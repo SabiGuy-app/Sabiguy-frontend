@@ -7,15 +7,15 @@ import Button from "../../../components/dashboard/Button";
 
 export default function DashboardHome() {
     const categories = [
-    { title: "Emergency", image: "../../../../public/1dfa55619d2d73389f6ae12f9bbf64ab94447f9d.jpg" },
-    { title: "Home & Repairs", image: "../../../../public/home&repairs.jpg" },
-    { title: "Domestic & Lifestyle", image: "../../../../public/Domestic.jpg" },
-    { title: "Transport & Logistics", image: "../../../../public/Transport.jpg" },
+    { title: "Emergency", image: "/1dfa55619d2d73389f6ae12f9bbf64ab94447f9d.jpg" },
+    { title: "Home & Repairs", image: "/home&repairs.jpg" },
+    { title: "Domestic & Lifestyle", image: "/Domestic.jpg" },
+    { title: "Transport & Logistics", image: "./Transport.jpg" },
   ];
 
    const providers = [
   {
-    image: "../../../../public/provider.jpg",
+    image: "./provider.jpg",
     name: "John Doe",
     skill: "Plumber",
     rating: "4.7",
@@ -24,7 +24,7 @@ export default function DashboardHome() {
     location: "Ikeja, Lagos",
   },
   {
-    image: "../../../../public/provider.jpg",
+    image: "/provider.jpg",
     name: "Mary Okafor",
     skill: "Electrician",
     rating: "4.5",
@@ -33,7 +33,7 @@ export default function DashboardHome() {
     location: "Lekki, Lagos",
   },
   {
-    image: "../../../../public/provider.jpg",
+    image: "/provider.jpg",
     name: "James Musa",
     skill: "Driver",
     rating: "4.6",

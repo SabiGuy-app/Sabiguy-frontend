@@ -10,10 +10,10 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import { LoginSchema } from "./schema";
 import ForgotPassword from "../Forgot-Password/ForgotPassword";
-
+import Loader from "../../components/Loader";
 
 
 
@@ -23,6 +23,7 @@ export default function Login () {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false); // Fixed typo
 
   const navigate = useNavigate()
 
@@ -67,49 +68,96 @@ export default function Login () {
 
   };
 
- const handleGoogleSuccess = async (credentialResponse) => {
-  console.log("Google login successful:", credentialResponse);
-  const token = credentialResponse.credential;
+//  const handleGoogleSuccess = async (credentialResponse) => {
+//   console.log("Google login successful:", credentialResponse);
+//   const token = credentialResponse.credential;
 
-  setLoading(true);
-  setErrorMessage("");
-  setSuccessMessage("");
+//   setLoading(true);
+//   setErrorMessage("");
+//   setSuccessMessage("");
 
-  try {
-    const res = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/auth/google-login`,
-      { token }, 
-      {
+//   try {
+//     const res = await axios.post(
+//       `${import.meta.env.VITE_BASE_URL}/auth/google-login`,
+//       { token }, 
+//       {
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+
+//     console.log("Server response:", res.data);
+
+//     if (res.data?.message) setSuccessMessage(res.data.message);
+
+//     if (res.data?.token) {
+//       localStorage.setItem("token", res.data.token);
+//       navigate("/congrats");
+//     }
+//   } catch (error) {
+//     console.error("Google login failed:", error);
+
+//     if (error.response) {
+//       setErrorMessage(error.response.data?.message || "Login failed. Try again.");
+//     } else if (error.request) {
+//       setErrorMessage("No response from server. Please check your connection.");
+//     } else {
+//       setErrorMessage("Unexpected error occurred.");
+//     }
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
+const googleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      setGoogleLoading(true);
+      
+      console.log("Access token:", tokenResponse.access_token);
+      
+      // Send access token to backend
+      const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-login`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ token: tokenResponse.access_token }),
+      });
+      
+      const data = await res.json();
+      console.log("Server response:", data);
+      
+      if (data?.token) {
+        localStorage.setItem("token", data.token);
+        setGoogleLoading(false);
+        // Redirect to dashboard or home
+        navigate('/dashboard');
+      } else if (data.message === "Account not found. Please sign up") {
+        setGoogleLoading(false);
+        setErrorMessage(data.message);
+      } else {
+        setGoogleLoading(false);
+        setErrorMessage(data.message || "Login failed");
       }
-    );
-
-    console.log("Server response:", res.data);
-
-    if (res.data?.message) setSuccessMessage(res.data.message);
-
-    if (res.data?.token) {
-      localStorage.setItem("token", res.data.token);
-      navigate("/congrats");
+    } catch (err) {
+      console.error(err);
+      setGoogleLoading(false);
+      setErrorMessage("Google login failed");
     }
-  } catch (error) {
-    console.error("Google login failed:", error);
+  },
+  
+  onError: () => {
+    setErrorMessage("Google login failed.");
+    setGoogleLoading(false);
+  },
+});
 
-    if (error.response) {
-      setErrorMessage(error.response.data?.message || "Login failed. Try again.");
-    } else if (error.request) {
-      setErrorMessage("No response from server. Please check your connection.");
-    } else {
-      setErrorMessage("Unexpected error occurred.");
-    }
-  } finally {
-    setLoading(false);
+if (googleLoading) {
+    return <Loader />;
   }
-};
-
-
 
 return (
     <>
@@ -210,9 +258,19 @@ return (
                 </div>
 
 
-                <div className="">
+                {/* <div className="">
       <GoogleLogin onSuccess={handleGoogleSuccess}/>
-    </div>
+    </div> */}
+    <button
+  onClick={() => googleLogin()}
+  disabled={googleLoading}
+  className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
+>
+  <img src="/Google.svg" alt="Google" className="w-5 h-5" />
+  <span className="text-gray-700 font-medium">
+    {googleLoading ? 'Logging in...' : 'Continue with Google'}
+  </span>
+</button>
     <p className="text-center text-sm mt-4">
                   Don't have an account yet?
                   <Link

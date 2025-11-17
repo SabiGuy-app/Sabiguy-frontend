@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import Loader from "../../../components/Loader";
 
 
@@ -76,44 +76,106 @@ export default function StepOne({ onNext }) {
   };
 
   //  Sign up with google
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setGoogleLoading(true); // Start loading
-    console.log("Google login successful:", credentialResponse);
-    const token = credentialResponse.credential;
+  // const handleGoogleSuccess = async (credentialResponse) => {
+  //   setGoogleLoading(true); // Start loading
+  //   console.log("Google login successful:", credentialResponse);
+  //   const token = credentialResponse.credential;
 
-    try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      });
+  //   try {
+  //     const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ token }),
+  //     });
 
-      const data = await res.json();
-      console.log("Server response:", data);
+  //     const data = await res.json();
+  //     console.log("Server response:", data);
 
-      if (data?.token) {
-        localStorage.setItem("token", data.token);
-      }
+  //     if (data?.token) {
+  //       localStorage.setItem("token", data.token);
+  //     }
 
-      if (data?.newUser?.email) {
-        localStorage.setItem("google-email", data.newUser.email);
-        onNext();
-      } else {
-        setErrorMessage("data.message");
-      } 
+  //     if (data?.newUser?.email) {
+  //       localStorage.setItem("google-email", data.newUser.email);
+  //       onNext();
+  //     } else {
+  //       setErrorMessage("data.message");
+  //     } 
       
-      if (data.message === "Email already in use") {
-        setErrorMessage(data.message);
+  //     if (data.message === "Email already in use") {
+  //       setErrorMessage(data.message);
+  //     }
+  //   } catch (err) {
+  //     console.error("Google login failed:", err);
+  //     setErrorMessage("Google login failed. Please try again.");
+  //   } finally {
+  //     setGoogleLoading(false); // Stop loading
+  //   }
+  // };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        setGoogleLoading(true);
+        
+        console.log("Token response:", tokenResponse); // Debug log
+        console.log("Access token:", tokenResponse.access_token); // Debug log
+        
+        // Get Google user info
+        const userInfo = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+        
+        const profile = await userInfo.json();
+        console.log("Google Profile:", profile);
+        
+        // Make sure you're sending the access_token
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-provider`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: tokenResponse.access_token }), // Send access_token
+        });
+        
+        const data = await res.json();
+        console.log("Server response:", data);
+        
+        if (data?.token) {
+          localStorage.setItem("token", data.token);
+        }
+        
+        if (data?.newUser?.email) {
+          localStorage.setItem("google-email", data.newUser.email);
+          setGoogleLoading(false);
+          onNext();
+        } else if (data.message === "Email already in use") {
+          setGoogleLoading(false);
+          setErrorMessage(data.message);
+        } else {
+          setGoogleLoading(false);
+          setErrorMessage("An error occurred. Please try again.");
+        }
+      } catch (err) {
+        console.error(err);
+        setGoogleLoading(false);
+        setErrorMessage("Google login failed");
       }
-    } catch (err) {
-      console.error("Google login failed:", err);
-      setErrorMessage("Google login failed. Please try again.");
-    } finally {
-      setGoogleLoading(false); // Stop loading
-    }
-  };
+    },
+    
+    onError: () => {
+      setErrorMessage("Google login failed.");
+      setGoogleLoading(false);
+    },
+  });
+
 
   // Show loader when Google login is in progress
   if (googleLoading) {
@@ -282,13 +344,21 @@ export default function StepOne({ onNext }) {
                   <div className="flex-grow border-t border-gray-300"></div>
                 </div>
 
-                <GoogleLogin 
+                {/* <GoogleLogin 
                   onSuccess={handleGoogleSuccess}
                   size="large"
                   text="continue_with"
                   theme="outline"
                   logo_alignment="center"
-                />
+                /> */}
+
+                <button
+  onClick={() => googleLogin()}
+  className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
+>
+  <img src="/Google.svg" alt="Google" className="w-5 h-5" />
+  <span className="text-gray-700 font-medium">Continue with Google</span>
+</button>
                 
                 <p className="text-center text-sm mt-4">
                   Already have an account?
