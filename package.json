@@ -1,0 +1,48 @@
+{
+  "name": "sabiguy-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "get-face-models": "powershell -Command \"mkdir -Force public/models; cd public/models; Invoke-WebRequest -OutFile tiny_face_detector_model-weights_manifest.json https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights/tiny_face_detector_model-weights_manifest.json; Invoke-WebRequest -OutFile tiny_face_detector_model-shard1.bin https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights/tiny_face_detector_model-shard1.bin; Invoke-WebRequest -OutFile face_landmark_68_model-weights_manifest.json https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights/face_landmark_68_model-weights_manifest.json; Invoke-WebRequest -OutFile face_landmark_68_model-shard1.bin https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights/face_landmark_68_model-shard1.bin\""
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/face_mesh": "^0.4.1633559619",
+    "@react-oauth/google": "^0.12.2",
+    "@svgr/webpack": "^8.1.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "axios": "^1.12.2",
+    "face-api.js": "^0.22.2",
+    "formik": "^2.4.6",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.546.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-hot-toast": "^2.6.0",
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.9.4",
+    "react-webcam": "^7.2.0",
+    "redux": "^5.0.1",
+    "tailwindcss": "^4.1.14",
+    "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.4",
+    "eslint": "^9.36.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.22",
+    "globals": "^16.4.0",
+    "vite": "^7.1.7"
+  }
+}

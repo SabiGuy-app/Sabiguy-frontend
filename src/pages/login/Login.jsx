@@ -1,0 +1,243 @@
+import AuthLayout from "../../components/layouts/layout";
+import Button from "../../components/button";
+import InputField from "../../components/InputField";
+import Navbar from "../../components/layouts/navbar";
+import { FaArrowRight } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { BsEye, BsEyeSlash } from "react-icons/bs";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import axios from "axios";
+import { Formik, ErrorMessage } from "formik";
+import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from '@react-oauth/google';
+import { LoginSchema } from "./schema";
+import ForgotPassword from "../Forgot-Password/ForgotPassword";
+
+
+
+
+export default function Login () {
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+
+  const navigate = useNavigate()
+
+  const handleShowPassword = () => {
+    setShowPassword((prev) => !prev);
+  };
+
+
+  const handleLogin = async (values, { setSubmitting }) => {
+    setLoading(true);
+    setSuccessMessage("");
+
+    try {
+       const payload = {
+        email: values.email,
+        password: values.password,
+       }
+
+       const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth`, payload);
+
+      if (res.data?.message) setSuccessMessage(res.data.message);
+
+      if (res.data?.token) {
+        localStorage.setItem("token", res.data.token);
+        navigate("/congrats");
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+
+      if (error.response) {
+        setErrorMessage(error.response.data?.message || "Login failed. Try again.");
+      } else if (error.request) {
+        setErrorMessage("No response from server. Please check your connection.");
+      } else {
+        setErrorMessage("Unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false);
+     setSubmitting(false);
+
+    }
+
+  };
+
+ const handleGoogleSuccess = async (credentialResponse) => {
+  console.log("Google login successful:", credentialResponse);
+  const token = credentialResponse.credential;
+
+  setLoading(true);
+  setErrorMessage("");
+  setSuccessMessage("");
+
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/auth/google-login`,
+      { token }, 
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Server response:", res.data);
+
+    if (res.data?.message) setSuccessMessage(res.data.message);
+
+    if (res.data?.token) {
+      localStorage.setItem("token", res.data.token);
+      navigate("/congrats");
+    }
+  } catch (error) {
+    console.error("Google login failed:", error);
+
+    if (error.response) {
+      setErrorMessage(error.response.data?.message || "Login failed. Try again.");
+    } else if (error.request) {
+      setErrorMessage("No response from server. Please check your connection.");
+    } else {
+      setErrorMessage("Unexpected error occurred.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+return (
+    <>
+    <Navbar/>
+    <AuthLayout
+    title="Welcome Back!"
+        description="Log in with your detail to keep exploring our platform"
+      >
+        <motion.div
+          key="step-one"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.3 }}
+        >
+            <h2 className="text-2xl font-semibold text-center mb-1">Welcome Back</h2>
+          <p className="text-gray-500 text-center mb-6">
+            Kindly provide your email address and password to continue
+          </p>
+
+          <Formik
+            initialValues={{
+              email: "",
+              password: "",
+            }}
+            onSubmit={handleLogin}
+            validationSchema={LoginSchema}>
+
+                {({ values, handleChange, handleBlur, handleSubmit }) => (
+                              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div>
+                                <InputField
+                                  name="email"
+                                  label="Email"
+                                  placeholder="Enter your email"
+                                  value={values.email}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                />
+                                <ErrorMessage
+                                    name="email"
+                                    component="span"
+                                    className="text-[#db3a3a]"
+                                  />
+                                  </div>
+                                   <div className="relative">
+                                                    <InputField
+                                                      name="password"
+                                                      label="Password"
+                                                      type={showPassword ? "text" : "password"}
+                                                      placeholder="Use a minimum of 6 characters"
+                                                      value={values.password}
+                                                      onChange={handleChange}
+                                                      onBlur={handleBlur}
+                                                    />
+                                                    <ErrorMessage
+                                                      name="password"
+                                                      component="span"
+                                                      className="text-[#db3a3a]"
+                                                    />
+                                                    {showPassword ? (
+                                                      <BsEye
+                                                        onClick={handleShowPassword}
+                                                        className="absolute top-11 right-3 cursor-pointer"
+                                                      />
+                                                    ) : (
+                                                      <BsEyeSlash
+                                                        onClick={handleShowPassword}
+                                                        className="absolute top-11 right-3 cursor-pointer"
+                                                      />
+                                                    )}
+                                                  </div>
+                                  
+                                                  {errorMessage && (
+                                                    <div className="text-center text-[#db3a3a] mt-2">{errorMessage}</div>
+                                                  )}
+                                                  {successMessage && (
+                                                    <div className="text-center text-[#005823BF] mt-2">{successMessage}</div>
+                                                  )}
+                                                  <div className="flex justify-start mb-5">
+  <button
+    type="button"
+     onClick={() => setShowForgotPassword(true)}
+    className="font-semibold text-lg hover:text-[#005823BF]"
+  >
+    Forgot Password?
+  </button>
+</div>
+
+                                                  <Button type="submit">
+                                                                    {loading ? "Loading..." : "Log In"}
+                                                                  </Button>
+
+                                                                  <div className="flex items-center my-4">
+                  <div className="flex-grow border-t border-gray-300"></div>
+                  <span className="mx-2 text-gray-500">or</span>
+                  <div className="flex-grow border-t border-gray-300"></div>
+                </div>
+
+
+                <div className="">
+      <GoogleLogin onSuccess={handleGoogleSuccess}/>
+    </div>
+    <p className="text-center text-sm mt-4">
+                  Don't have an account yet?
+                  <Link
+                    to="/"
+                    className="text-[#005823] font-medium hover:text-black transition-all duration-200 inline-flex items-center group ml-1"
+                  >
+                    Sign Up
+                    <FaArrowRight
+                      size={18}
+                      className="ml-2 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+                    />
+                  </Link>
+                </p>
+                                 </form>
+                )}
+
+                
+            </Formik>
+        </motion.div>
+      </AuthLayout>   
+      <ForgotPassword
+                isOpen={showForgotPassword}
+                onClose={() => setShowForgotPassword(false)}
+                />
+    </>
+    
+);
+};
