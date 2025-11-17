@@ -5,8 +5,10 @@ export default function UploadBox({
   uploadEndpoint,
   onUploadComplete,
   accept = "image/*,video/*",
+   onUploadStart,  
+  onUploadEnd,
   multiple = true,
-  maxSizeMB = 10,
+  maxSizeMB = 5,
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -36,6 +38,9 @@ export default function UploadBox({
     setUploading(true);
     const uploadedUrls = [];
 
+        onUploadStart?.(); // Call when upload starts
+
+
     try {
       for (const file of validFiles) {
         const formData = new FormData();
@@ -64,6 +69,8 @@ export default function UploadBox({
       alert("File upload failed. Please try again.");
     } finally {
       setUploading(false);
+      onUploadEnd?.(); 
+
     }
   };
 

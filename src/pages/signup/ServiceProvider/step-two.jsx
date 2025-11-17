@@ -16,6 +16,9 @@ export default function StepTwo({onNext, email}) {
 
   const inputRefs = useRef ([]); 
 
+    const google_email =   localStorage.getItem("google-email")
+
+
    const handleChange = (index, value) => {
     if (/^[0-9]?$/.test(value)) {
       const newOtp = [...otp];
@@ -97,7 +100,7 @@ anytime, anywhere."
                  Verify your email address
                </h2>
                <p className="text-gray-500 text-center mb-6">
-                 We've sent a verification code to your email: {" "} <span className="font-bold">{email}</span>
+                 We've sent a verification code to your email: {" "} <span className="font-bold">{email || google_email}</span>
                </p>
                <div className="flex flex-col gap-4 items-center">
                <div class="flex justify-center gap-2">

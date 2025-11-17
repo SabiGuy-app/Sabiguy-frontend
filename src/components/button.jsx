@@ -14,7 +14,7 @@ export default function Button({
     primary: "bg-[#005823BF] text-white hover:bg-[#005823]",
      secondary: "bg-[#005823BF] text-white hover:bg-[#005823] px-35 py-3",
     ghost: " text-[#005823] font-bold  border border-[#005823] px-20 py-2",
-    disabled: "bg-gray-300 text-gray-600 cursor-not-allowed"
+    disabled: "bg-gray-300 text-gray-600 px-35 py-3 cursor-not-allowed"
   };
 
   const sizes = {

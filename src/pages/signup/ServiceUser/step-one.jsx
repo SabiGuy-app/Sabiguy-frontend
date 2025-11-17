@@ -11,6 +11,7 @@ import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
 import { GoogleLogin } from '@react-oauth/google';
+import Loader from "../../../components/Loader";
 
 
 export default function StepOne({ onNext }) {
@@ -18,6 +19,7 @@ export default function StepOne({ onNext }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false); // Fixed typo
 
 
   const handleShowPassword = () => {
@@ -48,7 +50,7 @@ export default function StepOne({ onNext }) {
         }
         setSuccessMessage("Registration successful");
         onNext?.({ email: values.email });
-                         localStorage.setItem("email", values.email);
+        localStorage.setItem("email", values.email);
 
       } else {
         const data = response.data;
@@ -75,6 +77,7 @@ export default function StepOne({ onNext }) {
 
   //  Sign up with google
   const handleGoogleSuccess = async (credentialResponse) => {
+    setGoogleLoading(true); // Start loading
     console.log("Google login successful:", credentialResponse);
     const token = credentialResponse.credential;
 
@@ -91,27 +94,31 @@ export default function StepOne({ onNext }) {
       console.log("Server response:", data);
 
       if (data?.token) {
-        // ✅ Save backend token to localStorage
         localStorage.setItem("token", data.token);
       }
 
       if (data?.newUser?.email) {
-                localStorage.setItem("email", data.newUser.email);
-        // ✅ Move to StepTwo with email
+        localStorage.setItem("google-email", data.newUser.email);
         onNext();
       } else {
         setErrorMessage("data.message");
-      } if (data.message === "Email already in use") {
-         setErrorMessage(data.message);
-
+      } 
+      
+      if (data.message === "Email already in use") {
+        setErrorMessage(data.message);
       }
     } catch (err) {
       console.error("Google login failed:", err);
       setErrorMessage("Google login failed. Please try again.");
+    } finally {
+      setGoogleLoading(false); // Stop loading
     }
-  
-};
+  };
 
+  // Show loader when Google login is in progress
+  if (googleLoading) {
+    return <Loader />;
+  }
 
   return (
     <>
@@ -128,9 +135,9 @@ export default function StepOne({ onNext }) {
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-          <h2 className="text-2xl font-semibold text-center mb-1">Let’s get you started</h2>
+          <h2 className="text-2xl font-semibold text-center mb-1">Let's get you started</h2>
           <p className="text-gray-500 text-center mb-6">
-            Please enter your details and let’s get you started
+            Please enter your details and let's get you started
           </p>
 
           <Formik
@@ -275,20 +282,14 @@ export default function StepOne({ onNext }) {
                   <div className="flex-grow border-t border-gray-300"></div>
                 </div>
 
-                {/* <button
-                  type="button"
-                  className="w-full border border-gray-300 rounded-md py-2 flex items-center justify-center gap-2"
-                  onClick={handleGoogleSuccess}
-                >
-                  <img src="/public/Google.svg" alt="Google" className="w-5 h-5" />
-                  Continue with Google
-                </button> */}
-
-
-                <div className="">
-      <GoogleLogin onSuccess={handleGoogleSuccess}/>
-    </div>
-
+                <GoogleLogin 
+                  onSuccess={handleGoogleSuccess}
+                  size="large"
+                  text="continue_with"
+                  theme="outline"
+                  logo_alignment="center"
+                />
+                
                 <p className="text-center text-sm mt-4">
                   Already have an account?
                   <Link

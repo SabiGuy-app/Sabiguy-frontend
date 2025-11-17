@@ -5,8 +5,12 @@ import AccountSetupLayout from "./layout";
 import InputField from "../../../../components/InputField";
 import { IoIosArrowBack } from "react-icons/io";
 
+
+// remove alert
 export default function BankAccountForm({ onBack, onNext }) {
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const formik = useFormik({
     initialValues: {
@@ -23,6 +27,8 @@ export default function BankAccountForm({ onBack, onNext }) {
     }),
     onSubmit: async (values) => {
       setLoading(true);
+      setErrorMessage("");
+      setSuccessMessage("");
       try {
         const res = await fetch(`${import.meta.env.VITE_BASE_URL}/provider/bank-info`, {
           method: "PUT",
@@ -35,14 +41,14 @@ export default function BankAccountForm({ onBack, onNext }) {
 
         const data = await res.json();
         if (data.success) {
-          alert("Account info updated successfully!");
+          setSuccessMessage("Account info updated successfully!");
           onNext?.();
         } else {
-          alert(data.message || "Failed to update account info");
+          setErrorMessage(data.message || "Failed to update account info");
         }
       } catch (err) {
         console.error("Bank info update failed:", err);
-        alert("Something went wrong. Please try again.");
+        setErrorMessage("Something went wrong. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -109,7 +115,12 @@ export default function BankAccountForm({ onBack, onNext }) {
           {formik.touched.accountName && formik.errors.accountName && (
             <p className="text-red-500 text-sm">{formik.errors.accountName}</p>
           )}
-
+{errorMessage && (
+                  <div className="text-center text-[#db3a3a] mt-2">{errorMessage}</div>
+                )}
+                {successMessage && (
+                  <div className="text-center text-[#005823BF] mt-2">{successMessage}</div>
+                )}
           {/* Submit Button */}
           <div className="flex justify-end mt-6">
             <button
