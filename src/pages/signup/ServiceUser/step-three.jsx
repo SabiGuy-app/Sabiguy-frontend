@@ -1,6 +1,7 @@
 import React from "react";
 import Button from "../../../components/button";
 
+import { Link } from "react-router-dom"; 
 
 
 export default function StepThree () {
@@ -14,7 +15,12 @@ export default function StepThree () {
                 <p className="text-sm">Explore our services, connect with professionals, and start getting
 things done with ease.</p>
                    <div className="flex gap-10 mt-10">
+                    
+                            <Link to="/dashboard">
+
                     <Button size="md">Go To Dashboard</Button>
+                            </Link>
+
                     <button>Browse Services</button>
                    </div>
   <p className="text-gray-500 text-sm font-extralight italic mt-8">Tip: You can always update your profile or verification info in settings</p>

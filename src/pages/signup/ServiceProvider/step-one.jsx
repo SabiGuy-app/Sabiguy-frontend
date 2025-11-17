@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import Loader from "../../../components/Loader";
 
 
@@ -76,46 +76,84 @@ export default function StepOne({ onNext }) {
   };
 
   //  Sign up with google
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setGoogleLoading(true); // Start loading
-
-    console.log("Google login successful:", credentialResponse);
-    const token = credentialResponse.credential;
-
-    try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-provider`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      const data = await res.json();
-      console.log("Server response:", data);
-
-      if (data?.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      if (data?.newUser?.email) {
-                localStorage.setItem("google-email", data.newUser.email);
-        onNext();
-      } else {
-        setErrorMessage("data.message");
-      } if (data.message === "Email already in use") {
-         setErrorMessage(data.message);
-
-      }
-    } catch (err) {
-      console.error("Google login failed:", err);
-      setErrorMessage("Google login failed. Please try again.");
-    } finally {
-         setGoogleLoading(false);
-
+ const handleGoogleSuccess = async (idToken, profile) => {
+  console.log("Google login successful:", { idToken, profile });
+  
+  try {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-provider`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token: idToken }), // Send ID token, not access token
+    });
+    
+    const data = await res.json();
+    console.log("Server response:", data);
+    
+    if (data?.token) {
+      localStorage.setItem("token", data.token);
     }
-
+    
+    if (data?.newUser?.email) {
+      localStorage.setItem("google-email", data.newUser.email);
+      setGoogleLoading(false);
+      onNext();
+    } else if (data.message === "Email already in use") {
+      setGoogleLoading(false);
+      setErrorMessage(data.message);
+    } else {
+      setGoogleLoading(false);
+      setErrorMessage("An error occurred. Please try again.");
+    }
+  } catch (err) {
+    console.error("Google login failed:", err);
+    setGoogleLoading(false);
+    setErrorMessage("Google login failed. Please try again.");
+  }
 };
+
+const googleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      setGoogleLoading(true);
+      
+      // Get Google user info
+      const userInfo = await fetch(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        }
+      );
+      
+      const profile = await userInfo.json();
+      console.log("Google Profile:", profile);
+      
+      // Get ID token by exchanging the access token
+      const tokenInfo = await fetch(
+        `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${tokenResponse.access_token}`
+      );
+      const tokenData = await tokenInfo.json();
+      
+      // OR use the code flow to get id_token directly
+      // For now, you might need to send profile data to your backend
+      // and verify on the server side, or switch to using Google Identity Services
+      
+      await handleGoogleSuccess(tokenResponse.access_token, profile);
+    } catch (err) {
+      console.error(err);
+      setGoogleLoading(false);
+      setErrorMessage("Google login failed");
+    }
+  },
+  
+  onError: () => {
+    setErrorMessage("Google login failed.");
+    setGoogleLoading(false);
+  },
+});
 if (googleLoading) {
     return <Loader />;
   }
@@ -272,13 +310,21 @@ if (googleLoading) {
 
       {/* <GoogleLogin onSuccess={handleGoogleSuccess}/> */}
 
-      <GoogleLogin 
+      {/* <GoogleLogin 
                   onSuccess={handleGoogleSuccess}
                   size="large"
                   text="continue_with"
                   theme="outline"
                   logo_alignment="center"
-                />
+                /> */}
+
+                 <button
+  onClick={() => googleLogin()}
+  className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
+>
+  <img src="/Google.svg" alt="Google" className="w-5 h-5" />
+  <span className="text-gray-700 font-medium">Continue with Google</span>
+</button>
 
     
 
