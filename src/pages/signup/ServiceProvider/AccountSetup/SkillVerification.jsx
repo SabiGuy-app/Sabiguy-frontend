@@ -126,11 +126,11 @@ onSubmit={handleSubmit}
  <InputField
         select
         options={jobTitles}
-        value={values.title} // ✅ now controlled by Formik
+        value={values.title} 
         onChange={(option) => {
           setFieldValue("title", option.value);
           setSelectedJobTitle(option.value);
-          setFieldValue("service", ""); // reset service when title changes
+          setFieldValue("service", ""); 
           setSelectedService("");
         }}
       />

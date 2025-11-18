@@ -45,7 +45,7 @@ export default function DashboardHome() {
   
   return (
     <DashboardLayout>
-<div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+<div className="flex flex-col  md:flex-row md:items-center md:justify-between mb-6">
     <div>
       <h2 className="text-2xl font-bold mb-3">Welcome Back, Adam 👋</h2>
       <p className="mb-3 text-sm">Plan, prioritize, and accomplish  your task with ease.</p>
