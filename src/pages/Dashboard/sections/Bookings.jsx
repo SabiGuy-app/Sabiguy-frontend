@@ -3,7 +3,7 @@ import InputField from "../../../components/InputField";
 import { useState } from "react";
 import { jobTitles, allServices } from "../../signup/ServiceProvider/AccountSetup/SkillsSection/jobData";
 import Button from "../../../components/button";
-import RequestCard from "../../../components/RequestsCard";
+import RequestCard from "../../../components/dashboard/RequestsCard";
 import ServiceDetailsModal from "./ServiceDetailsModal";
 
 

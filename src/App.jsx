@@ -19,7 +19,12 @@ import SignupForm from './pages/signup/ServiceProvider';
 import Login from './pages/login/Login';
 import DashboardHome from './pages/Dashboard/sections/Homepage';
 import Bookings from './pages/Dashboard/sections/Bookings';
-
+import SavedProfile from './pages/Dashboard/sections/SavedProfile';
+import ChatPage from './pages/Dashboard/sections/Chat';
+import ActivityPage from './pages/Dashboard/sections/Activity';
+import ProfilePage from './pages/Dashboard/sections/Settings';
+import ContactPage from './pages/Dashboard/sections/Help';
+import Categories from './pages/Dashboard/sections/Categories';
 function App() {
 
   return (
@@ -37,24 +42,15 @@ function App() {
               <Route path="/login" element={<Login/>} />
               <Route path="/dashboard" element={<DashboardHome/>} />
               <Route path="/bookings" element={<Bookings/>} />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+              <Route path="/dashboard/saved" element={<SavedProfile/>} />
+              <Route path="/dashboard/chat" element={<ChatPage/>} />
+              <Route path="/dashboard/activity" element={<ActivityPage/>} />
+              <Route path="/dashboard/settings" element={<ProfilePage/>} />
+              <Route path="/dashboard/help" element={<ContactPage/>} />
+              <Route path="/dashboard/categories" element={<Categories/>} />
 
 
         </Routes>
-
         </div>
     </Router>
   )

@@ -18,6 +18,8 @@ export default function Form() {
     const handleBack = () => setStep ((prev) => Math.max (prev -1, 0));
 
     const forms = [
+                // <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack}/>,
+
         <StepOne onNext={handleNext} />,
         <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack}/>,
         <StepThree onNext={handleNext} onBack={handleBack}/>

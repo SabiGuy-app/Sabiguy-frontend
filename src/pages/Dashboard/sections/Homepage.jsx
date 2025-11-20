@@ -4,8 +4,10 @@ import CategoryCard from "../../../components/dashboard/CategoryCard";
 import ProviderCard from "../../../components/dashboard/ProviderCard";
 import { Wallet, Bookmark, MessageSquare, } from "lucide-react";
 import Button from "../../../components/dashboard/Button";
+import { useNavigate } from "react-router-dom";
 
 export default function DashboardHome() {
+  const navigate = useNavigate()
     const categories = [
     { title: "Emergency", image: "/1dfa55619d2d73389f6ae12f9bbf64ab94447f9d.jpg" },
     { title: "Home & Repairs", image: "/home&repairs.jpg" },
@@ -61,7 +63,7 @@ export default function DashboardHome() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
          <DashboardCard 
         title="Wallet Balance" 
-        value="₦0.00" 
+        amount="₦0.00" 
         button="Fund Wallet" 
         icon={<Wallet size={20} />} 
       />
@@ -85,7 +87,10 @@ export default function DashboardHome() {
 
         <h3 className="text-lg font-semibold mb-4"> Categories</h3>
 
-        <button className="hover:text-[#005823] hover:underline">View all</button>
+        <button className="hover:text-[#005823] hover:underline"
+        onClick={() =>navigate ("/dashboard/categories")}>
+          View all
+          </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {categories.map((cat, idx) => (

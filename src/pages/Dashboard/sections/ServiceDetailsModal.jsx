@@ -1,10 +1,12 @@
 import {  Calendar, MapPin, ChevronLeft, Star } from 'lucide-react';
+import Navbar from '../../../components/dashboard/Navbar';
 
 export default function ServiceDetailsModal ({ isOpen, onClose, request }) {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-gray-50  bg-opacity-50 flex items-center justify-center z-50 p-4">
+      
       <div className="bg-white p-5 rounded-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto">
         {/* Header */}
         <div className=" top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -120,5 +122,6 @@ export default function ServiceDetailsModal ({ isOpen, onClose, request }) {
         </div>
       </div>
     </div>
+    
   );
 };

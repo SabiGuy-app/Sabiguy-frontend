@@ -30,10 +30,10 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed  top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
+        className={`fixed  top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        <h1 className="text-3xl font-bold text-[#005823] mb-10">SabiGuy</h1>
+        {/* <h1 className="text-3xl font-bold text-[#005823] mb-10">SabiGuy</h1> */}
         <nav className="space-y-2">
           {links.map((link) => (
             <Link
