@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 export default function Welcome() {
   return (
-    <> 
+    <div className="h-screen"> 
     <Navbar/>
     <AuthLayout
     title="Welcome Back!"
@@ -23,7 +23,7 @@ anytime, anywhere."
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-       <h2 className="text-2xl font-semibold text-center mb-1">
+       <h2 className="text-2xl mt-4 font-semibold text-center mb-1">
                  Welcome to SabiGuy
                </h2>
                <p className="text-gray-500 text-center mb-6">
@@ -85,6 +85,6 @@ anytime, anywhere."
                  </p>
                  </motion.div>
     </AuthLayout>
-    </>
+    </div>
   );
 }

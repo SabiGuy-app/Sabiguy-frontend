@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 export default function Step() {
   return (
-    <> 
+    <div className="h-screen"> 
     <Navbar/>
     <AuthLayout
     title="Welcome Back!"
@@ -77,6 +77,6 @@ anytime, anywhere."
     </div>
                  </p>
     </AuthLayout>
-    </>
+    </div>
   );
 }

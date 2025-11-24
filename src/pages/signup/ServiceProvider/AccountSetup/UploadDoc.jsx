@@ -9,8 +9,10 @@ export default function UploadDocument({ onNext, onBack }) {
   const [isUploading, setIsUploading] = useState(false); // Track upload state
   
   const email = localStorage.getItem("email")
+  const google_email =   localStorage.getItem("google-email")
 
-  const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email}/work_visuals`;
+
+  const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/work_visuals`;
   const workVisualsEndpoint = `${import.meta.env.VITE_BASE_URL}/provider/work-visuals`;
 
   const handleVideoUpload = (urls) => {

@@ -80,7 +80,7 @@ export default function StepTwo({onNext, email}) {
  const isOtpComplete = otp.every((digit) => digit !== "");
 
     return (
-       <> 
+       <div className="h-screen"> 
        <Navbar/>
        <AuthLayout
        title="Welcome Back!"
@@ -150,6 +150,6 @@ anytime, anywhere."
       </div>
       </motion.div>
         </AuthLayout> 
-       </>
+       </div>
     )
 }

@@ -160,7 +160,7 @@ if (googleLoading) {
   }
 
 return (
-    <>
+    <div className="h-screen">
     <Navbar/>
     <AuthLayout
     title="Welcome Back!"
@@ -173,7 +173,7 @@ return (
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-            <h2 className="text-2xl font-semibold text-center mb-1">Welcome Back</h2>
+            <h2 className="text-2xl font-semibold text-center mt-7 mb-1">Welcome Back</h2>
           <p className="text-gray-500 text-center mb-6">
             Kindly provide your email address and password to continue
           </p>
@@ -271,7 +271,7 @@ return (
     {googleLoading ? 'Logging in...' : 'Continue with Google'}
   </span>
 </button>
-    <p className="text-center text-sm mt-4">
+    <p className="text-center mb-5 text-sm mt-4">
                   Don't have an account yet?
                   <Link
                     to="/"
@@ -295,7 +295,7 @@ return (
                 isOpen={showForgotPassword}
                 onClose={() => setShowForgotPassword(false)}
                 />
-    </>
+    </div>
     
 );
 };

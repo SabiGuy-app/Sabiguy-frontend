@@ -183,7 +183,7 @@ export default function StepOne({ onNext }) {
   }
 
   return (
-    <>
+    <div className="h-screen">
       <Navbar />
       <AuthLayout
         title="Welcome Back!"
@@ -197,7 +197,7 @@ export default function StepOne({ onNext }) {
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-          <h2 className="text-2xl font-semibold text-center mb-1">Let's get you started</h2>
+          <h2 className="text-2xl font-semibold text-center mt-7 mb-1">Let's get you started</h2>
           <p className="text-gray-500 text-center mb-6">
             Please enter your details and let's get you started
           </p>
@@ -360,7 +360,7 @@ export default function StepOne({ onNext }) {
   <span className="text-gray-700 font-medium">Continue with Google</span>
 </button>
                 
-                <p className="text-center text-sm mt-4">
+                <p className="text-center text-sm mt-2 mb-5">
                   Already have an account?
                   <Link
                     to="/login"
@@ -378,6 +378,6 @@ export default function StepOne({ onNext }) {
           </Formik>
         </motion.div>
       </AuthLayout>
-    </>
+    </div>
   );
 }

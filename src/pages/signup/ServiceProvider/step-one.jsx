@@ -221,7 +221,7 @@ if (googleLoading) {
 
 
   return (
-    <>
+    <div className="h-screen">
       <Navbar />
       <AuthLayout
         title="Welcome Back!"
@@ -235,7 +235,7 @@ if (googleLoading) {
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-          <h2 className="text-2xl font-semibold text-center mb-1">Let’s get you started</h2>
+          <h2 className="text-2xl font-semibold text-center mt-7 mb-1">Let’s get you started</h2>
           <p className="text-gray-500 text-center mb-6">
             Please enter your details and let’s get you started
           </p>
@@ -389,7 +389,7 @@ if (googleLoading) {
 
     
 
-                <p className="text-center text-sm mt-4">
+                <p className="text-center mb-4 text-sm mt-4">
                   Already have an account?
                   <Link
                     to="/login"
@@ -407,6 +407,6 @@ if (googleLoading) {
           </Formik>
         </motion.div>
       </AuthLayout>
-    </>
+    </div>
   );
 }

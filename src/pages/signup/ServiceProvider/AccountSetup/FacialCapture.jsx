@@ -30,7 +30,9 @@ export default function FaceCapture({ onNext, handleBack }) {
   const [cameraError, setCameraError] = useState(null);
 
   const email = localStorage.getItem("email");
-  const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email}/profile_pictures`;
+  const google_email =   localStorage.getItem("google-email")
+
+  const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/profile_pictures`;
   const saveEndpoint = `${import.meta.env.VITE_BASE_URL}/provider/profile-pic`;
 
   // Initialize MediaPipe Face Mesh

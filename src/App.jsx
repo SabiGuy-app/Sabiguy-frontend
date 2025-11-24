@@ -25,6 +25,9 @@ import ActivityPage from './pages/Dashboard/sections/Activity';
 import ProfilePage from './pages/Dashboard/sections/Settings';
 import ContactPage from './pages/Dashboard/sections/Help';
 import Categories from './pages/Dashboard/sections/Categories';
+// import Pages from './pages/Dashboard/Services/pages';
+import AmbulanceServices from './pages/Dashboard/Services/pages/AmbulanceServices';
+// import AmbulanceServices from "./pages/Dashboard/Services/pages"
 function App() {
 
   return (
@@ -48,6 +51,8 @@ function App() {
               <Route path="/dashboard/settings" element={<ProfilePage/>} />
               <Route path="/dashboard/help" element={<ContactPage/>} />
               <Route path="/dashboard/categories" element={<Categories/>} />
+              <Route path="/dashboard/categories/services" element={<AmbulanceServices/>} />
+
 
 
         </Routes>

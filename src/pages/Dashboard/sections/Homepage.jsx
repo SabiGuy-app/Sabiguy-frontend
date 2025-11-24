@@ -54,7 +54,9 @@ export default function DashboardHome() {
       </div>
   <div className="flex gap-3 mt-4 md:mt-0">
                
-    <Button variant="secondary">Browse service</Button>
+    <Button variant="secondary"
+    onClick={() => navigate("/dashboard/categories")}>
+      Browse service</Button>
         <Button variant="primary">Request service</Button>
 
 

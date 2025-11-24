@@ -1,26 +1,33 @@
-// components/dashboard/Navbar.jsx
 import { useState } from "react";
-import { Bell, Search, ChevronDown, Menu } from "lucide-react";
+import { Bell, Search, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const [showSearch, setShowSearch] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const navigate = useNavigate()
+  const [showMenu, setShowMenu] = useState(false);
+  const navigate = useNavigate();
 
   return (
-    <header className="flex items-center justify-between bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-30 shadow-sm">
-      {/* Mobile Menu Placeholder (optional toggle for sidebar, if needed) */}
-      <div className="md:hidden">
-        <Menu className="text-gray-600" size={24} />
-      </div>
-      
-                    <button className="text-4xl font-bold text-[#005823]"
-            onClick={() => navigate('/dashboard')}>
-                      SabiGuy</button>
+    <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
 
-      {/* Search */}
-      <div className="hidden md:flex flex-1 items-center ml-25 max-w-sm bg-gray-100 border border-gray-400 rounded-lg px-2 py-3">
+      {/* Mobile Menu Button */}
+      <button
+        className="md:hidden"
+        onClick={() => setShowMenu(true)}
+      >
+        <Menu size={26} className="text-gray-700" />
+      </button>
+
+      {/* Logo */}
+      <button
+        className="text-3xl font-bold text-[#005823]"
+        onClick={() => navigate("/dashboard")}
+      >
+        SabiGuy
+      </button>
+
+      {/* Desktop Search */}
+      <div className="hidden md:flex flex-1 items-center ml-10 max-w-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2">
         <Search size={18} className="text-gray-500 mr-2" />
         <input
           type="text"
@@ -29,7 +36,7 @@ export default function Navbar() {
         />
       </div>
 
-      {/* Mobile search icon */}
+      {/* Mobile Search Toggle */}
       <button
         onClick={() => setShowSearch(!showSearch)}
         className="md:hidden text-gray-600"
@@ -37,14 +44,31 @@ export default function Navbar() {
         <Search size={22} />
       </button>
 
-      {/* Mobile search bar (dropdown style) */}
+      {/* Right Icons */}
+      <div className="flex items-center space-x-4">
+        {/* Bell */}
+        <button className="relative">
+          <Bell className="text-gray-600" size={22} />
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+        </button>
+
+        {/* Profile */}
+        <button
+          onClick={() => navigate("/dashboard/settings")}
+          className="flex items-center"
+        >
+          <img
+            src="https://i.pravatar.cc/40"
+            className="w-8 h-8 rounded-full border"
+          />
+        </button>
+      </div>
+
+      {/* Mobile Search Dropdown */}
       {showSearch && (
         <div className="absolute top-16 left-0 w-full bg-white border-t border-gray-200 p-4 md:hidden">
           <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2">
-
-
             <Search size={18} className="text-gray-500 mr-2" />
-
             <input
               type="text"
               placeholder="Search providers or services..."
@@ -54,60 +78,37 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Right side icons */}
-      <div className="flex items-center space-x-4 ml-auto">
-        {/* Notification Bell */}
-        <button className="relative">
-          <Bell className="text-gray-600" size={22} />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
-        </button>
+      {/* Mobile Slide-in Menu */}
+      {showMenu && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
+             onClick={() => setShowMenu(false)}>
 
-        {/* Profile Dropdown */}
-        <div className="relative">
-          <button
-            // onClick={() => setShowDropdown(!showDropdown)}
-            onClick={() => navigate('/dashboard/settings')}
-
-            className="flex items-center space-x-2"
+          <div
+            className="absolute left-0 top-0 h-full w-64 bg-white shadow-lg p-6 animate-slideIn"
+            onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src="https://i.pravatar.cc/40"
-              alt="Profile"
-              className="w-8 h-8 rounded-full border border-gray-300"
-            />
-            {/* <ChevronDown
-              className={`text-gray-600 transition-transform ${
-                showDropdown ? "rotate-180" : ""
-              }`}
-              size={20}
-            /> */}
-          </button>
+            {/* Close Icon */}
+            <button className="mb-6" onClick={() => setShowMenu(false)}>
+              <X size={26} className="text-gray-600" />
+            </button>
 
-          {/* Dropdown menu */}
-          {showDropdown && (
-            <div className="absolute right-0 mt-2 bg-white shadow-lg border border-gray-100 rounded-lg w-40 py-2 z-50">
-              <a
-                href="/dashboard/profile"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                My Profile
-              </a>
-              <a
-                href="/dashboard/settings"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Settings
-              </a>
-              <button
-                onClick={() => alert('Logging out...')}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-              >
-                Logout
+            {/* Menu Links */}
+            <nav className="space-y-4 text-lg text-gray-700">
+              <button onClick={() => navigate("/dashboard")} className="block">
+                Dashboard
               </button>
-            </div>
-          )}
+
+              <button onClick={() => navigate("/dashboard/categories")} className="block">
+                Categories
+              </button>
+
+              <button onClick={() => navigate("/dashboard/settings")} className="block">
+                Settings
+              </button>
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }
