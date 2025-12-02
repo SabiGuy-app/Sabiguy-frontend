@@ -1,6 +1,6 @@
 export default function Card({ image, title, tasks = [], onTaskClick }) {
   return (
-    <div className="max-w-fit rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+    <div className="max-w-fit mb-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
 
       {/* Image */}
       <div className="relative w-full h-48 overflow-hidden">
@@ -16,18 +16,18 @@ export default function Card({ image, title, tasks = [], onTaskClick }) {
 
       {/* Tasks */}
       <div className="p-4">
-        <h4 className="font-semibold text-lg border-b pb-1 mb-2">Featured Tasks</h4>
+        <h4 className="font-semibold text-lg border-b border-gray-300 pb-1 mb-2">Featured Tasks</h4>
 
         <ul className="list-disc list-inside text-gray-600 space-y-1">
           {tasks.length > 0 ? (
             tasks.map((task, idx) => (
-              <li
+              <ul
                 key={idx}
                 className="cursor-pointer hover:text-[#005823]"
                 onClick={() => onTaskClick(task)}
               >
                 {task}
-              </li>
+              </ul >
             ))
           ) : (
             <p className="text-gray-400 italic">No tasks available</p>

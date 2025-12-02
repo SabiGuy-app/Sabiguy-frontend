@@ -5,11 +5,23 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Formik, ErrorMessage } from "formik";
 import { PersonalInfoSchema } from "../schema";
+import CoverageRadius from "../../../../components/Coverage";
 
 export default function PersonalInfoForm({ onNext }) {
   const handleSubmit = async (values) => {
     onNext(values);
   };
+
+  const initialValues = {
+  gender: "",
+  city: "",
+  address: "",
+  radius: 5,
+  allowAnywhere: true
+};
+
+console.log('Initial values:', initialValues);
+
 
   return (
     <AccountSetupLayout currentStep={0}>
@@ -31,11 +43,16 @@ export default function PersonalInfoForm({ onNext }) {
               gender: "",
               city: "",
               address: "",
+             radius: 5,
+          allowAnywhere: true
             }}
             validationSchema={PersonalInfoSchema}
+            
             onSubmit={handleSubmit}
           >
+
             {({ values, handleChange, handleBlur, handleSubmit, setFieldValue}) => (
+
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
                   <InputField
@@ -90,8 +107,13 @@ export default function PersonalInfoForm({ onNext }) {
                     className="text-[#db3a3a]"
                   />
                 </div>
-
-                <div className="flex justify-end mt-4">
+<CoverageRadius
+            initialRadius={values.radius}
+            initialAllowOutside={values.allowAnywhere}
+            onChange={(coverageData) => {
+              setFieldValue('coverageRadius', coverageData);
+            }}
+          />                <div className="flex justify-end mt-4">
                   <button
                     type="submit"
                     className="p-3 rounded-md text-white bg-[#005823BF] hover:bg-[#005823] transition-all duration-200"

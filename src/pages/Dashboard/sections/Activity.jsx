@@ -5,9 +5,24 @@ import { FiSearch } from "react-icons/fi";
 import { useState } from "react";
 import TabNavigation from "../../../components/dashboard/TabNav";
 import Activities from "../../../components/dashboard/Activities";
+import ServiceDetailsModal from "./ServiceDetailsModal";
+
+
 export default function ActivityPage () {
-      const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("All");
+  const [isServiceDetailsModalOpen, setIsServiceDetailsModalOpen] = useState(false);
+
   const tabs = ["All", "Bookings", "Payments", "Updates"];
+
+  const handleViewDetails = (request) => {
+    // setSelectedRequest(request);
+    setIsServiceDetailsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsServiceDetailsModalOpen(false);
+    // setSelectedRequest(null);
+  };
 
     const activities = [
     {
@@ -18,7 +33,7 @@ export default function ActivityPage () {
       timestamp: "2 hours ago",
       action: {
         label: "View Details",
-        onClick: () => console.log("View details clicked"),
+        // onClick:handleViewDetails
       },
     },
     {
@@ -103,6 +118,11 @@ export default function ActivityPage () {
         <DashboardLayout>
 {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+         <ServiceDetailsModal 
+                isOpen={isServiceDetailsModalOpen} 
+                onClose={handleCloseModal} 
+                // request={selectedRequest || {}} 
+              />
         <h1 className="font-bold text-2xl">Activity</h1>
       </div>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

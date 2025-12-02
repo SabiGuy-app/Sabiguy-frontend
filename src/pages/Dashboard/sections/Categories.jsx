@@ -2,47 +2,56 @@ import Navbar from "../../../components/dashboard/Navbar";
 import Card from "../../../components/dashboard/CategoriesPageCard";
 import Breadcrumbs from "../../../components/dashboard/BreadCrumbs";
 import { Home } from "lucide-react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useProviderStore } from "../../../stores/provider.store";
+
 
 export default function Categories() {
-
+  const { providers } = useProviderStore();
   const navigate = useNavigate();
 
-  // 💡 Centralized task → route mapping
-  const taskRoutes = {
-    "Fix leaking pipes": "/dashboard/categories/services",
-    "Install bathroom fittings": "/plumbing-services",
-    "Water heater repair": "/plumbing-services",
+  // Generate categories dynamically from providers
+  const categories = useMemo(() => {
+    if (!providers || providers.length === 0) {
+      return [];
+    }
 
-    "Emergency Ambulance": "/ambulance-services",
-    "Accident Response": "/ambulance-services",
+    // Group providers by category
+    const categoryMap = {};
+
+    providers.forEach((provider) => {
+
+const firstJob = provider.job?.[0]; // get first job safely
+
+  const category = firstJob?.title || "Other Services";
+      
+      if (!categoryMap[category]) {
+        categoryMap[category] = {
+          image: "/provider.jpg",
+          title: category,
+          tasks: new Set(),
+        };
+      }
+
+      // Add the provider's skill/service to tasks
+      if (firstJob?.service) {
+        categoryMap[category].tasks.add(firstJob?.service);
+      }
+    });
+
+    // Convert to array format and tasks Set to Array
+    return Object.values(categoryMap).map((cat) => ({
+      ...cat,
+      tasks: Array.from(cat.tasks),
+    }));
+  }, [providers]);
+
+  // Generate route based on task name
+  const getRouteFromTask = (task) => {
+    const slug = task.toLowerCase().replace(/\s+/g, "-");
+    return `/dashboard/categories/${slug}`;
   };
-
-  const categories = [
-    {
-      image: "/provider.jpg",
-      title: "Emergency Services",
-      tasks: [
-        "Fix leaking pipes",
-        "Install bathroom fittings",
-        "Water heater repair",
-      ],
-    },
-    {
-      image: "/provider.jpg",
-      title: "Emergency Services",
-      tasks: [],
-    },
-    {
-      image: "/provider.jpg",
-      title: "Emergency Services",
-      tasks: [
-        "Fix leaking pipes",
-        "Install bathroom fittings",
-        "Water heater repair",
-      ],
-    },
-  ];
 
   return (
     <>
@@ -58,18 +67,24 @@ export default function Categories() {
 
         <h1 className="font-semibold text-3xl mb-7">Explore Categories</h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 mt-5">
-          {categories.map((pro, idx) => (
-            <Card
-              key={idx}
-              {...pro}
-              onTaskClick={(task) => {
-                const route = taskRoutes[task];
-                if (route) navigate(route);
-              }}
-            />
-          ))}
-        </div>
+  {categories.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            <p>No categories available at the moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 mt-5 mb-3">
+            {categories.map((cat, idx) => (
+              <Card
+                key={idx}
+                {...cat}
+                onTaskClick={(task) => {
+                  const route = getRouteFromTask(task);
+                  navigate(route);
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

@@ -120,9 +120,6 @@ export default function StepOne({ onNext }) {
       try {
         setGoogleLoading(true);
         
-        console.log("Token response:", tokenResponse); // Debug log
-        console.log("Access token:", tokenResponse.access_token); // Debug log
-        
         // Get Google user info
         const userInfo = await fetch(
           "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -136,13 +133,12 @@ export default function StepOne({ onNext }) {
         const profile = await userInfo.json();
         console.log("Google Profile:", profile);
         
-        // Make sure you're sending the access_token
-        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-provider`, {
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ token: tokenResponse.access_token }), // Send access_token
+          body: JSON.stringify({ token: tokenResponse.access_token }), 
         });
         
         const data = await res.json();

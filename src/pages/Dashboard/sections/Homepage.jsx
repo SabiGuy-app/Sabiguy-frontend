@@ -5,8 +5,19 @@ import ProviderCard from "../../../components/dashboard/ProviderCard";
 import { Wallet, Bookmark, MessageSquare, } from "lucide-react";
 import Button from "../../../components/dashboard/Button";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../../stores/auth.store";
+import { getAllProviders } from "../../../api/povider";
+import { useState, useEffect } from "react";
+import { useProviderStore } from "../../../stores/provider.store";
+
 
 export default function DashboardHome() {
+    const [loading, setLoading] = useState(false);
+    const { token } = useAuthStore();
+  const { providers, setProviders } = useProviderStore();
+  
+
+const user = useAuthStore((state) => state.user);
   const navigate = useNavigate()
     const categories = [
     { title: "Emergency", image: "/1dfa55619d2d73389f6ae12f9bbf64ab94447f9d.jpg" },
@@ -15,41 +26,37 @@ export default function DashboardHome() {
     { title: "Transport & Logistics", image: "./Transport.jpg" },
   ];
 
-   const providers = [
-  {
-    image: "./provider.jpg",
-    name: "John Doe",
-    skill: "Plumber",
-    rating: "4.7",
-    reviews: "102",
-    price: "5,000",
-    location: "Ikeja, Lagos",
-  },
-  {
-    image: "/provider.jpg",
-    name: "Mary Okafor",
-    skill: "Electrician",
-    rating: "4.5",
-    reviews: "85",
-    price: "7,000",
-    location: "Lekki, Lagos",
-  },
-  {
-    image: "/provider.jpg",
-    name: "James Musa",
-    skill: "Driver",
-    rating: "4.6",
-    reviews: "98",
-    price: "4,000",
-    location: "Yaba, Lagos",
-  },
-];
+//  const handleGetProviders= async () => {
+//   setLoading(true);
+//  try {
+//   const providers = await getAllProviders();
+//   useAuthStore.getState().
+//  } catch (error) {
   
+//  }
+
+//  }
+
+ useEffect(() => {
+    const loadProviders = async () => {
+      const data = await getAllProviders(token);
+       
+
+
+          console.log("Setting providers:", data.data);
+
+      setProviders(data.data);
+    };
+
+    loadProviders();
+  }, []);
+
   return (
     <DashboardLayout>
 <div className="flex flex-col  md:flex-row md:items-center md:justify-between mb-6">
     <div>
-      <h2 className="text-2xl font-bold mb-3">Welcome Back, Adam 👋</h2>
+      <h2 className="text-2xl font-bold mb-3">  Welcome Back, {user.data?.fullName?.split(" ")[0]} 👋
+</h2>
       <p className="mb-3 text-sm">Plan, prioritize, and accomplish  your task with ease.</p>
       </div>
   <div className="flex gap-3 mt-4 md:mt-0">
@@ -62,7 +69,7 @@ export default function DashboardHome() {
 
       </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
          <DashboardCard 
         title="Wallet Balance" 
         amount="₦0.00" 
@@ -83,7 +90,7 @@ export default function DashboardHome() {
         value="New Messages" 
         icon={<MessageSquare size={20} />} 
       />
-    </div>
+    </div> */}
      <div className="mb-6 mt-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
 
@@ -103,7 +110,7 @@ export default function DashboardHome() {
       <div>
         <h3 className="text-xl font-semibold mb-4">Featured Providers</h3>
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {providers.map((pro, idx) => (
+          {providers?.map((pro, idx) => (
             <ProviderCard key={idx} {...pro} />
           ))}
         </div>

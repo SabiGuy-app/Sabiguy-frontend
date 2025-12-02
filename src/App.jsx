@@ -26,8 +26,9 @@ import ProfilePage from './pages/Dashboard/sections/Settings';
 import ContactPage from './pages/Dashboard/sections/Help';
 import Categories from './pages/Dashboard/sections/Categories';
 // import Pages from './pages/Dashboard/Services/pages';
-import AmbulanceServices from './pages/Dashboard/Services/pages/AmbulanceServices';
-// import AmbulanceServices from "./pages/Dashboard/Services/pages"
+import DynamicServicePage from './pages/Dashboard/Services/pages/ServicePage';
+import AmbulanceServices from './pages/Dashboard/Services/pages/AmbulanceServices'
+import ProviderDetails from './pages/Dashboard/sections/ProviderDetails';
 function App() {
 
   return (
@@ -51,7 +52,10 @@ function App() {
               <Route path="/dashboard/settings" element={<ProfilePage/>} />
               <Route path="/dashboard/help" element={<ContactPage/>} />
               <Route path="/dashboard/categories" element={<Categories/>} />
-              <Route path="/dashboard/categories/services" element={<AmbulanceServices/>} />
+             <Route path="/dashboard/categories/:serviceSlug" element={<DynamicServicePage />} />
+
+              <Route path="/dashboard/categories/emergency" element={<AmbulanceServices/>} />
+              <Route path="/dashboard/provider/:providerId" element={<ProviderDetails />} />
 
 
 

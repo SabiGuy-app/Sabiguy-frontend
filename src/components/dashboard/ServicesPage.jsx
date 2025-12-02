@@ -40,8 +40,8 @@ export default function ServicesPage ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {providers.map((item, idx) => (
-            <ProviderCard key={idx} {...item} />
-          ))}
+              <ProviderCard key={item._id || item.id || idx} {...item} />
+            ))}
         </div>
       </div>
     </>

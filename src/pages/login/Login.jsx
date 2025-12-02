@@ -14,16 +14,16 @@ import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import { LoginSchema } from "./schema";
 import ForgotPassword from "../Forgot-Password/ForgotPassword";
 import Loader from "../../components/Loader";
-
-
-
+import { useAuthStore } from "../../stores/auth.store";
+import { login, googleLogin, getUserByEmail } from "../../api/auth";
 export default function Login () {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false); // Fixed typo
+  const [googleLoading, setGoogleLoading] = useState(false); 
+  const { setUser, setToken } = useAuthStore();
 
   const navigate = useNavigate()
 
@@ -32,126 +32,179 @@ export default function Login () {
   };
 
 
+  // const handleLogin = async (values, { setSubmitting }) => {
+  //   setLoading(true);
+  //   setSuccessMessage("");
+
+  //   try {
+  //      const payload = {
+  //       email: values.email,
+  //       password: values.password,
+  //      }
+
+  //      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth`, payload);
+
+  //     if (res.data?.message) setSuccessMessage(res.data.message);
+
+  //     if (res.data?.token) {
+  //       localStorage.setItem("token", res.data.token);
+  //       setToken(res.data.token)
+  //       navigate("/dashboard");
+  //     }
+  //   } catch (error) {
+  //     console.error("Login failed:", error);
+
+  //     if (error.response) {
+  //       setErrorMessage(error.response.data?.message || "Login failed. Try again.");
+  //     } else if (error.request) {
+  //       setErrorMessage("No response from server. Please check your connection.");
+  //     } else {
+  //       setErrorMessage("Unexpected error occurred.");
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //    setSubmitting(false);
+
+  //   }
+
+  // };
+
   const handleLogin = async (values, { setSubmitting }) => {
-    setLoading(true);
-    setSuccessMessage("");
+  setLoading(true);
+  setSuccessMessage("");
 
-    try {
-       const payload = {
-        email: values.email,
-        password: values.password,
-       }
+  try {
+    const payload = {
+      email: values.email,
+      password: values.password,
+    };
 
-       const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth`, payload);
+    // 1. LOGIN
+    const res = await login(payload);
 
-      if (res.data?.message) setSuccessMessage(res.data.message);
+    if (res?.message) setSuccessMessage(res.message);
 
-      if (res.data?.token) {
-        localStorage.setItem("token", res.data.token);
-        navigate("/congrats");
-      }
-    } catch (error) {
-      console.error("Login failed:", error);
-
-      if (error.response) {
-        setErrorMessage(error.response.data?.message || "Login failed. Try again.");
-      } else if (error.request) {
-        setErrorMessage("No response from server. Please check your connection.");
-      } else {
-        setErrorMessage("Unexpected error occurred.");
-      }
-    } finally {
-      setLoading(false);
-     setSubmitting(false);
-
+    if (!res?.token) {
+      setErrorMessage("Login failed. Please try again.");
+      return;
     }
 
-  };
+    // Extract token + email
+    const token = res.token;
+    const loginEmail = res.email;
 
-//  const handleGoogleSuccess = async (credentialResponse) => {
-//   console.log("Google login successful:", credentialResponse);
-//   const token = credentialResponse.credential;
+    // Store token
+    localStorage.setItem("token", token);
+    useAuthStore.getState().setToken(token);
 
-//   setLoading(true);
-//   setErrorMessage("");
-//   setSuccessMessage("");
+    // 2. GET FULL USER DETAILS
+    const fullUser = await getUserByEmail(loginEmail);
 
-//   try {
-//     const res = await axios.post(
-//       `${import.meta.env.VITE_BASE_URL}/auth/google-login`,
-//       { token }, 
-//       {
+    // Store in Zustand
+    useAuthStore.getState().setUser(fullUser);
+
+    // 3. Redirect
+    navigate("/dashboard");
+
+  } catch (error) {
+    console.error("Login failed:", error);
+
+    if (error.response) {
+      setErrorMessage(error.response.data?.message || "Login failed. Try again.");
+    } else if (error.request) {
+      setErrorMessage("No response from server. Please check your connection.");
+    } else {
+      setErrorMessage("Unexpected error occurred.");
+    }
+
+  } finally {
+    setLoading(false);
+    setSubmitting(false);
+  }
+};
+
+
+// const googleLogin = useGoogleLogin({
+//   onSuccess: async (tokenResponse) => {
+//     try {
+//       setGoogleLoading(true);
+      
+//       console.log("Access token:", tokenResponse.access_token);
+      
+//       // Send access token to backend
+//       const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-login`, {
+//         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
 //         },
+//         body: JSON.stringify({ token: tokenResponse.access_token }),
+//       });
+      
+//       const data = await res.json();
+//       console.log("Server response:", data);
+      
+//       if (data?.token) {
+//         localStorage.setItem("token", data.token);
+//         setGoogleLoading(false);
+//         // Redirect to dashboard or home
+//         navigate('/dashboard');
+//       } else if (data.message === "Account not found. Please sign up") {
+//         setGoogleLoading(false);
+//         setErrorMessage(data.message);
+//       } else {
+//         setGoogleLoading(false);
+//         setErrorMessage(data.message || "Login failed");
 //       }
-//     );
-
-//     console.log("Server response:", res.data);
-
-//     if (res.data?.message) setSuccessMessage(res.data.message);
-
-//     if (res.data?.token) {
-//       localStorage.setItem("token", res.data.token);
-//       navigate("/congrats");
+//     } catch (err) {
+//       console.error(err);
+//       setGoogleLoading(false);
+//       setErrorMessage("Google login failed");
 //     }
-//   } catch (error) {
-//     console.error("Google login failed:", error);
+//   },
+  
+//   onError: () => {
+//     setErrorMessage("Google login failed.");
+//     setGoogleLoading(false);
+//   },
+// });
 
-//     if (error.response) {
-//       setErrorMessage(error.response.data?.message || "Login failed. Try again.");
-//     } else if (error.request) {
-//       setErrorMessage("No response from server. Please check your connection.");
-//     } else {
-//       setErrorMessage("Unexpected error occurred.");
-//     }
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-
-const googleLogin = useGoogleLogin({
+const GoogleLogin = useGoogleLogin({
   onSuccess: async (tokenResponse) => {
     try {
       setGoogleLoading(true);
-      
-      console.log("Access token:", tokenResponse.access_token);
-      
-      // Send access token to backend
-      const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token: tokenResponse.access_token }),
-      });
-      
-      const data = await res.json();
-      console.log("Server response:", data);
-      
-      if (data?.token) {
-        localStorage.setItem("token", data.token);
-        setGoogleLoading(false);
-        // Redirect to dashboard or home
-        navigate('/dashboard');
-      } else if (data.message === "Account not found. Please sign up") {
-        setGoogleLoading(false);
-        setErrorMessage(data.message);
-      } else {
-        setGoogleLoading(false);
+
+      const data = await googleLogin(tokenResponse.access_token);
+
+      if (!data?.token) {
         setErrorMessage(data.message || "Login failed");
+        setGoogleLoading(false);
+        return;
       }
+
+      const token = data.token;
+      const loginEmail = data.user.email;
+
+      // Store token
+      localStorage.setItem("token", token);
+      useAuthStore.getState().setToken(token);
+
+      // Get full user
+      const fullUser = await getUserByEmail(loginEmail);
+      useAuthStore.getState().setUser(fullUser);
+
+      navigate("/dashboard");
+      setGoogleLoading(false);
+
     } catch (err) {
       console.error(err);
       setGoogleLoading(false);
       setErrorMessage("Google login failed");
     }
   },
-  
+
   onError: () => {
-    setErrorMessage("Google login failed.");
     setGoogleLoading(false);
+    setErrorMessage("Google login failed.");
   },
 });
 
@@ -256,13 +309,8 @@ return (
                   <span className="mx-2 text-gray-500">or</span>
                   <div className="flex-grow border-t border-gray-300"></div>
                 </div>
-
-
-                {/* <div className="">
-      <GoogleLogin onSuccess={handleGoogleSuccess}/>
-    </div> */}
     <button
-  onClick={() => googleLogin()}
+  onClick={() => GoogleLogin()}
   disabled={googleLoading}
   className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
 >

@@ -2,7 +2,6 @@ import ServicesPage from "../../../../components/dashboard/ServicesPage";
 import { useNavigate } from "react-router-dom";
 import { Home, ChevronRight } from "lucide-react";
 
-
 export default function AmbulanceServices() {
   const navigate = useNavigate();
 
@@ -26,7 +25,7 @@ export default function AmbulanceServices() {
       breadcrumbs={[
     { label: "", to: "/dashboard", icon: Home },
     { label: "Categories", to: "/dashboard/categories" },
-    { label: "Fix leaking pipes" }
+    { label: "Ambulance Services" }
   ]}
     />
 

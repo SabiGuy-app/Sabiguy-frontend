@@ -1,44 +1,46 @@
 // data.js
 export const jobTitles = [
   { label: "Select Job Title", value: "" },
-  { label: "Emergency Services", value: "emergency" },
+  { label: "Emergency Services", value: "emergency_services" },
   { label: "Home & Repair Services", value: "home_repair" },
-  { label: "Domestic & Lifestyle Services", value: "domestic" },
+  { label: "Domestic & Lifestyle Services", value: "domestic_services" },
   { label: "Transport & Logistics Services", value: "transport" },
-  { label: "Professional Services", value: "professional" },
-  { label: "Freelance & Creative Services", value: "freelance" },
+  { label: "Professional Services", value: "professional_services" },
+  { label: "Freelance & Creative Services", value: "freelance_services" },
 ];
 
 export const allServices = {
-  emergency: [
-    { label: "Ambulance Services", value: "ambulance" },
+  emergency_services: [
+    { label: "Ambulance Services", value: "ambulance_services" },
     { label: "Towing & Roadside", value: "towing" },
-    { label: "Locksmiths", value: "locksmith" },
-    { label: "Security Services", value: "security" },
+    { label: "Locksmiths", value: "locksmiths" },
+    { label: "Security Services", value: "security_services" },
   ],
   home_repair: [
-    { label: "Plumbing & Electrical", value: "plumbing" },
-    { label: "Carpentry & Welding", value: "carpentry" },
-    { label: "Finishing & Aesthetics", value: "finishing" },
+    { label: "Plumbing", value: "plumbing" },
+    { label: "Electrical", value: "electrical" },
+    { label: "Welding", value: "welding" },
+    { label: "Carpentry", value: "carpentry" },
+    { label: "Finishing & Aesthetics", value: "aesthetics" },
   ],
-  domestic: [
-    { label: "Household Support", value: "support" },
+  domestic_services: [
+    { label: "Household Support", value: "household_support" },
     { label: "Childcare & Education", value: "childcare" },
-    { label: "Peronal & Beauty Services", value: "beauty" },
+    { label: "Peronal & Beauty Services", value: "beauty_services" },
   ],
   transport: [
-    { label: "Car driver", value: "car" },
-    { label: "Motorbike driver", value: "motorbike" },
-    { label: "Tricyle", value: "tricycle" },
+    { label: "Car driver", value: "car_driver" },
+    { label: "Motorbike driver", value: "motorbike_driver" },
+    { label: "Tricyle", value: "tricycle_driver" },
   ],
-  professional: [
+  professional_services: [
     { label: "Legal & Financial", value: "legal_financial" },
     { label: "Real Estate & Construction", value: "real_estate" },
-    { label: "Healthcare & Technology", value: "healthcare_tech" },
+    { label: "Healthcare & Technology", value: "healthcare_technology" },
   ],
-  freelance: [
-    { label: "Digital Creation", value: "digital" },
-    { label: "Content Creation", value: "content" },
-    { label: "Media Production", value: "media" },
+  freelance_services: [
+    { label: "Digital Creation", value: "digital_design" },
+    { label: "Content Creation", value: "content_creation" },
+    { label: "Media Production", value: "media_production" },
   ],
 };

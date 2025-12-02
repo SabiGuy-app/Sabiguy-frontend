@@ -66,6 +66,10 @@ try {
     address: initialValues.address,
     city: initialValues.city,
     gender: initialValues.gender,
+    coverageRadius: {
+       radius: initialValues.radius,
+       allowAnywhere:initialValues.allowAnywhere
+        }
   };
 
   response = await axios.post(
