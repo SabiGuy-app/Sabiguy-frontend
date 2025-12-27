@@ -1,11 +1,51 @@
 import { useState } from "react";
 import { Bell, Search, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import NotificationDrawer from "./Notification";
+import { useAuthStore } from "../../stores/auth.store";
 
 export default function Navbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+
+  const notifications = [
+    {
+      id: 1,
+      type: "message",
+      title: "New message from Steve",
+      message: "Hey, Let me know when you are on your way",
+      time: "5 min ago",
+      category: "today",
+      read: false,
+    },
+    {
+      id: 2,
+      type: "event",
+      title: "Upcoming event",
+      message: "Your scheduled plumbing service starts in 30 minutes.",
+      time: "1 hours ago",
+      category: "today",
+      read: false,
+    },
+    {
+      id: 3,
+      type: "booking",
+      title: "Bookings",
+      message: 'You have been book for "House wiring" by Chioma A.',
+      time: "2 hours ago",
+      category: "today",
+      read: false,
+    },
+  ];
+ 
+  const handleNotificationClick = () => {
+    setShowNotifications(true);
+    setUnreadCount(0)
+  };
 
   return (
     <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
@@ -47,9 +87,15 @@ export default function Navbar() {
       {/* Right Icons */}
       <div className="flex items-center space-x-4">
         {/* Bell */}
-        <button className="relative">
-          <Bell className="text-gray-600" size={22} />
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+        <button
+         onClick={handleNotificationClick}
+         className="relative">
+          <Bell size={24} />
+          {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center" >
+          {unreadCount}
+          </span>
+          )}
         </button>
 
         {/* Profile */}
@@ -58,7 +104,7 @@ export default function Navbar() {
           className="flex items-center"
         >
           <img
-            src="https://i.pravatar.cc/40"
+            src={user.data?.profilePicture}
             className="w-8 h-8 rounded-full border"
           />
         </button>
@@ -109,6 +155,11 @@ export default function Navbar() {
           </div>
         </div>
       )}
+       <NotificationDrawer
+              isOpen={showNotifications}
+              onClose={() => setShowNotifications(false)}
+              notifications={notifications}
+            />
     </header>
   );
 }

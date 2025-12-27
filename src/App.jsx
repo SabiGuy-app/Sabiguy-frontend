@@ -25,10 +25,15 @@ import ActivityPage from './pages/Dashboard/sections/Activity';
 import ProfilePage from './pages/Dashboard/sections/Settings';
 import ContactPage from './pages/Dashboard/sections/Help';
 import Categories from './pages/Dashboard/sections/Categories';
-// import Pages from './pages/Dashboard/Services/pages';
 import DynamicServicePage from './pages/Dashboard/Services/pages/ServicePage';
 import AmbulanceServices from './pages/Dashboard/Services/pages/AmbulanceServices'
 import ProviderDetails from './pages/Dashboard/sections/ProviderDetails';
+import ProviderDashboard from './pages/ProviderDashboard/sections/Homepage';
+import HireAlerts from './pages/ProviderDashboard/sections/HireAlerts/HireAlerts';
+import LiveTrackingPage from './pages/ProviderDashboard/sections/HireAlerts/TrackProvider';
+import ProviderProfilePage from './pages/ProviderDashboard/sections/Settings';
+import Notifications from './pages/ProviderDashboard/sections/Notification';
+
 function App() {
 
   return (
@@ -45,17 +50,25 @@ function App() {
               <Route path="/success" element={<Success/>} />
               <Route path="/login" element={<Login/>} />
               <Route path="/dashboard" element={<DashboardHome/>} />
+               <Route path="/dashboard/provider/hire-alert" element={<HireAlerts/>} />                
+               <Route path="/dashboard/provider" element={<ProviderDashboard/>} />
               <Route path="/bookings" element={<Bookings/>} />
               <Route path="/dashboard/saved" element={<SavedProfile/>} />
               <Route path="/dashboard/chat" element={<ChatPage/>} />
+              <Route path="/dashboard/provider/chat" element={<ChatPage/>} />
               <Route path="/dashboard/activity" element={<ActivityPage/>} />
+               <Route path="/dashboard/provider/activity" element={<ActivityPage/>} />
               <Route path="/dashboard/settings" element={<ProfilePage/>} />
               <Route path="/dashboard/help" element={<ContactPage/>} />
+              <Route path="/dashboard/provider/help" element={<ContactPage/>} />
               <Route path="/dashboard/categories" element={<Categories/>} />
              <Route path="/dashboard/categories/:serviceSlug" element={<DynamicServicePage />} />
-
               <Route path="/dashboard/categories/emergency" element={<AmbulanceServices/>} />
               <Route path="/dashboard/provider/:providerId" element={<ProviderDetails />} />
+              <Route path="/dashboard/provider/track" element={<LiveTrackingPage />} />
+              <Route path="/dashboard/provider/settings" element={<ProviderProfilePage/>} />
+              <Route path="/dashboard/provider/notification" element={<Notifications/>} />
+
 
 
 

@@ -12,7 +12,7 @@ export default function DashboardCard({ title, value, button, figure, icon, amou
       <p className="text-2xl text-black font-semibold text-center mb-3 mt-3">{figure}</p>
                   <p className="text-2xl text-black font-semibold">{amount}</p>
 
-            <p className="text-xl text-black font-semibold text-center mb-3">{value}</p>
+            <p className="text-xl text-black font-semibold  mb-3">{value}</p>
 
       {button && (
         <button className="bg-[#005823BF] w-26 text-white p-2 rounded-lg text-sm font-medium hover:bg-[#00471d]">

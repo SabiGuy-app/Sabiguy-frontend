@@ -11,7 +11,6 @@ import { useState } from "react";
 
 // Reusable Request Card Component
 export default function RequestCard({ request, onViewDetails }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getStatusStyles = (status) => {
     const styles = {

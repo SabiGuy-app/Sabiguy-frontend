@@ -8,7 +8,10 @@ import {
   Clock, 
   Star, 
   MapPin,
-  Globe
+  Globe,
+  Award,
+  ShieldAlert,
+  ShieldCheck
 } from "lucide-react";
 
 export default function ProviderDetails() {
@@ -48,10 +51,26 @@ export default function ProviderDetails() {
     console.log("Payment initiated for:", selectedService);
   };
 
+ const getStatusConfig = (status) => {
+  const configs = {
+     verified: {
+      icon: <ShieldCheck className="w-3 h-3" />,
+      style: "bg-gray-100 text-green-600 border-green-300",
+    },
+    unverified: {
+      icon: <ShieldAlert className="w-3 h-3" />,
+      style: "bg-red-100 text-red-600 border-red-300",
+    },
+  }
+    
+    return configs[status] || configs['verified'];
+  };
+const { icon, style } = getStatusConfig(provider.status);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
+      <div className="bg-white px-6 py-4">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
@@ -68,15 +87,20 @@ export default function ProviderDetails() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-start gap-4">
                 <img
-                  src={provider.image}
+                  src={provider.profilePicture}
                   alt={provider.name}
                   className="w-20 h-20 rounded-full object-cover"
                 />
-                <div className="flex-1">
+                <div className="flex flex-col ">
                   <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-semibold">{provider.name}</h1>
-                    <CheckCircle className="w-5 h-5 text-green-500 fill-green-500" />
-                  </div>
+                    <h1 className="text-2xl font-semibold">{provider.fullName}</h1>
+<span
+  className={`flex items-center gap-1 ml-4 px-3 text-xs font-medium rounded-full border ${style}`}
+>
+  {icon}
+  {provider.status || "verified"}
+</span>            
+                 </div>
                   <p className="text-gray-600 mb-2">{provider.job?.[0]?.title || provider.skill}</p>
                   <div className="flex items-center gap-1 mb-2">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -85,30 +109,30 @@ export default function ProviderDetails() {
                   </div>
                   <div className="flex items-center gap-1 text-gray-600">
                     <MapPin className="w-4 h-4" />
-                    <span className="text-sm">{provider.location}</span>
+                    <span className="text-sm">{provider.city}</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
+                <div className="grid grid-cols-3 gap-9  pt-6">
                 <div className="text-center">
-                  <Briefcase className="w-5 h-5 mx-auto mb-1 text-gray-600" />
-                  <p className="text-2xl font-semibold">{provider.jobsCompleted || 25}</p>
+                  <Award className="w-5 h-5 mx-auto mb-1 text-[#005823]" />
+                  <p className="text font-semibold">{provider.jobsCompleted || 25}</p>
                   <p className="text-sm text-gray-600">Jobs Done</p>
                 </div>
                 <div className="text-center">
                   <Clock className="w-5 h-5 mx-auto mb-1 text-gray-600" />
-                  <p className="text-2xl font-semibold">&lt; 2 hours</p>
+                  <p className="font-semibold">&lt; 2 hours</p>
                   <p className="text-sm text-gray-600">Response Time</p>
                 </div>
                 <div className="text-center">
                   <Star className="w-5 h-5 mx-auto mb-1 text-yellow-400 fill-yellow-400" />
-                  <p className="text-2xl font-semibold">{provider.rating}</p>
+                  <p className=" font-semibold">{provider.rating}</p>
                   <p className="text-sm text-gray-600">Rating</p>
                 </div>
               </div>
             </div>
+              </div>
+
+            
 
             {/* About Section */}
             <div className="bg-white rounded-lg shadow p-6">
@@ -149,17 +173,17 @@ export default function ProviderDetails() {
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold mb-4">Services & Pricing</h2>
               <div className="space-y-3">
-                {provider.job && provider.job.length > 0 ? (
-                  provider.job.map((service, idx) => (
+                {provider.service && provider.service.length > 0 ? (
+                  provider.service.map((service, idx) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
                     >
                       <div>
-                        <h3 className="font-medium">{service.title}</h3>
-                        <p className="text-sm text-gray-600">
-                            price
-                          {/* ₦{service.price.toLocaleString()} • {service.unit || "Per service"} */}
+                        <h3 className="font-medium">{service.serviceName}</h3>
+                        <p className="text-sm font-semibold text-[#005823]">
+                            
+                          ₦{service.price.toLocaleString()} • Per {service.pricingModel || "Per service"}
                         </p>
                       </div>
                       <button
@@ -168,18 +192,23 @@ export default function ProviderDetails() {
                       >
                         Book
                       </button>
+
                     </div>
+                    
                   ))
+                  
                 ) : (
                   <div className="text-center py-4 text-gray-500">
                     No services available
                   </div>
                 )}
-                <button className="w-full text-center text-blue-600 hover:text-blue-700 font-medium py-2">
+                <button className="w-full text-center hover:text-[#005823] font-medium py-2">
                   View all
                 </button>
               </div>
             </div>
+          
+
 
             {/* Recent Reviews */}
             <div className="bg-white rounded-lg shadow p-6">
@@ -208,6 +237,56 @@ export default function ProviderDetails() {
                 ))}
               </div>
             </div>
+              {/* WORK VISUALS SECTION */}
+<div className="bg-white rounded-lg shadow p-6 mt-6">
+  <h2 className="text-2xl font-semibold mb-4">Work Gallery</h2>
+
+  {provider.workVisuals && provider.workVisuals.length > 0 ? (
+    provider.workVisuals.map((visual, idx) => (
+      <div key={idx} className="space-y-4">
+         {/* VIDEOS */}
+        {visual.videos && visual.videos.length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium mb-2">Videos</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {visual.videos.map((vid, i) => (
+                <video
+                  key={i}
+                  controls
+                  className="w-full rounded-lg border"
+                >
+                  <source src={vid} type="video/mp4" />
+                </video>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* PICTURES */}
+        {visual.pictures && visual.pictures.length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium mb-2">Pictures</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {visual.pictures.map((pic, i) => (
+                <img
+                  key={i}
+                  src={pic}
+                  alt="Work"
+                  className="w-full h-40 object-cover rounded-lg border"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+       
+
+      </div>
+    ))
+  ) : (
+    <p className="text-gray-500">No work visuals available.</p>
+  )}
+</div>
           </div>
 
           {/* Right Column - Booking Summary */}
@@ -242,14 +321,35 @@ export default function ProviderDetails() {
                   </button>
                 </>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>Select a service to view booking summary</p>
+                <div className="rounded-lg">
+                <div className="flex items-start gap-4">
+  <img
+                  src={provider.profilePicture}
+                  alt={provider.name}
+                  className="w-20 h-20 rounded-full object-cover"
+                />
+                <div className="flex flex-col ">
+                    <h1 className="text-xs">{provider.fullName}</h1>
+                     <p className="text-gray-600  font-semibold">{provider.job?.[0]?.title || provider.skill}</p>
+<div className="flex items-center gap-1 mb-2 text-xs">
+                    <Star className="w-2 h-2 fill-yellow-400 text-yellow-400" />
+                    <span className="font-medium">{provider.rating}</span>
+                    <span className="text-gray-500">({provider.reviews} reviews)</span>
+                  </div>
+                </div>
+                </div>
+                 <h2 className="mt-3 ">Range</h2>
+                 <p className="font-semibold text-lg">$50,000 - $100,000/month</p>
+ <button
+                    className="w-full mt-10 bg-[#005823CC] text-white py-3 rounded-lg hover:bg-green-700 font-medium"
+                  >
+Book Now                  </button>
                 </div>
               )}
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
   );
 }

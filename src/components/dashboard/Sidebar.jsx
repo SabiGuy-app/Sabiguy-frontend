@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, HelpCircle, MessageCircle } from "lucide-react";
-import { FaChartBar, FaBook, FaHeart, FaComments, FaClipboardList, FaCog, FaQuestionCircle } from "react-icons/fa";
+import { Menu, X, HelpCircle, MessageCircle, Home, LogOut, Gift, Heart, Book, ClipboardList, Cog} from "lucide-react";
 
 
 const links = [
-  { name: "Dashboard", path: "/dashboard", icon: <FaChartBar/> },
-  { name: "My Bookings", path: "/bookings", icon: <FaBook/> },
-  { name: "Saved Profile", path: "/dashboard/saved", icon: <FaHeart/> },
+  { name: "Home", path: "/dashboard", icon: <Home/> },
+  { name: "My Bookings", path: "/bookings", icon: <Book/> },
+  { name: "Saved Profile", path: "/dashboard/saved", icon: <Heart/> },
   { name: "Chat", path: "/dashboard/chat", icon: <MessageCircle/> },
-  { name: "Activity", path: "/dashboard/activity", icon: <FaClipboardList/> },
-  { name: "Settings", path: "/dashboard/settings", icon: <FaCog/> },
+  { name: "Activity", path: "/dashboard/activity", icon: <ClipboardList/> },
+  // { name: "Referrals", path: "/dashboard/", icon: <Gift/> },
+  { name: "Settings", path: "/dashboard/settings", icon: <Cog/> },
   { name: "Help", path: "/dashboard/help", icon: <HelpCircle/> },
+  { name: "Logout", path: "/", icon: <LogOut/> },
+
+
 ];
 
 export default function Sidebar() {
@@ -30,7 +33,7 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed  top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
+        className={`fixed top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         {/* <h1 className="text-3xl font-bold text-[#005823] mb-10">SabiGuy</h1> */}
