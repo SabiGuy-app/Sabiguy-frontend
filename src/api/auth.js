@@ -1,4 +1,5 @@
 import api from "./axios";
+import { removeFCMToken } from "./fcm";
 
 
 // LOGIN (email + password)
@@ -30,3 +31,25 @@ export const googleLogin = async (accessToken) => {
   });
   return data;
 };
+
+export async function handleLogout() {
+  try {
+    // Remove FCM token from backend
+    await removeFCMToken();
+    
+    // Clear local storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Clear Zustand store
+    useAuthStore.getState().clearAuth();
+    
+    // Redirect to login
+    navigate('/login');
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Still logout even if FCM removal fails
+    localStorage.removeItem('token');
+    navigate('/login');
+  }
+}

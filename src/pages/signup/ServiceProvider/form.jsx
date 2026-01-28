@@ -32,13 +32,10 @@ const handleNext = (data) => {
   };    const handleBack = () => setStep ((prev) => Math.max (prev -1, 0));
 
     const forms = [
-        <SkillsVerification onNext={handleNext} onBack={handleBack}/>,
-
         <StepOne onNext={handleNext} />,
         <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack}/>,
         <StepThree onNext={handleNext} onBack={handleBack}/>,
        <PersonalInfoForm onNext={handleNext} onBack={handleBack}/>,
-        // <Identity onNext={handleNext} onBack={handleBack}/>,
         <AccountTypeForm onNext={handleNext} initialValues={formData} onBack={handleBack}/>,
         <FacialCapture onNext={handleNext} onBack={handleBack}/>,
         <FaceCapture onNext={handleNext} onBack={handleBack}/>,

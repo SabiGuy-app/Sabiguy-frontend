@@ -1,12 +1,5 @@
 import { useState, useEffect } from "react";
-import { 
-  FiBell, 
-  FiCalendar, 
-  FiMessageSquare, 
-  FiPhone,
-  FiX
-} from "react-icons/fi";
-import { FaMoneyBillWave } from "react-icons/fa";
+import { FiBell} from "react-icons/fi";
 
 export default function LiveTrackPage () {
   const [timeRemaining, setTimeRemaining] = useState(7068); // 1:57:48 in seconds

@@ -5,7 +5,7 @@ import Navbar from "../../components/layouts/navbar";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
@@ -16,6 +16,11 @@ import ForgotPassword from "../Forgot-Password/ForgotPassword";
 import Loader from "../../components/Loader";
 import { useAuthStore } from "../../stores/auth.store";
 import { login, googleLogin, getUserByEmail } from "../../api/auth";
+import { requestNotificationPermission, listenForMessages } from "../../services/fcmService";
+import { registerUserFCMToken } from "../../api/fcm";
+import { toast } from "react-toastify";
+
+
 export default function Login () {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,43 +36,35 @@ export default function Login () {
     setShowPassword((prev) => !prev);
   };
 
+ useEffect(() => {
+listenForMessages((payload) => {
+      // Handle notification in app
+      console.log('Notification received in foreground:', payload);
+      
+      toast.info(
+      payload?.notification?.title || "New notification",
+      {
+        description: payload?.notification?.body,
+      }
+    );
+    });
+  }, []);
 
-  // const handleLogin = async (values, { setSubmitting }) => {
-  //   setLoading(true);
-  //   setSuccessMessage("");
+  const registerFCM = async () => {
+    try {
+      const fcmToken = await requestNotificationPermission();
+      
+      if (fcmToken) {
+        await registerUserFCMToken(fcmToken);
+        console.log('✅ FCM token registered successfully');
+      }
+    } catch (error) {
+      console.error('Failed to register FCM:', error);
+      // Don't block login if FCM fails
+    }
+  };
 
-  //   try {
-  //      const payload = {
-  //       email: values.email,
-  //       password: values.password,
-  //      }
 
-  //      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth`, payload);
-
-  //     if (res.data?.message) setSuccessMessage(res.data.message);
-
-  //     if (res.data?.token) {
-  //       localStorage.setItem("token", res.data.token);
-  //       setToken(res.data.token)
-  //       navigate("/dashboard");
-  //     }
-  //   } catch (error) {
-  //     console.error("Login failed:", error);
-
-  //     if (error.response) {
-  //       setErrorMessage(error.response.data?.message || "Login failed. Try again.");
-  //     } else if (error.request) {
-  //       setErrorMessage("No response from server. Please check your connection.");
-  //     } else {
-  //       setErrorMessage("Unexpected error occurred.");
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //    setSubmitting(false);
-
-  //   }
-
-  // };
 
   const handleLogin = async (values, { setSubmitting }) => {
   setLoading(true);
@@ -97,14 +94,20 @@ export default function Login () {
     localStorage.setItem("token", token);
     useAuthStore.getState().setToken(token);
 
+        navigate("/dashboard");
+
+
     // 2. GET FULL USER DETAILS
     const fullUser = await getUserByEmail(loginEmail);
 
     // Store in Zustand
     useAuthStore.getState().setUser(fullUser);
 
+    // Register FCM token
+    await registerFCM();
+
     // 3. Redirect
-    navigate("/dashboard");
+    // navigate("/dashboard");
 
   } catch (error) {
     console.error("Login failed:", error);
@@ -122,51 +125,6 @@ export default function Login () {
     setSubmitting(false);
   }
 };
-
-
-// const googleLogin = useGoogleLogin({
-//   onSuccess: async (tokenResponse) => {
-//     try {
-//       setGoogleLoading(true);
-      
-//       console.log("Access token:", tokenResponse.access_token);
-      
-//       // Send access token to backend
-//       const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-login`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({ token: tokenResponse.access_token }),
-//       });
-      
-//       const data = await res.json();
-//       console.log("Server response:", data);
-      
-//       if (data?.token) {
-//         localStorage.setItem("token", data.token);
-//         setGoogleLoading(false);
-//         // Redirect to dashboard or home
-//         navigate('/dashboard');
-//       } else if (data.message === "Account not found. Please sign up") {
-//         setGoogleLoading(false);
-//         setErrorMessage(data.message);
-//       } else {
-//         setGoogleLoading(false);
-//         setErrorMessage(data.message || "Login failed");
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       setGoogleLoading(false);
-//       setErrorMessage("Google login failed");
-//     }
-//   },
-  
-//   onError: () => {
-//     setErrorMessage("Google login failed.");
-//     setGoogleLoading(false);
-//   },
-// });
 
 const GoogleLogin = useGoogleLogin({
   onSuccess: async (tokenResponse) => {
@@ -191,6 +149,8 @@ const GoogleLogin = useGoogleLogin({
       // Get full user
       const fullUser = await getUserByEmail(loginEmail);
       useAuthStore.getState().setUser(fullUser);
+
+      await registerFCM();
 
       navigate("/dashboard");
       setGoogleLoading(false);

@@ -1,4 +1,4 @@
-import { FiUser, FiCreditCard, FiLock, FiSettings } from "react-icons/fi";
+import { FiUser, FiCreditCard, FiLock, FiSettings, FiGift } from "react-icons/fi";
 
 // Tab Navigation Component
 export default function ProfileTabs({ activeTab, onTabChange }) {
@@ -7,6 +7,8 @@ export default function ProfileTabs({ activeTab, onTabChange }) {
     { id: "wallet", label: "Wallet", icon: FiCreditCard },
     { id: "password", label: "Password", icon: FiLock },
     { id: "settings", label: "Settings & preferences", icon: FiSettings },
+    { id: "referrals", label: "Referrals", icon: FiGift },
+
   ];
 
   return (

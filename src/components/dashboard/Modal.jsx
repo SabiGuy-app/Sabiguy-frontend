@@ -1,38 +1,47 @@
-import { useState } from "react";
-import { FiX } from "react-icons/fi";
+import React, { useEffect } from "react";
 
-// Reusable Modal Component
-export default function Modal({ isOpen, onClose, title, children }) {
+function Modal({ isOpen, onClose, title, children }) {
+  // Close on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <FiX size={24} />
-          </button>
-        </div>
-        
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="bg-white rounded-2xl shadow-lg w-[90%] sm:w-[80%] md:w-[600px] max-h-[90vh] overflow-y-auto p-6 relative"
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          aria-label="Close modal"
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl"
+        >
+          ✕
+        </button>
+
+        {/* Title */}
+        {title && (
+          <h2 className="text-xl sm:text-2xl font-semibold text-center mb-4">
+            {title}
+          </h2>
+        )}
+
         {/* Content */}
-        <div className="p-6">
-          {children}
-        </div>
+        <div className="text-gray-700">{children}</div>
       </div>
     </div>
   );
 }
 
-
+export default Modal;

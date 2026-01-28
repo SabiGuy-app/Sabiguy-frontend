@@ -74,7 +74,7 @@ export default function ProviderProfilePage () {
                       <ProviderProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
               
                       {/* Tab Content */}
-                      {activeTab === "profile" && <ProviderProfileInfoTab profile={profile} />}
+                      {/* {activeTab === "profile" && <ProviderProfileInfoTab profile={profile} />} */}
                       {activeTab === "wallet" && <ProviderWalletTab profile={profile} />}
                       {activeTab === "password" && <PasswordTab profile={profile} />}
                       {activeTab === "service" && <ProviderServiceProfileTab profile={profile} />}

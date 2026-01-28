@@ -15,7 +15,7 @@ export default function ServicesCard({ logo, title, onClick }) {
   <div className="transition-transform duration-300 ease-out group-hover:scale-105 group-hover:-translate-y-1">
         {logo}
        </div>
-        <p className="text-lg font-semibold mt-3 text-black">
+        <p className="text-xs font-semibold mt-3 text-black">
           {title}
            </p>
           

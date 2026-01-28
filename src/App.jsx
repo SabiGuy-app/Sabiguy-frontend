@@ -18,7 +18,7 @@ import SignupPage from './pages/signup/ServiceUser';
 import SignupForm from './pages/signup/ServiceProvider';
 import Login from './pages/login/Login';
 import DashboardHome from './pages/Dashboard/sections/Homepage';
-import Bookings from './pages/Dashboard/sections/Bookings';
+import Bookings from './pages/Dashboard/sections/Bookings/Bookings';
 import SavedProfile from './pages/Dashboard/sections/SavedProfile';
 import ChatPage from './pages/Dashboard/sections/Chat';
 import ActivityPage from './pages/Dashboard/sections/Activity';
@@ -33,14 +33,25 @@ import HireAlerts from './pages/ProviderDashboard/sections/HireAlerts/HireAlerts
 import LiveTrackingPage from './pages/ProviderDashboard/sections/HireAlerts/TrackProvider';
 import ProviderProfilePage from './pages/ProviderDashboard/sections/Settings';
 import Notifications from './pages/ProviderDashboard/sections/Notification';
-
+import ReviewModalsExample from './pages/Dashboard/Examples';
+import SearchingLoader from './components/dashboard/Searching';
+import AvailableProviders from './pages/Dashboard/sections/Bookings/AvailableProviders';
+import BookingSummary from './pages/Dashboard/sections/Bookings/BookingSummary';
+import PickupLocation from './pages/Dashboard/sections/Bookings/PickupLocation';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 function App() {
 
+
   return (
+    <>
+          <ToastContainer position="top-right" autoClose={5000} />
+
     <Router>
       <div>
         <Routes>
               <Route path="/" element={<Welcome/>} />
+                   <Route path="/eng" element={<ReviewModalsExample/>} />
               <Route path="/signup" element={<SignupPage/>} />
               <Route path="/service-provider/signup" element={<SignupForm/>} />
               <Route path="/congrats" element={<Congrats/>} />
@@ -65,16 +76,17 @@ function App() {
              <Route path="/dashboard/categories/:serviceSlug" element={<DynamicServicePage />} />
               <Route path="/dashboard/categories/emergency" element={<AmbulanceServices/>} />
               <Route path="/dashboard/provider/:providerId" element={<ProviderDetails />} />
-              <Route path="/dashboard/provider/track" element={<LiveTrackingPage />} />
+              <Route path="/dashboard/provider/track" element={<PickupLocation />} />
               <Route path="/dashboard/provider/settings" element={<ProviderProfilePage/>} />
               <Route path="/dashboard/provider/notification" element={<Notifications/>} />
-
-
-
+              <Route path="/dashboard/provider/searching" element={<SearchingLoader/>} />
+              <Route path="/dashboard/provider/ava" element={<AvailableProviders/>} />
+              <Route path="/dashboard/provider/summary" element={<BookingSummary/>} />
 
         </Routes>
         </div>
     </Router>
+    </>
   )
 }
 

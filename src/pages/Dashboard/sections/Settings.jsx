@@ -8,23 +8,28 @@ import { FiUser} from "react-icons/fi";
 import WalletTab from "../../../components/dashboard/WalletTab";
 import PasswordTab from "../../../components/dashboard/PasswordTab";
 import SettingsTab from "../../../components/dashboard/SettingsTab";
+import { useAuthStore } from "../../../stores/auth.store";
+import ReferralsTab from "../../../components/provider-dashboard/ReferralsTab";
+
 
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
+  const user = useAuthStore((state) => state.user);
+
 
   // Mock profile data
   const profile = {
     name: "Stephen Gerrad",
     firstName: "Gerrad",
-    lastName: "Stephen",
+    lastName: "Sthen",
     email: "Stephengerrad01@gmail.com",
     phone: "+234 813 772 6280",
     address: "24, Eleyele street",
     city: "Ibadan",
     state: "Oyo",
     rating: 4.6,
-    avatar: null, // You can add avatar URL here
+    avatar: null, 
   };
 
   return (
@@ -41,8 +46,8 @@ export default function ProfilePage() {
           <div className="flex items-center gap-4">
             {/* Avatar */}
             <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-              {profile.avatar ? (
-                <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
+              {user.data?.profilePicture ? (
+                <img src={user.data?.profilePicture} alt={user.data?.fullName} className="w-full h-full object-cover" />
               ) : (
                 <FiUser size={32} className="text-gray-500" />
               )}
@@ -51,10 +56,10 @@ export default function ProfilePage() {
             {/* User Info */}
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                {profile.name}
+                {user.data?.fullName}
               </h2>
-              <p className="text-sm text-gray-600 mb-1">{profile.email}</p>
-              <p className="text-sm text-gray-600">{profile.phone}</p>
+              <p className="text-sm text-gray-600 mb-1">{user.data?.email}</p>
+              <p className="text-sm text-gray-600">{user.data?.phoneNumber}</p>
             </div>
           </div>
 
@@ -76,10 +81,12 @@ export default function ProfilePage() {
         <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Tab Content */}
-        {activeTab === "profile" && <ProfileInfoTab profile={profile} />}
+        {activeTab === "profile" && <ProfileInfoTab user={user} />}
         {activeTab === "wallet" &&  <WalletTab/> }
         {activeTab === "password" && <PasswordTab/>}
         {activeTab === "settings" && <SettingsTab/> }
+        {activeTab === "referrals" && <ReferralsTab profile={profile} />}
+        
       </div>
       </div>
     </DashboardLayout>

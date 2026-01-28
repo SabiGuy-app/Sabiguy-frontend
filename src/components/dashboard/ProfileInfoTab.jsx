@@ -1,4 +1,4 @@
-export default function ProfileInfoTab({ profile, onProfileUpdate }) {
+export default function ProfileInfoTab({ user, onProfileUpdate }) {
   return (
     <div className="mb-12">
       <h2 className="text-xl font-semibold text-gray-900 mt-5 mb-6">Personal Information</h2>
@@ -12,7 +12,7 @@ export default function ProfileInfoTab({ profile, onProfileUpdate }) {
             </label>
             <input
               type="text"
-              defaultValue={profile.firstName}
+              defaultValue={user.data?.fullName}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>
@@ -22,7 +22,7 @@ export default function ProfileInfoTab({ profile, onProfileUpdate }) {
             </label>
             <input
               type="text"
-              defaultValue={profile.lastName}
+              defaultValue={user.data?.fullName}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>
@@ -35,7 +35,8 @@ export default function ProfileInfoTab({ profile, onProfileUpdate }) {
           </label>
           <input
             type="email"
-            defaultValue={profile.email}
+            readOnly
+            defaultValue={user.data?.email}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
           />
         </div>
@@ -47,7 +48,7 @@ export default function ProfileInfoTab({ profile, onProfileUpdate }) {
           </label>
           <input
             type="tel"
-            defaultValue={profile.phone}
+            defaultValue={user.data?.phoneNumber}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
           />
         </div>
@@ -59,7 +60,7 @@ export default function ProfileInfoTab({ profile, onProfileUpdate }) {
           </label>
           <input
             type="text"
-            defaultValue={profile.address}
+            defaultValue={user.data?.address}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
           />
         </div>
@@ -72,7 +73,7 @@ export default function ProfileInfoTab({ profile, onProfileUpdate }) {
             </label>
             <input
               type="text"
-              defaultValue={profile.city}
+              defaultValue={user.data?.city}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>
@@ -82,7 +83,8 @@ export default function ProfileInfoTab({ profile, onProfileUpdate }) {
             </label>
             <input
               type="text"
-              defaultValue={profile.state}
+              defaultValue={user.data?.state}
+              readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>

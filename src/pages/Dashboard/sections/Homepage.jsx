@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useProviderStore } from "../../../stores/provider.store";
 import { Home, Wrench, CircleAlert, Truck, Briefcase, Palette } from "lucide-react";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
+import { sendTestNotification } from "../../../api/fcm";
 
 
 export default function DashboardHome() {
@@ -38,27 +39,12 @@ const user = useAuthStore((state) => state.user);
     {logo: <Briefcase size={80} className="bg-purple-50 text-purple-500 rounded-full p-5 " />, title: "Professional Services" },
     {logo: <Palette size={80} className="bg-[#E83781]/10 text-[#E83781]  rounded-full p-5 " />, title: "Freelance & Creative Services" },
 
-
   ]
-//  const handleGetProviders= async () => {
-//   setLoading(true);
-//  try {
-//   const providers = await getAllProviders();
-//   useAuthStore.getState().
-//  } catch (error) {
-  
-//  }
-
-//  }
 
  useEffect(() => {
     const loadProviders = async () => {
       const data = await getAllProviders(token);
-       
-
-
           console.log("Setting providers:", data.data);
-
       setProviders(data.data);
     };
 
@@ -79,6 +65,11 @@ const user = useAuthStore((state) => state.user);
     onClick={() => navigate("/dashboard/categories")}>
       Browse service</Button>
         <Button variant="primary">Request service</Button>
+<button onClick={async () => {
+  await testSelectProvider('Hello!, THis is a test notification', 'Test notification');
+}}>
+  Send Test Notification
+</button>
 
 
       </div> */}
@@ -92,7 +83,7 @@ const user = useAuthStore((state) => state.user);
 
        
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
         {services.map((ser, idx) => (
           <ServicesCard key={idx} logo={ser.logo} title={ser.title} />
         ))}
