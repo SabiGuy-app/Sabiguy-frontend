@@ -13,6 +13,7 @@ export default function ProfileInfoTab({ user, onProfileUpdate }) {
             <input
               type="text"
               defaultValue={user.data?.fullName}
+              readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>
@@ -23,6 +24,7 @@ export default function ProfileInfoTab({ user, onProfileUpdate }) {
             <input
               type="text"
               defaultValue={user.data?.fullName}
+              readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>
