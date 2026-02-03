@@ -4,19 +4,16 @@ import TabNavigation from "../../../components/dashboard/TabNav";
 import ProfileInfoTab from "../../../components/dashboard/ProfileInfoTab";
 import ProfileTabs from "../../../components/dashboard/ProfileTabs";
 import { useState } from "react";
-import { FiUser} from "react-icons/fi";
+import { FiUser } from "react-icons/fi";
 import WalletTab from "../../../components/dashboard/WalletTab";
 import PasswordTab from "../../../components/dashboard/PasswordTab";
 import SettingsTab from "../../../components/dashboard/SettingsTab";
 import { useAuthStore } from "../../../stores/auth.store";
 import ReferralsTab from "../../../components/provider-dashboard/ReferralsTab";
 
-
-
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const user = useAuthStore((state) => state.user);
-
 
   // Mock profile data
   const profile = {
@@ -29,65 +26,69 @@ export default function ProfilePage() {
     city: "Ibadan",
     state: "Oyo",
     rating: 4.6,
-    avatar: null, 
+    avatar: null,
   };
 
   return (
     <DashboardLayout>
       {/* Header */}
-     <div className="w-190">
+      <div className="w-190">
+        {/* Profile Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-9 mb-6">
+          <h1 className="mb-4 font-bold">My Profile</h1>
+          <h1 className="border-b border-gray-300"></h1>
+          <div className="flex flex-col mt-4 md:flex-row md:items-center md:justify-between gap-6">
+            {/* Left Side - Avatar and Info */}
+            <div className="flex items-center gap-4">
+              {/* Avatar */}
+              <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                {user.data?.profilePicture ? (
+                  <img
+                    src={user.data?.profilePicture}
+                    alt={user.data?.fullName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <FiUser size={32} className="text-gray-500" />
+                )}
+              </div>
 
-      {/* Profile Card */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-9 mb-6">
-         <h1 className="mb-4 font-bold">My Profile</h1>
-<h1 className="border-b border-gray-300"></h1>
-        <div className="flex flex-col mt-4 md:flex-row md:items-center md:justify-between gap-6">
-          {/* Left Side - Avatar and Info */}
-          <div className="flex items-center gap-4">
-            {/* Avatar */}
-            <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-              {user.data?.profilePicture ? (
-                <img src={user.data?.profilePicture} alt={user.data?.fullName} className="w-full h-full object-cover" />
-              ) : (
-                <FiUser size={32} className="text-gray-500" />
-              )}
+              {/* User Info */}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                  {user.data?.fullName}
+                </h2>
+                <p className="text-sm text-gray-600 mb-1">{user.data?.email}</p>
+                <p className="text-sm text-gray-600">
+                  {user.data?.phoneNumber}
+                </p>
+              </div>
             </div>
 
-            {/* User Info */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                {user.data?.fullName}
-              </h2>
-              <p className="text-sm text-gray-600 mb-1">{user.data?.email}</p>
-              <p className="text-sm text-gray-600">{user.data?.phoneNumber}</p>
+            {/* Middle - Rating */}
+            <div className="flex flex-col items-start md:items-center">
+              <span className="text-sm text-gray-600 mb-2">Overall Rating</span>
+              <StarRating rating={profile.rating} />
             </div>
-          </div>
 
-          {/* Middle - Rating */}
-          <div className="flex flex-col items-start md:items-center">
-            <span className="text-sm text-gray-600 mb-2">Overall Rating</span>
-            <StarRating rating={profile.rating} />
+            {/* Right Side - Edit Button */}
+            <button className="p-2 bg-[#8BC53F] text-white font-medium rounded-lg hover:bg-[#7ab335] transition-colors self-start md:self-center">
+              Edit Profile
+            </button>
           </div>
-
-          {/* Right Side - Edit Button */}
-          <button className="p-2 bg-[#8BC53F] text-white font-medium rounded-lg hover:bg-[#7ab335] transition-colors self-start md:self-center">
-            Edit Profile
-          </button>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Tabs */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Tab Content */}
-        {activeTab === "profile" && <ProfileInfoTab user={user} />}
-        {activeTab === "wallet" &&  <WalletTab/> }
-        {activeTab === "password" && <PasswordTab/>}
-        {activeTab === "settings" && <SettingsTab/> }
-        {activeTab === "referrals" && <ReferralsTab profile={profile} />}
-        
-      </div>
+          {/* Tab Content */}
+          {activeTab === "profile" && <ProfileInfoTab user={user} />}
+          {activeTab === "wallet" && <WalletTab />}
+          {activeTab === "password" && <PasswordTab />}
+          {activeTab === "settings" && <SettingsTab />}
+          {activeTab === "referrals" && <ReferralsTab profile={profile} />}
+        </div>
       </div>
     </DashboardLayout>
   );
