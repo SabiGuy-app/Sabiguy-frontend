@@ -73,7 +73,7 @@ export default function ChatPage() {
     }
   };
   return (
-    <ProviderDashboardLayout>
+    <DashboardLayout>
       <div className="flex h-screen bg-gray-50">
         {/* Sidebar - Chat List */}
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
@@ -252,6 +252,6 @@ export default function ChatPage() {
           )}
         </div>
       </div>
-    </ProviderDashboardLayout>
+    </DashboardLayout>
   );
 }
