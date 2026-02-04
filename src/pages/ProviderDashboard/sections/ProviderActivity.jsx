@@ -1,4 +1,5 @@
-import DashboardLayout from "../../../components/layouts/DashboardLayout";
+import React from "react";
+import ProviderDashboardLayout from "../../../components/layouts/ProviderDashboardLayout";
 import ActivityCard from "../../../components/dashboard/ActivityCard";
 import {
   Wallet,
@@ -11,9 +12,10 @@ import { FiSearch } from "react-icons/fi";
 import { useState } from "react";
 import TabNavigation from "../../../components/dashboard/TabNav";
 import Activities from "../../../components/dashboard/Activities";
-import ServiceDetailsModal from "./ServiceDetailsModal";
+import ServiceDetailsModal from "../../Dashboard/sections/ServiceDetailsModal";
+// import ServiceDetailsModal from "./ServiceDetailsModal";
 
-export default function ActivityPage() {
+const ProviderActivity = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [isServiceDetailsModalOpen, setIsServiceDetailsModalOpen] =
     useState(false);
@@ -126,8 +128,7 @@ export default function ActivityPage() {
     },
   ];
   return (
-    <DashboardLayout>
-      {/* Header */}
+    <ProviderDashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <ServiceDetailsModal
           isOpen={isServiceDetailsModalOpen}
@@ -188,6 +189,8 @@ export default function ActivityPage() {
           <Activities key={activity.id} activity={activity} />
         ))}
       </div>
-    </DashboardLayout>
+    </ProviderDashboardLayout>
   );
-}
+};
+
+export default ProviderActivity;

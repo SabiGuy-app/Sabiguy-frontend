@@ -135,7 +135,6 @@ export default function RequestCard({ request, onViewDetails }) {
                 Close Request
               </button>
             )}
-            
           </div>
         </div>
       </div>
