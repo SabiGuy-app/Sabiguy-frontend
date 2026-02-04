@@ -1,4 +1,5 @@
-import DashboardLayout from "../../../components/layouts/DashboardLayout";
+import React from "react";
+import ProviderDashboardLayout from "../../../components/layouts/ProviderDashboardLayout";
 import { useState } from "react";
 import {
   FiSearch,
@@ -8,10 +9,8 @@ import {
   FiPaperclip,
   FiPhone,
 } from "react-icons/fi";
-import { BsThreeDotsVertical } from "react-icons/bs";
-import ProviderDashboardLayout from "../../../components/layouts/ProviderDashboardLayout";
 
-export default function ChatPage() {
+const ProviderChat = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +72,7 @@ export default function ChatPage() {
     }
   };
   return (
-    <DashboardLayout>
+    <ProviderDashboardLayout>
       <div className="flex h-screen bg-gray-50">
         {/* Sidebar - Chat List */}
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
@@ -252,6 +251,8 @@ export default function ChatPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </ProviderDashboardLayout>
   );
-}
+};
+
+export default ProviderChat;

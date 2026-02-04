@@ -39,6 +39,9 @@ import BookingSummary from "./pages/Dashboard/sections/Bookings/BookingSummary";
 import PickupLocation from "./pages/Dashboard/sections/Bookings/PickupLocation";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ProviderHelp from "./pages/ProviderDashboard/sections/ProviderHelp";
+import ProviderActivity from "./pages/ProviderDashboard/sections/ProviderActivity";
+import ProviderChat from "./pages/ProviderDashboard/sections/ProviderChat";
 function App() {
   return (
     <>
@@ -66,15 +69,15 @@ function App() {
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/dashboard/saved" element={<SavedProfile />} />
             <Route path="/dashboard/chat" element={<ChatPage />} />
-            <Route path="/dashboard/provider/chat" element={<ChatPage />} />
+            <Route path="/dashboard/provider/chat" element={<ProviderChat />} />
             <Route path="/dashboard/activity" element={<ActivityPage />} />
             <Route
               path="/dashboard/provider/activity"
-              element={<ActivityPage />}
+              element={<ProviderActivity />}
             />
             <Route path="/dashboard/settings" element={<ProfilePage />} />
             <Route path="/dashboard/help" element={<ContactPage />} />
-            <Route path="/dashboard/provider/help" element={<ContactPage />} />
+            <Route path="/dashboard/provider/help" element={<ProviderHelp />} />
             <Route path="/dashboard/categories" element={<Categories />} />
             <Route
               path="/dashboard/categories/:serviceSlug"

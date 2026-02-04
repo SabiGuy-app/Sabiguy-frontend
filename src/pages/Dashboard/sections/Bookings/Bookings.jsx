@@ -12,12 +12,16 @@ import { Calendar, Clock, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { bookingPost } from "../../../../api/bookings";
 
 export default function Bookings() {
   const [activeTab, setActiveTab] = useState("request");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Formik setup with dynamic validation schema
   const formik = useFormik({
@@ -110,9 +114,59 @@ export default function Bookings() {
         .integer("Budget must be a whole number")
         .min(1000, "Budget must be at least ₦1,000"),
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       console.log("Form submitted:", values);
-      navigate("/dashboard/provider/searching");
+      setLoading(true);
+      setSuccessMessage("");
+      setErrorMessage("");
+
+      try {
+        const payload = {
+          serviceType: values.jobTitle,
+          subCategory: values.service,
+          title: values.title,
+          address: "Osborne Foreshore Estate, Ikoyi, Lagos",
+          pickupAddress: values.pickupLocation,
+          dropoffAddress: values.dropoffLocation,
+          scheduleType: values.serviceType,
+          budget: parseFloat(values.budget),
+          attachments: values.attachments,
+        };
+
+        console.log(payload);
+
+        const res = await bookingPost(payload);
+
+        if (res?.message) {
+          setSuccessMessage(res.message);
+        } else {
+          setSuccessMessage("Booking created successfully!");
+        }
+
+        // Reset form
+        formik.resetForm();
+
+        setTimeout(() => {
+          navigate("/dashboard/provider/searching");
+        }, 1500);
+      } catch (error) {
+        console.error("Booking creation failed:", error);
+
+        if (error.response) {
+          setErrorMessage(
+            error.response.data?.message ||
+              "Booking creation failed. Try again.",
+          );
+        } else if (error.request) {
+          setErrorMessage(
+            "No response from server. Please check your connection.",
+          );
+        } else {
+          setErrorMessage("Unexpected error occurred.");
+        }
+      } finally {
+        setLoading(false);
+      }
     },
   });
 
@@ -121,7 +175,6 @@ export default function Bookings() {
     : [];
   const navigate = useNavigate();
 
-  // Check if Transport & Logistics is selected
   const isTransportLogistics = formik.values.jobTitle === "transport";
 
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
@@ -145,75 +198,6 @@ export default function Bookings() {
       </div>
     );
   };
-
-  // Sample requests data
-  const requests = [
-    {
-      id: 1,
-      title: "Electrical Installation",
-      status: "Pending",
-      providerName: "Phil Crook",
-      providerImage: "https://i.pravatar.cc/40",
-      orderId: "ORD 001",
-      price: 50000,
-      deliveryDate: "Oct 13, 2025",
-      scheduledDate: "Oct 10, 2025 - 9 AM",
-      startsIn: "1h 57m 48s",
-      ratings: null,
-    },
-    {
-      id: 2,
-      title: "Electrical Installation",
-      status: "In Progress",
-      providerName: "Phil Crook",
-      providerImage: "https://i.pravatar.cc/49",
-      orderId: "ORD 001",
-      price: 50000,
-      deliveryDate: "Oct 13, 2025",
-      scheduledDate: "Oct 08, 2025 - 10 AM",
-      startsIn: null,
-      ratings: null,
-    },
-    {
-      id: 3,
-      title: "Plumbing Repair",
-      status: "Completed",
-      providerName: "John Smith",
-      providerImage: "https://i.pravatar.cc/45",
-      orderId: "ORD 002",
-      price: 35000,
-      deliveryDate: "Oct 05, 2025",
-      scheduledDate: "Oct 01, 2025 - 2 PM",
-      startsIn: null,
-      ratings: null,
-    },
-    {
-      id: 4,
-      title: "Plumbing Repair",
-      status: "Completed",
-      providerName: "John Smith",
-      providerImage: "https://i.pravatar.cc/45",
-      orderId: "ORD 002",
-      price: 35000,
-      deliveryDate: "Oct 05, 2025",
-      scheduledDate: "Oct 01, 2025 - 2 PM",
-      startsIn: null,
-      ratings: 3.0,
-    },
-    {
-      id: 5,
-      title: "Plumbing Repair",
-      status: "Waiting confirmation",
-      providerName: "John Smith",
-      providerImage: "https://i.pravatar.cc/45",
-      orderId: "ORD 002",
-      price: 35000,
-      deliveryDate: "Oct 05, 2025",
-      scheduledDate: "Oct 01, 2025 - 2 PM",
-      startsIn: null,
-      ratings: null,
-    },
-  ];
 
   const filteredRequests = requests.filter((request) => {
     if (statusFilter === "all") return true;
@@ -294,6 +278,20 @@ export default function Bookings() {
             onSubmit={formik.handleSubmit}
             className="space-y-[20px] gap-4 p-5"
           >
+            {/* Error Messages */}
+            {errorMessage && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                {errorMessage}
+              </div>
+            )}
+
+            {/* Success Messages */}
+            {successMessage && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                {successMessage}
+              </div>
+            )}
+
             {/* Work Category */}
             <div>
               <InputField
@@ -583,8 +581,8 @@ export default function Bookings() {
 
             {/* Submit Button */}
             <div className="flex flex-col">
-              <Button variant="secondary" type="submit">
-                Post Request
+              <Button variant="secondary" type="submit" disabled={loading}>
+                {loading ? "Creating Booking..." : "Post Request"}
               </Button>
             </div>
           </form>
@@ -638,3 +636,72 @@ export default function Bookings() {
     </DashboardLayout>
   );
 }
+
+// Sample requests data
+const requests = [
+  {
+    id: 1,
+    title: "Electrical Installation",
+    status: "Pending",
+    providerName: "Phil Crook",
+    providerImage: "https://i.pravatar.cc/40",
+    orderId: "ORD 001",
+    price: 50000,
+    deliveryDate: "Oct 13, 2025",
+    scheduledDate: "Oct 10, 2025 - 9 AM",
+    startsIn: "1h 57m 48s",
+    ratings: null,
+  },
+  {
+    id: 2,
+    title: "Electrical Installation",
+    status: "In Progress",
+    providerName: "Phil Crook",
+    providerImage: "https://i.pravatar.cc/49",
+    orderId: "ORD 001",
+    price: 50000,
+    deliveryDate: "Oct 13, 2025",
+    scheduledDate: "Oct 08, 2025 - 10 AM",
+    startsIn: null,
+    ratings: null,
+  },
+  {
+    id: 3,
+    title: "Plumbing Repair",
+    status: "Completed",
+    providerName: "John Smith",
+    providerImage: "https://i.pravatar.cc/45",
+    orderId: "ORD 002",
+    price: 35000,
+    deliveryDate: "Oct 05, 2025",
+    scheduledDate: "Oct 01, 2025 - 2 PM",
+    startsIn: null,
+    ratings: null,
+  },
+  {
+    id: 4,
+    title: "Plumbing Repair",
+    status: "Completed",
+    providerName: "John Smith",
+    providerImage: "https://i.pravatar.cc/45",
+    orderId: "ORD 002",
+    price: 35000,
+    deliveryDate: "Oct 05, 2025",
+    scheduledDate: "Oct 01, 2025 - 2 PM",
+    startsIn: null,
+    ratings: 3.0,
+  },
+  {
+    id: 5,
+    title: "Plumbing Repair",
+    status: "Waiting confirmation",
+    providerName: "John Smith",
+    providerImage: "https://i.pravatar.cc/45",
+    orderId: "ORD 002",
+    price: 35000,
+    deliveryDate: "Oct 05, 2025",
+    scheduledDate: "Oct 01, 2025 - 2 PM",
+    startsIn: null,
+    ratings: null,
+  },
+];

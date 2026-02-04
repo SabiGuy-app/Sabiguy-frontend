@@ -3,8 +3,10 @@ import CoverageRadius from "../Coverage";
 export default function ProviderProfileInfoTab({ user, onProfileUpdate }) {
   return (
     <div className="mb-12">
-      <h2 className="text-xl font-semibold text-gray-900 mt-5 mb-6">Personal Information</h2>
-      
+      <h2 className="text-xl font-semibold text-gray-900 mt-5 mb-6">
+        Personal Information
+      </h2>
+
       <form className="space-y-6">
         {/* First Name and Last Name */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -87,18 +89,18 @@ export default function ProviderProfileInfoTab({ user, onProfileUpdate }) {
               defaultValue={user.data?.state}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
-          </div> 
+          </div>
         </div>
-        <CoverageRadius/>
+        <CoverageRadius />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Bio
           </label>
-           <textarea
+          <textarea
             placeholder="Tell customers about your experience"
             rows={4}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
-            />
+          />
         </div>
       </form>
     </div>

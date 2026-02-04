@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, HelpCircle, MessageCircle } from "lucide-react";
+import { Menu, X, HelpCircle, MessageCircle, LogOut } from "lucide-react";
 import { FaChartBar, FaBook, FaHeart, FaComments, FaClipboardList, FaCog, FaQuestionCircle, FaBell} from "react-icons/fa";
 
 
@@ -10,7 +10,8 @@ const links = [
   { name: "Chat", path: "/dashboard/provider/chat", icon: <MessageCircle/> },
   { name: "Activity", path: "/dashboard/provider/activity", icon: <FaClipboardList/> },
   { name: "Settings", path: "/dashboard/provider/settings", icon: <FaCog/> },
-  { name: "Help", path: "/dashboard/povider/help", icon: <HelpCircle/> },
+  { name: "Help", path: "/dashboard/provider/help", icon: <HelpCircle/> },
+  { name: "Logout", path: "/", icon: <LogOut/> },
 ];
 
 export default function ProviderSidebar() {
