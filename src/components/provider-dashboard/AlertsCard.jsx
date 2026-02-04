@@ -28,60 +28,49 @@ export default function AlertsCard({ alert, onViewDetails }) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-start gap-4">
-       
         {/* Main Content */}
         <div className="flex-1">
-            
           <div className="flex  items-start justify-between mb-2">
             <div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {alert.title}
-                </h3>
+              <h3 className="text-xl font-semibold text-gray-900">
+                {alert.title}
+              </h3>
 
-                
-          <div className="flex flex-col mb-4 mt-2 gap-3 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-[#2D6A3E]" />
-              <span>{alert.distance}</span>
-            </div>
-                        
-            
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span className="font-medium">
-                  {alert.scheduledDate}
-                </span>
-              </div>
-              {alert.posted && (
-               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">
-             Posted: {alert.posted}</span>
-            </div>
-                        )}
-            
-            {alert.offerSent && (
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">
-                 Counter offer sent {alert.offerSent}
-                </span>
-              </div>
-            )}
-            
-          </div>
-                
+              <div className="flex flex-col mb-4 mt-2 gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-[#2D6A3E]" />
+                  <span>{alert.distance}</span>
+                </div>
 
-              
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span className="font-medium">{alert.scheduledDate}</span>
+                </div>
+                {alert.posted && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-yellow-500" />
+                    <span className="font-medium">Posted: {alert.posted}</span>
+                  </div>
+                )}
+
+                {alert.offerSent && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-yellow-500" />
+                    <span className="font-medium">
+                      Counter offer sent {alert.offerSent}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-             <div className="text-right">
-                <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(
-                    alert.status
-                  )}`}
-                >
-                  {alert.status}
-                </span>
+            <div className="text-right">
+              <span
+                className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(
+                  alert.status,
+                )}`}
+              >
+                {alert.status}
+              </span>
               <div className="text-2xl mt-3 font-bold text-[#2D6A3E]">
                 ₦{alert.price.toLocaleString()}
               </div>
@@ -92,11 +81,11 @@ export default function AlertsCard({ alert, onViewDetails }) {
           </div>
 
           {/* Date and Time Info */}
-          
+
           <div className="flex gap-3 border-t">
             <button
               onClick={() => onViewDetails(alert)}
-              className="px-3 py-1 mt-3 bg-[#2D6A3E] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
+              className="px-3 py-1 mt-3 bg-[#2D6A3E] text-white cursor-pointer rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
             >
               View Details
             </button>
@@ -105,7 +94,6 @@ export default function AlertsCard({ alert, onViewDetails }) {
                 Awaiting Customer's response
               </button>
             )}
-            
           </div>
         </div>
       </div>

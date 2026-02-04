@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FiSearch, FiChevronDown, FiPlus } from "react-icons/fi";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import FundWalletModal from "./FundWalletModal";
 
 // Wallet Tab Content
 export default function WalletTab() {
@@ -8,6 +9,9 @@ export default function WalletTab() {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("This month");
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Mock transaction data
   const transactions = [
@@ -76,26 +80,36 @@ export default function WalletTab() {
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 mb-1">My Wallet</h2>
-        <p className="text-sm text-gray-500 italic">Tip: Use your wallet to pay artisans fast</p>
+        <p className="text-sm text-gray-500 italic">
+          Tip: Use your wallet to pay artisans fast
+        </p>
       </div>
 
       {/* Available Balance Card */}
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 max-w-xs">
         <p className="text-sm text-gray-600 mb-3">Available Balance</p>
         <h3 className="text-4xl font-bold text-gray-900 mb-4">₦0.00</h3>
-        <button className="w-full px-6 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="w-full px-6 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors"
+        >
           Fund wallet
         </button>
       </div>
 
       {/* Recent Transaction Section */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent transaction</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Recent transaction
+        </h3>
 
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-3 mb-4">
           <div className="relative flex-1">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <FiSearch
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={18}
+            />
             <input
               type="text"
               placeholder="Search"
@@ -104,7 +118,7 @@ export default function WalletTab() {
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent text-sm"
             />
           </div>
-          
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -153,11 +167,22 @@ export default function WalletTab() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {transactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-gray-900">{transaction.description}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{transaction.type}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{transaction.amount}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{transaction.date}</td>
+                  <tr
+                    key={transaction.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {transaction.description}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {transaction.type}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {transaction.amount}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {transaction.date}
+                    </td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
@@ -190,14 +215,16 @@ export default function WalletTab() {
               {[1, 2, 3, "...", 8, 9, 10].map((page, index) => (
                 <button
                   key={index}
-                  onClick={() => typeof page === "number" && setCurrentPage(page)}
+                  onClick={() =>
+                    typeof page === "number" && setCurrentPage(page)
+                  }
                   disabled={page === "..."}
                   className={`w-8 h-8 flex items-center justify-center text-sm rounded-lg transition-colors ${
                     currentPage === page
                       ? "bg-[#005823] text-white"
                       : page === "..."
-                      ? "text-gray-400 cursor-default"
-                      : "text-gray-700 hover:bg-gray-100"
+                        ? "text-gray-400 cursor-default"
+                        : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   {page}
@@ -206,7 +233,9 @@ export default function WalletTab() {
             </div>
 
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
@@ -219,8 +248,10 @@ export default function WalletTab() {
 
       {/* Manage Cards Section */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Manage Cards</h3>
-        
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Manage Cards
+        </h3>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Card 1 - Green Mastercard */}
           <div className="relative bg-gradient-to-br from-[#005823] to-[#003d18] rounded-xl p-6 text-white h-48 flex flex-col justify-between overflow-hidden">
@@ -232,7 +263,9 @@ export default function WalletTab() {
 
             <div>
               <div className="text-xs opacity-75 mb-1">Card Number</div>
-              <div className="text-lg font-mono tracking-wider">5119 1198 5634 8532</div>
+              <div className="text-lg font-mono tracking-wider">
+                5119 1198 5634 8532
+              </div>
             </div>
 
             <div className="flex justify-between items-end">
@@ -248,11 +281,15 @@ export default function WalletTab() {
 
           {/* Card 2 - Light Visa */}
           <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-6 text-gray-800 h-48 flex flex-col justify-between border border-gray-300">
-            <div className="absolute top-4 right-4 text-2xl font-bold text-blue-600">VISA</div>
+            <div className="absolute top-4 right-4 text-2xl font-bold text-blue-600">
+              VISA
+            </div>
 
             <div>
               <div className="text-xs text-gray-600 mb-1">Card Number</div>
-              <div className="text-lg font-mono tracking-wider">5234 1198 5634 1234</div>
+              <div className="text-lg font-mono tracking-wider">
+                5234 1198 5634 1234
+              </div>
             </div>
 
             <div className="flex justify-between items-end">
@@ -277,6 +314,11 @@ export default function WalletTab() {
           </div>
         </div>
       </div>
+
+      <FundWalletModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 }

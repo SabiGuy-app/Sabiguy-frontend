@@ -12,6 +12,7 @@ import { useState } from "react";
 import TabNavigation from "../../../components/dashboard/TabNav";
 import Activities from "../../../components/dashboard/Activities";
 import ServiceDetailsModal from "./ServiceDetailsModal";
+import ProviderDashboardLayout from "../../../components/layouts/ProviderDashboardLayout";
 
 export default function ActivityPage() {
   const [activeTab, setActiveTab] = useState("All");
@@ -125,8 +126,9 @@ export default function ActivityPage() {
       },
     },
   ];
+  
   return (
-    <DashboardLayout>
+    <ProviderDashboardLayout>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <ServiceDetailsModal
@@ -188,6 +190,6 @@ export default function ActivityPage() {
           <Activities key={activity.id} activity={activity} />
         ))}
       </div>
-    </DashboardLayout>
+    </ProviderDashboardLayout>
   );
 }

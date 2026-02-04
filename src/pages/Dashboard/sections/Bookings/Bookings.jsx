@@ -10,26 +10,119 @@ import RequestCard from "../../../../components/dashboard/RequestsCard";
 import ServiceDetailsModal from "../ServiceDetailsModal";
 import { Calendar, Clock, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+
 export default function Bookings() {
-  const [selectedJobTitle, setSelectedJobTitle] = useState("");
-  const [selectedService, setSelectedService] = useState("");
   const [activeTab, setActiveTab] = useState("request");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [serviceType, setServiceType] = useState("");
 
-  // Transport & Logistics specific fields
-  const [pickupLocation, setPickupLocation] = useState("");
-  const [dropoffLocation, setDropoffLocation] = useState("");
+  // Formik setup with dynamic validation schema
+  const formik = useFormik({
+    initialValues: {
+      jobTitle: "",
+      service: "",
+      title: "",
+      description: "",
+      location: "",
+      pickupLocation: "",
+      dropoffLocation: "",
+      serviceType: "",
+      startDate: "",
+      endDate: "",
+      scheduleDate: "",
+      budget: "",
+    },
+    validationSchema: Yup.object().shape({
+      jobTitle: Yup.string().required("Work category is required"),
+      service: Yup.string().required("Sub-category is required"),
 
-  const serviceOptions = selectedJobTitle
-    ? allServices[selectedJobTitle] || []
+      // Conditional validation for regular services
+      title: Yup.string().when("jobTitle", {
+        is: (val) => val !== "transport",
+        then: (schema) => schema.required("Request title is required"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      description: Yup.string().when("jobTitle", {
+        is: (val) => val !== "transport",
+        then: (schema) =>
+          schema
+            .required("Task description is required")
+            .min(10, "Description must be at least 10 characters"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      location: Yup.string().when("jobTitle", {
+        is: (val) => val !== "transport",
+        then: (schema) => schema.required("Location is required"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+
+      // Conditional validation for transport services
+      pickupLocation: Yup.string().when("jobTitle", {
+        is: "transport",
+        then: (schema) => schema.required("Pickup location is required"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      dropoffLocation: Yup.string().when("jobTitle", {
+        is: "transport",
+        then: (schema) => schema.required("Dropoff location is required"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+
+      // Service type validation
+      serviceType: Yup.string().required("Service type is required"),
+
+      // Conditional validation for scheduled services
+      scheduleDate: Yup.date().when(["serviceType", "jobTitle"], {
+        is: (serviceType, jobTitle) =>
+          serviceType === "schedule" && jobTitle === "transport",
+        then: (schema) =>
+          schema
+            .required("Schedule date is required")
+            .min(new Date(), "Date must be in the future"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      startDate: Yup.date().when(["serviceType", "jobTitle"], {
+        is: (serviceType, jobTitle) =>
+          serviceType === "schedule" && jobTitle !== "transport",
+        then: (schema) =>
+          schema
+            .required("Start date is required")
+            .min(new Date(), "Start date must be in the future"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      endDate: Yup.date().when(["serviceType", "jobTitle", "startDate"], {
+        is: (serviceType, jobTitle, startDate) =>
+          serviceType === "schedule" && jobTitle !== "transport" && startDate,
+        then: (schema) =>
+          schema
+            .required("End date is required")
+            .min(Yup.ref("startDate"), "End date must be after start date"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+
+      // Budget validation
+      budget: Yup.number()
+        .required("Budget is required")
+        .positive("Budget must be a positive number")
+        .integer("Budget must be a whole number")
+        .min(1000, "Budget must be at least ₦1,000"),
+    }),
+    onSubmit: (values) => {
+      console.log("Form submitted:", values);
+      navigate("/dashboard/provider/searching");
+    },
+  });
+
+  const serviceOptions = formik.values.jobTitle
+    ? allServices[formik.values.jobTitle] || []
     : [];
   const navigate = useNavigate();
 
   // Check if Transport & Logistics is selected
-  const isTransportLogistics = selectedJobTitle === "transport";
+  const isTransportLogistics = formik.values.jobTitle === "transport";
 
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
@@ -139,28 +232,28 @@ export default function Bookings() {
     setSelectedRequest(null);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission
-    if (isTransportLogistics) {
-      console.log({
-        jobTitle: selectedJobTitle,
-        service: selectedService,
-        pickupLocation,
-        dropoffLocation,
-        serviceType,
-        // ... other fields
-      });
-    } else {
-      console.log({
-        jobTitle: selectedJobTitle,
-        service: selectedService,
-        serviceType,
-        // ... other fields
-      });
-    }
-    navigate("/dashboard/provider/searching");
-  };
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   // Handle form submission
+  //   if (isTransportLogistics) {
+  //     console.log({
+  //       jobTitle: selectedJobTitle,
+  //       service: selectedService,
+  //       pickupLocation,
+  //       dropoffLocation,
+  //       serviceType,
+  //       // ... other fields
+  //     });
+  //   } else {
+  //     console.log({
+  //       jobTitle: selectedJobTitle,
+  //       service: selectedService,
+  //       serviceType,
+  //       // ... other fields
+  //     });
+  //   }
+  //   navigate("/dashboard/provider/searching");
+  // };
 
   return (
     <DashboardLayout>
@@ -198,92 +291,150 @@ export default function Bookings() {
 
         {activeTab === "request" ? (
           <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-4 mb-9 p-5"
+            onSubmit={formik.handleSubmit}
+            className="space-y-[20px] gap-4 p-5"
           >
             {/* Work Category */}
-            <InputField
-              label="Select work category"
-              select
-              options={jobTitles}
-              value={selectedJobTitle}
-              onChange={(option) => {
-                setSelectedJobTitle(option.value);
-                setSelectedService("");
-              }}
-            />
+            <div>
+              <InputField
+                label="Select work category"
+                select
+                options={jobTitles}
+                value={formik.values.jobTitle}
+                onChange={(option) => {
+                  formik.setFieldValue("jobTitle", option.value);
+                  formik.setFieldValue("service", "");
+                }}
+                onBlur={() => formik.setFieldTouched("jobTitle", true)}
+              />
+              {formik.touched.jobTitle && formik.errors.jobTitle && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formik.errors.jobTitle}
+                </p>
+              )}
+            </div>
 
             {/* Subcategory */}
-            <InputField
-              label="Sub-category"
-              select
-              options={[
-                { label: "Select Services", value: "" },
-                ...serviceOptions,
-              ]}
-              value={selectedService}
-              onChange={(option) => {
-                setSelectedService(option.value);
-              }}
-              disabled={!selectedJobTitle}
-            />
+            <div>
+              <InputField
+                label="Sub-category"
+                select
+                options={[
+                  { label: "Select Services", value: "" },
+                  ...serviceOptions,
+                ]}
+                value={formik.values.service}
+                onChange={(option) => {
+                  formik.setFieldValue("service", option.value);
+                }}
+                onBlur={() => formik.setFieldTouched("service", true)}
+                disabled={!formik.values.jobTitle}
+              />
+              {formik.touched.service && formik.errors.service && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formik.errors.service}
+                </p>
+              )}
+            </div>
 
             {/* Conditional Fields Based on Category */}
             {isTransportLogistics ? (
               <>
                 {/* Transport & Logistics Fields */}
-                <InputField
-                  name="pickupLocation"
-                  label="Pickup location"
-                  placeholder="24 Palm Avenue, Lagos"
-                  value={pickupLocation}
-                  onChange={(e) => setPickupLocation(e.target.value)}
-                />
+                <div>
+                  <InputField
+                    name="pickupLocation"
+                    label="Pickup location"
+                    placeholder="24 Palm Avenue, Lagos"
+                    value={formik.values.pickupLocation}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                  {formik.touched.pickupLocation &&
+                    formik.errors.pickupLocation && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {formik.errors.pickupLocation}
+                      </p>
+                    )}
+                </div>
 
-                <InputField
-                  name="dropoffLocation"
-                  label="Dropoff location"
-                  placeholder="24 Palm Avenue, Lagos"
-                  value={dropoffLocation}
-                  onChange={(e) => setDropoffLocation(e.target.value)}
-                />
+                <div>
+                  <InputField
+                    name="dropoffLocation"
+                    label="Dropoff location"
+                    placeholder="24 Palm Avenue, Lagos"
+                    value={formik.values.dropoffLocation}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                  {formik.touched.dropoffLocation &&
+                    formik.errors.dropoffLocation && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {formik.errors.dropoffLocation}
+                      </p>
+                    )}
+                </div>
 
                 {/* Show distance if both locations are filled */}
-                {pickupLocation && dropoffLocation && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span>15km</span>
-                  </div>
-                )}
+                {formik.values.pickupLocation &&
+                  formik.values.dropoffLocation && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>15km</span>
+                    </div>
+                  )}
               </>
             ) : (
               <>
                 {/* Regular Service Fields */}
-                <InputField
-                  name="title"
-                  label="Request a title"
-                  placeholder="e.g Need an electrician home wiring."
-                />
+                <div>
+                  <InputField
+                    name="title"
+                    label="Request a title"
+                    placeholder="e.g Need an electrician home wiring."
+                    value={formik.values.title}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                  {formik.touched.title && formik.errors.title && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.title}
+                    </p>
+                  )}
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Task Description
                   </label>
                   <textarea
+                    name="description"
                     placeholder="Tell us the details of your task"
                     rows={4}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent"
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-md placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent ${
+                      formik.touched.description && formik.errors.description
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                    value={formik.values.description}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                   />
+                  {formik.touched.description && formik.errors.description && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.description}
+                    </p>
+                  )}
                 </div>
 
                 <div className="w-1/3">
@@ -299,75 +450,141 @@ export default function Bookings() {
                   </label>
                 </div>
 
-                <InputField
-                  name="location"
-                  label="Location"
-                  placeholder="Your Location"
-                />
+                <div>
+                  <InputField
+                    name="location"
+                    label="Location"
+                    placeholder="Your Location"
+                    value={formik.values.location}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                  {formik.touched.location && formik.errors.location && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.location}
+                    </p>
+                  )}
+                </div>
               </>
             )}
 
             {/* Service Type (Common for both) */}
             <div className="relative">
-              <InputField
-                label="Service Type"
-                select
-                options={[
-                  { label: "Immediate", value: "immediate" },
-                  { label: "Schedule", value: "schedule" },
-                ]}
-                value={serviceType}
-                onChange={(option) => setServiceType(option.value)}
-              />
-              {serviceType === "immediate" && (
+              <div>
+                <InputField
+                  label="Service Type"
+                  select
+                  options={[
+                    { label: "Select service type", value: "" },
+                    { label: "Immediate", value: "immediate" },
+                    { label: "Schedule", value: "schedule" },
+                  ]}
+                  value={formik.values.serviceType}
+                  onChange={(option) =>
+                    formik.setFieldValue("serviceType", option.value)
+                  }
+                  onBlur={() => formik.setFieldTouched("serviceType", true)}
+                />
+                {formik.touched.serviceType && formik.errors.serviceType && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.serviceType}
+                  </p>
+                )}
+              </div>
+              {formik.values.serviceType === "immediate" && (
                 <Clock className="absolute right-4 top-[55%] w-5 h-5 text-gray-400 pointer-events-none" />
               )}
-              {serviceType === "schedule" && (
+              {formik.values.serviceType === "schedule" && (
                 <Calendar className="absolute right-4 top-[55%] w-5 h-5 text-gray-400 pointer-events-none" />
               )}
             </div>
 
             {/* Schedule Date (if schedule is selected) */}
-            {serviceType === "schedule" &&
+            {formik.values.serviceType === "schedule" &&
               (isTransportLogistics ? (
                 <div className="relative">
-                  <InputField
-                    label="Select Date"
-                    type="date"
-                    min={new Date().toISOString().split("T")[0]}
-                  />
+                  <div>
+                    <InputField
+                      name="scheduleDate"
+                      label="Select Date"
+                      type="date"
+                      min={new Date().toISOString().split("T")[0]}
+                      value={formik.values.scheduleDate}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    />
+                    {formik.touched.scheduleDate &&
+                      formik.errors.scheduleDate && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formik.errors.scheduleDate}
+                        </p>
+                      )}
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="relative">
-                    <InputField
-                      label="Start Date"
-                      type="date"
-                      min={new Date().toISOString().split("T")[0]}
-                    />
+                    <div>
+                      <InputField
+                        name="startDate"
+                        label="Start Date"
+                        type="date"
+                        min={new Date().toISOString().split("T")[0]}
+                        value={formik.values.startDate}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                      {formik.touched.startDate && formik.errors.startDate && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formik.errors.startDate}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="relative">
-                    <InputField
-                      label="End Date"
-                      type="date"
-                      min={new Date().toISOString().split("T")[0]}
-                    />
+                    <div>
+                      <InputField
+                        name="endDate"
+                        label="End Date"
+                        type="date"
+                        min={new Date().toISOString().split("T")[0]}
+                        value={formik.values.endDate}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                      {formik.touched.endDate && formik.errors.endDate && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formik.errors.endDate}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
 
             {/* Budget */}
-            <InputField
-              name="budget"
-              label="Your Budget"
-              placeholder="Enter Amount"
-            />
+            <div>
+              <InputField
+                name="budget"
+                label="Your Budget"
+                placeholder="Enter Amount"
+                type="number"
+                value={formik.values.budget}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.budget && formik.errors.budget && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formik.errors.budget}
+                </p>
+              )}
+            </div>
 
             {/* Submit Button */}
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col">
               <Button variant="secondary" type="submit">
-                Post request
+                Post Request
               </Button>
             </div>
           </form>
