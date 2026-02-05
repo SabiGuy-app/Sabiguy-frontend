@@ -7,16 +7,21 @@ import { useAuthStore } from "../../../stores/auth.store";
 import { getAllProviders } from "../../../api/povider";
 import { useState, useEffect } from "react";
 import { useProviderStore } from "../../../stores/provider.store";
-import { Home, Wrench, CircleAlert, Truck, Briefcase, Palette } from "lucide-react";
+import {
+  Home,
+  Wrench,
+  CircleAlert,
+  Truck,
+  Briefcase,
+  Palette,
+} from "lucide-react";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
 import { sendTestNotification } from "../../../api/fcm";
 
-
 export default function DashboardHome() {
-    const [loading, setLoading] = useState(false);
-    const { token } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const { token } = useAuthStore();
   const { providers, setProviders } = useProviderStore();
-  
 
 const user = useAuthStore((state) => state.user);
   const currentUserId = useAuthStore((state) => state.user?.data?._id);
@@ -36,19 +41,66 @@ const user = useAuthStore((state) => state.user);
   ];
 
   const services = [
-    {logo: <CircleAlert size={80} className="bg-red-50 text-red-500 rounded-full p-5 " />, title: "Emergency Services" },
-    {logo: <Home size={80} className="bg-blue-50 text-blue-500 rounded-full p-5 " />, title: "Domestic & Lifetyle" },
-    {logo: <Wrench size={80} className="bg-[#FF620D]/10 text-[#FF620D] rounded-full p-5 " />, title: "Home & Repair" },
-    {logo: <Truck size={80} className="bg-[#6467F2]/10 text-[#6467F2] rounded-full p-5 " />, title: "Transport & Logistics" },
-    {logo: <Briefcase size={80} className="bg-purple-50 text-purple-500 rounded-full p-5 " />, title: "Professional Services" },
-    {logo: <Palette size={80} className="bg-[#E83781]/10 text-[#E83781]  rounded-full p-5 " />, title: "Freelance & Creative Services" },
+    {
+      logo: (
+        <CircleAlert
+          size={80}
+          className="bg-red-50 text-red-500 rounded-full p-5 "
+        />
+      ),
+      title: "Emergency Services",
+    },
+    {
+      logo: (
+        <Home
+          size={80}
+          className="bg-blue-50 text-blue-500 rounded-full p-5 "
+        />
+      ),
+      title: "Domestic & Lifetyle",
+    },
+    {
+      logo: (
+        <Wrench
+          size={80}
+          className="bg-[#FF620D]/10 text-[#FF620D] rounded-full p-5 "
+        />
+      ),
+      title: "Home & Repair",
+    },
+    {
+      logo: (
+        <Truck
+          size={80}
+          className="bg-[#6467F2]/10 text-[#6467F2] rounded-full p-5 "
+        />
+      ),
+      title: "Transport & Logistics",
+    },
+    {
+      logo: (
+        <Briefcase
+          size={80}
+          className="bg-purple-50 text-purple-500 rounded-full p-5 "
+        />
+      ),
+      title: "Professional Services",
+    },
+    {
+      logo: (
+        <Palette
+          size={80}
+          className="bg-[#E83781]/10 text-[#E83781]  rounded-full p-5 "
+        />
+      ),
+      title: "Freelance & Creative Services",
+    },
+  ];
 
-  ]
-
- useEffect(() => {
+  useEffect(() => {
     const loadProviders = async () => {
       const data = await getAllProviders(token);
-          console.log("Setting providers:", data.data);
+      console.log("Setting providers:", data.data);
       setProviders(data.data);
     };
 
@@ -57,13 +109,15 @@ const user = useAuthStore((state) => state.user);
 
   return (
     <DashboardLayout>
-<div className="flex flex-col  md:flex-row md:items-center md:justify-between mb-6">
-    <div>
-      <h2 className="text-lg font-semibold mb-3">  Welcome Back, {user.data?.fullName?.split(" ")[0]} 👋
-</h2>
-      <p className="mb-3 text-sm">What would you like to get done today?</p>
-      </div>
-  {/* <div className="flex gap-3 mt-4 md:mt-0">
+      <div className="flex flex-col  md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h2 className="text-lg font-semibold mb-3">
+            {" "}
+            Welcome Back, {user.data?.fullName?.split(" ")[0]} 👋
+          </h2>
+          <p className="mb-3 text-sm">What would you like to get done today?</p>
+        </div>
+        {/* <div className="flex gap-3 mt-4 md:mt-0">
                
     <Button variant="secondary"
     onClick={() => navigate("/dashboard/categories")}>
@@ -79,18 +133,15 @@ const user = useAuthStore((state) => state.user);
       </div> */}
       </div>
 
-      <CategoryCarousel categories={categories}/>
-       <div className="mb-6 mt-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-
-        <h3 className="text-lg font-semibold mb-4">Explore Categories</h3>
-
-       
+      <CategoryCarousel categories={categories} />
+      <div className="mb-6 mt-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+          <h3 className="text-lg font-semibold mb-4">Explore Categories</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
-        {services.map((ser, idx) => (
-          <ServicesCard key={idx} logo={ser.logo} title={ser.title} />
-        ))}
+          {services.map((ser, idx) => (
+            <ServicesCard key={idx} logo={ser.logo} title={ser.title} />
+          ))}
         </div>
       </div>
       {/* <div>

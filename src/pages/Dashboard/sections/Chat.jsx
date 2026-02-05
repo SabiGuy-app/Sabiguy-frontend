@@ -6,7 +6,7 @@ import { chatService } from "../../../api/chat";
 import { io } from "socket.io-client";
 import { useAuthStore } from "../../../stores/auth.store";
 
-const SOCKET_URL = "http://localhost:3000";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
 export default function ChatPage() {
   const [chats, setChats] = useState([]);
@@ -264,10 +264,10 @@ const loadMessages = async (bookingId) => {
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         {/* Header */}
 
-        {/* Chats Header */}
-        <div className="px-4 py-3 border-b border-gray-200">
-          <h2 className="font-semibold text-gray-800">Chats</h2>
-        </div>
+          {/* Chats Header */}
+          <div className="px-4 py-3 border-b border-gray-200">
+            <h2 className="font-semibold text-gray-800">Chats</h2>
+          </div>
 
         {/* Chat List Search */}
         <div className="px-4 py-3">
@@ -385,12 +385,12 @@ const loadMessages = async (bookingId) => {
               </div>
             </div>
 
-            {/* Date Divider */}
-            <div className="flex items-center justify-center py-4 bg-gray-50">
-              <span className="px-4 py-1 bg-white rounded-full text-sm text-gray-500 border border-gray-200">
-                Today
-              </span>
-            </div>
+              {/* Date Divider */}
+              <div className="flex items-center justify-center py-4 bg-gray-50">
+                <span className="px-4 py-1 bg-white rounded-full text-sm text-gray-500 border border-gray-200">
+                  Today
+                </span>
+              </div>
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50">

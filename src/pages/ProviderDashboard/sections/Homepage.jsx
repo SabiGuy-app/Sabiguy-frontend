@@ -27,56 +27,52 @@ export default function ProviderDashboard () {
                 </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <DashboardCard 
-        title="Total Revenue" 
-        amount="₦0.00" 
-        icon={<Wallet size={20} />} 
-      />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <DashboardCard
+          title="Total Revenue"
+          amount="₦0.00"
+          icon={<Wallet size={20} />}
+        />
 
-      <DashboardCard 
-        title="Active Jobs" 
-        amount="2" 
-        icon={<Bookmark size={20} />} 
-      />
+        <DashboardCard
+          title="Active Jobs"
+          amount="2"
+          icon={<Bookmark size={20} />}
+        />
 
-      <DashboardCard 
-        title="Average Ratings" 
-        amount="2" 
-        icon={<Star size={20} />} 
-      />
+        <DashboardCard
+          title="Average Ratings"
+          amount="2"
+          icon={<Star size={20} />}
+        />
+      </div>
+      <div className="grid grid-cols-1 mt-5 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <RevenueOverview />
+          <AverageResponseTime />
+        </div>
 
-                </div>
-<div className="grid grid-cols-1 mt-5 lg:grid-cols-3 gap-6">
-
-    <div className="lg:col-span-2 space-y-6">
-      <RevenueOverview />
-      <AverageResponseTime />
-    </div>
-
-    <div className="gap-10">
-      
-       <div className="w-90 "> <WalletCard/>
-       
-        </div> <div className="mt-12 w-90"> 
-          
-          <RevenueByServiceType/> 
+        <div className="gap-10">
+          <div className="w-90 ">
+            {" "}
+            <WalletCard />
+          </div>{" "}
+          <div className="mt-12 w-90">
+            <RevenueByServiceType />
           </div>
-          </div>
+        </div>
+      </div>
 
-  </div>
+      <div className="flex flex-col lg:flex-row gap-6 mt-10">
+        <div className="w-full lg:w-[30%] space-y-6">
+          <PeakHourAnalysis />
+          <BookingsByDayOfWeek />
+        </div>
 
-   <div className="flex flex-col lg:flex-row gap-6 mt-10">
-     <div className="w-full lg:w-[30%] space-y-6">
-    <PeakHourAnalysis />
-    <BookingsByDayOfWeek />
-  </div>
-
-  <div className="w-full lg:w-[70%] space-y-6">
-    <RecentTransactions />
-  </div> 
-</div>
-        </ProviderDashboardLayout>
-
-    )
+        <div className="w-full lg:w-[70%] space-y-6">
+          <RecentTransactions />
+        </div>
+      </div>
+    </ProviderDashboardLayout>
+  );
 }
