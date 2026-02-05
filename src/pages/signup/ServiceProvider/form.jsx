@@ -16,13 +16,11 @@ import { useState } from "react";
 export default function Form() {
     const [step , setStep] = useState(0)
     const [formData, setFormData] = useState({
-
         gender: '',
         city: '',
         accountType: '',
-          radius: '',
-          allowAnywhere: true
-
+        radius: '',
+        allowAnywhere: true
     });
       
 
@@ -35,15 +33,14 @@ const handleNext = (data) => {
         <StepOne onNext={handleNext} />,
         <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack}/>,
         <StepThree onNext={handleNext} onBack={handleBack}/>,
-       <PersonalInfoForm onNext={handleNext} onBack={handleBack}/>,
+        <PersonalInfoForm onNext={handleNext} onBack={handleBack}/>,
         <AccountTypeForm onNext={handleNext} initialValues={formData} onBack={handleBack}/>,
         <FacialCapture onNext={handleNext} onBack={handleBack}/>,
         <FaceCapture onNext={handleNext} onBack={handleBack}/>,
         <SkillsVerification onNext={handleNext} onBack={handleBack}/>,
         <UploadDocumnet onNext={handleNext} onBack={handleBack}/>,
         <BankAccountForm onNext={handleNext} onBack={handleBack}/>,
-         <Congrats onNext={handleNext} onBack={handleBack}/>
-
+        <Congrats onNext={handleNext} onBack={handleBack}/>
     ];
 
     return (

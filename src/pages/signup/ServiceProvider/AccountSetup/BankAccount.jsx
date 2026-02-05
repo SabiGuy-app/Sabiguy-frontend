@@ -5,8 +5,6 @@ import AccountSetupLayout from "./layout";
 import InputField from "../../../../components/InputField";
 import { IoIosArrowBack } from "react-icons/io";
 
-
-// remove alert
 export default function BankAccountForm({ onBack, onNext }) {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");

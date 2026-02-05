@@ -1,60 +1,208 @@
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FiSearch, FiBell, FiUser, FiSend, FiPaperclip, FiPhone } from "react-icons/fi";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { chatService } from "../../../api/chat";
+import { io } from "socket.io-client";
+import { useAuthStore } from "../../../stores/auth.store";
+
+const SOCKET_URL = "http://localhost:3000";
 
 export default function ChatPage() {
+  const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
-  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const messagesEndRef = useRef(null);
+  const currentUserId = useAuthStore((state) => state.user?.data?._id);
   const [searchQuery, setSearchQuery] = useState("");
 
-   const chats = [
-    {
-      id: 1,
-      name: "Phil Crook",
-      role: "Electrician",
-      lastMessage: "I'd like to confirm your availability before booking",
-      time: "11 ago",
-      avatar: "PC",
-      unread: 0,
-      messages: [
-        {
-          id: 1,
-          text: "I'd like to confirm your availability before booking",
-          time: "4:32 AM",
-          sender: "user",
-        },
-        {
-          id: 2,
-          text: "I'd like to confirm your availability before booking",
-          time: "4:10 AM",
-          sender: "other",
-        },
-        {
-          id: 3,
-          text: "I'd like to confirm your availability before booking",
-          time: "4:32 AM",
-          sender: "user",
-        },
-        {
-          id: 4,
-          text: "I'd like to confirm your availability before booking",
-          time: "4:10 AM",
-          sender: "other",
-        },
-      ],
-    },
-  ];
+  useEffect(() => {
+  const token = useAuthStore.getState().token;
+    if (!token) return;
 
-const filteredChats = chats.filter((chat) =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    const newSocket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling'], // ✅ Add this
+reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    });
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Handle sending message
-      console.log("Sending:", message);
-      setMessage("");
+    newSocket.on("connect", () => {
+      console.log("✅ Connected to chat server");
+    });
+
+    newSocket.on("connected", (data) => {
+      console.log("✅ Server confirmed connection:", data);
+    });
+
+    newSocket.on("new_message", (data) => {
+      console.log("📨 New message received:", data);
+      
+      if (selectedChat && data.bookingId === selectedChat.bookingId._id) {
+        setMessages((prev) => [...prev, data.message]);
+        scrollToBottom();
+      }
+      
+      updateChatLastMessage(data.bookingId, data.message);
+    });
+
+    newSocket.on("user_typing", (data) => {
+      console.log("⌨️ User typing:", data);
+    });
+
+    newSocket.on("error", (error) => {
+      console.error("❌ Socket error:", error);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    loadChats();
+  }, []);
+
+
+  useEffect(() => {
+    if (selectedChat) {
+      loadMessages(selectedChat.bookingId._id);
+      
+      if (socket) {
+        socket.emit("join_chat", { bookingId: selectedChat.bookingId._id });
+        markAsRead(selectedChat.bookingId._id);
+      }
+    }
+
+    return () => {
+      if (selectedChat && socket) {
+        socket.emit("leave_chat", { bookingId: selectedChat.bookingId._id });
+      }
+    };
+  }, [selectedChat, socket]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Load all chats
+  const loadChats = async () => {
+    try {
+      setLoading(true);
+      const response = await chatService.getAllChats();
+      setChats(response.data || []);
+    } catch (error) {
+      console.error("Error loading chats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+const loadMessages = async (bookingId) => {
+    try {
+      const response = await chatService.getMessages(bookingId, 1, 100);
+      const messagesData = response.data.messages || [];
+      setMessages(messagesData.reverse());
+    } catch (error) {
+      console.error("Error loading messages:", error);
+      setMessages([]);
+    }
+  };
+  // Mark messages as read
+  const markAsRead = async (bookingId) => {
+    try {
+      await chatService.markAsRead(bookingId);
+      
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.bookingId._id === bookingId
+            ? { ...chat, unreadCount: 0 }
+            : chat
+        )
+      );
+    } catch (error) {
+      console.error("Error marking as read:", error);
+    }
+  };
+
+  // Update chat list with new last message
+  const updateChatLastMessage = (bookingId, newMessage) => {
+    setChats((prev) =>
+      prev.map((chat) => {
+        if (chat.bookingId._id === bookingId) {
+          return {
+            ...chat,
+            lastMessage: {
+              text: newMessage.message,
+              timestamp: newMessage.createdAt,
+            },
+            lastMessageTime: newMessage.createdAt,
+            unreadCount:
+              selectedChat?.bookingId._id !== bookingId
+                ? (chat.unreadCount || 0) + 1
+                : 0,
+          };
+        }
+        return chat;
+      })
+    );
+  };
+
+  // Send message
+  const handleSendMessage = async () => {
+    if (!message.trim() || !selectedChat) return;
+
+    const messageText = message.trim();
+    setMessage("");
+
+    try {
+      setSendingMessage(true);
+
+      if (socket && socket.connected) {
+        socket.emit("send_message", {
+          bookingId: selectedChat.bookingId._id,
+          message: messageText,
+          messageType: "text",
+        });
+      } else {
+        const response = await chatService.sendMessage(
+          selectedChat.bookingId._id,
+          {
+            message: messageText,
+            messageType: "text",
+          }
+        );
+
+        setMessages((prev) => [...prev, response.data]);
+        updateChatLastMessage(selectedChat.bookingId._id, response.data);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setMessage(messageText);
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  // Handle typing indicator
+  const handleTyping = (isTyping) => {
+    if (socket && selectedChat) {
+      socket.emit("typing", {
+        bookingId: selectedChat.bookingId._id,
+        isTyping,
+      });
     }
   };
 
@@ -64,15 +212,57 @@ const filteredChats = chats.filter((chat) =>
       handleSendMessage();
     }
   };
+
+  // Filter chats
+  const filteredChats = chats.filter((chat) =>
+    chat.otherParticipant?.name
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
+
+  // Format time
+  const formatTime = (timestamp) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  // Format relative time
+  const formatRelativeTime = (timestamp) => {
+    if (!timestamp) return "";
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
+  // Get initials
+  const getInitials = (name) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <DashboardLayout>
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar - Chat List */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         {/* Header */}
-        
-          
-        
 
         {/* Chats Header */}
         <div className="px-4 py-3 border-b border-gray-200">
@@ -86,6 +276,8 @@ const filteredChats = chats.filter((chat) =>
             <input
               type="text"
               placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent"
             />
           </div>
@@ -93,26 +285,57 @@ const filteredChats = chats.filter((chat) =>
 
         {/* Chat List */}
         <div className="flex-1 overflow-y-auto">
-          {filteredChats.map((chat) => (
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8BC53F]"></div>
+            </div>
+          ) : filteredChats.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No chats yet</p>
+            </div>
+          ) : (
+          filteredChats.map((chat) => (
             <div
-              key={chat.id}
+              key={chat._id}
               onClick={() => setSelectedChat(chat)}
               className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                selectedChat?.id === chat.id ? "bg-gray-100" : ""
+                selectedChat?._id === chat._id ? "bg-gray-100" : ""
               }`}
             >
-              <div className="w-12 h-12 bg-[#8BC53F] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-                {chat.avatar}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-semibold text-gray-800 text-sm">{chat.name}</h3>
-                  <span className="text-xs text-gray-500">{chat.time}</span>
+             <div className="relative">
+                  <div className="w-12 h-12 bg-[#8BC53F] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                    {chat.otherParticipant?.avatar ? (
+                      <img
+                        src={chat.otherParticipant.avatar}
+                        alt=""
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      getInitials(chat.otherParticipant?.name)
+                    )}
+                  </div>
+                  {chat.unreadCount > 0 && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
+                      {chat.unreadCount}
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-gray-500">{chat.role}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-gray-800 text-sm truncate">
+                      {chat.otherParticipant?.name || "Unknown User"}
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      {formatRelativeTime(chat.lastMessageTime)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">
+                    {chat.lastMessage?.text || "No messages yet"}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -125,19 +348,35 @@ const filteredChats = chats.filter((chat) =>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-[#8BC53F] rounded-full flex items-center justify-center text-white font-semibold">
-                    {selectedChat.avatar}
+                    {selectedChat.otherParticipant?.avatar ? (
+                      <img
+                        src={selectedChat.otherParticipant.profilePicture}
+                        alt=""
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      getInitials(selectedChat.otherParticipant?.name)
+                    )}
                   </div>
                   <div>
-                    <h2 className="font-semibold text-gray-800">{selectedChat.name}</h2>
-                    <p className="text-sm text-gray-500">{selectedChat.role}</p>
+                    <h2 className="font-semibold text-gray-800">
+                      {selectedChat.otherParticipant?.name || "Unknown User"}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      {selectedChat.bookingId?.serviceType || "Service"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <button className="text-gray-600 hover:text-gray-800">
-                    <span className="text-sm p-2 bg-[#005823]/10">View Profile</span>
+                    <span className="text-sm p-2 bg-[#005823]/10 rounded">
+                      View Profile
+                    </span>
                   </button>
                   <button className="text-gray-600 hover:text-gray-800">
-                    <span className="text-sm  text-[#005823] border border-gray-300 p-2">Active Booking</span>
+                    <span className="text-sm text-[#005823] border border-gray-300 p-2 rounded">
+                      {selectedChat.bookingId?.status || "Active Booking"}
+                    </span>
                   </button>
                   <button className="text-gray-600 hover:text-gray-800">
                     <FiPhone size={20} />
@@ -156,39 +395,55 @@ const filteredChats = chats.filter((chat) =>
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
               <div className="space-y-4">
-                {selectedChat.messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div className="flex items-end gap-2 max-w-md">
-                      {msg.sender === "other" && (
-                        <div className="w-8 h-8 bg-pink-400 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-                          W
-                        </div>
-                      )}
-                      <div>
-                        <div
-                          className={`px-4 py-3 rounded-2xl ${
-                            msg.sender === "user"
-                              ? "bg-[#8BC53F] text-white rounded-br-sm"
-                              : "bg-white text-gray-800 rounded-bl-sm"
-                          }`}
-                        >
-                          <p className="text-sm">{msg.text}</p>
-                        </div>
-                        <span className="text-xs text-gray-500 mt-1 block px-2">
-                          {msg.time}
-                        </span>
-                      </div>
-                      {msg.sender === "user" && (
-                        <div className="w-8 h-8 bg-[#8BC53F] rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-                          A
-                        </div>
-                      )}
-                    </div>
+                {messages.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No messages yet. Start the conversation!</p>
                   </div>
-                ))}
+                ) : (
+                  messages.map((msg) => {
+                    const isCurrentUser =
+                      msg.senderId?.toString() === currentUserId;
+
+                    return (
+                      <div
+                        key={msg._id}
+                        className={`flex ${
+                          isCurrentUser ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        <div className="flex items-end gap-2 max-w-md">
+                          {!isCurrentUser && (
+                            <div className="w-8 h-8 bg-pink-400 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                              {getInitials(
+                                selectedChat.otherParticipant?.name
+                              )}
+                            </div>
+                          )}
+                          <div>
+                            <div
+                              className={`px-4 py-3 rounded-2xl ${
+                                isCurrentUser
+                                  ? "bg-[#8BC53F] text-white rounded-br-sm"
+                                  : "bg-white text-gray-800 rounded-bl-sm"
+                              }`}
+                            >
+                              <p className="text-sm">{msg.message}</p>
+                            </div>
+                            <span className="text-xs text-gray-500 mt-1 block px-2">
+                              {formatTime(msg.createdAt)}
+                            </span>
+                          </div>
+                          {isCurrentUser && (
+                            <div className="w-8 h-8 bg-[#8BC53F] rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                              You
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
               </div>
             </div>
 
@@ -202,21 +457,30 @@ const filteredChats = chats.filter((chat) =>
                   type="text"
                   placeholder="Type your message"
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    handleTyping(true);
+                  }}
+                  onBlur={() => handleTyping(false)}
                   onKeyPress={handleKeyPress}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent"
+                  disabled={sendingMessage}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent disabled:bg-gray-100"
                 />
                 <button
                   onClick={handleSendMessage}
-                  className="w-10 h-10 bg-[#005823] rounded-lg flex items-center justify-center text-white hover:bg-[#004019] transition-colors"
+                  disabled={!message.trim() || sendingMessage}
+                  className="w-10 h-10 bg-[#005823] rounded-lg flex items-center justify-center text-white hover:bg-[#004019] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FiSend size={18} />
+                  {sendingMessage ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <FiSend size={18} />
+                  )}
                 </button>
               </div>
             </div>
           </>
         ) : (
-          /* Empty State */
           <div className="flex-1 flex items-center justify-center bg-gray-50">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-gray-800 mb-2">

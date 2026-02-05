@@ -19,6 +19,10 @@ export default function DashboardHome() {
   
 
 const user = useAuthStore((state) => state.user);
+  const currentUserId = useAuthStore((state) => state.user?.data?._id);
+
+
+  console.log ('ID',currentUserId)
   const navigate = useNavigate()
     const categories = [
     { title: "Dispatch Riders",  description: "Your items delivered quickly and safely", image: "/Dispatch.jpg" , bgColor: "#6467F24D"},

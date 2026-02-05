@@ -28,10 +28,9 @@ export default function Login () {
   const [errorMessage, setErrorMessage] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false); 
-  const { setUser, setToken } = useAuthStore();
+  // const userRole = useAuthStore((state) => state.user?.data?.role);
 
   const navigate = useNavigate()
-
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
@@ -94,8 +93,12 @@ listenForMessages((payload) => {
     localStorage.setItem("token", token);
     useAuthStore.getState().setToken(token);
 
-        navigate("/dashboard");
-
+    
+    if (res.role === "buyer") {
+  navigate("/dashboard");
+} else if (res.role === "provider") {
+  navigate("/dashboard/provider");
+}
 
     // 2. GET FULL USER DETAILS
     const fullUser = await getUserByEmail(loginEmail);
@@ -105,9 +108,6 @@ listenForMessages((payload) => {
 
     // Register FCM token
     await registerFCM();
-
-    // 3. Redirect
-    // navigate("/dashboard");
 
   } catch (error) {
     console.error("Login failed:", error);
@@ -171,6 +171,10 @@ const GoogleLogin = useGoogleLogin({
 if (googleLoading) {
     return <Loader />;
   }
+
+if (loading) {
+  return <Loader/>
+}
 
 return (
     <div className="h-screen">
