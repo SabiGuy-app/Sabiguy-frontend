@@ -136,6 +136,7 @@ export default function Bookings() {
         console.log(payload);
 
         const res = await bookingPost(payload);
+        console.log(res);
 
         if (res?.message) {
           setSuccessMessage(res.message);
@@ -215,29 +216,6 @@ export default function Bookings() {
     setIsModalOpen(false);
     setSelectedRequest(null);
   };
-
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   // Handle form submission
-  //   if (isTransportLogistics) {
-  //     console.log({
-  //       jobTitle: selectedJobTitle,
-  //       service: selectedService,
-  //       pickupLocation,
-  //       dropoffLocation,
-  //       serviceType,
-  //       // ... other fields
-  //     });
-  //   } else {
-  //     console.log({
-  //       jobTitle: selectedJobTitle,
-  //       service: selectedService,
-  //       serviceType,
-  //       // ... other fields
-  //     });
-  //   }
-  //   navigate("/dashboard/provider/searching");
-  // };
 
   return (
     <DashboardLayout>
