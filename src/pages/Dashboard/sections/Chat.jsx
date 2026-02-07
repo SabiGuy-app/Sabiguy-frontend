@@ -1,7 +1,6 @@
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import { useState, useEffect, useRef } from "react";
 import { FiSearch, FiBell, FiUser, FiSend, FiPaperclip, FiPhone } from "react-icons/fi";
-import { BsThreeDotsVertical } from "react-icons/bs";
 import { chatService } from "../../../api/chat";
 import { io } from "socket.io-client";
 import { useAuthStore } from "../../../stores/auth.store";
@@ -33,15 +32,15 @@ reconnection: true,
     });
 
     newSocket.on("connect", () => {
-      console.log("✅ Connected to chat server");
+      console.log("Connected to chat server");
     });
 
     newSocket.on("connected", (data) => {
-      console.log("✅ Server confirmed connection:", data);
+      console.log(" Server confirmed connection:", data);
     });
 
     newSocket.on("new_message", (data) => {
-      console.log("📨 New message received:", data);
+      console.log(" New message received:", data);
       
       if (selectedChat && data.bookingId === selectedChat.bookingId._id) {
         setMessages((prev) => [...prev, data.message]);

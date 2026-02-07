@@ -16,7 +16,6 @@ export default function ProviderDashboard () {
    const { token } = useAuthStore();
    const user = useAuthStore((state) => state.user);
 
-
     return (
         <ProviderDashboardLayout>
 
