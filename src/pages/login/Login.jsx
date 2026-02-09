@@ -28,12 +28,11 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const { setUser, setToken } = useAuthStore();
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false); 
+  // const userRole = useAuthStore((state) => state.user?.data?.role);
 
-  const navigate = useNavigate();
-
+  const navigate = useNavigate()
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
@@ -91,10 +90,15 @@ export default function Login() {
       localStorage.setItem("token", token);
       useAuthStore.getState().setToken(token);
 
-      navigate("/dashboard");
+    
+    if (res.role === "buyer") {
+  navigate("/dashboard");
+} else if (res.role === "provider") {
+  navigate("/dashboard/provider");
+}
 
-      // 2. GET FULL USER DETAILS
-      const fullUser = await getUserByEmail(loginEmail);
+    // 2. GET FULL USER DETAILS
+    const fullUser = await getUserByEmail(loginEmail);
 
       // Store in Zustand
       useAuthStore.getState().setUser(fullUser);
@@ -102,10 +106,8 @@ export default function Login() {
       // Register FCM token
       await registerFCM();
 
-      // 3. Redirect
-      // navigate("/dashboard");
-    } catch (error) {
-      console.error("Login failed:", error);
+  } catch (error) {
+    console.error("Login failed:", error);
 
       if (error.response) {
         setErrorMessage(
@@ -168,6 +170,10 @@ export default function Login() {
   if (googleLoading) {
     return <Loader />;
   }
+
+if (loading) {
+  return <Loader/>
+}
 
   return (
     <div className="h-screen">

@@ -14,14 +14,15 @@ import Congrats from "./congrats";
 import { useState } from "react";
 
 export default function Form() {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({
-    gender: "",
-    city: "",
-    accountType: "",
-    radius: "",
-    allowAnywhere: true,
-  });
+    const [step , setStep] = useState(0)
+    const [formData, setFormData] = useState({
+        gender: '',
+        city: '',
+        accountType: '',
+        radius: '',
+        allowAnywhere: true
+    });
+      
 
   const handleNext = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
@@ -30,6 +31,8 @@ export default function Form() {
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
   const forms = [
+        <BankAccountForm onNext={handleNext} onBack={handleBack} />,
+
     <StepOne onNext={handleNext} />,
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
     <StepThree onNext={handleNext} onBack={handleBack} />,
