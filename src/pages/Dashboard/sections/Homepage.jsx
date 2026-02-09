@@ -27,7 +27,7 @@ import Welding from "../../../../public/Welding.jpg"
 import Household from "../../../../public/Household.jpg"
 import Towing from "../../../../public/Towing.jpg"
 import Legal from "../../../../public/Legal.jpg"
-import Plumbing from "../../../../public/Design.jpg"
+import Plumbing from "../../../../public/Plumbing.jpg"
 import Design from "../../../../public/Design.jpg"
 import { sendTestNotification } from "../../../api/fcm";
 
