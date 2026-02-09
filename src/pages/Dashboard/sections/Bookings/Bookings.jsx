@@ -219,7 +219,7 @@ export default function Bookings() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen">
         <ServiceDetailsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
