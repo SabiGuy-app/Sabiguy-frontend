@@ -3,9 +3,6 @@ import Button from "../../../components/button";
 import Navbar from "../../../components/layouts/navbar";
 import AuthLayout from "../../../components/layouts/layout";
 
-
-
-
 export default function StepThree ({onNext}) {
     return (
         <>
@@ -21,7 +18,7 @@ Just a few more details to help personalize your experience.</p>
                     <Button variant="secondary"
                     onClick={onNext}
                     >Continue</Button>
-                    <button className="mt-7">Skip for now</button>
+                    {/* <button className="mt-7">Skip for now</button> */}
 
 
             </div>

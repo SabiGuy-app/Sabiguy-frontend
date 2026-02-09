@@ -104,7 +104,7 @@ export default function Navbar() {
           className="flex items-center"
         >
           <img
-            src={user.data?.profilePicture}
+            src={user.data?.profilePicture || '/avatar.png'}
             className="w-8 h-8 rounded-full border"
           />
         </button>

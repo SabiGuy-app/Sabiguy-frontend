@@ -1,10 +1,12 @@
 import api from "./axios";
+import { useAuthStore } from "../stores/auth.store";
 import { removeFCMToken } from "./fcm";
-
 
 // LOGIN (email + password)
 export const login = async (payload) => {
+
   const { data } = await api.post('/auth', payload);
+    useAuthStore.getState().setId(data.id)
   return data;
 };
 
