@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProviderStore } from "../../../stores/provider.store";
 
-
 export default function Categories() {
   const { providers } = useProviderStore();
   const navigate = useNavigate();
@@ -21,11 +20,10 @@ export default function Categories() {
     const categoryMap = {};
 
     providers.forEach((provider) => {
+      const firstJob = provider.job?.[0]; // get first job safely
 
-const firstJob = provider.job?.[0]; // get first job safely
+      const category = firstJob?.title || "Other Services";
 
-  const category = firstJob?.title || "Other Services";
-      
       if (!categoryMap[category]) {
         categoryMap[category] = {
           image: "/provider.jpg",
@@ -67,7 +65,7 @@ const firstJob = provider.job?.[0]; // get first job safely
 
         <h1 className="font-semibold text-3xl mb-7">Explore Categories</h1>
 
-  {categories.length === 0 ? (
+        {categories.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p>No categories available at the moment.</p>
           </div>
