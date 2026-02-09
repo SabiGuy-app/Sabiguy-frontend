@@ -20,6 +20,15 @@ import family from "../../../../public/family.png"
 import delivery from "../../../../public/delivery.png"
 import handtool from "../../../../public/hand-tools.png"
 import siren from "../../../../public/siren.png"
+
+import Dispatch2 from "../../../../public/Dispatch2.png"
+import electrician from "../../../../public/electrician.png"
+import Welding from "../../../../public/Welding.jpg"
+import Household from "../../../../public/Household.jpg"
+import Towing from "../../../../public/Towing.jpg"
+import Legal from "../../../../public/Legal.jpg"
+import Plumbing from "../../../../public/Design.jpg"
+import Design from "../../../../public/Design.jpg"
 import { sendTestNotification } from "../../../api/fcm";
 
 export default function DashboardHome() {
@@ -27,21 +36,58 @@ export default function DashboardHome() {
   const { token } = useAuthStore();
   const { providers, setProviders } = useProviderStore();
 
-const user = useAuthStore((state) => state.user);
-  const currentUserId = useAuthStore((state) => state.user?.data?._id);
-
-
-  console.log ('ID',currentUserId)
-  const navigate = useNavigate()
-    const categories = [
-    { title: "Dispatch Riders",  description: "Your items delivered quickly and safely", image: "/Dispatch.jpg" , bgColor: "#6467F24D"},
-    { title: "Electrician",  description: "Professional wiring, repairs, and power solutions on demand", image: "/electrician.png", bgColor: "#BF4A0B4D" },
-    { title: "Welding",  description: "Reliable welding for repairs and fabrication", image: "/Welding.jpg", bgColor: "#72280080" },
-    { title: "Household Support",  description: "Quick, dependable household assistance anytime.", image: "/Household.jpg", bgColor: "#0054AE80" },
-    { title: "Towing & Roadside",  description: "Fast help for breakdowns and emergencies", image: "/Towing.jpg", bgColor: "#B100004D" },
-    { title: "Legal & Financial",  description: "Expert guidance for legal and financial needs", image: "/Legal.jpg", bgColor: "#4800D94D" },
-    { title: "Plumbing",  description: "Fast help for breakdowns and emergencies", image: "/Plumbing.jpg", bgColor: "#BF4A0B4D" },
-    { title: "Digital Design",  description: "Modern designs for web, brand, and media.", image: "/1dfa55619d2d73389f6ae12f9bbf64ab94447f9d.jpg", bgColor: "#A30B4B4D" },
+  const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+  const categories = [
+    {
+      title: "Dispatch Riders",
+      description: "Your items delivered quickly and safely",
+      image: Dispatch2,
+      // bgColor: "#6467F24D",
+    },
+    {
+      title: "Electrician",
+      description:
+        "Professional wiring, repairs, and power solutions on demand",
+      image: electrician,
+      bgColor: "#BF4A0B4D",
+    },
+    {
+      title: "Welding",
+      description: "Reliable welding for repairs and fabrication",
+      image: Welding,
+      bgColor: "#72280080",
+    },
+    {
+      title: "Household Support",
+      description: "Quick, dependable household assistance anytime.",
+      image: Household,
+      bgColor: "#0054AE80",
+    },
+    {
+      title: "Towing & Roadside",
+      description: "Fast help for breakdowns and emergencies",
+      image: Towing,
+      bgColor: "#B100004D",
+    },
+    {
+      title: "Legal & Financial",
+      description: "Expert guidance for legal and financial needs",
+      image: Legal,
+      bgColor: "#4800D94D",
+    },
+    {
+      title: "Plumbing",
+      description: "Fast help for breakdowns and emergencies",
+      image: Plumbing,
+      bgColor: "#BF4A0B4D",
+    },
+    {
+      title: "Digital Design",
+      description: "Modern designs for web, brand, and media.",
+      image: Design,
+      bgColor: "#A30B4B4D",
+    },
   ];
 
   const services = [
