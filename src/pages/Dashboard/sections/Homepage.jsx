@@ -4,7 +4,7 @@ import CategoryCarousel from "../../../components/dashboard/CategoryCarousel";
 import Button from "../../../components/dashboard/Button";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/auth.store";
-import { getAllProviders } from "../../../api/povider";
+import { getAllProviders } from "../../../api/provider";
 import { useState, useEffect } from "react";
 import { useProviderStore } from "../../../stores/provider.store";
 import {
