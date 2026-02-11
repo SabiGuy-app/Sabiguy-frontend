@@ -14,6 +14,43 @@ export const bookingPost = async (payload) => {
 
 export const getAllBookings = async () => {
   const token = localStorage.getItem("token");
+  const { data } = await api.get("/bookings", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return data;
+};
+
+export const getBookingsDetails = async (payload) => {
+  const token = localStorage.getItem("token");
+  const { data } = await api.get(`/bookings/${payload}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return data;
+};
+
+export const acceptBookings = async (bookingId) => {
+  const token = localStorage.getItem("token");
+  const { data } = await api.patch(
+    `/provider/${bookingId}/accept`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  return data;
+};
+
+export const getProviderBookings = async () => {
+  const token = localStorage.getItem("token");
   const { data } = await api.get("/provider/bookings", {
     headers: {
       Authorization: `Bearer ${token}`,
