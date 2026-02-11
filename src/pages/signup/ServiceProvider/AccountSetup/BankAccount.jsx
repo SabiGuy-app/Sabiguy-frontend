@@ -1,25 +1,127 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import AccountSetupLayout from "./layout";
 import InputField from "../../../../components/InputField";
 import { IoIosArrowBack } from "react-icons/io";
 
-
-// remove alert
 export default function BankAccountForm({ onBack, onNext }) {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [banks, setBanks] = useState([]);
+  const [loadingBanks, setLoadingBanks] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [verifyingAccount, setVerifyingAccount] = useState(false);
+
+  // Fetch banks on component mount
+  useEffect(() => {
+    fetchBanks();
+  }, []);
+
+  const fetchBanks = async () => {
+    setLoadingBanks(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/payment/banks`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Extract only name and code from the response
+        const bankList = data.data.map(bank => ({
+          name: bank.name,
+          code: bank.code
+        }));
+        setBanks(bankList);
+      } else {
+        setErrorMessage("Failed to fetch banks");
+      }
+    } catch (error) {
+      console.error("Fetch banks error:", error);
+      setErrorMessage("Failed to load banks. Please refresh.");
+    } finally {
+      setLoadingBanks(false);
+    }
+  };
+
+  // Filter banks based on search query
+  const filteredBanks = banks.filter(bank =>
+    bank.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Verify account number when both bank and account number are provided
+  const verifyAccountNumber = async (accountNumber, bankCode) => {
+    if (!accountNumber || !bankCode || accountNumber.length !== 10) {
+      formik.setFieldValue("accountName", "");
+      return;
+    }
+
+    setVerifyingAccount(true);
+    setErrorMessage("");
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/provider/bank-account`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ 
+            accountNumber, 
+            bankCode,
+            verifyOnly: true
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log('Verification response:', data);
+      console.log('Account details:', data.verificationDetails);
+      
+      if (data.success) {
+        // Check both locations for account name
+        const accountName = data.data?.accountName || data.verificationDetails?.accountName;
+        
+        console.log('Extracted account name:', accountName);
+        
+        if (accountName) {
+          formik.setFieldValue("accountName", accountName);
+        } else {
+          console.error('Account name not found in response');
+          setErrorMessage("Could not retrieve account name");
+          formik.setFieldValue("accountName", "");
+        }
+      } else {
+        setErrorMessage(data.message || "Could not verify account number");
+        formik.setFieldValue("accountName", "");
+      }
+    } catch (error) {
+      console.error("Account verification error:", error);
+      setErrorMessage("Failed to verify account number");
+      formik.setFieldValue("accountName", "");
+    } finally {
+      setVerifyingAccount(false);
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
-      bankName: "",
       accountNumber: "",
       accountName: "",
+      bankName: "",
+      bankCode: ""
     },
     validationSchema: Yup.object({
-      bankName: Yup.string().required("Bank name is required"),
+      bankName: Yup.string().required("Please select a bank"),
       accountNumber: Yup.string()
         .matches(/^\d{10}$/, "Enter a valid 10-digit account number")
         .required("Account number is required"),
@@ -29,22 +131,35 @@ export default function BankAccountForm({ onBack, onNext }) {
       setLoading(true);
       setErrorMessage("");
       setSuccessMessage("");
+      
       try {
+        console.log('Submitting bank info:', {
+          accountNumber: values.accountNumber,
+          bankCode: values.bankCode,
+          bankName: values.bankName
+        });
+
         const res = await fetch(`${import.meta.env.VITE_BASE_URL}/provider/bank-info`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify(values),
+          body: JSON.stringify({
+            accountNumber: values.accountNumber,
+            bankCode: values.bankCode
+          }),
         });
 
         const data = await res.json();
+        console.log('Save bank info response:', data);
+        console.log('Verification details:', data.verificationDetails);
+        
         if (data.success) {
-          setSuccessMessage("Account info updated successfully!");
-          onNext?.();
+          setSuccessMessage("Bank account added successfully!");
+          setTimeout(() => onNext?.(), 1500);
         } else {
-          setErrorMessage(data.message || "Failed to update account info");
+          setErrorMessage(data.message || "Failed to add bank account");
         }
       } catch (err) {
         console.error("Bank info update failed:", err);
@@ -54,6 +169,36 @@ export default function BankAccountForm({ onBack, onNext }) {
       }
     },
   });
+
+  // Handle bank selection
+  const handleBankSelect = (bank) => {
+    console.log('Selected bank:', bank);
+    formik.setFieldValue("bankName", bank.name);
+    formik.setFieldValue("bankCode", bank.code);
+    setSearchQuery(bank.name);
+    setShowDropdown(false);
+    
+    // Verify account if account number already entered
+    if (formik.values.accountNumber.length === 10) {
+      verifyAccountNumber(formik.values.accountNumber, bank.code);
+    }
+  };
+
+  // Handle account number change
+  const handleAccountNumberChange = (e) => {
+    const value = e.target.value;
+    formik.handleChange(e);
+    
+    console.log('Account number changed:', value);
+    
+    // Auto-verify when 10 digits entered and bank selected
+    if (value.length === 10 && formik.values.bankCode) {
+      console.log('Triggering verification for:', value, formik.values.bankCode);
+      verifyAccountNumber(value, formik.values.bankCode);
+    } else if (value.length !== 10) {
+      formik.setFieldValue("accountName", "");
+    }
+  };
 
   return (
     <AccountSetupLayout currentStep={3}>
@@ -73,21 +218,50 @@ export default function BankAccountForm({ onBack, onNext }) {
 
         {/* Form */}
         <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
-          {/* Bank Name */}
-          <InputField
-            name="bankName"
-            label="Bank"
-            select
-            options={[
-              { label: "Select Bank", value: "" },
-              { label: "UBA", value: "UBA" },
-              { label: "GTB", value: "GTB" },
-              { label: "OPAY", value: "OPAY" },
-            ]}
-            value={formik.values.bankName}
-            onChange={(option) => formik.setFieldValue("bankName", option.value)}
-            onBlur={formik.handleBlur}
-          />
+          {/* Bank Name with Search */}
+          <div className="relative">
+            <label className="block text-sm font-medium mb-1">Bank</label>
+            <input
+              type="text"
+              placeholder={loadingBanks ? "Loading banks..." : "Search for your bank"}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => {
+                // Delay to allow click on dropdown
+                setTimeout(() => {
+                  setShowDropdown(false);
+                  formik.setFieldTouched("bankName", true);
+                }, 200);
+              }}
+              disabled={loadingBanks}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#005823BF]"
+            />
+            
+            {/* Dropdown */}
+            {showDropdown && searchQuery && filteredBanks.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {filteredBanks.map((bank) => (
+                  <div
+                    key={bank.code}
+                    onClick={() => handleBankSelect(bank)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {bank.name}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {showDropdown && searchQuery && filteredBanks.length === 0 && !loadingBanks && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg px-4 py-2 text-gray-500">
+                No banks found
+              </div>
+            )}
+          </div>
           {formik.touched.bankName && formik.errors.bankName && (
             <p className="text-red-500 text-sm">{formik.errors.bankName}</p>
           )}
@@ -95,39 +269,54 @@ export default function BankAccountForm({ onBack, onNext }) {
           {/* Account Number */}
           <InputField
             name="accountNumber"
-            placeholder="Account Number"
+            label="Account Number"
+            placeholder="Enter your 10-digit account number"
             value={formik.values.accountNumber}
-            onChange={formik.handleChange}
+            onChange={handleAccountNumberChange}
             onBlur={formik.handleBlur}
+            disabled={!formik.values.bankCode}
           />
           {formik.touched.accountNumber && formik.errors.accountNumber && (
             <p className="text-red-500 text-sm">{formik.errors.accountNumber}</p>
           )}
 
-          {/* Account Name */}
-          <InputField
-            name="accountName"
-            placeholder="Account Name"
-            value={formik.values.accountName}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          />
+          {/* Account Name (Auto-filled after verification) */}
+          <div>
+            <InputField
+              name="accountName"
+              label="Account Name"
+              placeholder={verifyingAccount ? "Verifying account..." : "Account name will appear here"}
+              value={formik.values.accountName}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              disabled={true}
+              className="bg-gray-50"
+            />
+            {verifyingAccount && (
+              <p className="text-blue-500 text-sm mt-1">⏳ Verifying account number...</p>
+            )}
+            {formik.values.accountName && !verifyingAccount && (
+              <p className="text-green-600 text-sm mt-1">✓ Account verified</p>
+            )}
+          </div>
           {formik.touched.accountName && formik.errors.accountName && (
             <p className="text-red-500 text-sm">{formik.errors.accountName}</p>
           )}
-{errorMessage && (
-                  <div className="text-center text-[#db3a3a] mt-2">{errorMessage}</div>
-                )}
-                {successMessage && (
-                  <div className="text-center text-[#005823BF] mt-2">{successMessage}</div>
-                )}
+
+          {errorMessage && (
+            <div className="text-center text-[#db3a3a] mt-2">{errorMessage}</div>
+          )}
+          {successMessage && (
+            <div className="text-center text-[#005823BF] mt-2">{successMessage}</div>
+          )}
+
           {/* Submit Button */}
           <div className="flex justify-end mt-6">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || verifyingAccount || !formik.values.accountName}
               className={`px-6 py-2 rounded-md text-white bg-[#005823BF] hover:bg-[#004e1a] transition ${
-                loading && "opacity-70 cursor-not-allowed"
+                (loading || verifyingAccount || !formik.values.accountName) && "opacity-70 cursor-not-allowed"
               }`}
             >
               {loading ? "Saving..." : "Save & Continue"}

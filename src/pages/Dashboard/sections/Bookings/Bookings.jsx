@@ -1,6 +1,6 @@
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   jobTitles,
   allServices,
@@ -12,7 +12,7 @@ import { Calendar, Clock, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { bookingPost } from "../../../../api/bookings";
+import { bookingPost} from "../../../../api/bookings";
 
 export default function Bookings() {
   const [activeTab, setActiveTab] = useState("request");
@@ -22,6 +22,7 @@ export default function Bookings() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
 
   // Formik setup with dynamic validation schema
   const formik = useFormik({
@@ -136,6 +137,7 @@ export default function Bookings() {
         console.log(payload);
 
         const res = await bookingPost(payload);
+        console.log(res);
 
         if (res?.message) {
           setSuccessMessage(res.message);
@@ -216,32 +218,9 @@ export default function Bookings() {
     setSelectedRequest(null);
   };
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   // Handle form submission
-  //   if (isTransportLogistics) {
-  //     console.log({
-  //       jobTitle: selectedJobTitle,
-  //       service: selectedService,
-  //       pickupLocation,
-  //       dropoffLocation,
-  //       serviceType,
-  //       // ... other fields
-  //     });
-  //   } else {
-  //     console.log({
-  //       jobTitle: selectedJobTitle,
-  //       service: selectedService,
-  //       serviceType,
-  //       // ... other fields
-  //     });
-  //   }
-  //   navigate("/dashboard/provider/searching");
-  // };
-
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen">
         <ServiceDetailsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}

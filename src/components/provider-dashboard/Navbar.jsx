@@ -10,7 +10,10 @@ export default function ProviderNavbar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(3);
   const user = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser); // If you have this action
+  const [updatingAvailability, setUpdatingAvailability] = useState(false);
   const navigate = useNavigate();
+  const isAvailable = user?.data?.availability?.isAvailable ?? false;
 
   const notifications = [
     {
@@ -48,7 +51,52 @@ export default function ProviderNavbar() {
     setUnreadCount(0);
   };
 
-  return (
+  const toggleAvailability = async () => {
+    setUpdatingAvailability(true);
+    const newAvailability = !isAvailable; // Toggle to opposite
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/provider/availability/toggle`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ isAvailable: newAvailability }), // Send the new toggled value
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update Zustand store with new availability
+        if (updateUser) {
+          updateUser({
+            ...user,
+            data: {
+              ...user.data,
+              availability: {
+                ...user.data?.availability,
+                isAvailable: newAvailability
+              }
+            }
+          });
+        }
+      } else {
+        console.error("Failed to update availability:", data.message);
+        // Optionally show error toast
+      }
+    } catch (error) {
+      console.error("Error updating availability:", error);
+      // Optionally show error toast
+    } finally {
+      setUpdatingAvailability(false);
+    }
+  }
+
+  return (     
     <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
 
       {/* Mobile Menu Button */}
@@ -61,7 +109,7 @@ export default function ProviderNavbar() {
 
       {/* Logo */}
       <button
-        className="text-3xl font-bold text-[#005823]"
+    className="hidden sm:block text-xl sm:text-2xl md:text-3xl font-bold text-[#005823]"
         onClick={() => navigate("/dashboard")}
       >
         SabiGuy
@@ -87,6 +135,30 @@ export default function ProviderNavbar() {
 
       {/* Right Icons */}
       <div className="flex items-center space-x-4">
+      <div className="lg:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200">
+
+          <span
+            className={`text-xs font-medium transition-colors ${
+              isAvailable ? "text-gray-700" : "text-gray-400"
+            }`}
+          >
+            {isAvailable ? "Available for Jobs" : "Not Available"}
+          </span>
+          <button
+            onClick={toggleAvailability}
+            disabled={updatingAvailability}
+            className={`relative w-11 h-6 rounded-full transition-all duration-300 ${
+              isAvailable ? "bg-green-500" : "bg-gray-300"
+            } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
+            aria-label="Toggle availability"
+          >
+            <div
+              className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                isAvailable ? "translate-x-6" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+          </div>
         {/* Bell */}
        <button
               onClick={handleNotificationClick}
@@ -106,7 +178,7 @@ export default function ProviderNavbar() {
           className="flex items-center"
         >
           <img
-            src={user.data?.profilePicture}
+            src={user.data?.profilePicture || "/avatar.png"}
             className="w-8 h-8 rounded-full border"
           />
         </button>
@@ -140,6 +212,33 @@ export default function ProviderNavbar() {
               <X size={26} className="text-gray-600" />
             </button>
 
+            {/* Mobile Availability Toggle */}
+            <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200">
+                <span
+                 className={`text-[10px] sm:text-xs font-medium transition-colors hidden sm:block ${
+                    isAvailable ? "text-gray-700" : "text-gray-400"
+                  }`}
+                >
+                  {isAvailable ? "Available for Jobs" : "Not Available"}
+                </span>
+              </div>
+              <button
+                onClick={toggleAvailability}
+                disabled={updatingAvailability}
+                className={`relative w-full h-8 rounded-full transition-all duration-300 ${
+                  isAvailable ? "bg-green-500" : "bg-gray-300"
+                } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <div
+                  className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                    isAvailable ? "translate-x-[calc(100%-1.75rem)]" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+
             {/* Menu Links */}
             <nav className="space-y-4 text-lg text-gray-700">
               <button onClick={() => navigate("/dashboard")} className="block">
@@ -164,4 +263,4 @@ export default function ProviderNavbar() {
       />
     </header>
   );
-}
+}  

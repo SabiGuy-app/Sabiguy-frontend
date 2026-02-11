@@ -32,7 +32,7 @@ export default function ProfilePage() {
   return (
     <DashboardLayout>
       {/* Header */}
-      <div className="w-190">
+      <div className="">
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-200 p-9 mb-6">
           <h1 className="mb-4 font-bold">My Profile</h1>
