@@ -33,7 +33,7 @@ export default function AlertsCard({ alert, onViewDetails }) {
           <div className="flex  items-start justify-between mb-2">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">
-                {alert.title}
+                {alert.fullName}
               </h3>
 
               <div className="flex flex-col mb-4 mt-2 gap-3 text-sm text-gray-600">
@@ -44,7 +44,7 @@ export default function AlertsCard({ alert, onViewDetails }) {
 
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  <span className="font-medium">{alert.scheduledDate}</span>
+                  <span className="font-medium">{alert.scheduleType}</span>
                 </div>
                 {alert.posted && (
                   <div className="flex items-center gap-2">
