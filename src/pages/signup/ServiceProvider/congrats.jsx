@@ -14,7 +14,7 @@ export default function Congrats () {
                 <p className="text-2xl mb-5 mt-5">We’re reviewing your documents and will notify you once
 you’re verified.</p>
                    <div className="flex gap-10 mt-10">
-                    <Link to="/dashboard"> 
+                    <Link to="/dashboard/provider"> 
                     <Button size="md">Go To Dashboard</Button>
                     </Link>
                    </div>
