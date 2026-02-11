@@ -12,7 +12,7 @@ import { Calendar, Clock, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { bookingPost} from "../../../../api/bookings";
+import { bookingPost } from "../../../../api/bookings";
 
 export default function Bookings() {
   const [activeTab, setActiveTab] = useState("request");
@@ -22,7 +22,6 @@ export default function Bookings() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
 
   // Formik setup with dynamic validation schema
   const formik = useFormik({
@@ -38,7 +37,7 @@ export default function Bookings() {
       startDate: "",
       endDate: "",
       scheduleDate: "",
-      budget: "",
+      // autoAcceptNearest: false,
     },
     validationSchema: Yup.object().shape({
       jobTitle: Yup.string().required("Work category is required"),
@@ -109,11 +108,11 @@ export default function Bookings() {
       }),
 
       // Budget validation
-      budget: Yup.number()
-        .required("Budget is required")
-        .positive("Budget must be a positive number")
-        .integer("Budget must be a whole number")
-        .min(1000, "Budget must be at least ₦1,000"),
+      // budget: Yup.number()
+      //   .required("Budget is required")
+      //   .positive("Budget must be a positive number")
+      //   .integer("Budget must be a whole number")
+      //   .min(1000, "Budget must be at least ₦1,000"),
     }),
     onSubmit: async (values) => {
       console.log("Form submitted:", values);
@@ -125,13 +124,13 @@ export default function Bookings() {
         const payload = {
           serviceType: values.jobTitle,
           subCategory: values.service,
-          title: values.title,
           address: "Osborne Foreshore Estate, Ikoyi, Lagos",
           pickupAddress: values.pickupLocation,
           dropoffAddress: values.dropoffLocation,
           scheduleType: values.serviceType,
-          budget: parseFloat(values.budget),
+          budget: 2000,
           attachments: values.attachments,
+          // autoAcceptNearest: values.autoAcceptNearest,
         };
 
         console.log(payload);
@@ -453,7 +452,7 @@ export default function Bookings() {
                   select
                   options={[
                     { label: "Select service type", value: "" },
-                    { label: "Immediate", value: "immediate" },
+                    { label: "Pickup now", value: "immediate" },
                     { label: "Schedule", value: "schedule" },
                   ]}
                   value={formik.values.serviceType}
@@ -468,12 +467,12 @@ export default function Bookings() {
                   </p>
                 )}
               </div>
-              {formik.values.serviceType === "immediate" && (
+              {/* {formik.values.serviceType === "immediate" && (
                 <Clock className="absolute right-4 top-[55%] w-5 h-5 text-gray-400 pointer-events-none" />
               )}
               {formik.values.serviceType === "schedule" && (
                 <Calendar className="absolute right-4 top-[55%] w-5 h-5 text-gray-400 pointer-events-none" />
-              )}
+              )} */}
             </div>
 
             {/* Schedule Date (if schedule is selected) */}
@@ -541,7 +540,7 @@ export default function Bookings() {
               ))}
 
             {/* Budget */}
-            <div>
+            {/* <div>
               <InputField
                 name="budget"
                 label="Your Budget"
@@ -556,7 +555,24 @@ export default function Bookings() {
                   {formik.errors.budget}
                 </p>
               )}
-            </div>
+            </div> */}
+
+            {/* Automatically accept nearby providers  */}
+            {/* <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                // id="auto-accept"
+                // checked={formik.values.autoAcceptNearest}
+                // onChange={formik.handleChange}
+                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label
+                htmlFor="auto-accept"
+                className="text-gray-500 cursor-pointer select-none"
+              >
+                Automatically accept the nearest provider
+              </label>
+            </div> */}
 
             {/* Submit Button */}
             <div className="flex flex-col">
