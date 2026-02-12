@@ -209,7 +209,7 @@ onSubmit={(values, { setSubmitting }) => {
     Upload File
   </label>
   {values.ninSlip && (
-  <p className="text-sm text-gray-600 mt-2">{values.ninSlip.name}</p>
+  <p className="text-sm font-bold text-gray-600 mt-2">{values.ninSlip.name}</p>
 )}
 </div>
 

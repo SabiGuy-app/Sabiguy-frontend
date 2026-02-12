@@ -10,6 +10,7 @@ import { AnimatePresence } from "framer-motion";
 import FaceCapture from "./AccountSetup/FacialCapture";
 import FacialCapture from "./AccountSetup/FaceCapture/FacialCapture";
 import UploadDocumnet from "./AccountSetup/UploadDoc";
+import UploadAutoMobile from "./AccountSetup/UploadAutomobile";
 import Congrats from "./congrats";
 import { useState } from "react";
 
@@ -31,8 +32,6 @@ export default function Form() {
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
   const forms = [
-        <BankAccountForm onNext={handleNext} onBack={handleBack} />,
-
     <StepOne onNext={handleNext} />,
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
     <StepThree onNext={handleNext} onBack={handleBack} />,
@@ -45,7 +44,7 @@ export default function Form() {
     <FacialCapture onNext={handleNext} onBack={handleBack} />,
     <FaceCapture onNext={handleNext} onBack={handleBack} />,
     <SkillsVerification onNext={handleNext} onBack={handleBack} />,
-    <UploadDocumnet onNext={handleNext} onBack={handleBack} />,
+    <UploadAutoMobile onNext={handleNext} onBack={handleBack} />,
     <BankAccountForm onNext={handleNext} onBack={handleBack} />,
     <Congrats onNext={handleNext} onBack={handleBack} />,
   ];

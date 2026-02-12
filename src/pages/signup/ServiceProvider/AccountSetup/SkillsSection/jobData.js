@@ -30,6 +30,8 @@ export const allServices = {
   // ],
   transport: [
     { label: "Car driver", value: "car_driver" },
+   { label: "Dispatch Rider", value: "dispatch_rider" },
+
     { label: "Motorbike driver", value: "motorbike_driver" },
     { label: "Package Delivery", value: "package_delivery" },
   ],
