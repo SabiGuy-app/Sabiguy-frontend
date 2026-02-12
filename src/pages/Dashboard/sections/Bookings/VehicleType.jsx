@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Navbar from "../../../../components/dashboard/Navbar";
-import location from "../../../../../public/location.png"
+import location from "../../../../../public/location.png";
+import motorbike from "../../../../../public/motorbike.png";
+import corolla from "../../../../../public/corolla.png";
 
 export default function VehicleType() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -14,7 +16,7 @@ export default function VehicleType() {
       delivery: "Medium-sized delivery",
       price: "₦5,000",
       priceValue: 5000,
-      icon: "🚗",
+      image: corolla,
     },
     {
       id: 2,
@@ -24,42 +26,44 @@ export default function VehicleType() {
       package: "Small to medium package",
       price: "₦2,700",
       priceValue: 2700,
-      icon: "🏍️",
+      image: motorbike,
     },
   ];
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 grid grid-cols-2 gap-10 p-6 font-sans">
-        <div className="">
-          {/* Header */}
-          <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+      <div className=" bg-gray-50 grid grid-cols-2 gap-10 p-6">
+        <div>
+          <h1 className="text-[28px] font-semibold text-[#231F20] mb-6">
             Choose a ride
           </h1>
 
-          {/* Locations */}
-          <div className="mb-6 space-y-3">
+          <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-gray-900 mt-2 flex-shrink-0"></div>
-              <p className="text-gray-700 text-sm">
-                15 Victoria Island, Lagos...
-              </p>
+              <div className="w-2 h-2 rounded-full bg-gray-900 mt-3 flex-shrink-0"></div>
+              <div>
+                <span className="text-[#231F2080]/50 text-[16px]">Pickup</span>
+                <p className="text-[#231F20BF]/[.75] text-[20px]">
+                  15 Victoria Island, Lagos
+                </p>
+              </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-gray-900 mt-2 flex-shrink-0"></div>
-              <p className="text-gray-700 text-sm">
-                24 Palm Avenue, Lekki Phase 1, Lagos
-              </p>
+              <div className="w-2 h-2 rounded-full bg-gray-900 mt-3 flex-shrink-0"></div>
+              <div>
+                <span className="text-[#231F2080]/50 text-[16px]">Dropoff</span>
+                <p className="text-[#231F20BF]/[.75] text-[20px]">
+                  24 Palm Avenue, Lekki Phase 1, Lagos
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Available options */}
-          <h2 className="text-sm font-medium text-gray-900 mb-3">
+          <h2 className="text-[20px] font-medium text-[##231F20] mb-3">
             Available options
           </h2>
 
-          {/* Vehicle Cards */}
           <div className="space-y-3 mb-6">
             {vehicles.map((vehicle) => (
               <button
@@ -73,21 +77,27 @@ export default function VehicleType() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-3xl">{vehicle.icon}</div>
+                    <div className="text-3xl">
+                      <img
+                        src={vehicle.image}
+                        alt=""
+                        className="w-[71px] h-[43px]"
+                      />
+                    </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-base">
+                      <h3 className="font-semibold text-[#231F20] text-[20px]">
                         {vehicle.name}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-[16px] text-[#231F2080]/[.75]">
                         {vehicle.time} • {vehicle.capacity}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-[16px] text-gray-400 mt-0.5">
                         {vehicle.delivery || vehicle.package}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-gray-900 text-base">
+                    <p className="font-semibold text-[#005823] text-[20px]">
                       {vehicle.price}
                     </p>
                   </div>
@@ -96,13 +106,12 @@ export default function VehicleType() {
             ))}
           </div>
 
-          {/* Continue Button */}
-          <button className="w-full bg-green-800 hover:bg-green-900 text-white font-medium py-4 rounded-lg transition-colors">
+          <button className="w-full bg-[#005823] hover:bg-green-900 text-[16px] text-white font-medium py-4 rounded-lg transition-colors">
             Continue
           </button>
         </div>
         <div>
-            <img src={location} alt="" />
+          <img src={location} alt="" className="w-[700px] h-[660px]" />
         </div>
       </div>
     </>
