@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { Bell, Search, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bell, Search, Menu, X, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NotificationDrawer from "../dashboard/Notification";
 import { useAuthStore } from "../../stores/auth.store";
+import locationService from "../../services/locationService";
+import { io } from "socket.io-client";
+
 
 export default function ProviderNavbar() {
   const [showSearch, setShowSearch] = useState(false);
@@ -10,7 +13,9 @@ export default function ProviderNavbar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(3);
   const user = useAuthStore((state) => state.user);
-  const updateUser = useAuthStore((state) => state.updateUser); // If you have this action
+  const updateUser = useAuthStore((state) => state.updateUser); 
+  const [socket, setSocket] = useState(null);
+  const [locationEnabled, setLocationEnabled] = useState(false);
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
   const navigate = useNavigate();
   const isAvailable = user?.data?.availability?.isAvailable ?? false;
@@ -45,6 +50,88 @@ export default function ProviderNavbar() {
     },
   ];
 
+
+  // Initialize socket connection
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const newSocket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:3000", {
+      auth: { token },
+      transports: ['websocket', 'polling']
+    });
+
+    newSocket.on("connect", () => {
+      console.log("✅ Provider socket connected");
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.error("❌ Socket connection error:", error);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      locationService.stopTracking();
+      newSocket.disconnect();
+    };
+  }, []);
+
+  // Sync location tracking with availability
+  useEffect(() => {
+    if (isAvailable && socket) {
+      // Start location tracking when available
+      startLocationTracking();
+    } else if (!isAvailable) {
+      // Stop location tracking when not available
+      locationService.stopTracking();
+      setLocationEnabled(false);
+    }
+  }, [isAvailable, socket]);
+
+  const startLocationTracking = async () => {
+    if (!navigator.geolocation) {
+      alert("Your browser does not support location tracking");
+      return false;
+    }
+
+    try {
+      // Request permission first
+      await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          { enableHighAccuracy: true }
+        );
+      });
+
+      console.log("✅ Location permission granted");
+
+      // Start continuous tracking
+      locationService.startTracking(socket);
+      setLocationEnabled(true);
+
+      // Also notify via socket
+      if (socket) {
+        socket.emit("set_availability", { isAvailable: true });
+      }
+
+      return true;
+    } catch (error) {
+      console.error("❌ Location permission denied:", error);
+      
+      // Show user-friendly error
+      const errorMessages = {
+        1: "Location permission denied. Please enable location access in your browser settings.",
+        2: "Location unavailable. Please check your device settings.",
+        3: "Location request timed out. Please try again."
+      };
+      
+      alert(errorMessages[error.code] || "Failed to enable location tracking");
+      return false;
+    }
+  };
+
   const handleNotificationClick = () => {
     setShowNotifications(true);
     // Mark as read when opened
@@ -52,8 +139,18 @@ export default function ProviderNavbar() {
   };
 
   const toggleAvailability = async () => {
+    const newAvailability = !isAvailable;
+
+    // If turning ON, request location permission first
+    if (newAvailability) {
+      const locationGranted = await startLocationTracking();
+      if (!locationGranted) {
+        // Don't proceed if location permission denied
+        return;
+      }
+    }
+
     setUpdatingAvailability(true);
-    const newAvailability = !isAvailable; // Toggle to opposite
 
     try {
       const response = await fetch(
@@ -64,14 +161,14 @@ export default function ProviderNavbar() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify({ isAvailable: newAvailability }), // Send the new toggled value
+          body: JSON.stringify({ isAvailable: newAvailability }),
         }
       );
 
       const data = await response.json();
 
       if (data.success) {
-        // Update Zustand store with new availability
+        // Update Zustand store
         if (updateUser) {
           updateUser({
             ...user,
@@ -84,17 +181,87 @@ export default function ProviderNavbar() {
             }
           });
         }
+
+        // If turning OFF, stop location tracking
+        if (!newAvailability) {
+          locationService.stopTracking();
+          setLocationEnabled(false);
+          
+          // Notify socket
+          if (socket) {
+            socket.emit("set_availability", { isAvailable: false });
+          }
+        }
+
+        console.log(`✅ Availability ${newAvailability ? 'enabled' : 'disabled'}`);
       } else {
         console.error("Failed to update availability:", data.message);
-        // Optionally show error toast
+        alert("Failed to update availability. Please try again.");
+        
+        // Rollback location tracking if API failed
+        if (newAvailability) {
+          locationService.stopTracking();
+          setLocationEnabled(false);
+        }
       }
     } catch (error) {
       console.error("Error updating availability:", error);
-      // Optionally show error toast
+      alert("Error updating availability. Please check your connection.");
+      
+      // Rollback location tracking on error
+      if (newAvailability) {
+        locationService.stopTracking();
+        setLocationEnabled(false);
+      }
     } finally {
       setUpdatingAvailability(false);
     }
-  }
+  };
+
+  // const toggleAvailability = async () => {
+  //   setUpdatingAvailability(true);
+  //   const newAvailability = !isAvailable; // Toggle to opposite
+
+  //   try {
+  //     const response = await fetch(
+  //       `${import.meta.env.VITE_BASE_URL}/provider/availability/toggle`,
+  //       {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //         },
+  //         body: JSON.stringify({ isAvailable: newAvailability }), // Send the new toggled value
+  //       }
+  //     );
+
+  //     const data = await response.json();
+
+  //     if (data.success) {
+  //       // Update Zustand store with new availability
+  //       if (updateUser) {
+  //         updateUser({
+  //           ...user,
+  //           data: {
+  //             ...user.data,
+  //             availability: {
+  //               ...user.data?.availability,
+  //               isAvailable: newAvailability
+  //             }
+  //           }
+  //         });
+  //       }
+  //     } else {
+  //       console.error("Failed to update availability:", data.message);
+  //       // Optionally show error toast
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating availability:", error);
+  //     // Optionally show error toast
+  //   } finally {
+  //     setUpdatingAvailability(false);
+  //   }
+  // }
 
   return (     
     <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
@@ -135,30 +302,47 @@ export default function ProviderNavbar() {
 
       {/* Right Icons */}
       <div className="flex items-center space-x-4">
-      <div className="lg:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200">
-
-          <span
-            className={`text-xs font-medium transition-colors ${
-              isAvailable ? "text-gray-700" : "text-gray-400"
-            }`}
-          >
-            {isAvailable ? "Available for Jobs" : "Not Available"}
-          </span>
+        <div className="lg:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-2">
+            {/* Location indicator */}
+            {locationEnabled && (
+              <MapPin size={14} className="text-green-500 animate-pulse" />
+            )}
+            <span
+              className={`text-xs font-medium transition-colors ${
+                isAvailable ? "text-gray-700" : "text-gray-400"
+              }`}
+            >
+              {isAvailable 
+                ? locationEnabled 
+                  ? "Available • Location On" 
+                  : "Available" 
+                : "Not Available"}
+            </span>
+          </div>
+          
           <button
             onClick={toggleAvailability}
             disabled={updatingAvailability}
             className={`relative w-11 h-6 rounded-full transition-all duration-300 ${
               isAvailable ? "bg-green-500" : "bg-gray-300"
             } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
-            aria-label="Toggle availability"
+            aria-label="Toggle availability and location"
+            title={isAvailable ? "Go offline and stop location" : "Go online and start location"}
           >
-            <div
-              className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${
-                isAvailable ? "translate-x-6" : "translate-x-0.5"
-              }`}
-            />
+            {updatingAvailability ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div
+                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                  isAvailable ? "translate-x-6" : "translate-x-0.5"
+                }`}
+              />
+            )}
           </button>
-          </div>
+        </div>
         {/* Bell */}
        <button
               onClick={handleNotificationClick}

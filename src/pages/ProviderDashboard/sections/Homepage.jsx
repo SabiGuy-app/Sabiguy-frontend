@@ -13,8 +13,10 @@ import { useState, useEffect } from "react";
 
 
 export default function ProviderDashboard () {
-   const { token } = useAuthStore();
    const user = useAuthStore((state) => state.user);
+
+ 
+
 
     return (
         <ProviderDashboardLayout>
@@ -25,7 +27,6 @@ export default function ProviderDashboard () {
                     <p className="mb-3 text-sm">Here's a quick look at your business performance today.</p>
                 </div>
                 </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <DashboardCard
           title="Total Revenue"
