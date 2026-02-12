@@ -58,7 +58,7 @@ class LocationService {
    */
   throttledHTTPUpdate = this.throttle((latitude, longitude) => {
     fetch(`${import.meta.env.VITE_BASE_URL}/provider/location`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
