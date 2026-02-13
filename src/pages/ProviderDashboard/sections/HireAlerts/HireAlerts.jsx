@@ -6,7 +6,8 @@ import AlertsCard from "../../../../components/provider-dashboard/AlertsCard";
 import AlertDetailsModal from "./AlertDetails";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
-import { getAllBookings, getProviderBookings } from "../../../../api/bookings";
+import { getProviderBookings } from "../../../../api/provider";
+import { getAllBookings } from "../../../../api/bookings";
 
 export default function HireAlerts() {
   const navigate = useNavigate();
@@ -18,103 +19,148 @@ export default function HireAlerts() {
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [isMarkOpen, setIsMarkOpen] = useState(false);
 
-  // States for API data
-  const [alerts, setAlerts] = useState([]);
+
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch bookings on component mount
+
   useEffect(() => {
     fetchBookings();
-  }, [activeTab]); // Refetch when tab changes
+  }, [activeTab]);
 
   const fetchBookings = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       setError(null);
+      const response = await getProviderBookings();
+      const bookingsData = response.data || response;
 
-      if (activeTab === "alert") {
-        // Fetch available bookings for Hire Alerts
-        const response = await getAllBookings();
-        console.log("🔔 Available Bookings:", response);
 
-        if (response.success && response.data.length > 0) {
-          const transformedAlerts = transformAvailableBookings(response.data);
-          setAlerts(transformedAlerts);
-        } else {
-          setAlerts([]);
-        }
-      } else {
-        // Fetch provider's accepted bookings for Jobs tab
-        const response = await getProviderBookings();
-        console.log("📦 Provider Bookings:", response);
+      if (Array.isArray(bookingsData)) {
+        const jobsList = bookingsData.filter(
+          (booking) =>
+            booking.status === "accepted" ||
+            booking.status === "in_progress" ||
+            booking.status === "completed" ||
+            booking.status === "waiting_confirmation"
+        );
+        const alertsList = bookingsData.filter(
+          (booking) => booking.status === "pending"
+        );
 
-        if (response.success && response.data.length > 0) {
-          const transformedJobs = transformProviderBookings(response.data);
-          setJobs(transformedJobs);
-        } else {
-          setJobs([]);
-        }
+        setJobs(jobsList);
+        setAlerts(alertsList);
+      } else if (bookingsData.bookings) {
+
+        const jobsList = bookingsData.bookings.filter(
+          (booking) =>
+            booking.status === "accepted" ||
+            booking.status === "in_progress" ||
+            booking.status === "completed" ||
+            booking.status === "waiting_confirmation"
+        );
+        const alertsList = bookingsData.bookings.filter(
+          (booking) => booking.status === "pending"
+        );
+
+        setJobs(jobsList);
+        setAlerts(alertsList);
       }
     } catch (err) {
-      setError(err.message || "Failed to fetch bookings");
       console.error("Error fetching bookings:", err);
+      setError(err.response?.data?.message || "Failed to load bookings");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const transformAvailableBookings = (bookings) => {
-    // Filter only pending_providers status
-    const availableBookings = bookings.filter(
-      (booking) => booking.status === "awaiting_provider_acceptance"
-    );
 
-    return availableBookings.map((booking) => ({
-      id: booking._id,
-      title: booking.title,
-      fullName: booking.userId.fullName,
-      number: booking.userId.phoneNumber,
-      status: "New",
-      distance: booking.distance
-        ? `${booking.distance.value} ${booking.distance.unit} away`
-        : "N/A",
-      price: booking.calculatedPrice || booking.budget || 0,
-      scheduleType: booking.scheduleType,
-      posted: getTimeAgo(booking.createdAt),
-      location:
-        booking.location?.address || booking.pickupLocation?.address || "N/A",
-      originalData: booking,
-    }));
-  };
+  const transformBookingsData = (bookings) => {
+    const alerts = [];
+    const jobs = [];
 
-  const transformProviderBookings = (bookings) => {
-    return bookings.map((booking) => ({
-      id: booking._id,
-      title: booking.title,
-      price:
-        booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
-      location:
-        booking.location?.address || booking.pickupLocation?.address || "N/A",
-      status: mapJobStatus(booking.status),
-      providerName: "You",
-      startsIn:
-        booking.status === "confirmed"
-          ? calculateTimeUntil(booking.startDate)
-          : null,
-      est_completion:
-        booking.status === "in_progress"
-          ? calculateEstCompletion(booking.startDate, booking.endDate)
-          : null,
-      completed:
-        booking.status === "completed" ||
-        booking.status === "waiting_confirmation"
-          ? getTimeAgo(booking.updatedAt)
-          : null,
-      ratings: booking.rating || null,
-      originalData: booking,
-    }));
+    bookings.forEach((booking) => {
+      const commonData = {
+        id: booking._id,
+        title: booking.title,
+        price:
+          booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
+        deliveryDate: booking.endDate
+          ? new Date(booking.endDate).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+          : "TBD",
+        scheduledDate:
+          new Date(booking.startDate).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }) +
+          " - " +
+          new Date(booking.startDate).toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          }),
+        location:
+          booking.location?.address || booking.pickupLocation?.address || "N/A",
+        // Store original data for modal details
+        originalData: booking,
+      };
+
+      // Categorize based on status
+      if (
+        booking.status === "pending_providers" ||
+        booking.status === "pending_customer"
+      ) {
+        // These are alerts (new job opportunities)
+        alerts.push({
+          ...commonData,
+          status:
+            booking.status === "pending_providers"
+              ? "New"
+              : "Awaiting Response",
+          distance: booking.distance
+            ? `${booking.distance.value} ${booking.distance.unit} away`
+            : "N/A",
+          posted:
+            booking.status === "pending_providers"
+              ? getTimeAgo(booking.createdAt)
+              : null,
+          offerSent:
+            booking.status === "pending_customer"
+              ? getTimeAgo(booking.updatedAt)
+              : null,
+        });
+      } else {
+        // These are active jobs
+        jobs.push({
+          ...commonData,
+          status: mapJobStatus(booking.status),
+          providerName: "You", // Since this is provider dashboard
+          startsIn:
+            booking.status === "confirmed"
+              ? calculateTimeUntil(booking.startDate)
+              : null,
+          est_completion:
+            booking.status === "in_progress"
+              ? calculateEstCompletion(booking.startDate, booking.endDate)
+              : null,
+          completed:
+            booking.status === "completed" ||
+              booking.status === "waiting_confirmation"
+              ? getTimeAgo(booking.updatedAt)
+              : null,
+          ratings: booking.rating || null,
+        });
+      }
+    });
+
+    return { alerts, jobs };
   };
 
   const mapJobStatus = (apiStatus) => {
@@ -181,11 +227,10 @@ export default function HireAlerts() {
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
-              activeFilter === filter.toLowerCase()
-                ? "bg-[#2D6A3E] text-white"
-                : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
-            }`}
+            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${activeFilter === filter.toLowerCase()
+              ? "bg-[#2D6A3E] text-white"
+              : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
+              }`}
           >
             {filter}
           </button>
@@ -195,12 +240,12 @@ export default function HireAlerts() {
   };
 
   const filteredJobs = jobs.filter((job) => {
-    const status = job.status.toLowerCase();
+    const status = job.status?.toLowerCase() || "";
 
     if (statusFilter === "all") return true;
 
     if (statusFilter === "active") {
-      return status === "in progress" || status === "waiting confirmation";
+      return status === "in_progress" || status === "waiting_confirmation";
     }
 
     return status === statusFilter;
@@ -232,23 +277,17 @@ export default function HireAlerts() {
   };
 
   const handleCloseMark = () => {
-    setSelectedJob(false);
-    setIsMarkOpen(null);
+    setIsMarkOpen(false);
+    setSelectedJob(null);
   };
 
-  const handleAcceptSuccess = async () => {
-  // Switch to Jobs tab
-  setActiveTab("jobs");
-  
-  // Refresh both tabs
-  await fetchBookings(currentPage);
-  
-  // Show success notification
-  console.log("✅ Job accepted! Switched to Jobs tab");
-};
+
+  const handleRefresh = () => {
+    fetchBookings();
+  };
 
   // Loading State
-  if (loading) {
+  if (isLoading) {
     return (
       <ProviderDashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -286,29 +325,30 @@ export default function HireAlerts() {
         isOpen={isAlertModalOpen}
         onClose={handleCloseAlert}
         alert={selectedAlert || {}}
-        onAcceptSuccess={handleAcceptSuccess}
+        onRefresh={handleRefresh}
       />
-      
+
       <JobDetailsModal
         isOpen={isJobModalOpen}
         onClose={handleCloseJob}
         job={selectedJob || {}}
+        onRefresh={handleRefresh}
       />
 
       <MarkAsCompleted
         isOpen={isMarkOpen}
         onClose={handleCloseMark}
         job={selectedJob || {}}
+        onRefresh={handleRefresh}
       />
 
       <div className="flex border-b mb-3">
         <button
           onClick={() => setActiveTab("alert")}
-          className={`px-6 py-3 font-medium transition-colors relative ${
-            activeTab === "alert"
+          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "alert"
               ? "text-[#005823] border-b-2 border-[#005823]"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           Hire Alerts
           {alerts.length > 0 && (
@@ -320,11 +360,10 @@ export default function HireAlerts() {
 
         <button
           onClick={() => setActiveTab("jobs")}
-          className={`px-6 py-3 font-medium transition-colors relative ${
-            activeTab === "jobs"
+          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "jobs"
               ? "text-[#005823] border-b-2 border-[#005823]"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           Jobs
           {jobs.length > 0 && (

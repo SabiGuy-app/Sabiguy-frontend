@@ -42,6 +42,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ProviderHelp from "./pages/ProviderDashboard/sections/ProviderHelp";
 import ProviderActivity from "./pages/ProviderDashboard/sections/ProviderActivity";
 import ProviderChat from "./pages/ProviderDashboard/sections/ProviderChat";
+import WalletCallback from "./pages/WalletCallback";
 import VehicleType from "./pages/Dashboard/sections/Bookings/VehicleType";
 import AvailableRiders from "./pages/Dashboard/sections/Bookings/AvailableRiders";
 import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2";
@@ -80,6 +81,7 @@ function App() {
               element={<ProviderActivity />}
             />
             <Route path="/dashboard/settings" element={<ProfilePage />} />
+            <Route path="/wallet/funding/callback" element={<WalletCallback />} />
             <Route path="/dashboard/help" element={<ContactPage />} />
             <Route path="/dashboard/provider/help" element={<ProviderHelp />} />
             <Route path="/dashboard/categories" element={<Categories />} />
