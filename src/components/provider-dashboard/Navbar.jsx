@@ -5,61 +5,110 @@ import NotificationDrawer from "../dashboard/Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import locationService from "../../services/locationService";
 import { io } from "socket.io-client";
-
+import { notificationService } from "../../api/notifications";
 
 export default function ProviderNavbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const user = useAuthStore((state) => state.user);
-  const updateUser = useAuthStore((state) => state.updateUser); 
+  const updateUser = useAuthStore((state) => state.updateUser);
   const [socket, setSocket] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
   const navigate = useNavigate();
   const isAvailable = user?.data?.availability?.isAvailable ?? false;
 
-  const notifications = [
-    {
-      id: 1,
-      type: "message",
-      title: "New message from Steve",
-      message: "Hey, Let me know when you are on your way",
-      time: "5 min ago",
-      category: "today",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "event",
-      title: "Upcoming event",
-      message: "Your scheduled plumbing service starts in 30 minutes.",
-      time: "1 hours ago",
-      category: "today",
-      read: false,
-    },
-    {
-      id: 3,
-      type: "booking",
-      title: "Bookings",
-      message: 'You have been book for "House wiring" by Chioma A.',
-      time: "2 hours ago",
-      category: "today",
-      read: false,
-    },
-  ];
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await notificationService.fetchUnreadCount();
+      if (res.success) {
+        setUnreadCount(res.data.unreadCount);
+      }
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  };
 
+  const fetchNotifications = async () => {
+    setLoadingNotifications(true);
+
+    try {
+      const res = await notificationService.fetchNotifications();
+
+      if (res.success) {
+        setNotifications(res.data.notifications);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      const res = await notificationService.markAsRead(id);
+
+      if (res.data.success) {
+        // Update local state
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif._id === id ? { ...notif, read: true } : notif,
+          ),
+        );
+        // Refresh unread count
+        fetchUnreadCount();
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const res = await notificationService.markAllAsRead();
+      if (res.data.success) {
+        // Update local state
+        setNotifications((prev) =>
+          prev.map((notif) => ({ ...notif, read: true })),
+        );
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      const res = await notificationService.deleteNotification(id);
+      if (res.data.success) {
+        // Remove from local state
+        setNotifications((prev) => prev.filter((notif) => notif._id !== id));
+        // Refresh unread count
+        fetchUnreadCount();
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
 
   // Initialize socket connection
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const newSocket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:3000", {
-      auth: { token },
-      transports: ['websocket', 'polling']
-    });
+    const newSocket = io(
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:3000",
+      {
+        auth: { token },
+        transports: ["websocket", "polling"],
+      },
+    );
 
     newSocket.on("connect", () => {
       console.log("✅ Provider socket connected");
@@ -69,12 +118,32 @@ export default function ProviderNavbar() {
       console.error("❌ Socket connection error:", error);
     });
 
+    // Listen for new notifications via socket
+    newSocket.on("new_notification", (notification) => {
+      console.log("📬 New notification received:", notification);
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+    });
+
     setSocket(newSocket);
 
     return () => {
       locationService.stopTracking();
       newSocket.disconnect();
     };
+  }, []);
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchUnreadCount();
+    fetchNotifications();
+
+    // Poll for new notifications every 30 seconds (optional if socket is working)
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Sync location tracking with availability
@@ -98,11 +167,9 @@ export default function ProviderNavbar() {
     try {
       // Request permission first
       await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
-          { enableHighAccuracy: true }
-        );
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+        });
       });
 
       console.log("✅ Location permission granted");
@@ -119,14 +186,14 @@ export default function ProviderNavbar() {
       return true;
     } catch (error) {
       console.error("❌ Location permission denied:", error);
-      
+
       // Show user-friendly error
       const errorMessages = {
         1: "Location permission denied. Please enable location access in your browser settings.",
         2: "Location unavailable. Please check your device settings.",
-        3: "Location request timed out. Please try again."
+        3: "Location request timed out. Please try again.",
       };
-      
+
       alert(errorMessages[error.code] || "Failed to enable location tracking");
       return false;
     }
@@ -134,7 +201,6 @@ export default function ProviderNavbar() {
 
   const handleNotificationClick = () => {
     setShowNotifications(true);
-    // Mark as read when opened
     setUnreadCount(0);
   };
 
@@ -162,7 +228,7 @@ export default function ProviderNavbar() {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({ isAvailable: newAvailability }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -176,9 +242,9 @@ export default function ProviderNavbar() {
               ...user.data,
               availability: {
                 ...user.data?.availability,
-                isAvailable: newAvailability
-              }
-            }
+                isAvailable: newAvailability,
+              },
+            },
           });
         }
 
@@ -186,18 +252,20 @@ export default function ProviderNavbar() {
         if (!newAvailability) {
           locationService.stopTracking();
           setLocationEnabled(false);
-          
+
           // Notify socket
           if (socket) {
             socket.emit("set_availability", { isAvailable: false });
           }
         }
 
-        console.log(`✅ Availability ${newAvailability ? 'enabled' : 'disabled'}`);
+        console.log(
+          `✅ Availability ${newAvailability ? "enabled" : "disabled"}`,
+        );
       } else {
         console.error("Failed to update availability:", data.message);
         alert("Failed to update availability. Please try again.");
-        
+
         // Rollback location tracking if API failed
         if (newAvailability) {
           locationService.stopTracking();
@@ -207,7 +275,7 @@ export default function ProviderNavbar() {
     } catch (error) {
       console.error("Error updating availability:", error);
       alert("Error updating availability. Please check your connection.");
-      
+
       // Rollback location tracking on error
       if (newAvailability) {
         locationService.stopTracking();
@@ -218,65 +286,16 @@ export default function ProviderNavbar() {
     }
   };
 
-  // const toggleAvailability = async () => {
-  //   setUpdatingAvailability(true);
-  //   const newAvailability = !isAvailable; // Toggle to opposite
-
-  //   try {
-  //     const response = await fetch(
-  //       `${import.meta.env.VITE_BASE_URL}/provider/availability/toggle`,
-  //       {
-  //         method: "PUT",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //         },
-  //         body: JSON.stringify({ isAvailable: newAvailability }), // Send the new toggled value
-  //       }
-  //     );
-
-  //     const data = await response.json();
-
-  //     if (data.success) {
-  //       // Update Zustand store with new availability
-  //       if (updateUser) {
-  //         updateUser({
-  //           ...user,
-  //           data: {
-  //             ...user.data,
-  //             availability: {
-  //               ...user.data?.availability,
-  //               isAvailable: newAvailability
-  //             }
-  //           }
-  //         });
-  //       }
-  //     } else {
-  //       console.error("Failed to update availability:", data.message);
-  //       // Optionally show error toast
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating availability:", error);
-  //     // Optionally show error toast
-  //   } finally {
-  //     setUpdatingAvailability(false);
-  //   }
-  // }
-
-  return (     
+  return (
     <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
-
       {/* Mobile Menu Button */}
-      <button
-        className="md:hidden"
-        onClick={() => setShowMenu(true)}
-      >
+      <button className="md:hidden" onClick={() => setShowMenu(true)}>
         <Menu size={26} className="text-gray-700" />
       </button>
 
       {/* Logo */}
       <button
-    className="hidden sm:block text-xl sm:text-2xl md:text-3xl font-bold text-[#005823]"
+        className="hidden sm:block text-xl sm:text-2xl md:text-3xl font-bold text-[#005823]"
         onClick={() => navigate("/dashboard")}
       >
         SabiGuy
@@ -304,7 +323,6 @@ export default function ProviderNavbar() {
       <div className="flex items-center space-x-4">
         <div className="lg:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200">
           <div className="flex items-center gap-2">
-            {/* Location indicator */}
             {locationEnabled && (
               <MapPin size={14} className="text-green-500 animate-pulse" />
             )}
@@ -313,14 +331,14 @@ export default function ProviderNavbar() {
                 isAvailable ? "text-gray-700" : "text-gray-400"
               }`}
             >
-              {isAvailable 
-                ? locationEnabled 
-                  ? "Available • Location On" 
-                  : "Available" 
+              {isAvailable
+                ? locationEnabled
+                  ? "Available • Location On"
+                  : "Available"
                 : "Not Available"}
             </span>
           </div>
-          
+
           <button
             onClick={toggleAvailability}
             disabled={updatingAvailability}
@@ -328,7 +346,11 @@ export default function ProviderNavbar() {
               isAvailable ? "bg-green-500" : "bg-gray-300"
             } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
             aria-label="Toggle availability and location"
-            title={isAvailable ? "Go offline and stop location" : "Go online and start location"}
+            title={
+              isAvailable
+                ? "Go offline and stop location"
+                : "Go online and start location"
+            }
           >
             {updatingAvailability ? (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -343,17 +365,18 @@ export default function ProviderNavbar() {
             )}
           </button>
         </div>
+
         {/* Bell */}
-       <button
-              onClick={handleNotificationClick}
-              className="relative text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <Bell size={24} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
+        <button
+          onClick={handleNotificationClick}
+          className="relative text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <Bell size={24} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-4 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </button>
 
         {/* Profile */}
@@ -363,6 +386,7 @@ export default function ProviderNavbar() {
         >
           <img
             src={user.data?.profilePicture || "/avatar.png"}
+            alt="Profile"
             className="w-8 h-8 rounded-full border"
           />
         </button>
@@ -384,14 +408,14 @@ export default function ProviderNavbar() {
 
       {/* Mobile Slide-in Menu */}
       {showMenu && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
-             onClick={() => setShowMenu(false)}>
-
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
+          onClick={() => setShowMenu(false)}
+        >
           <div
             className="absolute left-0 top-0 h-full w-64 bg-white shadow-lg p-6 animate-slideIn"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Icon */}
             <button className="mb-6" onClick={() => setShowMenu(false)}>
               <X size={26} className="text-gray-600" />
             </button>
@@ -400,7 +424,7 @@ export default function ProviderNavbar() {
             <div className="mb-6 p-4 border border-gray-200 rounded-lg">
               <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200">
                 <span
-                 className={`text-[10px] sm:text-xs font-medium transition-colors hidden sm:block ${
+                  className={`text-[10px] sm:text-xs font-medium transition-colors hidden sm:block ${
                     isAvailable ? "text-gray-700" : "text-gray-400"
                   }`}
                 >
@@ -416,39 +440,50 @@ export default function ProviderNavbar() {
               >
                 <div
                   className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
-                    isAvailable ? "translate-x-[calc(100%-1.75rem)]" : "translate-x-1"
+                    isAvailable
+                      ? "translate-x-[calc(100%-1.75rem)]"
+                      : "translate-x-1"
                   }`}
                 />
               </button>
             </div>
 
-
-            {/* Menu Links */}
             <nav className="space-y-4 text-lg text-gray-700">
               <button onClick={() => navigate("/dashboard")} className="block">
                 Dashboard
               </button>
 
-              <button onClick={() => navigate("/dashboard/categories")} className="block">
+              <button
+                onClick={() => navigate("/dashboard/categories")}
+                className="block"
+              >
                 Categories
               </button>
 
-              <button onClick={() => navigate("/dashboard/settings")} className="block">
+              <button
+                onClick={() => navigate("/dashboard/settings")}
+                className="block"
+              >
                 Settings
               </button>
             </nav>
           </div>
         </div>
       )}
+
       <NotificationDrawer
         isOpen={showNotifications}
         onClose={() => setShowNotifications(false)}
         notifications={notifications}
+        loading={loadingNotifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
+        onDelete={deleteNotification}
       />
     </header>
   );
-}  
-
+}
 // import { useState, useEffect, useRef } from "react";
 // import { Bell, Search, Menu, X, MapPin, AlertCircle } from "lucide-react";
 // import { useNavigate } from "react-router-dom";
@@ -467,11 +502,11 @@ export default function ProviderNavbar() {
 //   const [locationError, setLocationError] = useState(null);
 //   const [updatingAvailability, setUpdatingAvailability] = useState(false);
 //   const [showLocationAlert, setShowLocationAlert] = useState(false);
-  
+
 //   const user = useAuthStore((state) => state.user);
 //   const updateUser = useAuthStore((state) => state.updateUser);
 //   const navigate = useNavigate();
-  
+
 //   const isAvailable = user?.data?.availability?.isAvailable ?? false;
 //   const locationCheckInterval = useRef(null);
 
@@ -549,7 +584,7 @@ export default function ProviderNavbar() {
 //       (position) => {
 //         setLocationError(null);
 //         setShowLocationAlert(false);
-        
+
 //         // If location was previously disabled, restart tracking
 //         if (!locationEnabled) {
 //           console.log("📍 Location re-enabled, restarting tracking...");
@@ -560,10 +595,10 @@ export default function ProviderNavbar() {
 //       // Error - location is disabled or denied
 //       (error) => {
 //         console.error("📍 Location check failed:", error);
-        
+
 //         const errorMessage = getLocationErrorMessage(error.code);
 //         handleLocationError(errorMessage);
-        
+
 //         // If provider is still available but location failed, show alert
 //         if (isAvailable) {
 //           setShowLocationAlert(true);
@@ -624,10 +659,10 @@ export default function ProviderNavbar() {
 //       return true;
 //     } catch (error) {
 //       console.error("❌ Location permission error:", error);
-      
+
 //       const errorMessage = getLocationErrorMessage(error.code);
 //       setLocationError(errorMessage);
-      
+
 //       // Show user-friendly error
 //       if (error.code === 1) {
 //         alert(
@@ -645,7 +680,7 @@ export default function ProviderNavbar() {
 //       } else {
 //         alert("Failed to access location. Please try again.");
 //       }
-      
+
 //       return false;
 //     }
 //   };
@@ -705,7 +740,7 @@ export default function ProviderNavbar() {
 //         if (!newAvailability) {
 //           stopLocationTracking();
 //           stopLocationMonitoring();
-          
+
 //           // Notify socket
 //           if (socket) {
 //             socket.emit("set_availability", { isAvailable: false });
@@ -719,7 +754,7 @@ export default function ProviderNavbar() {
 //       } else {
 //         console.error("Failed to update availability:", data.message);
 //         alert("Failed to update availability. Please try again.");
-        
+
 //         // Rollback
 //         if (newAvailability) {
 //           stopLocationTracking();
@@ -728,7 +763,7 @@ export default function ProviderNavbar() {
 //     } catch (error) {
 //       console.error("Error updating availability:", error);
 //       alert("Error updating availability. Please check your connection.");
-      
+
 //       // Rollback
 //       if (newAvailability) {
 //         stopLocationTracking();
@@ -740,10 +775,10 @@ export default function ProviderNavbar() {
 
 //   const handleFixLocation = () => {
 //     setShowLocationAlert(false);
-    
+
 //     // Show instructions
 //     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
+
 //     if (isMobile) {
 //       alert(
 //         "📍 Enable Location on Your Device\n\n" +
@@ -805,7 +840,7 @@ export default function ProviderNavbar() {
 //     setUnreadCount(0);
 //   };
 
-//   return (     
+//   return (
 //     <>
 //       <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
 
@@ -857,26 +892,26 @@ export default function ProviderNavbar() {
 //               )}
 //               <span
 //                 className={`text-xs font-medium transition-colors ${
-//                   isAvailable 
-//                     ? locationEnabled 
-//                       ? "text-gray-700" 
+//                   isAvailable
+//                     ? locationEnabled
+//                       ? "text-gray-700"
 //                       : "text-red-600"
 //                     : "text-gray-400"
 //                 }`}
 //               >
-//                 {isAvailable 
-//                   ? locationEnabled 
-//                     ? "Available • Location On" 
+//                 {isAvailable
+//                   ? locationEnabled
+//                     ? "Available • Location On"
 //                     : locationError || "Location Off"
 //                   : "Not Available"}
 //               </span>
 //             </div>
-            
+
 //             <button
 //               onClick={toggleAvailability}
 //               disabled={updatingAvailability}
 //               className={`relative w-11 h-6 rounded-full transition-all duration-300 ${
-//                 isAvailable && locationEnabled ? "bg-green-500" : 
+//                 isAvailable && locationEnabled ? "bg-green-500" :
 //                 isAvailable && !locationEnabled ? "bg-red-500" :
 //                 "bg-gray-300"
 //               } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -965,12 +1000,12 @@ export default function ProviderNavbar() {
 //                     )
 //                   )}
 //                 </div>
-                
+
 //                 <button
 //                   onClick={toggleAvailability}
 //                   disabled={updatingAvailability}
 //                   className={`relative w-full h-10 rounded-full transition-all duration-300 ${
-//                     isAvailable && locationEnabled ? "bg-green-500" : 
+//                     isAvailable && locationEnabled ? "bg-green-500" :
 //                     isAvailable && !locationEnabled ? "bg-red-500" :
 //                     "bg-gray-300"
 //                   } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -990,13 +1025,13 @@ export default function ProviderNavbar() {
 //                     </div>
 //                   )}
 //                 </button>
-                
+
 //                 {locationEnabled && (
 //                   <p className="mt-2 text-xs text-green-600">
 //                     📍 Location tracking active
 //                   </p>
 //                 )}
-                
+
 //                 {isAvailable && !locationEnabled && (
 //                   <p className="mt-2 text-xs text-red-600">
 //                     ⚠️ {locationError || "Location disabled"}
@@ -1021,7 +1056,7 @@ export default function ProviderNavbar() {
 //             </div>
 //           </div>
 //         )}
-        
+
 //         <NotificationDrawer
 //           isOpen={showNotifications}
 //           onClose={() => setShowNotifications(false)}
