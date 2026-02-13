@@ -199,6 +199,88 @@ export default function ProviderNavbar() {
     }
   };
 
+
+  // Initialize socket connection
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const newSocket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:3000", {
+      auth: { token },
+      transports: ['websocket', 'polling']
+    });
+
+    newSocket.on("connect", () => {
+      console.log("✅ Provider socket connected");
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.error("❌ Socket connection error:", error);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      locationService.stopTracking();
+      newSocket.disconnect();
+    };
+  }, []);
+
+  // Sync location tracking with availability
+  useEffect(() => {
+    if (isAvailable && socket) {
+      // Start location tracking when available
+      startLocationTracking();
+    } else if (!isAvailable) {
+      // Stop location tracking when not available
+      locationService.stopTracking();
+      setLocationEnabled(false);
+    }
+  }, [isAvailable, socket]);
+
+  const startLocationTracking = async () => {
+    if (!navigator.geolocation) {
+      alert("Your browser does not support location tracking");
+      return false;
+    }
+
+    try {
+      // Request permission first
+      await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          { enableHighAccuracy: true }
+        );
+      });
+
+      console.log("✅ Location permission granted");
+
+      // Start continuous tracking
+      locationService.startTracking(socket);
+      setLocationEnabled(true);
+
+      // Also notify via socket
+      if (socket) {
+        socket.emit("set_availability", { isAvailable: true });
+      }
+
+      return true;
+    } catch (error) {
+      console.error("❌ Location permission denied:", error);
+      
+      // Show user-friendly error
+      const errorMessages = {
+        1: "Location permission denied. Please enable location access in your browser settings.",
+        2: "Location unavailable. Please check your device settings.",
+        3: "Location request timed out. Please try again."
+      };
+      
+      alert(errorMessages[error.code] || "Failed to enable location tracking");
+      return false;
+    }
+  };
+
   const handleNotificationClick = () => {
     setShowNotifications(true);
     setUnreadCount(0);
