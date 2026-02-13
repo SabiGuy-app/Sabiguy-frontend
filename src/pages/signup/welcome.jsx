@@ -75,7 +75,7 @@ anytime, anywhere."
             </Link>
           </div>
 
-          <p className="text-center text-sm mt-4">
+          <div className="text-center text-sm mt-4">
             Already have an account?
             <div className="group inline-flex">
               {/* Arrow icon that appears on hover */}
@@ -91,7 +91,7 @@ anytime, anywhere."
                 </button>
               </Link>
             </div>
-          </p>
+          </div>
         </motion.div>
       </AuthLayout>
     </div>

@@ -1,11 +1,14 @@
 import { ArrowBigLeft, X } from "lucide-react";
 import React, { useState } from "react";
+import { fundWallet } from "../../api/provider";
+import { toast } from "react-toastify";
 
 const FundWalletModal = ({ isOpen, onClose }) => {
   const [currentModal, setCurrentModal] = useState(1);
   const [fundingMethod, setFundingMethod] = useState("online");
   const [amount, setAmount] = useState("");
   const [selectedCard, setSelectedCard] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClose = () => {
     setCurrentModal(1);
@@ -16,6 +19,40 @@ const FundWalletModal = ({ isOpen, onClose }) => {
 
   const handleBack = () => {
     setCurrentModal(1);
+  };
+
+  const handleFundWallet = async () => {
+    if (!amount || amount.trim() === "") {
+      toast.error("Please enter an amount");
+      return;
+    }
+
+    const amountValue = parseFloat(amount);
+    if (isNaN(amountValue) || amountValue < 1000) {
+      toast.error("Minimum funding amount is ₦1,000");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await fundWallet(amountValue);
+
+      const authUrl = response.data?.authorizationUrl || response.authorizationUrl;
+
+      if (authUrl) {
+        toast.success("Redirecting to payment gateway...");
+        // Redirect to Paystack
+        window.location.href = authUrl;
+      } else {
+        toast.error("Payment initialization failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Fund wallet error:", error);
+      const errorMessage = error.response?.data?.message || "Failed to initiate payment. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   //   Modal1
@@ -45,11 +82,11 @@ const FundWalletModal = ({ isOpen, onClose }) => {
               />
             </div>
             <span className="text-[#231F20] text-[16px]">
-              Fund Wallet (Online)
+              Fund Wallet (Paystack)
             </span>
           </label>
 
-          <label className="flex items-center space-x-3 cursor-pointer">
+          {/* <label className="flex items-center space-x-3 cursor-pointer">
             <input
               type="radio"
               name="funding"
@@ -61,7 +98,7 @@ const FundWalletModal = ({ isOpen, onClose }) => {
             <span className="text-[#231F20] text-[16px]">
               Fund Wallet (From saved card)
             </span>
-          </label>
+          </label> */}
         </div>
 
         <button
@@ -98,18 +135,23 @@ const FundWalletModal = ({ isOpen, onClose }) => {
               ₦
             </span>
             <input
-              type="text"
+              type="number"
               placeholder="Enter Amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               className="w-full py-3 focus:outline-none px-4 "
+              disabled={isLoading}
+              autoFocus
             />
           </div>
         </div>
 
         <button
-          onClick={handleClose}
-          className="w-full bg-[#005823CC] hover:bg-green-700 text-white font-medium mb-5 py-3 rounded-lg transition-colors"
+          onClick={handleFundWallet}
+          disabled={isLoading}
+          className="w-full bg-[#005823CC] hover:bg-green-700 text-white font-medium mb-5 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Top-up
+          {isLoading ? "Processing..." : "Top-up"}
         </button>
       </div>
     </div>
@@ -154,11 +196,10 @@ const FundWalletModal = ({ isOpen, onClose }) => {
         <div className="space-y-3 mb-3">
           <div
             onClick={() => setSelectedCard("mastercard")}
-            className={`flex items-center justify-between rounded-lg cursor-pointer transition-all ${
-              selectedCard === "mastercard"
-                ? ""
-                : "border-gray-200 hover:border-gray-300"
-            }`}
+            className={`flex items-center justify-between rounded-lg cursor-pointer transition-all ${selectedCard === "mastercard"
+              ? ""
+              : "border-gray-200 hover:border-gray-300"
+              }`}
           >
             <div className="flex items-center space-x-3">
               <div className="flex items-center">
@@ -168,11 +209,10 @@ const FundWalletModal = ({ isOpen, onClose }) => {
               <span className="text-gray-700 font-medium">**** 8332</span>
             </div>
             <div
-              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                selectedCard === "mastercard"
-                  ? "border-green-600"
-                  : "border-gray-300"
-              }`}
+              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedCard === "mastercard"
+                ? "border-green-600"
+                : "border-gray-300"
+                }`}
             >
               {selectedCard === "mastercard" && (
                 <div className="w-3 h-3 bg-green-600 rounded-full"></div>
@@ -182,20 +222,18 @@ const FundWalletModal = ({ isOpen, onClose }) => {
 
           <div
             onClick={() => setSelectedCard("visa")}
-            className={`flex items-center justify-between cursor-pointer transition-all ${
-              selectedCard === "visa"
-                ? ""
-                : "border-gray-200 hover:border-gray-300"
-            }`}
+            className={`flex items-center justify-between cursor-pointer transition-all ${selectedCard === "visa"
+              ? ""
+              : "border-gray-200 hover:border-gray-300"
+              }`}
           >
             <div className="flex items-center space-x-3">
               <div className="text-blue-600 font-bold text-xl italic">VISA</div>
               <span className="text-gray-700 font-medium">**** 1234</span>
             </div>
             <div
-              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                selectedCard === "visa" ? "border-green-600" : "border-gray-300"
-              }`}
+              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedCard === "visa" ? "border-green-600" : "border-gray-300"
+                }`}
             >
               {selectedCard === "visa" && (
                 <div className="w-3 h-3 bg-green-600 rounded-full"></div>
