@@ -43,6 +43,9 @@ import ProviderHelp from "./pages/ProviderDashboard/sections/ProviderHelp";
 import ProviderActivity from "./pages/ProviderDashboard/sections/ProviderActivity";
 import ProviderChat from "./pages/ProviderDashboard/sections/ProviderChat";
 import VehicleType from "./pages/Dashboard/sections/Bookings/VehicleType";
+import AvailableRiders from "./pages/Dashboard/sections/Bookings/AvailableRiders";
+import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2";
+import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
 function App() {
   return (
     <>
@@ -119,6 +122,18 @@ function App() {
             <Route
               path="/bookings/vehicletype"
               element={<VehicleType />}
+            />
+            <Route
+              path="/bookings/availableriders"
+              element={<AvailableRiders />}
+            />
+            <Route
+              path="/bookings/summary"
+              element={<BookingSummary2 />}
+            />
+            <Route
+              path="/bookings/trackrider"
+              element={<TrackRider />}
             />
           </Routes>
         </div>
