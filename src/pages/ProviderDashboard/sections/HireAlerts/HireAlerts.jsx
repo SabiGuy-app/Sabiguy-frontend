@@ -1,5 +1,6 @@
 import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Add this
 import JobsCard from "../../../../components/provider-dashboard/JobsCard";
 import AlertsCard from "../../../../components/provider-dashboard/AlertsCard";
 import AlertDetailsModal from "./AlertDetails";
@@ -9,6 +10,7 @@ import { getProviderBookings } from "../../../../api/provider";
 import { getAllBookings } from "../../../../api/bookings";
 
 export default function HireAlerts() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("alert");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedAlert, setSelectedAlert] = useState(null);
@@ -74,36 +76,6 @@ export default function HireAlerts() {
     }
   };
 
-  // States for API data
-  const [alerts, setAlerts] = useState([]);
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Fetch bookings on component mount
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const fetchBookings = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await getAllBookings();
-      console.log(response);
-
-      if (response.success) {
-        const transformedData = transformBookingsData(response.data);
-        setAlerts(transformedData.alerts);
-        setJobs(transformedData.jobs);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to fetch bookings");
-      console.error("Error fetching bookings:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const transformBookingsData = (bookings) => {
     const alerts = [];
@@ -117,10 +89,10 @@ export default function HireAlerts() {
           booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
         deliveryDate: booking.endDate
           ? new Date(booking.endDate).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
           : "TBD",
         scheduledDate:
           new Date(booking.startDate).toLocaleDateString("en-US", {
@@ -180,7 +152,7 @@ export default function HireAlerts() {
               : null,
           completed:
             booking.status === "completed" ||
-            booking.status === "waiting_confirmation"
+              booking.status === "waiting_confirmation"
               ? getTimeAgo(booking.updatedAt)
               : null,
           ratings: booking.rating || null,
@@ -198,6 +170,7 @@ export default function HireAlerts() {
       waiting_confirmation: "Waiting confirmation",
       completed: "Completed",
       cancelled: "Cancelled",
+      pending_customer: "Awaiting Response",
     };
     return statusMap[apiStatus] || apiStatus;
   };
@@ -314,7 +287,7 @@ export default function HireAlerts() {
   };
 
   // Loading State
-  if (loading) {
+  if (isLoading) {
     return (
       <ProviderDashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -369,21 +342,13 @@ export default function HireAlerts() {
         onRefresh={handleRefresh}
       />
 
-
-      {isLoading && (
-        <div className="flex items-center justify-center min-h-[300px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D6A3E] mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading bookings...</p>
-          </div>
       <div className="flex border-b mb-3">
         <button
           onClick={() => setActiveTab("alert")}
-          className={`px-6 py-3 font-medium transition-colors relative ${
-            activeTab === "alert"
+          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "alert"
               ? "text-[#005823] border-b-2 border-[#005823]"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           Hire Alerts
           {alerts.length > 0 && (
@@ -395,11 +360,10 @@ export default function HireAlerts() {
 
         <button
           onClick={() => setActiveTab("jobs")}
-          className={`px-6 py-3 font-medium transition-colors relative ${
-            activeTab === "jobs"
+          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "jobs"
               ? "text-[#005823] border-b-2 border-[#005823]"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           Jobs
           {jobs.length > 0 && (
@@ -429,37 +393,22 @@ export default function HireAlerts() {
             </div>
           )}
         </div>
-      )}
+      ) : (
+        <div>
+          <StatusFilter
+            activeFilter={statusFilter}
+            onFilterChange={setStatusFilter}
+          />
 
-
-      {error && !isLoading && (
-        <div className="flex items-center justify-center min-h-[300px]">
-          <div className="text-center max-w-md">
-            <div className="text-red-500 mb-4">
-              <svg
-                className="w-16 h-16 mx-auto"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          <div className="space-y-4">
+            {filteredJobs.length > 0 ? (
+              filteredJobs.map((job) => (
+                <JobsCard
+                  key={job.id}
+                  job={job}
+                  onViewDetails={handleViewJob}
+                  onMarkAsCompleted={handleMark}
                 />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Failed to Load Bookings
-            </h3>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <button
-              onClick={handleRefresh}
-              className="px-4 py-2 bg-[#2D6A3E] text-white rounded-lg hover:bg-[#1f4a2a] transition-colors"
-            >
-              Retry
-            </button>
               ))
             ) : (
               <div className="text-center py-12 bg-white rounded-lg">
@@ -471,71 +420,6 @@ export default function HireAlerts() {
             )}
           </div>
         </div>
-      )}
-
-
-      {!isLoading && !error && (
-        <>
-          <div className="flex border-b mb-3">
-            <button
-              onClick={() => setActiveTab("alert")}
-              className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "alert"
-                ? "text-[#005823] border-b-2 border-[#005823]"
-                : "text-gray-500 hover:text-gray-700"
-                }`}
-            >
-              Hire Alerts
-            </button>
-
-            <button
-              onClick={() => setActiveTab("jobs")}
-              className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "jobs"
-                ? "text-[#005823] border-b-2 border-[#005823]"
-                : "text-gray-500 hover:text-gray-700"
-                }`}
-            >
-              Jobs
-            </button>
-          </div>
-
-          {activeTab === "alert" ? (
-            <div className="space-y-4 mt-3">
-              {alerts.length > 0 ? (
-                alerts.map((alert) => (
-                  <AlertsCard
-                    key={alert.id}
-                    alert={alert}
-                    onViewDetails={handleViewAlert}
-                  />
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No alerts available</p>
-              )}
-            </div>
-          ) : (
-            <div>
-              <StatusFilter
-                activeFilter={statusFilter}
-                onFilterChange={setStatusFilter}
-              />
-
-              <div className="space-y-4">
-                {filteredJobs.length > 0 ? (
-                  filteredJobs.map((job) => (
-                    <JobsCard
-                      key={job.id}
-                      job={job}
-                      onViewDetails={handleViewJob}
-                      onMarkAsCompleted={handleMark}
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No jobs found</p>
-                )}
-              </div>
-            </div>
-          )}
-        </>
       )}
     </ProviderDashboardLayout>
   );

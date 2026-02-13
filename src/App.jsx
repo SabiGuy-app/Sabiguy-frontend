@@ -43,6 +43,7 @@ import ProviderHelp from "./pages/ProviderDashboard/sections/ProviderHelp";
 import ProviderActivity from "./pages/ProviderDashboard/sections/ProviderActivity";
 import ProviderChat from "./pages/ProviderDashboard/sections/ProviderChat";
 import WalletCallback from "./pages/WalletCallback";
+import VehicleType from "./pages/Dashboard/sections/Bookings/VehicleType";
 function App() {
   return (
     <>
@@ -116,6 +117,10 @@ function App() {
             <Route
               path="/dashboard/provider/summary"
               element={<BookingSummary />}
+            />
+            <Route
+              path="/bookings/vehicletype"
+              element={<VehicleType />}
             />
           </Routes>
         </div>

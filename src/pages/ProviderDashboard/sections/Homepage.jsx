@@ -10,8 +10,10 @@ import WalletCard from "../../../components/provider-dashboard/WalletCard";
 import RevenueByServiceType from "../../../components/provider-dashboard/RevenueByService";
 import RecentTransactions from "../../../components/provider-dashboard/RecentTransactions";
 import { getDashboardStats, formatCurrency } from "../../../api/provider";
+import { useAuthStore } from "../../../stores/auth.store";
 
 export default function ProviderDashboard() {
+  const user = useAuthStore((state) => state.user);
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,30 +48,10 @@ export default function ProviderDashboard() {
     <ProviderDashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold mb-3">Welcome back Queen</h2>
-          <p className="mb-3 text-sm">
-            Here's a quick look at your business performance today.
-          </p>
+          <h2 className="text-lg font-semibold mb-3">Welcome Back, {user.data?.fullName?.split(" ")[0]} 👋</h2>
+          <p className="mb-3 text-sm">Here's a quick look at your business performance today.</p>
         </div>
       </div>
-import { useAuthStore } from "../../../stores/auth.store";
-import { useState, useEffect } from "react";
-
-
-export default function ProviderDashboard () {
-   const { token } = useAuthStore();
-   const user = useAuthStore((state) => state.user);
-
-    return (
-        <ProviderDashboardLayout>
-
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                <div>
-      <h2 className="text-lg font-semibold mb-3">Welcome Back, {user.data?.fullName?.split(" ")[0]} 👋</h2>
-                    <p className="mb-3 text-sm">Here's a quick look at your business performance today.</p>
-                </div>
-                </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <DashboardCard
           title="Total Revenue"

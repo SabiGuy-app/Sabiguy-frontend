@@ -16,28 +16,31 @@ import {
   Palette,
 } from "lucide-react";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
-import family from "../../../../public/family.png"
-import delivery from "../../../../public/delivery.png"
-import handtool from "../../../../public/hand-tools.png"
-import siren from "../../../../public/siren.png"
+import family from "../../../../public/family.png";
+import delivery from "../../../../public/delivery.png";
+import handtool from "../../../../public/hand-tools.png";
+import siren from "../../../../public/siren.png";
 
-import Dispatch2 from "../../../../public/Dispatch2.png"
-import electrician from "../../../../public/electrician.png"
-import Welding from "../../../../public/Welding.jpg"
-import Household from "../../../../public/Household.jpg"
-import Towing from "../../../../public/Towing.jpg"
-import Legal from "../../../../public/Legal.jpg"
-import Plumbing from "../../../../public/Plumbing.jpg"
-import Design from "../../../../public/Design.jpg"
+import Dispatch2 from "../../../../public/Dispatch2.png";
+import electrician from "../../../../public/electrician.png";
+import Welding from "../../../../public/Welding.jpg";
+import Household from "../../../../public/Household.jpg";
+import Towing from "../../../../public/Towing.jpg";
+import Legal from "../../../../public/Legal.jpg";
+import Plumbing from "../../../../public/Plumbing.jpg";
+import Design from "../../../../public/Design.jpg";
 import { sendTestNotification } from "../../../api/fcm";
+import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 
 export default function DashboardHome() {
   const [loading, setLoading] = useState(false);
   const { token } = useAuthStore();
   const { providers, setProviders } = useProviderStore();
-
+  const [modalOpen, setModalOpen] = useState(false);
+   const [selectedService, setSelectedService] = useState(null);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+
   const categories = [
     {
       title: "Dispatch Riders",
@@ -93,6 +96,16 @@ export default function DashboardHome() {
   const services = [
     {
       // logo: (
+      //   <Truck
+      //     size={80}
+      //     className="bg-[#6467F2]/10 text-[#6467F2] rounded-full p-5 "
+      //   />
+      // ),
+      image: delivery,
+      title: "Transport & Logistics",
+    },
+    {
+      // logo: (
       //   <CircleAlert
       //     size={80}
       //     className="bg-red-50 text-red-500 rounded-full p-5 "
@@ -123,16 +136,6 @@ export default function DashboardHome() {
     },
     {
       // logo: (
-      //   <Truck
-      //     size={80}
-      //     className="bg-[#6467F2]/10 text-[#6467F2] rounded-full p-5 "
-      //   />
-      // ),
-      image: delivery,
-      title: "Transport & Logistics",
-    },
-    {
-      // logo: (
       //   <Briefcase
       //     size={80}
       //     className="bg-purple-50 text-purple-500 rounded-full p-5 "
@@ -152,6 +155,16 @@ export default function DashboardHome() {
       title: "Freelance & Creative Services",
     },
   ];
+
+    const handleServiceClick = (service, isDisabled) => {
+    if (isDisabled) {
+      setSelectedService(service);
+      setModalOpen(true);
+    } else {
+      // Handle active service click (navigate or other action)
+      console.log("Active service clicked:", service.title);
+    }
+  };
 
   useEffect(() => {
     const loadProviders = async () => {
@@ -199,15 +212,31 @@ export default function DashboardHome() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
           <h3 className="text-lg font-semibold mb-4">Explore Categories</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((ser, idx) => (
-            <ServicesCard key={idx} image={ser.image} logo={ser.logo} title={ser.title} />
-          ))}
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((ser, idx) => {
+            const isDisabled = ser.title !== "Transport & Logistics";
+            return (
+              <ServicesCard
+                key={idx}
+                image={ser.image}
+                logo={ser.logo}
+                title={ser.title}
+                disabled={isDisabled}
+                onClick={() => handleServiceClick(ser, isDisabled)}
+              />
+            );
+          })}
         </div>
+
+        <ComingSoonModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        service={selectedService}
+      />
       </div>
       {/* <div>
         <h3 className="text-xl font-semibold mb-4">Featured Providers</h3>
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {providers?.map((pro, idx) => (
             <ProviderCard key={idx} {...pro} />
           ))}
