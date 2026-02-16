@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import Navbar from "../../../../components/dashboard/Navbar";
-import location from "../../../../../public/location.png";
-import motorbike from "../../../../../public/motorbike.png";
-import corolla from "../../../../../public/corolla.png";
+import location from "/location.png";
+import motorbike from "/motorbike.png";
+import corolla from "/corolla.png";
 
 export default function VehicleType() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
