@@ -9,7 +9,7 @@ import {
   Shield,
 } from "lucide-react";
 import Navbar from "../../../../components/dashboard/Navbar";
-import location from "../../../../../public/location.png";
+import location from "/location.png";
 
 export default function TrackRider() {
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
@@ -27,7 +27,7 @@ export default function TrackRider() {
       id: 2,
       title: "Arrived at pickup location",
       subtitle: "At pickup point",
-      completed: false,
+      completed: true,
       active: false,
     },
     {
@@ -58,25 +58,29 @@ export default function TrackRider() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
         <div className="">
-          <h1 className="text-[28px] font-semibold text-gray-900 mb-4">
+          <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
             Arrival in 12 mins
           </h1>
 
           <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-gray-900 mt-3 flex-shrink-0"></div>
+              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center">
+                <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
+              </div>
               <div>
-                <span className="text-[#231F2080]/50 text-[16px]">Pickup</span>
-                <p className="text-[#231F20BF]/[.75] text-[20px]">
+                <span className="text-[#231F2080] text-[16px]">Pickup</span>
+                <p className="text-[#231F20BF] text-[20px]">
                   15 Victoria Island, Lagos
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-gray-900 mt-3 flex-shrink-0"></div>
+              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center">
+                <MapPin className="w-3 h-3 text-[#005823]" />
+              </div>
               <div>
-                <span className="text-[#231F2080]/50 text-[16px]">Dropoff</span>
-                <p className="text-[#231F20BF]/[.75] text-[20px]">
+                <span className="text-[#231F2080] text-[16px]">Dropoff</span>
+                <p className="text-[#231F20BF] text-[20px]">
                   24 Palm Avenue, Lekki Phase 1, Lagos
                 </p>
               </div>
@@ -113,7 +117,7 @@ export default function TrackRider() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="grid grid-cols-3 gap-6">
               <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
@@ -124,7 +128,7 @@ export default function TrackRider() {
                   Message
                 </span>
               </button>
-              <button className="text-red-500 font-medium text-sm px-3 hover:text-red-600 transition-colors">
+              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
                 Cancel Request
               </button>
             </div>
@@ -205,12 +209,12 @@ export default function TrackRider() {
                     {/* Content */}
                     <div className="pb-12 last:pb-0">
                       <div
-                        className={`text-sm font-medium ${step.completed ? "text-gray-900" : "text-gray-400"}`}
+                        className={`text-[16px] font-medium ${step.completed ? "text-[#005823]" : "text-gray-400"}`}
                       >
                         {step.title}
                       </div>
                       <div
-                        className={`text-xs ${step.completed ? "text-gray-500" : "text-gray-400"}`}
+                        className={`text-[12px] ${step.completed ? "text-gray-500" : "text-gray-400"}`}
                       >
                         {step.subtitle}
                       </div>

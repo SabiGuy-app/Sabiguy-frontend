@@ -37,7 +37,7 @@ export default function Bookings() {
       startDate: "",
       endDate: "",
       scheduleDate: "",
-      // autoAcceptNearest: false,
+      autoAcceptNearest: false,
     },
     validationSchema: Yup.object().shape({
       jobTitle: Yup.string().required("Work category is required"),
@@ -147,9 +147,15 @@ export default function Bookings() {
         // Reset form
         formik.resetForm();
 
+        navigate("/dashboard/provider/searching");
+
         setTimeout(() => {
-          navigate("/dashboard/provider/searching");
-        }, 1500);
+          if (values.autoAcceptNearest) {
+            navigate("/bookings/summary");
+          } else {
+            navigate("/bookings/availableriders");
+          }
+        }, 2500);
       } catch (error) {
         console.error("Booking creation failed:", error);
 
@@ -558,13 +564,14 @@ export default function Bookings() {
             </div> */}
 
             {/* Automatically accept nearby providers  */}
-            {/* <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <input
                 type="checkbox"
-                // id="auto-accept"
-                // checked={formik.values.autoAcceptNearest}
-                // onChange={formik.handleChange}
-                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                id="auto-accept"
+                name="autoAcceptNearest"
+                checked={formik.values.autoAcceptNearest}
+                onChange={formik.handleChange}
+                className="w-5 h-5 rounded cursor-pointer"
               />
               <label
                 htmlFor="auto-accept"
@@ -572,7 +579,27 @@ export default function Bookings() {
               >
                 Automatically accept the nearest provider
               </label>
-            </div> */}
+            </div>
+
+            {formik.values.autoAcceptNearest && (
+              <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <svg
+                  className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p className="text-sm text-blue-800">
+                  The system will automatically assign the nearest available
+                  provider to your request.
+                </p>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="flex flex-col">
