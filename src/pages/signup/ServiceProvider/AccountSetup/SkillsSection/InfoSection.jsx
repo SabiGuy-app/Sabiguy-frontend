@@ -19,11 +19,37 @@ export function DriverInfoSection({ values, handleChange, handleBlur }) {
 
       <h6 className="text-xl font-semibold mt-5">Vehicle Information</h6>
       <InputField
+      label='Vehicle Production Year'
         name="vehicleProductionYear"
         value={values?.vehicleProductionYear || ""}
         onChange={handleChange}
         onBlur={handleBlur}
         placeholder="Vehicle Production Year"
+      />
+
+      <InputField
+      label='Vehicle Name'
+        name="vehicleName"
+        value={values?.vehicleName || ""}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="Vehicle Name"
+      />
+      <InputField
+      label= 'Vehicle Registration Number'
+        name="vehicleRegNo"
+        value={values?.vehicleRegNo || ""}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="Vehicle Registration Number"
+      />
+      <InputField
+      label='Vehicle Color'
+        name="vehicleColor"
+        value={values?.vehicleColor || ""}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="Vehicle Color"
       />
     </div>
   );
