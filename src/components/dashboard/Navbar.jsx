@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Bell, Search, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
+import NotificationToast from "../NotificationToast";
+import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
@@ -48,7 +51,7 @@ export default function Navbar() {
     try {
       const res = await notificationService.markAsRead(id);
 
-      if (res.data.success) {
+      if (res.success) {
         // Update local state
         setNotifications((prev) =>
           prev.map((notif) =>
@@ -66,7 +69,7 @@ export default function Navbar() {
   const markAllAsRead = async () => {
     try {
       const res = await notificationService.markAllAsRead();
-      if (res.data.success) {
+      if (res.success) {
         // Update local state
         setNotifications((prev) =>
           prev.map((notif) => ({ ...notif, read: true })),
@@ -81,7 +84,7 @@ export default function Navbar() {
   const deleteNotification = async (id) => {
     try {
       const res = await notificationService.deleteNotification(id);
-      if (res.data.success) {
+      if (res.success) {
         // Remove from local state
         setNotifications((prev) => prev.filter((notif) => notif._id !== id));
         // Refresh unread count
@@ -92,13 +95,47 @@ export default function Navbar() {
     }
   };
 
+  // Show toast notification
+  const showNotificationToast = (notification) => {
+    console.log("🔔 showNotificationToast called with:", notification);
+
+    // Play sound
+    console.log("🔊 Playing notification sound...");
+    notificationSoundService.play();
+
+    // Show toast
+    console.log("📢 Displaying toast notification...");
+    toast.custom(
+      (t) => (
+        <NotificationToast
+          notification={notification}
+          onClose={() => {
+            console.log("🔔 Toast closed");
+            toast.dismiss(t.id);
+          }}
+          onClick={() => {
+            console.log("🔔 Toast clicked");
+            toast.dismiss(t.id);
+            setShowNotifications(true);
+          }}
+        />
+      ),
+      {
+        duration: 5000,
+        position: "top-right",
+      },
+    );
+  };
   // Initialize socket connection
   useEffect(() => {
+    // Initialize sound service
+    notificationSoundService.init();
+
     const token = localStorage.getItem("token");
     if (!token) return;
 
     const newSocket = io(
-      import.meta.env.VITE_SOCKET_URL || "http://localhost:5173",
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:3000",
       {
         auth: { token },
         transports: ["websocket", "polling"],
@@ -118,6 +155,8 @@ export default function Navbar() {
       console.log("📬 New notification received:", notification);
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
+      // Show toast with sound
+      showNotificationToast(notification);
     });
 
     setSocket(newSocket);
@@ -138,128 +177,155 @@ export default function Navbar() {
 
   const handleNotificationClick = () => {
     setShowNotifications(true);
-    setUnreadCount(0);
+    fetchNotifications();
+  };
+
+  // Test notification (remove after debugging)
+  const testNotification = () => {
+    const testNotif = {
+      _id: Date.now().toString(),
+      title: "Test Notification",
+      message: "This is a test notification to verify the toast is working!",
+      type: "test",
+      read: false,
+      createdAt: new Date(),
+    };
+    showNotificationToast(testNotif);
   };
 
   return (
-    <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
-      {/* Mobile Menu Button */}
-      <button className="md:hidden" onClick={() => setShowMenu(true)}>
-        <Menu size={26} className="text-gray-700" />
-      </button>
-
-      {/* Logo */}
-      <button
-        className="text-3xl font-bold text-[#005823]"
-        onClick={() => navigate("/dashboard")}
-      >
-        SabiGuy
-      </button>
-
-      {/* Desktop Search */}
-      <div className="hidden md:flex flex-1 items-center ml-10 max-w-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2">
-        <Search size={18} className="text-gray-500 mr-2" />
-        <input
-          type="text"
-          placeholder="Search providers or services..."
-          className="bg-transparent w-full outline-none text-sm"
-        />
-      </div>
-
-      {/* Mobile Search Toggle */}
-      <button
-        onClick={() => setShowSearch(!showSearch)}
-        className="md:hidden text-gray-600"
-      >
-        <Search size={22} />
-      </button>
-
-      {/* Right Icons */}
-      <div className="flex items-center space-x-4">
-        {/* Bell */}
-        <button onClick={handleNotificationClick} className="relative">
-          <Bell size={24} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[20px] h-4 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
-          )}
+    <>
+      <Toaster position="top-right" />
+      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
+        {/* Mobile Menu Button */}
+        <button className="md:hidden" onClick={() => setShowMenu(true)}>
+          <Menu size={26} className="text-gray-700" />
         </button>
 
-        {/* Profile */}
+        {/* Logo */}
         <button
-          onClick={() => navigate("/dashboard/settings")}
-          className="flex items-center"
+          className="text-3xl font-bold text-[#005823]"
+          onClick={() => navigate("/dashboard")}
         >
-          <img
-            src={user.data?.profilePicture || "/avatar.png"}
-            className="w-8 h-8 rounded-full border"
-          />
+          SabiGuy
         </button>
-      </div>
 
-      {/* Mobile Search Dropdown */}
-      {showSearch && (
-        <div className="absolute top-16 left-0 w-full bg-white border-t border-gray-200 p-4 md:hidden">
-          <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2">
-            <Search size={18} className="text-gray-500 mr-2" />
-            <input
-              type="text"
-              placeholder="Search providers or services..."
-              className="bg-transparent w-full outline-none text-sm"
-            />
-          </div>
+        {/* Desktop Search */}
+        <div className="hidden md:flex flex-1 items-center ml-10 max-w-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2">
+          <Search size={18} className="text-gray-500 mr-2" />
+          <input
+            type="text"
+            placeholder="Search providers or services..."
+            className="bg-transparent w-full outline-none text-sm"
+          />
         </div>
-      )}
 
-      {/* Mobile Slide-in Menu */}
-      {showMenu && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
-          onClick={() => setShowMenu(false)}
+        {/* Mobile Search Toggle */}
+        <button
+          onClick={() => setShowSearch(!showSearch)}
+          className="md:hidden text-gray-600"
         >
-          <div
-            className="absolute left-0 top-0 h-full w-64 bg-white shadow-lg p-6 animate-slideIn"
-            onClick={(e) => e.stopPropagation()}
+          <Search size={22} />
+        </button>
+
+        {/* Right Icons */}
+        <div className="flex items-center space-x-4">
+          {/* Test Button (remove after debugging) */}
+          {/* <button
+            onClick={testNotification}
+            className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
           >
-            {/* Close Icon */}
-            <button className="mb-6" onClick={() => setShowMenu(false)}>
-              <X size={26} className="text-gray-600" />
-            </button>
+            Test
+          </button> */}
 
-            {/* Menu Links */}
-            <nav className="space-y-4 text-lg text-gray-700">
-              <button onClick={() => navigate("/dashboard")} className="block">
-                Dashboard
-              </button>
+          {/* Bell */}
+          <button onClick={handleNotificationClick} className="relative">
+            <Bell size={24} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[20px] h-4 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
 
-              <button
-                onClick={() => navigate("/dashboard/categories")}
-                className="block"
-              >
-                Categories
-              </button>
-
-              <button
-                onClick={() => navigate("/dashboard/settings")}
-                className="block"
-              >
-                Settings
-              </button>
-            </nav>
-          </div>
+          {/* Profile */}
+          <button
+            onClick={() => navigate("/dashboard/settings")}
+            className="flex items-center"
+          >
+            <img
+              src={user.data?.profilePicture || "/avatar.png"}
+              className="w-8 h-8 rounded-full border"
+            />
+          </button>
         </div>
-      )}
-      <NotificationDrawer
-        isOpen={showNotifications}
-        onClose={() => setShowNotifications(false)}
-        notifications={notifications}
-        loading={loadingNotifications}
-        unreadCount={unreadCount}
-        onMarkAsRead={markAsRead}
-        onMarkAllAsRead={markAllAsRead}
-        onDelete={deleteNotification}
-      />
-    </header>
+
+        {/* Mobile Search Dropdown */}
+        {showSearch && (
+          <div className="absolute top-16 left-0 w-full bg-white border-t border-gray-200 p-4 md:hidden">
+            <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2">
+              <Search size={18} className="text-gray-500 mr-2" />
+              <input
+                type="text"
+                placeholder="Search providers or services..."
+                className="bg-transparent w-full outline-none text-sm"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Slide-in Menu */}
+        {showMenu && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
+            onClick={() => setShowMenu(false)}
+          >
+            <div
+              className="absolute left-0 top-0 h-full w-64 bg-white shadow-lg p-6 animate-slideIn"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Icon */}
+              <button className="mb-6" onClick={() => setShowMenu(false)}>
+                <X size={26} className="text-gray-600" />
+              </button>
+
+              {/* Menu Links */}
+              <nav className="space-y-4 text-lg text-gray-700">
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="block"
+                >
+                  Dashboard
+                </button>
+
+                <button
+                  onClick={() => navigate("/dashboard/categories")}
+                  className="block"
+                >
+                  Categories
+                </button>
+
+                <button
+                  onClick={() => navigate("/dashboard/settings")}
+                  className="block"
+                >
+                  Settings
+                </button>
+              </nav>
+            </div>
+          </div>
+        )}
+        <NotificationDrawer
+          isOpen={showNotifications}
+          onClose={() => setShowNotifications(false)}
+          notifications={notifications}
+          loading={loadingNotifications}
+          unreadCount={unreadCount}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onDelete={deleteNotification}
+        />
+      </header>
+    </>
   );
 }

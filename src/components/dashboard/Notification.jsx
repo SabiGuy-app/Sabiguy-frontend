@@ -1,6 +1,8 @@
-import { X, Trash2, Check } from "lucide-react";
+import { X, Trash2, Check, Loader2 } from "lucide-react";
 import { FiMessageSquare, FiCalendar, FiBell } from "react-icons/fi";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function NotificationDrawer({
   isOpen,
@@ -12,25 +14,32 @@ export default function NotificationDrawer({
   onMarkAllAsRead,
   onDelete,
 }) {
+  const navigate = useNavigate();
+  const [markingAsRead, setMarkingAsRead] = useState(null); // Track which notification is being marked as read
+  const [deleting, setDeleting] = useState(null); // Track which notification is being deleted
+
+  // Filter to only show UNREAD notifications
+  const unreadNotifications = notifications.filter((n) => !n.isRead);
+
   // Group notifications by date
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const todayNotifications = notifications.filter((n) => {
+  const todayNotifications = unreadNotifications.filter((n) => {
     const notifDate = new Date(n.createdAt);
     notifDate.setHours(0, 0, 0, 0);
     return notifDate.getTime() === today.getTime();
   });
 
-  const yesterdayNotifications = notifications.filter((n) => {
+  const yesterdayNotifications = unreadNotifications.filter((n) => {
     const notifDate = new Date(n.createdAt);
     notifDate.setHours(0, 0, 0, 0);
     return notifDate.getTime() === yesterday.getTime();
   });
 
-  const olderNotifications = notifications.filter((n) => {
+  const olderNotifications = unreadNotifications.filter((n) => {
     const notifDate = new Date(n.createdAt);
     notifDate.setHours(0, 0, 0, 0);
     return notifDate.getTime() < yesterday.getTime();
@@ -46,70 +55,132 @@ export default function NotificationDrawer({
       job_started: <FiCalendar className="text-orange-500" size={20} />,
       payment_received: <FiBell className="text-green-500" size={20} />,
       booking_completed: <FiCalendar className="text-green-500" size={20} />,
-      message_received: <FiMessageSquare className="text-orange-500" size={20} />,
+      message_received: (
+        <FiMessageSquare className="text-orange-500" size={20} />
+      ),
       new_message: <FiMessageSquare className="text-orange-500" size={20} />,
       counter_offer: <FiBell className="text-blue-500" size={20} />,
-      job_completed_confirmed: <FiCalendar className="text-green-500" size={20} />,
+      job_completed_confirmed: (
+        <FiCalendar className="text-green-500" size={20} />
+      ),
       test: <FiBell className="text-gray-500" size={20} />,
     };
     return iconMap[type] || <FiBell className="text-gray-500" size={20} />;
   };
 
-  const NotificationItem = ({ notification }) => (
-    <div
-      className={`flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer relative ${
-        !notification.read ? "bg-blue-50" : ""
-      }`}
-    >
-      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-        {getIcon(notification.type)}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <h4 className="font-semibold text-gray-900 text-sm">
-            {notification.title}
-          </h4>
-          <span className="text-xs text-gray-500 whitespace-nowrap">
-            {formatDistanceToNow(new Date(notification.createdAt), {
-              addSuffix: true,
-            })}
-          </span>
+  const handleNotificationClick = async (notification) => {
+    // Set marking as read state
+    setMarkingAsRead(notification._id);
+
+    // Call the mark as read function
+    await onMarkAsRead(notification._id);
+
+    // Route to chat page for new_message type
+    if (
+      notification.type === "new_message" ||
+      notification.type === "message_received"
+    ) {
+      onClose();
+
+      if (notification.messageId) {
+        navigate(`/dashboard/chat?messageId=${notification.messageId}`);
+      } else if (notification.data?.chatId) {
+        navigate(`/dashboard/chat?chatId=${notification.data.chatId}`);
+      } else if (notification.data?.bookingId) {
+        navigate(`/dashboard/chat?bookingId=${notification.data.bookingId}`);
+      } else {
+        navigate("/dashboard/chat");
+      }
+    }
+
+    // Reset marking state
+    setMarkingAsRead(null);
+  };
+
+  const handleMarkAsRead = async (e, notificationId) => {
+    e.stopPropagation();
+    setMarkingAsRead(notificationId);
+    await onMarkAsRead(notificationId);
+    setMarkingAsRead(null);
+  };
+
+  const handleDelete = async (e, notificationId) => {
+    e.stopPropagation();
+    setDeleting(notificationId);
+    await onDelete(notificationId);
+    setDeleting(null);
+  };
+
+  const NotificationItem = ({ notification }) => {
+    const isMarkingAsRead = markingAsRead === notification._id;
+    const isDeleting = deleting === notification._id;
+    const isProcessing = isMarkingAsRead || isDeleting;
+
+    return (
+      <div
+        onClick={() => !isProcessing && handleNotificationClick(notification)}
+        className={`flex items-start gap-4 p-4 rounded-lg transition-all cursor-pointer relative group ${
+          isProcessing
+            ? "opacity-50 bg-gray-100"
+            : "hover:bg-gray-50 bg-blue-50"
+        }`}
+      >
+        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+          {getIcon(notification.type)}
         </div>
-        <p className="text-sm text-gray-600 line-clamp-2">
-          {notification.message}
-        </p>
-        
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 mt-2">
-          {!notification.read && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onMarkAsRead(notification._id);
-              }}
-              className="text-xs text-[#005823] hover:underline flex items-center gap-1"
-            >
-              <Check size={14} />
-              Mark as read
-            </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h4 className="font-semibold text-gray-900 text-sm">
+              {notification.title}
+            </h4>
+            <span className="text-xs text-gray-500 whitespace-nowrap">
+              {formatDistanceToNow(new Date(notification.createdAt), {
+                addSuffix: true,
+              })}
+            </span>
+          </div>
+          <p className="text-sm text-gray-600 line-clamp-2">
+            {notification.message}
+          </p>
+
+          {/* Loading/Action states */}
+          {isMarkingAsRead && (
+            <div className="flex items-center gap-2 mt-2 text-xs text-blue-600">
+              <Loader2 size={14} className="animate-spin" />
+              Marking as read...
+            </div>
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(notification._id);
-            }}
-            className="text-xs text-red-500 hover:underline flex items-center gap-1"
-          >
-            <Trash2 size={14} />
-            Delete
-          </button>
+          {isDeleting && (
+            <div className="flex items-center gap-2 mt-2 text-xs text-red-600">
+              <Loader2 size={14} className="animate-spin" />
+              Deleting...
+            </div>
+          )}
+
+          {/* Action buttons - only show when not processing */}
+          {!isProcessing && (
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={(e) => handleMarkAsRead(e, notification._id)}
+                className="text-xs text-[#005823] hover:underline flex items-center gap-1"
+              >
+                <Check size={14} />
+                Mark as read
+              </button>
+              <button
+                onClick={(e) => handleDelete(e, notification._id)}
+                className="text-xs text-red-500 hover:underline flex items-center gap-1"
+              >
+                <Trash2 size={14} />
+                Delete
+              </button>
+            </div>
+          )}
         </div>
-      </div>
-      {!notification.read && (
         <div className="absolute top-4 right-4 w-2 h-2 bg-blue-500 rounded-full"></div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <>
@@ -129,7 +200,7 @@ export default function NotificationDrawer({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <div>
-            <h2 className="text-lg font-semibold">Notification</h2>
+            <h2 className="text-lg font-semibold">Notifications</h2>
             {unreadCount > 0 && (
               <p className="text-xs text-gray-500">{unreadCount} unread</p>
             )}
@@ -154,17 +225,17 @@ export default function NotificationDrawer({
             <div className="flex items-center justify-center h-40">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#005823]" />
             </div>
-          ) : notifications.length === 0 ? (
+          ) : unreadNotifications.length === 0 ? (
             /* Empty State */
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <FiBell className="text-gray-400" size={28} />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No notifications yet
+                All caught up!
               </h3>
               <p className="text-sm text-gray-500">
-                You'll see notifications here when you have updates
+                You have no unread notifications
               </p>
             </div>
           ) : (

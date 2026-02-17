@@ -146,6 +146,12 @@ export default function Login() {
         localStorage.setItem("token", token);
         useAuthStore.getState().setToken(token);
 
+        if (res.role === "buyer") {
+  navigate("/dashboard");
+} else if (res.role === "provider") {
+  navigate("/dashboard/provider");
+}
+
         // Get full user
         const fullUser = await getUserByEmail(loginEmail);
         useAuthStore.getState().setUser(fullUser);

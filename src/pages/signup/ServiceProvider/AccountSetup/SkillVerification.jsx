@@ -38,6 +38,9 @@ export default function SkillsVerification({ onNext, onBack }) {
 
       if (selectedJobTitle === "transport") {
         dynamicFields.driverLicenseNumber = values.driverLicenseNumber;
+        dynamicFields.vehicleColor = values.vehicleColor;
+        dynamicFields.vehicleName = values.vehicleName;
+        dynamicFields.vehicleRegNo = values.vehicleRegNo;
         dynamicFields.vehicleProductionYear = values.vehicleProductionYear;
       } else if (selectedJobTitle === "domestic") {
         dynamicFields.fullName = values.fullName;
@@ -60,12 +63,13 @@ export default function SkillsVerification({ onNext, onBack }) {
       const payload = {
         job: [
           {
-            service: values.service,
-            title: values.title,
+            service: values.title,
+            title: values.service,
             tagLine: values.tagLine,
-            ...dynamicFields,
           },
         ],
+        ...dynamicFields,
+
         service: services.map((s) => ({
           serviceName: s.name,
           pricingModel: s.pricingModel,
@@ -143,6 +147,10 @@ export default function SkillsVerification({ onNext, onBack }) {
             // Transport fields
             driverLicenseNumber: "",
             vehicleProductionYear: "",
+            vehicleName: "",
+            vehicleRegNo: "",
+            vehicleColor: "",
+
             // Domestic fields
             fullName: "",
             nationalId: "",
