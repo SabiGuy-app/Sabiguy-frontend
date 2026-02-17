@@ -7,28 +7,19 @@ import { useAuthStore } from "../../../stores/auth.store";
 import { getAllProviders } from "../../../api/provider";
 import { useState, useEffect } from "react";
 import { useProviderStore } from "../../../stores/provider.store";
-import {
-  Home,
-  Wrench,
-  CircleAlert,
-  Truck,
-  Briefcase,
-  Palette,
-} from "lucide-react";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
-import family from "../../../../public/family.png";
-import delivery from "../../../../public/delivery.png";
-import handtool from "../../../../public/hand-tools.png";
-import siren from "../../../../public/siren.png";
-
-import Dispatch2 from "../../../../public/Dispatch2.png";
-import electrician from "../../../../public/electrician.png";
-import Welding from "../../../../public/Welding.jpg";
-import Household from "../../../../public/Household.jpg";
-import Towing from "../../../../public/Towing.jpg";
-import Legal from "../../../../public/Legal.jpg";
-import Plumbing from "../../../../public/Plumbing.jpg";
-import Design from "../../../../public/Design.jpg";
+import family from "/family.png";
+import delivery from "/delivery.png";
+import handtool from "/hand-tools.png";
+import siren from "/siren.png";
+import Dispatch2 from "/Dispatch2.png";
+import electrician from "/electrician.png";
+import Welding from "/Welding.jpg";
+import Household from "/Household.jpg";
+import Towing from "/Towing.jpg";
+import Legal from "/Legal.jpg";
+import Plumbing from "/Plumbing.jpg";
+import Design from "/Design.jpg";
 import { sendTestNotification } from "../../../api/fcm";
 import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 

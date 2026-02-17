@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Check, MapPin, Star } from "lucide-react";
 import Navbar from "../../../../components/dashboard/Navbar";
-import location from "../../../../../public/location.png";
+import location from "/location.png";
+import { useNavigate } from "react-router-dom";
 
 export default function AvailableRiders() {
   const [providers, setProviders] = useState([
@@ -30,11 +31,11 @@ export default function AvailableRiders() {
       accepted: false,
     },
   ]);
+  const navigate = useNavigate()
+
 
   const handleAccept = (id) => {
-    setProviders(
-      providers.map((p) => (p.id === id ? { ...p, accepted: true } : p)),
-    );
+    navigate("/bookings/summary")
   };
 
   const handleDecline = (id) => {
@@ -108,7 +109,6 @@ export default function AvailableRiders() {
                           <button
                             onClick={() => handleAccept(provider.id)}
                             className="flex-1 py-2.5 px-4 rounded-md font-medium transition-colors bg-[#005823CC] hover:bg-green-700"
-                            
                           >
                             <span className="flex items-center justify-center gap-2 text-white">
                               <Check className="w-4 h-4" />
