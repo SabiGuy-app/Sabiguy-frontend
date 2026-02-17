@@ -6,7 +6,6 @@ import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
 import { io } from "socket.io-client";
 
-
 export default function Navbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -18,138 +17,134 @@ export default function Navbar() {
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
-   const fetchUnreadCount = async () => {
-      try {
-        const res = await notificationService.fetchUnreadCount();
-        if (res.success) {
-          setUnreadCount(res.data.unreadCount);
-        }
-      } catch (error) {
-        console.error("Error fetching unread count:", error);
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await notificationService.fetchUnreadCount();
+      if (res.success) {
+        setUnreadCount(res.data.unreadCount);
       }
-    };
-  
-    const fetchNotifications = async () => {
-      setLoadingNotifications(true);
-  
-      try {
-        const res = await notificationService.fetchNotifications();
-  
-        if (res.success) {
-          setNotifications(res.data.notifications);
-        }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      } finally {
-        setLoadingNotifications(false);
-      }
-    };
-  
-    const markAsRead = async (id) => {
-      try {
-        const res = await notificationService.markAsRead(id);
-  
-        if (res.data.success) {
-          // Update local state
-          setNotifications((prev) =>
-            prev.map((notif) =>
-              notif._id === id ? { ...notif, read: true } : notif,
-            ),
-          );
-          // Refresh unread count
-          fetchUnreadCount();
-        }
-      } catch (error) {
-        console.error("Error marking notification as read:", error);
-      }
-    };
-  
-    const markAllAsRead = async () => {
-      try {
-        const res = await notificationService.markAllAsRead();
-        if (res.data.success) {
-          // Update local state
-          setNotifications((prev) =>
-            prev.map((notif) => ({ ...notif, read: true })),
-          );
-          setUnreadCount(0);
-        }
-      } catch (error) {
-        console.error("Error marking all as read:", error);
-      }
-    };
-  
-    const deleteNotification = async (id) => {
-      try {
-        const res = await notificationService.deleteNotification(id);
-        if (res.data.success) {
-          // Remove from local state
-          setNotifications((prev) => prev.filter((notif) => notif._id !== id));
-          // Refresh unread count
-          fetchUnreadCount();
-        }
-      } catch (error) {
-        console.error("Error deleting notification:", error);
-      }
-    };
-  
-   // Initialize socket connection
-    useEffect(() => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-  
-      const newSocket = io(
-        import.meta.env.VITE_SOCKET_URL || "http://localhost:3000",
-        {
-          auth: { token },
-          transports: ["websocket", "polling"],
-        },
-      );
-  
-      newSocket.on("connect", () => {
-        console.log("✅ User socket connected");
-      });
-  
-      newSocket.on("connect_error", (error) => {
-        console.error("❌ Socket connection error:", error);
-      });
-  
-      // Listen for new notifications via socket
-      newSocket.on("new_notification", (notification) => {
-        console.log("📬 New notification received:", notification);
-        setNotifications((prev) => [notification, ...prev]);
-        setUnreadCount((prev) => prev + 1);
-      });
-  
-      setSocket(newSocket);
-    }, []);
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  };
 
-     // Fetch initial data
-      useEffect(() => {
+  const fetchNotifications = async () => {
+    setLoadingNotifications(true);
+
+    try {
+      const res = await notificationService.fetchNotifications();
+
+      if (res.success) {
+        setNotifications(res.data.notifications);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      const res = await notificationService.markAsRead(id);
+
+      if (res.data.success) {
+        // Update local state
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif._id === id ? { ...notif, read: true } : notif,
+          ),
+        );
+        // Refresh unread count
         fetchUnreadCount();
-        fetchNotifications();
-    
-        // Poll for new notifications every 30 seconds (optional if socket is working)
-        const interval = setInterval(() => {
-          fetchUnreadCount();
-        }, 30000);
-    
-        return () => clearInterval(interval);
-      }, []);
- 
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const res = await notificationService.markAllAsRead();
+      if (res.data.success) {
+        // Update local state
+        setNotifications((prev) =>
+          prev.map((notif) => ({ ...notif, read: true })),
+        );
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      const res = await notificationService.deleteNotification(id);
+      if (res.data.success) {
+        // Remove from local state
+        setNotifications((prev) => prev.filter((notif) => notif._id !== id));
+        // Refresh unread count
+        fetchUnreadCount();
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
+  // Initialize socket connection
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const newSocket = io(
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:5173",
+      {
+        auth: { token },
+        transports: ["websocket", "polling"],
+      },
+    );
+
+    newSocket.on("connect", () => {
+      console.log("✅ User socket connected");
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.error("❌ Socket connection error:", error);
+    });
+
+    // Listen for new notifications via socket
+    newSocket.on("new_notification", (notification) => {
+      console.log("📬 New notification received:", notification);
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    setSocket(newSocket);
+  }, []);
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchUnreadCount();
+    fetchNotifications();
+
+    // Poll for new notifications every 30 seconds (optional if socket is working)
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleNotificationClick = () => {
     setShowNotifications(true);
-    setUnreadCount(0)
+    setUnreadCount(0);
   };
 
   return (
     <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
-
       {/* Mobile Menu Button */}
-      <button
-        className="md:hidden"
-        onClick={() => setShowMenu(true)}
-      >
+      <button className="md:hidden" onClick={() => setShowMenu(true)}>
         <Menu size={26} className="text-gray-700" />
       </button>
 
@@ -182,10 +177,8 @@ export default function Navbar() {
       {/* Right Icons */}
       <div className="flex items-center space-x-4">
         {/* Bell */}
-        <button
-         onClick={handleNotificationClick}
-         className="relative">
-           <Bell size={24} />
+        <button onClick={handleNotificationClick} className="relative">
+          <Bell size={24} />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 min-w-[20px] h-4 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1">
               {unreadCount > 99 ? "99+" : unreadCount}
@@ -199,7 +192,7 @@ export default function Navbar() {
           className="flex items-center"
         >
           <img
-            src={user.data?.profilePicture || '/avatar.png'}
+            src={user.data?.profilePicture || "/avatar.png"}
             className="w-8 h-8 rounded-full border"
           />
         </button>
@@ -221,9 +214,10 @@ export default function Navbar() {
 
       {/* Mobile Slide-in Menu */}
       {showMenu && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
-             onClick={() => setShowMenu(false)}>
-
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
+          onClick={() => setShowMenu(false)}
+        >
           <div
             className="absolute left-0 top-0 h-full w-64 bg-white shadow-lg p-6 animate-slideIn"
             onClick={(e) => e.stopPropagation()}
@@ -239,11 +233,17 @@ export default function Navbar() {
                 Dashboard
               </button>
 
-              <button onClick={() => navigate("/dashboard/categories")} className="block">
+              <button
+                onClick={() => navigate("/dashboard/categories")}
+                className="block"
+              >
                 Categories
               </button>
 
-              <button onClick={() => navigate("/dashboard/settings")} className="block">
+              <button
+                onClick={() => navigate("/dashboard/settings")}
+                className="block"
+              >
                 Settings
               </button>
             </nav>
@@ -251,15 +251,15 @@ export default function Navbar() {
         </div>
       )}
       <NotificationDrawer
-              isOpen={showNotifications}
-              onClose={() => setShowNotifications(false)}
-              notifications={notifications}
-              loading={loadingNotifications}
-              unreadCount={unreadCount}
-              onMarkAsRead={markAsRead}
-              onMarkAllAsRead={markAllAsRead}
-              onDelete={deleteNotification}
-            />
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        notifications={notifications}
+        loading={loadingNotifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
+        onDelete={deleteNotification}
+      />
     </header>
   );
 }

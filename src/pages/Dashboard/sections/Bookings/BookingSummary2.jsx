@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  ArrowLeft,
   Phone,
   MessageCircle,
   User,
@@ -15,23 +14,35 @@ import bookingCar from "/bookings.png";
 import Navbar from "../../../../components/dashboard/Navbar";
 import { FiChevronLeft } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import useBookingStore from "../../../../stores/booking.store";
 
 export default function BookingSummary2() {
   const [selectedPayment, setSelectedPayment] = useState("wallet");
   const [notes, setNotes] = useState("");
-  const [walletBalance, setWalletBalance] = useState(60000); // Wallet balance
+  const [walletBalance, setWalletBalance] = useState(60000);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
   const navigate = useNavigate();
-  const serviceCost = 10000;
+
+  const booking = useBookingStore((state) => state.booking);
+  const bookingDetails = booking?.data?.booking || {};
+  const providerDetails = booking?.data?.providers?.[0] || {};
+
+  console.log(providerDetails);
+
+  const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
+  const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
+  const estimatedDistance = bookingDetails?.distance
+    ? `${bookingDetails.distance.value} ${bookingDetails.distance.unit}`
+    : "—";
+  const serviceCost = bookingDetails?.calculatedPrice || 0;
   const serviceChargeRate = 0.02;
   const serviceCharge = serviceCost * serviceChargeRate;
   const totalAmount = serviceCost + serviceCharge;
 
-  // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -41,16 +52,13 @@ export default function BookingSummary2() {
     }).format(amount);
   };
 
-  // Handle payment
   const handleConfirmAndPay = async () => {
     setErrorMessage("");
     setIsProcessing(true);
 
-    // Simulate processing delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     if (selectedPayment === "wallet") {
-      // Check if wallet has sufficient balance
       if (walletBalance < totalAmount) {
         setErrorMessage(
           `Insufficient wallet balance. You need ${formatCurrency(totalAmount - walletBalance)} more to complete this transaction.`,
@@ -58,20 +66,15 @@ export default function BookingSummary2() {
         setIsProcessing(false);
         return;
       }
-
-      // Deduct from wallet
       setWalletBalance((prev) => prev - totalAmount);
       setShowSuccessModal(true);
       setIsProcessing(false);
     } else if (selectedPayment === "online") {
-      // Handle online payment (integrate payment gateway)
-      // For now, just show success
       setShowSuccessModal(true);
       setIsProcessing(false);
     }
   };
 
-  // Success Modal Component
   const SuccessModal = () => (
     <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-8 relative animate-fadeIn">
@@ -137,12 +140,12 @@ export default function BookingSummary2() {
                     r="10"
                     stroke="currentColor"
                     strokeWidth="4"
-                  ></circle>
+                  />
                   <path
                     className="opacity-75"
                     fill="currentColor"
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
+                  />
                 </svg>
                 <span>Loading...</span>
               </>
@@ -198,36 +201,37 @@ export default function BookingSummary2() {
             </div>
           )}
 
-          {/* Driver Info */}
           <div className="flex items-start gap-4 mb-6">
             <div className="relative">
               <img
-                src={bookingCar}
-                alt="Marcus Johnson"
+                src={providerDetails?.profilePicture || bookingCar}
+                alt={providerDetails?.fullName || "Provider"}
                 className="w-16 h-16 rounded-full object-cover"
+                onError={(e) => { e.target.src = bookingCar; }}
               />
             </div>
-
             <div className="flex-grow">
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Marcus Johnson
+                  {providerDetails?.fullName || "Provider"}
                 </h2>
                 <span className="flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 text-xs font-medium rounded">
                   ✓ Verified
                 </span>
               </div>
               <p className="text-sm text-gray-600 mb-1">
-                Toyota Corolla · KSF257NG
+                {providerDetails?.services?.[0]?.title?.replace(/_/g, " ") || bookingDetails?.subCategory?.replace(/_/g, " ") || "—"}
               </p>
               <div className="flex items-center gap-1 text-sm text-gray-600">
                 <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium text-gray-900">4.9</span>
-                <span className="text-gray-500">(25 reviews)</span>
+                <span className="font-medium text-gray-900">
+                  {providerDetails?.rating?.average > 0 ? providerDetails.rating.average.toFixed(1) : "New"}
+                </span>
+                <span className="text-gray-500">({providerDetails?.rating?.count ?? 0} reviews)</span>
               </div>
               <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>2.7 miles away</span>
+                <span>{providerDetails?.distance?.toFixed(1) ?? "—"} km away</span>
               </div>
             </div>
 
@@ -237,27 +241,28 @@ export default function BookingSummary2() {
                 <div className="flex items-center justify-center w-10 h-10 rounded-full">
                   <User className="w-5 h-5" />
                 </div>
-                <div className="text-lg font-semibold text-gray-900">25</div>
+                <div className="text-lg font-semibold text-gray-900">{providerDetails?.completedJobs ?? 0}</div>
                 <div className="text-xs text-gray-500">Jobs Done</div>
               </div>
               <div className="flex flex-col justify-center items-center">
                 <div className="flex items-center justify-center w-10 h-10">
                   <Clock className="w-5 h-5" />
                 </div>
-                <div className="text-lg font-semibold text-gray-900">
-                  {"< 3 Mins"}
-                </div>
+                <div className="text-lg font-semibold text-gray-900">{"< 3 Mins"}</div>
                 <div className="text-xs text-gray-500">Response Time</div>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center w-10 h-10">
                   <Star className="w-5 h-5" />
                 </div>
-                <div className="text-lg font-semibold text-gray-900">4.9</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {providerDetails?.rating?.average > 0 ? providerDetails.rating.average.toFixed(1) : "New"}
+                </div>
                 <div className="text-xs text-gray-500">Rating</div>
               </div>
             </div>
           </div>
+
 
           {/* Action Buttons */}
           <div className="flex gap-3 mb-6">
@@ -288,22 +293,24 @@ export default function BookingSummary2() {
             </h3>
 
             <div className="space-y-3">
+              {/* Pickup */}
               <div className="flex gap-3">
-                <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center">
-                  <div className="w-5 h-5 bg-[#005823] rounded-full"></div>
+                <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-5 h-5 bg-[#005823] rounded-full" />
                 </div>
                 <div>
                   <div className="font-semibold text-[16px] text-[#231F20]">
                     Pickup Location
                   </div>
                   <div className="text-[16px] text-[#231F20BF]">
-                    24 Palm Avenue, Lagos
+                    {pickupAddress}
                   </div>
                 </div>
               </div>
 
+              {/* Dropoff */}
               <div className="flex gap-3">
-                <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-5 h-5 text-[#005823]" />
                 </div>
                 <div>
@@ -311,21 +318,22 @@ export default function BookingSummary2() {
                     Dropoff Location
                   </div>
                   <div className="text-[16px] text-[#231F20BF]">
-                    24 Palm Avenue, Lagos
+                    {dropoffAddress}
                   </div>
                 </div>
               </div>
 
+              {/* Distance */}
               <div className="flex gap-3">
-                <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center">
-                  <Navigation className="w-5 h-5 text-green-600 mt-0.5" />
+                <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                  <Navigation className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
                   <div className="font-semibold text-[16px] text-[#231F20]">
                     Estimated Distance
                   </div>
                   <div className="text-[16px] text-[#231F20BF]">
-                    10 Kilometre
+                    {estimatedDistance}
                   </div>
                 </div>
               </div>
@@ -337,14 +345,13 @@ export default function BookingSummary2() {
             <h3 className="text-[20px] font-semibold text-gray-900 mb-4">
               Cost
             </h3>
-
             <div className="space-y-2">
               <div className="flex justify-between text-[16px] font-semibold text-[#231F20BF]">
                 <span>Service Cost</span>
                 <span>{formatCurrency(serviceCost)}</span>
               </div>
               <div className="flex justify-between text-[16px] font-semibold text-[#231F20BF]">
-                <span>Service Charge</span>
+                <span>Service Charge (2%)</span>
                 <span>{formatCurrency(serviceCharge)}</span>
               </div>
               <div className="pt-2 mt-2 text-[16px]">
@@ -365,14 +372,9 @@ export default function BookingSummary2() {
             <h3 className="text-[20px] font-semibold text-[#231F20] mb-4">
               Payment Method
             </h3>
-
             <div className="space-y-3">
               <label
-                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                  selectedPayment === "wallet"
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:bg-gray-50"
-                }`}
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${selectedPayment === "wallet" ? "border-green-500 bg-green-50" : "border-gray-200 hover:bg-gray-50"}`}
               >
                 <input
                   type="radio"
@@ -408,11 +410,7 @@ export default function BookingSummary2() {
               </label>
 
               <label
-                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                  selectedPayment === "online"
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:bg-gray-50"
-                }`}
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${selectedPayment === "online" ? "border-green-500 bg-green-50" : "border-gray-200 hover:bg-gray-50"}`}
               >
                 <input
                   type="radio"
@@ -442,11 +440,6 @@ export default function BookingSummary2() {
                 </div>
               </label>
             </div>
-
-            <button className="w-full mt-3 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium bg-[#fbfbfb] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-              <span className="text-xl">+</span>
-              <span>Add Payment Method</span>
-            </button>
           </div>
 
           {/* Additional Notes */}
@@ -484,7 +477,6 @@ export default function BookingSummary2() {
         </div>
       </div>
 
-      {/* Success Modal */}
       {showSuccessModal && <SuccessModal />}
     </>
   );
