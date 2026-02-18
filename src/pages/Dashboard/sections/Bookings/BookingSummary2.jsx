@@ -9,6 +9,8 @@ import {
   Navigation,
   X,
   CheckCircle,
+  Award,
+  Shield,
 } from "lucide-react";
 import bookingCar from "/bookings.png";
 import Navbar from "../../../../components/dashboard/Navbar";
@@ -215,8 +217,8 @@ export default function BookingSummary2() {
                 <h2 className="text-lg font-semibold text-gray-900">
                   {providerDetails?.fullName || "Provider"}
                 </h2>
-                <span className="flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 text-xs font-medium rounded">
-                  ✓ Verified
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-[#8BC53F1A] text-[#8BC53F] text-[12px] font-semibold rounded">
+                  <Shield className="w-[16px] h-[16px]"/> Verified
                 </span>
               </div>
               <p className="text-sm text-gray-600 mb-1">
@@ -229,9 +231,9 @@ export default function BookingSummary2() {
                 </span>
                 <span className="text-gray-500">({providerDetails?.rating?.count ?? 0} reviews)</span>
               </div>
-              <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
+              <div className="flex items-center gap-1 text-sm text-[#231F20BF] mt-1">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>{providerDetails?.distance?.toFixed(1) ?? "—"} km away</span>
+                <span>{providerDetails?.distance?.toFixed(1) ?? "—"} miles away</span>
               </div>
             </div>
 
@@ -239,26 +241,26 @@ export default function BookingSummary2() {
             <div className="flex gap-6">
               <div className="flex flex-col justify-center items-center">
                 <div className="flex items-center justify-center w-10 h-10 rounded-full">
-                  <User className="w-5 h-5" />
+                  <Award className="w-[24px] h-[24px] text-[#005823]" />
                 </div>
-                <div className="text-lg font-semibold text-gray-900">{providerDetails?.completedJobs ?? 0}</div>
-                <div className="text-xs text-gray-500">Jobs Done</div>
+                <div className="text-[20px] font-semibold text-[#231F20]">{providerDetails?.completedJobs ?? 0}</div>
+                <div className="text-[16px] text-[#231F2080]">Jobs Done</div>
               </div>
               <div className="flex flex-col justify-center items-center">
                 <div className="flex items-center justify-center w-10 h-10">
-                  <Clock className="w-5 h-5" />
+                  <Clock className="w-[24px] h-[24px] text-[#231F20BF]" />
                 </div>
-                <div className="text-lg font-semibold text-gray-900">{"< 3 Mins"}</div>
-                <div className="text-xs text-gray-500">Response Time</div>
+                <div className="text-[20px] font-semibold text-[#231F20]">{"< 3 Mins"}</div>
+                <div className="text-[16px] text-[#231F2080]">Response Time</div>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center w-10 h-10">
-                  <Star className="w-5 h-5" />
+                  <Star className="w-[24px] h-[24px] text-yellow-400" />
                 </div>
-                <div className="text-lg font-semibold text-gray-900">
+                <div className="text-[20px] font-semibold text-[#231F20]">
                   {providerDetails?.rating?.average > 0 ? providerDetails.rating.average.toFixed(1) : "New"}
                 </div>
-                <div className="text-xs text-gray-500">Rating</div>
+                <div className="text-[16px] text-[#231F2080]">Rating</div>
               </div>
             </div>
           </div>
@@ -374,7 +376,7 @@ export default function BookingSummary2() {
             </h3>
             <div className="space-y-3">
               <label
-                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${selectedPayment === "wallet" ? "border-green-500 bg-green-50" : "border-gray-200 hover:bg-gray-50"}`}
+                className={`flex items-center gap-3 p-4 border rounded-[8px] cursor-pointer transition-colors ${selectedPayment === "wallet" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
               >
                 <input
                   type="radio"
@@ -382,7 +384,7 @@ export default function BookingSummary2() {
                   value="wallet"
                   checked={selectedPayment === "wallet"}
                   onChange={(e) => setSelectedPayment(e.target.value)}
-                  className="w-5 h-5 text-green-600"
+                  className="w-5 h-5 accent-[#005823]"
                 />
                 <div className="flex items-center gap-3 flex-grow">
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -401,8 +403,8 @@ export default function BookingSummary2() {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900">Wallet</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="font-semibold text-[16px] text-[#231F20]">Wallet</div>
+                    <div className="text-[12px] font-semibold text-[#231F20BF]">
                       Balance: {formatCurrency(walletBalance)}
                     </div>
                   </div>
@@ -410,7 +412,7 @@ export default function BookingSummary2() {
               </label>
 
               <label
-                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${selectedPayment === "online" ? "border-green-500 bg-green-50" : "border-gray-200 hover:bg-gray-50"}`}
+                className={`flex items-center gap-3 p-4 border rounded-[8px] cursor-pointer transition-colors ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
               >
                 <input
                   type="radio"
@@ -418,7 +420,7 @@ export default function BookingSummary2() {
                   value="online"
                   checked={selectedPayment === "online"}
                   onChange={(e) => setSelectedPayment(e.target.value)}
-                  className="w-5 h-5 text-green-600"
+                  className="w-5 h-5 accent-[#005823]"
                 />
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -436,7 +438,7 @@ export default function BookingSummary2() {
                       />
                     </svg>
                   </div>
-                  <div className="font-medium text-gray-900">Pay Online</div>
+                  <div className="font-medium text-[16px] text-[#231F20]">Pay Online</div>
                 </div>
               </label>
             </div>
@@ -444,7 +446,7 @@ export default function BookingSummary2() {
 
           {/* Additional Notes */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            <h3 className="text-[20px] font-semibold text-[#231F20] mb-3">
               Additional notes (optional)
             </h3>
             <textarea
@@ -458,13 +460,13 @@ export default function BookingSummary2() {
 
           {/* Action Buttons */}
           <div className="flex gap-3 pb-6">
-            <button className="flex-1 py-4 px-6 bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+            <button className="flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold hover:bg-gray-50 transition-colors">
               Cancel
             </button>
             <button
               onClick={handleConfirmAndPay}
               disabled={isProcessing}
-              className="flex-1 py-4 px-6 bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 px-6 text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isProcessing
                 ? "Processing..."
