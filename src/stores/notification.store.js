@@ -1,4 +1,4 @@
-import  { create } from 'zustand';
+import { create } from "zustand";
 
 const useNotificationStore = create((set) => ({
   notifications: [],
@@ -7,22 +7,23 @@ const useNotificationStore = create((set) => ({
   addNotification: (notification) =>
     set((state) => ({
       notifications: [notification, ...state.notifications],
-      unreadCount: state.unreadCount + 1
+      unreadCount: state.unreadCount + 1,
     })),
 
   markAsRead: (notificationId) =>
     set((state) => ({
       notifications: state.notifications.map((n) =>
-        n._id === notificationId ? { ...n, isRead: true } : n
+        n._id === notificationId ? { ...n, isRead: true } : n,
       ),
-      unreadCount: Math.max(0, state.unreadCount - 1)
+      unreadCount: Math.max(0, state.unreadCount - 1),
     })),
 
-  setNotifications: (notifications) =>
-    set({ notifications }),
+  setNotifications: (notifications) => set({ notifications }),
 
-  setUnreadCount: (count) =>
-    set({ unreadCount: count })
+  setUnreadCount: (count) => set({ unreadCount: count }),
+
+  // Reset all notification data on logout
+  reset: () => set({ notifications: [], unreadCount: 0 }),
 }));
 
 export default useNotificationStore;

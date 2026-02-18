@@ -75,7 +75,7 @@ export const payWithWallet = async (bookingId) => {
 };
 
 export const getAllProviders = async () => {
-    const { data } = await api.get("/providers");
+    const { data } = await api.get("users/providers");
     return data;
 };
 

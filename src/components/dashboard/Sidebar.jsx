@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, HelpCircle, MessageCircle, Home, LogOut, Gift, Heart, Book, ClipboardList, Cog} from "lucide-react";
+import { handleLogout } from "../../api/auth";
 
 
 const links = [
@@ -12,7 +13,7 @@ const links = [
   // { name: "Referrals", path: "/dashboard/", icon: <Gift/> },
   { name: "Settings", path: "/dashboard/settings", icon: <Cog/> },
   { name: "Help", path: "/dashboard/help", icon: <HelpCircle/> },
-  { name: "Logout", path: "/", icon: <LogOut/> },
+  { name: "Logout", icon: <LogOut/> },
 
 
 ];
@@ -20,6 +21,23 @@ const links = [
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  const onLogout = async () => {
+    try {
+      await handleLogout();
+      setOpen(false);
+      // Add a small delay to ensure stores are cleared before redirect
+      setTimeout(() => {
+        navigate("/");
+      }, 100);
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still redirect even if logout has errors
+      setOpen(false);
+      navigate("/");
+    }
+  };
 
   return (
     <>
@@ -36,9 +54,22 @@ export default function Sidebar() {
         className={`fixed top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        {/* <h1 className="text-3xl font-bold text-[#005823] mb-10">SabiGuy</h1> */}
         <nav className="space-y-2">
-          {links.map((link) => (
+          {links.map((link) => {
+            if (link.name === "Logout") {
+              return (
+                <button
+                  key={link.name}
+                  onClick={onLogout}
+                  className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+                >
+                  <span>{link.icon}</span>
+                  <span>{link.name}</span>
+                </button>
+              );
+            }
+
+            return (
             <Link
               key={link.path}
               to={link.path}
@@ -50,7 +81,8 @@ export default function Sidebar() {
               <span>{link.icon}</span>
               <span>{link.name}</span>
             </Link>
-          ))}
+            )
+})}
         </nav>
       </aside>
     </>

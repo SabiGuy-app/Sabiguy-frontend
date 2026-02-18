@@ -14,10 +14,24 @@ import { useAuthStore } from "../../../stores/auth.store";
 
 export default function ProviderDashboard() {
   const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Don't render until store is hydrated
+  if (!hydrated) {
+    return (
+      <ProviderDashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mx-auto mb-4"></div>
+            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse mx-auto"></div>
+          </div>
+        </div>
+      </ProviderDashboardLayout>
+    );
+  }
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -28,7 +42,9 @@ export default function ProviderDashboard() {
         setDashboardData(response.data || response);
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
-        setError(err.response?.data?.message || "Failed to load dashboard data");
+        setError(
+          err.response?.data?.message || "Failed to load dashboard data",
+        );
         // Set default data on error so dashboard still renders
         setDashboardData({});
       } finally {
@@ -39,7 +55,6 @@ export default function ProviderDashboard() {
     fetchDashboardStats();
   }, []);
 
-
   const totalRevenue = dashboardData?.totalEarnings || 0;
   const activeJobs = dashboardData?.activeBookings || 0;
   const averageRating = dashboardData?.averageRating || 0;
@@ -48,8 +63,11 @@ export default function ProviderDashboard() {
     <ProviderDashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h2 className="text-lg font-semibold mb-3">Welcome Back, {user.data?.fullName?.split(" ")[0]} 👋</h2>
-          <p className="mb-3 text-sm">Here's a quick look at your business performance today.</p>
+          <h2 className="text-lg font-semibold mb-3">  {" "}
+            Welcome Back, {user?.data?.fullName?.split(" ")[0]} 👋</h2>
+          <p className="mb-3 text-sm">
+            Here's a quick look at your business performance today.
+          </p>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
