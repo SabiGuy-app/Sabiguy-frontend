@@ -1,3 +1,4 @@
+import axios from "axios";
 import api from "./axios";
 
 export const bookingPost = async (payload) => {
@@ -57,5 +58,21 @@ export const getProviderBookings = async () => {
     },
   });
 
+  return data;
+};
+
+export const selectProvider = async (bookingId, providerId) => {
+  const token = localStorage.getItem("token");
+  const { data } = await api.put(
+    `/bookings/${bookingId}/select-provider`,
+    {
+      providerId,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
   return data;
 };

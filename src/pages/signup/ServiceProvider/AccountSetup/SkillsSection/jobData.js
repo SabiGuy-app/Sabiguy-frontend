@@ -1,7 +1,7 @@
 // data.js
 export const jobTitles = [
   { label: "Select Job Title", value: "" },
-  { label: "Transport & Logistics Services", value: "transport" },    
+  { label: "Transport & Logistics Services", value: "transport" },
   // { label: "Emergency Services", value: "emergency_services" },
   // { label: "Home & Repair Services", value: "home_repair" },
   // { label: "Domestic & Lifestyle Services", value: "domestic_services" },

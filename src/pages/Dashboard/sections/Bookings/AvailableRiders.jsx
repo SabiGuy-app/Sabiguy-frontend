@@ -1,123 +1,163 @@
 import React, { useState } from "react";
-import { Check, MapPin, Star } from "lucide-react";
+import { Check, MapPin, Star, Loader2 } from "lucide-react";
 import Navbar from "../../../../components/dashboard/Navbar";
 import location from "/location.png";
 import { useNavigate } from "react-router-dom";
+import useBookingStore from "../../../../stores/booking.store";
+import { selectProvider } from "../../../../api/bookings";
 
 export default function AvailableRiders() {
-  const [providers, setProviders] = useState([
-    {
-      id: 1,
-      name: "Toyota Corolla",
-      code: "KSF257NG",
-      rating: 4.7,
-      reviews: 120,
-      distance: 2.3,
-      price: 5000,
-      image:
-        "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=300&fit=crop",
-      accepted: false,
-    },
-    {
-      id: 2,
-      name: "Audi",
-      code: "KSF257NG",
-      rating: 4.5,
-      reviews: 120,
-      distance: 3.7,
-      price: 5000,
-      image:
-        "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&h=300&fit=crop",
-      accepted: false,
-    },
-  ]);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const booking = useBookingStore((state) => state.booking);
 
+  const providers = booking?.data?.providers || [];
+  const bookingDetails = booking?.data?.booking || {};
+  const bookingId = bookingDetails._id;
+  const bookingAmount = bookingDetails.calculatedPrice;
 
-  const handleAccept = (id) => {
-    navigate("/bookings/summary")
-  };
+  // console.log(providers);
+  // console.log(bookingDetails);
+  // console.log(bookingId);
+  // console.log(bookingAmount);
 
-  const handleDecline = (id) => {
-    setProviders(
-      providers.map((p) => (p.id === id ? { ...p, accepted: false } : p)),
-    );
+  const [acceptingId, setAcceptingId] = useState(null);
+  const [error, setError] = useState("");
+
+  const handleAccept = async (providerId) => {
+    setAcceptingId(providerId);
+    setError("");
+
+    try {
+      await selectProvider(bookingId, providerId);
+      navigate("/bookings/summary");
+    } catch (err) {
+      setError(
+        err?.response?.data?.message || "Failed to accept provider. Try again.",
+      );
+    } finally {
+      setAcceptingId(null);
+    }
   };
 
   return (
     <>
       <Navbar />
       <div className="min-h-screen grid grid-cols-2 gap-10 bg-gray-50 p-4 sm:p-8">
-        <div className="">
+        <div>
           <h1 className="text-2xl font-semibold text-gray-900 mb-6">
             Available providers
           </h1>
 
-          <div className="space-y-4">
-            {providers.map((provider) => (
-              <div
-                key={provider.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
-              >
-                <div className="grid grid-cols-2 sm:flex-row gap-4">
-                  <div className="w-full h-full">
-                    <div className="w-full h-full bg-gray-100 rounded-lg overflow-hidden">
-                      <img
-                        src={provider.image}
-                        alt={provider.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </div>
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
 
-                  {/* Provider Details */}
-                  <div className="flex-grow">
-                    <div className="flex flex-col h-full">
-                      <div>
-                        <h2 className="text-lg font-semibold text-gray-900">
-                          {provider.name}{" "}
-                          <span className="text-gray-500 font-normal">
-                            • {provider.code}
-                          </span>
-                        </h2>
-
-                        <div className="flex items-center gap-1 mt-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium text-gray-900">
-                            {provider.rating}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            ({provider.reviews} reviews)
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1 mt-1">
-                          <MapPin className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">
-                            {provider.distance} miles away
-                          </span>
-                        </div>
+          {providers.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+              <p className="text-gray-500">
+                No providers available at the moment.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {providers.map((provider) => (
+                <div
+                  key={provider.id}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+                >
+                  <div className="flex flex-col md:flex-row gap-6 md:gap-10">
+                    <div className="w-full md:w-1/2">
+                      <div className="w-full h-[200px] sm:h-[250px] bg-gray-100 rounded-lg overflow-hidden">
+                        <img
+                          src={provider.profilePicture}
+                          alt={provider.fullName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.fullName)}&background=e5e7eb&color=374151`;
+                          }}
+                        />
                       </div>
+                    </div>
 
-                      {/* Price and Actions */}
-                      <div className="mt-4">
-                        <div className="text-2xl font-bold text-green-700 mb-3">
-                          ₦{provider.price.toLocaleString()}
+                    {/* Content */}
+                    <div className="w-full md:w-1/2">
+                      <div className="flex flex-col h-full justify-between">
+                        <div>
+                          <h2 className="text-[30px] font-semibold text-gray-900">
+                            {provider.fullName}{" "}
+                            <span className="text-gray-500 font-normal text-[20px]">
+                              •{" "}
+                              {provider.services?.[0]?.title?.replace(
+                                /_/g,
+                                " ",
+                              )}
+                            </span>
+                          </h2>
+
+                          {/* Rating */}
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-medium text-gray-900">
+                              {provider.rating?.average > 0
+                                ? provider.rating.average.toFixed(1)
+                                : "New"}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              ({provider.rating?.count} reviews)
+                            </span>
+                          </div>
+
+                          {/* Distance */}
+                          <div className="flex items-center gap-1 mt-1">
+                            <MapPin className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">
+                              {provider.distance?.toFixed(1)} km away
+                            </span>
+                          </div>
+
+                          {/* Completed jobs */}
+                          <div className="mt-1">
+                            <span className="text-sm text-gray-500">
+                              {provider.completedJobs} job
+                              {provider.completedJobs !== 1 ? "s" : ""}{" "}
+                              completed
+                            </span>
+                          </div>
+
+                          {/* Price */}
+                          <h2 className="text-2xl sm:text-[25px] text-[#005823] font-semibold mt-2">
+                            ₦{bookingAmount}
+                          </h2>
                         </div>
 
-                        <div className="flex flex-col gap-2">
+                        {/* Actions */}
+                        <div className="space-y-1 sm:flex-row gap-2">
                           <button
                             onClick={() => handleAccept(provider.id)}
-                            className="flex-1 py-2.5 px-4 rounded-md font-medium transition-colors bg-[#005823CC] hover:bg-green-700"
+                            disabled={!!acceptingId}
+                            className="w-full py-2.5 px-4 rounded-md font-medium transition-colors bg-[#005823CC] hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             <span className="flex items-center justify-center gap-2 text-white">
-                              <Check className="w-4 h-4" />
-                              Accept
+                              {acceptingId === provider.id ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Accepting...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  Accept
+                                </>
+                              )}
                             </span>
                           </button>
+
                           <button
                             onClick={() => handleDecline(provider.id)}
-                            className="flex-1 py-2.5 px-4 rounded-md font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                            disabled={!!acceptingId}
+                            className="w-full py-2.5 px-4 rounded-md font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             Decline
                           </button>
@@ -126,10 +166,12 @@ export default function AvailableRiders() {
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Map */}
         <div>
           <img src={location} alt="" className="w-[700px] h-[660px]" />
         </div>

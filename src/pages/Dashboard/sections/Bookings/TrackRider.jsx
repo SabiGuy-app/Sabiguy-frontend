@@ -27,7 +27,7 @@ export default function TrackRider() {
       id: 2,
       title: "Arrived at pickup location",
       subtitle: "At pickup point",
-      completed: true,
+      completed: false,
       active: false,
     },
     {
