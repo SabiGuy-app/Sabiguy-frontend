@@ -25,13 +25,14 @@ export default function ChatPage() {
   const [socket, setSocket] = useState(null);
   const [typingStatus, setTypingStatus] = useState({});
   const messagesEndRef = useRef(null);
+  const hydrated = useAuthStore((state) => state.hydrated);
   const currentUserId = useAuthStore((state) => state.user?.data?._id);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams] = useSearchParams();
 
+  // Don't setup socket until store is hydrated
   useEffect(() => {
-    const token = useAuthStore.getState().token;
-    if (!token) return;
+    if (!hydrated) return;
 
     const newSocket = io(SOCKET_URL, {
       auth: { token },

@@ -26,11 +26,26 @@ import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 export default function DashboardHome() {
   const [loading, setLoading] = useState(false);
   const { token } = useAuthStore();
+  const hydrated = useAuthStore((state) => state.hydrated);
   const { providers, setProviders } = useProviderStore();
   const [modalOpen, setModalOpen] = useState(false);
-   const [selectedService, setSelectedService] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+
+  // Don't render until store is hydrated
+  if (!hydrated) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mx-auto mb-4"></div>
+            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse mx-auto"></div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const categories = [
     {
@@ -147,7 +162,7 @@ export default function DashboardHome() {
     },
   ];
 
-    const handleServiceClick = (service, isDisabled) => {
+  const handleServiceClick = (service, isDisabled) => {
     if (isDisabled) {
       setSelectedService(service);
       setModalOpen(true);
@@ -173,7 +188,7 @@ export default function DashboardHome() {
         <div>
           <h2 className="text-lg font-semibold mb-3">
             {" "}
-            Welcome Back, {user.data?.fullName?.split(" ")[0]} 👋
+            Welcome Back, {user?.data?.fullName?.split(" ")[0]} 👋
           </h2>
           <p className="mb-3 text-sm">What would you like to get done today?</p>
         </div>
@@ -203,7 +218,7 @@ export default function DashboardHome() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
           <h3 className="text-lg font-semibold mb-4">Explore Categories</h3>
         </div>
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((ser, idx) => {
             const isDisabled = ser.title !== "Transport & Logistics";
             return (
@@ -220,10 +235,10 @@ export default function DashboardHome() {
         </div>
 
         <ComingSoonModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        service={selectedService}
-      />
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          service={selectedService}
+        />
       </div>
       {/* <div>
         <h3 className="text-xl font-semibold mb-4">Featured Providers</h3>
