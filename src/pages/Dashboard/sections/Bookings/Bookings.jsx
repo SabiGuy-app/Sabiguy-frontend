@@ -183,7 +183,7 @@ export default function Bookings() {
           dropoffAddress: values.dropoffAddress,
           scheduleType: values.serviceType,
           vehicle: values.vehicle,
-          budget: 2000,
+          // budget: 2000,
           modeOfDelivery: values.modeOfDelivery,
           // attachments: values.attachments,
           // autoAcceptNearest: values.autoAcceptNearest,

@@ -31,7 +31,13 @@ export default function BookingSummary2() {
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
-  const providerDetails = booking?.data?.providers?.[0] || {};
+  const selectedProviderId = useBookingStore(
+    (state) => state.selectedProviderId,
+  );
+  const providerDetails =
+    booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
+    booking?.data?.providers?.[0] ||
+    {};
 
   console.log(providerDetails);
 
@@ -209,7 +215,9 @@ export default function BookingSummary2() {
                 src={providerDetails?.profilePicture || bookingCar}
                 alt={providerDetails?.fullName || "Provider"}
                 className="w-16 h-16 rounded-full object-cover"
-                onError={(e) => { e.target.src = bookingCar; }}
+                onError={(e) => {
+                  e.target.src = bookingCar;
+                }}
               />
             </div>
             <div className="flex-grow">
@@ -218,22 +226,30 @@ export default function BookingSummary2() {
                   {providerDetails?.fullName || "Provider"}
                 </h2>
                 <span className="flex items-center gap-1 px-2 py-0.5 bg-[#8BC53F1A] text-[#8BC53F] text-[12px] font-semibold rounded">
-                  <Shield className="w-[16px] h-[16px]"/> Verified
+                  <Shield className="w-[16px] h-[16px]" /> Verified
                 </span>
               </div>
               <p className="text-sm text-gray-600 mb-1">
-                {providerDetails?.services?.[0]?.title?.replace(/_/g, " ") || bookingDetails?.subCategory?.replace(/_/g, " ") || "—"}
+                {providerDetails?.services?.[0]?.title?.replace(/_/g, " ") ||
+                  bookingDetails?.subCategory?.replace(/_/g, " ") ||
+                  "—"}
               </p>
               <div className="flex items-center gap-1 text-sm text-gray-600">
                 <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                 <span className="font-medium text-gray-900">
-                  {providerDetails?.rating?.average > 0 ? providerDetails.rating.average.toFixed(1) : "New"}
+                  {providerDetails?.rating?.average > 0
+                    ? providerDetails.rating.average.toFixed(1)
+                    : "New"}
                 </span>
-                <span className="text-gray-500">({providerDetails?.rating?.count ?? 0} reviews)</span>
+                <span className="text-gray-500">
+                  ({providerDetails?.rating?.count ?? 0} reviews)
+                </span>
               </div>
               <div className="flex items-center gap-1 text-sm text-[#231F20BF] mt-1">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>{providerDetails?.distance?.toFixed(1) ?? "—"} miles away</span>
+                <span>
+                  {providerDetails?.distance?.toFixed(1) ?? "—"} miles away
+                </span>
               </div>
             </div>
 
@@ -243,28 +259,35 @@ export default function BookingSummary2() {
                 <div className="flex items-center justify-center w-10 h-10 rounded-full">
                   <Award className="w-[24px] h-[24px] text-[#005823]" />
                 </div>
-                <div className="text-[20px] font-semibold text-[#231F20]">{providerDetails?.completedJobs ?? 0}</div>
+                <div className="text-[20px] font-semibold text-[#231F20]">
+                  {providerDetails?.completedJobs ?? 0}
+                </div>
                 <div className="text-[16px] text-[#231F2080]">Jobs Done</div>
               </div>
               <div className="flex flex-col justify-center items-center">
                 <div className="flex items-center justify-center w-10 h-10">
                   <Clock className="w-[24px] h-[24px] text-[#231F20BF]" />
                 </div>
-                <div className="text-[20px] font-semibold text-[#231F20]">{"< 3 Mins"}</div>
-                <div className="text-[16px] text-[#231F2080]">Response Time</div>
+                <div className="text-[20px] font-semibold text-[#231F20]">
+                  {"< 3 Mins"}
+                </div>
+                <div className="text-[16px] text-[#231F2080]">
+                  Response Time
+                </div>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center w-10 h-10">
                   <Star className="w-[24px] h-[24px] text-yellow-400" />
                 </div>
                 <div className="text-[20px] font-semibold text-[#231F20]">
-                  {providerDetails?.rating?.average > 0 ? providerDetails.rating.average.toFixed(1) : "New"}
+                  {providerDetails?.rating?.average > 0
+                    ? providerDetails.rating.average.toFixed(1)
+                    : "New"}
                 </div>
                 <div className="text-[16px] text-[#231F2080]">Rating</div>
               </div>
             </div>
           </div>
-
 
           {/* Action Buttons */}
           <div className="flex gap-3 mb-6">
@@ -403,7 +426,9 @@ export default function BookingSummary2() {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-semibold text-[16px] text-[#231F20]">Wallet</div>
+                    <div className="font-semibold text-[16px] text-[#231F20]">
+                      Wallet
+                    </div>
                     <div className="text-[12px] font-semibold text-[#231F20BF]">
                       Balance: {formatCurrency(walletBalance)}
                     </div>
@@ -438,7 +463,9 @@ export default function BookingSummary2() {
                       />
                     </svg>
                   </div>
-                  <div className="font-medium text-[16px] text-[#231F20]">Pay Online</div>
+                  <div className="font-medium text-[16px] text-[#231F20]">
+                    Pay Online
+                  </div>
                 </div>
               </label>
             </div>
