@@ -1,7 +1,7 @@
 // data.js
 export const jobTitles = [
   { label: "Select Job Title", value: "" },
-  { label: "Transport & Logistics Services", value: "transport" },    
+  { label: "Transport & Logistics Services", value: "transport" },
   // { label: "Emergency Services", value: "emergency_services" },
   // { label: "Home & Repair Services", value: "home_repair" },
   // { label: "Domestic & Lifestyle Services", value: "domestic_services" },
@@ -30,10 +30,10 @@ export const allServices = {
   // ],
   transport: [
     { label: "Car driver", value: "car_driver" },
-   { label: "Dispatch Rider", value: "dispatch_rider" },
+  //  { label: "Dispatch Rider", value: "dispatch_rider" },
 
-    { label: "Motorbike driver", value: "motorbike_driver" },
-    { label: "Package Delivery", value: "package_delivery" },
+    { label: "Motorbike driver", value: "motorbike_rider" },
+    // { label: "Package Delivery", value: "package_delivery" },
   ],
   // professional_services: [
   //   { label: "Legal & Financial", value: "legal_financial" },

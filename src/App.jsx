@@ -44,6 +44,9 @@ import ProviderActivity from "./pages/ProviderDashboard/sections/ProviderActivit
 import ProviderChat from "./pages/ProviderDashboard/sections/ProviderChat";
 import WalletCallback from "./pages/WalletCallback";
 import VehicleType from "./pages/Dashboard/sections/Bookings/VehicleType";
+import AvailableRiders from "./pages/Dashboard/sections/Bookings/AvailableRiders";
+import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2";
+import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
 function App() {
   return (
     <>
@@ -79,6 +82,7 @@ function App() {
             />
             <Route path="/dashboard/settings" element={<ProfilePage />} />
             <Route path="/wallet/funding/callback" element={<WalletCallback />} />
+            <Route path="/payment/callback" element={<WalletCallback />} />
             <Route path="/dashboard/help" element={<ContactPage />} />
             <Route path="/dashboard/provider/help" element={<ProviderHelp />} />
             <Route path="/dashboard/categories" element={<Categories />} />
@@ -121,6 +125,18 @@ function App() {
             <Route
               path="/bookings/vehicletype"
               element={<VehicleType />}
+            />
+            <Route
+              path="/bookings/availableriders"
+              element={<AvailableRiders />}
+            />
+            <Route
+              path="/bookings/summary"
+              element={<BookingSummary2 />}
+            />
+            <Route
+              path="/bookings/trackrider"
+              element={<TrackRider />}
             />
           </Routes>
         </div>

@@ -28,11 +28,11 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false); 
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   // const userRole = useAuthStore((state) => state.user?.data?.role);
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
@@ -90,15 +90,8 @@ export default function Login() {
       localStorage.setItem("token", token);
       useAuthStore.getState().setToken(token);
 
-    
-    if (res.role === "buyer") {
-  navigate("/dashboard");
-} else if (res.role === "provider") {
-  navigate("/dashboard/provider");
-}
-
-    // 2. GET FULL USER DETAILS
-    const fullUser = await getUserByEmail(loginEmail);
+      // 2. GET FULL USER DETAILS
+      const fullUser = await getUserByEmail(loginEmail);
 
       // Store in Zustand
       useAuthStore.getState().setUser(fullUser);
@@ -106,8 +99,14 @@ export default function Login() {
       // Register FCM token
       await registerFCM();
 
-  } catch (error) {
-    console.error("Login failed:", error);
+      // Navigate based on user role
+      if (res.role === "buyer") {
+        navigate("/dashboard");
+      } else if (res.role === "provider") {
+        navigate("/dashboard/provider");
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
 
       if (error.response) {
         setErrorMessage(
@@ -152,7 +151,13 @@ export default function Login() {
 
         await registerFCM();
 
-        navigate("/dashboard");
+        // Navigate based on user role
+        if (data.user.role === "buyer") {
+          navigate("/dashboard");
+        } else if (data.user.role === "provider") {
+          navigate("/dashboard/provider");
+        }
+
         setGoogleLoading(false);
       } catch (err) {
         console.error(err);
@@ -171,9 +176,9 @@ export default function Login() {
     return <Loader />;
   }
 
-if (loading) {
-  return <Loader/>
-}
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <div className="h-screen">
@@ -279,6 +284,7 @@ if (loading) {
                   <div className="flex-grow border-t border-gray-300"></div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => GoogleLogin()}
                   disabled={googleLoading}
                   className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
