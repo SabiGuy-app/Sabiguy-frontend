@@ -18,7 +18,13 @@ export default function TrackRider() {
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
-  const providerDetails = booking?.data?.providers?.[0] || {};
+  const selectedProviderId = useBookingStore(
+    (state) => state.selectedProviderId,
+  );
+  const providerDetails =
+    booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
+    booking?.data?.providers?.[0] ||
+    {};
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";

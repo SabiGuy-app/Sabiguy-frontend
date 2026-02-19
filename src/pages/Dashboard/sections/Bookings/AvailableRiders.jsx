@@ -9,6 +9,7 @@ import { selectProvider } from "../../../../api/bookings";
 export default function AvailableRiders() {
   const navigate = useNavigate();
   const booking = useBookingStore((state) => state.booking);
+  const setSelectedProviderId = useBookingStore((state) => state.setSelectedProviderId);
 
   const providers = booking?.data?.providers || [];
   const bookingDetails = booking?.data?.booking || {};
@@ -29,6 +30,7 @@ export default function AvailableRiders() {
 
     try {
       await selectProvider(bookingId, providerId);
+      setSelectedProviderId(providerId);
       navigate("/bookings/summary");
     } catch (err) {
       setError(
