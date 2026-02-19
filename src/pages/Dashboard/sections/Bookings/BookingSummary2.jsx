@@ -21,15 +21,10 @@ import useBookingStore from "../../../../stores/booking.store";
 import {
   getWalletBalance,
   payWithWallet,
-  getAllProviders,
 } from "../../../../api/provider";
-
 import { initializePayment } from "../../../../api/payment";
-import { getBookingsDetails, selectProvider } from "../../../../api/bookings";
+import { getBookingsDetails } from "../../../../api/bookings";
 import { useSearchParams } from "react-router-dom";
-// ... imports ...
-
-
 
 export default function BookingSummary2() {
   const [selectedPayment, setSelectedPayment] = useState("wallet");
@@ -47,6 +42,28 @@ export default function BookingSummary2() {
   const paymentSuccess = searchParams.get("payment_success");
   const reference = searchParams.get("reference");
 
+  // Zustand store
+  const booking = useBookingStore((state) => state.booking);
+  const setBooking = useBookingStore((state) => state.setBooking);
+  const selectedProviderId = useBookingStore((state) => state.selectedProviderId);
+
+  const bookingDetails = booking?.data?.booking || {};
+  const providerDetails =
+    booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
+    booking?.data?.providers?.[0] ||
+    {};
+
+  const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
+  const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
+  const estimatedDistance = bookingDetails?.distance
+    ? `${bookingDetails.distance.value} ${bookingDetails.distance.unit}`
+    : "—";
+  const serviceCost = bookingDetails?.calculatedPrice || 0;
+  const serviceChargeRate = 0.02;
+  const serviceCharge = serviceCost * serviceChargeRate;
+  const totalAmount = serviceCost + serviceCharge;
+
+  // Fetch wallet balance on mount
   useEffect(() => {
     const fetchBalance = async () => {
       try {
@@ -61,16 +78,14 @@ export default function BookingSummary2() {
     fetchBalance();
   }, []);
 
-  // Fetch Booking Details & Handle Payment Success
+  // Fetch booking details if bookingId is in URL (e.g., payment callback)
   useEffect(() => {
     if (queryBookingId) {
       const fetchBooking = async () => {
         try {
           const data = await getBookingsDetails(queryBookingId);
-          // Update global store with fetched booking details so UI renders
-          useBookingStore.getState().setBooking(data);
+          setBooking(data);
 
-          // Only show modal if payment flow just completed
           if (paymentSuccess === "true") {
             setShowSuccessModal(true);
           }
@@ -81,33 +96,9 @@ export default function BookingSummary2() {
           }
         }
       };
-
       fetchBooking();
     }
-  }, [paymentSuccess, queryBookingId]);
-
-  const booking = useBookingStore((state) => state.booking);
-  const bookingDetails = booking?.data?.booking || {};
-  const selectedProviderId = useBookingStore(
-    (state) => state.selectedProviderId,
-  );
-  const providerDetails =
-    booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
-    booking?.data?.providers?.[0] ||
-    {};
-
-  console.log(providerDetails);
-
-  const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
-  const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
-  const estimatedDistance = bookingDetails?.distance
-    ? `${bookingDetails.distance.value} ${bookingDetails.distance.unit}`
-    : "—";
-  const serviceCost = bookingDetails?.calculatedPrice || 0;
-  // User explicitly requested 2%
-  const serviceChargeRate = 0.02;
-  const serviceCharge = serviceCost * serviceChargeRate;
-  const totalAmount = serviceCost + serviceCharge;
+  }, [queryBookingId, paymentSuccess, setBooking]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-NG", {
@@ -119,10 +110,6 @@ export default function BookingSummary2() {
   };
 
   const handleConfirmAndPay = async () => {
-    console.log("Starting payment. Selected method:", selectedPayment);
-    console.log("Wallet Balance:", walletBalance);
-    console.log("Total Amount:", totalAmount);
-
     setErrorMessage("");
     setIsProcessing(true);
 
@@ -134,26 +121,7 @@ export default function BookingSummary2() {
         return;
       }
 
-      // Ensure provider is selected
-      if (!bookingDetails.provider) {
-        const providerId = providerDetails?.id || providerDetails?._id;
-
-        if (providerId) {
-          try {
-            console.log("Auto-selecting provider:", providerId);
-            await selectProvider(bookingId, providerId);
-            toast.success("Provider assigned");
-          } catch (selError) {
-            console.error("Failed to select provider:", selError);
-            toast.error("Failed to assign provider. Please try again.");
-            return;
-          }
-        } else {
-          console.error("No provider details found in booking object:", booking);
-          toast.error("Booking invalid: No provider info available.");
-          return;
-        }
-      }
+      // Provider already selected on AvailableRiders page - just proceed to payment
 
       if (selectedPayment === "wallet") {
         if (walletBalance < totalAmount) {
@@ -169,23 +137,18 @@ export default function BookingSummary2() {
           response?.data?.available ??
           null;
 
-        // Calculate what the balance SHOULD be after payment
         const expectedBalance = walletBalance - totalAmount;
 
-        // If API returns a balance that suggests no deduction (>= current), ignore it
-        // and use our calculated value. Otherwise trust the API if it shows a decrease.
-        const finalBalance = (apiNewBalance !== null && apiNewBalance < walletBalance)
-          ? apiNewBalance
-          : expectedBalance;
+        const finalBalance =
+          apiNewBalance !== null && apiNewBalance < walletBalance
+            ? apiNewBalance
+            : expectedBalance;
 
         setWalletBalance(finalBalance);
 
-        // Background sync to ensure server consistency
-        // We delay slightly to allow backend processing to settle
         setTimeout(async () => {
           try {
             const balanceData = await getWalletBalance({ bustCache: true });
-            // Only update if significantly different (optional, simple overwrite is fine too)
             if (balanceData?.data?.available !== undefined) {
               setWalletBalance(balanceData.data.available);
             }
@@ -196,15 +159,11 @@ export default function BookingSummary2() {
 
         setShowSuccessModal(true);
       } else if (selectedPayment === "online") {
-        console.log("Processing Online Payment (Direct Escrow)...");
-        // Handle Online Payment via Direct Escrow Endpoint
         const response = await initializePayment(bookingId);
-        console.log("Online Payment Response:", response);
-
-        const authUrl = response?.data?.authorizationUrl || response?.authorizationUrl;
+        const authUrl =
+          response?.data?.authorizationUrl || response?.authorizationUrl;
 
         if (authUrl) {
-          // Store bookingId for callback recovery
           localStorage.setItem("pendingBookingPaymentId", bookingId);
           toast.success("Redirecting to payment gateway...");
           window.location.href = authUrl;
@@ -213,20 +172,17 @@ export default function BookingSummary2() {
           toast.error("Failed to initialize payment. Please try again.");
         }
       } else {
-        console.error("Unknown payment method selected:", selectedPayment);
         toast.error("Please select a valid payment method.");
       }
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error(
-        error.response?.data?.message || "Payment processing failed"
-      );
+      toast.error(error.response?.data?.message || "Payment processing failed");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const SuccessModal = ({ txReference }) => (
+  const SuccessModal = () => (
     <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-8 relative animate-fadeIn">
         <button
@@ -256,9 +212,7 @@ export default function BookingSummary2() {
                 {formatCurrency(totalAmount)}
               </span>
             </div>
-
           </div>
-
 
           <button
             onClick={() => {
@@ -309,7 +263,10 @@ export default function BookingSummary2() {
       <div className="bg-[#f7f7f7]">
         <div className="max-w-3xl mx-20 p-4 sm:p-6 bg-white">
           <div className="flex items-center gap-3 mb-6">
-            <button className="text-gray-600 hover:text-gray-900">
+            <button
+              onClick={() => navigate(-1)}
+              className="text-gray-600 hover:text-gray-900"
+            >
               <FiChevronLeft size={24} />
             </button>
             <h1 className="text-xl font-semibold text-gray-900">
@@ -346,6 +303,7 @@ export default function BookingSummary2() {
             </div>
           )}
 
+          {/* Provider Info */}
           <div className="flex items-start gap-4 mb-6">
             <div className="relative">
               <img
@@ -384,9 +342,7 @@ export default function BookingSummary2() {
               </div>
               <div className="flex items-center gap-1 text-sm text-[#231F20BF] mt-1">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>
-                  {providerDetails?.distance?.toFixed(1) ?? "—"} miles away
-                </span>
+                <span>{providerDetails?.distance?.toFixed(1) ?? "—"} km away</span>
               </div>
             </div>
 
@@ -408,9 +364,7 @@ export default function BookingSummary2() {
                 <div className="text-[20px] font-semibold text-[#231F20]">
                   {"< 3 Mins"}
                 </div>
-                <div className="text-[16px] text-[#231F2080]">
-                  Response Time
-                </div>
+                <div className="text-[16px] text-[#231F2080]">Response Time</div>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center w-10 h-10">
@@ -536,7 +490,11 @@ export default function BookingSummary2() {
             </h3>
             <div className="space-y-3">
               <label
-                className={`flex items-center gap-3 p-4 border rounded-[8px] cursor-pointer transition-colors ${selectedPayment === "wallet" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
+                className={`flex items-center gap-3 p-4 border rounded-[8px] cursor-pointer transition-colors ${
+                  selectedPayment === "wallet"
+                    ? "border-[#005823] bg-[#00582305]"
+                    : "border-[#231F2040] hover:bg-gray-50"
+                }`}
               >
                 <input
                   type="radio"
@@ -567,14 +525,21 @@ export default function BookingSummary2() {
                       Wallet
                     </div>
                     <div className="text-[12px] font-semibold text-[#231F20BF]">
-                      Balance: {isLoadingBalance ? "Loading..." : formatCurrency(walletBalance)}
+                      Balance:{" "}
+                      {isLoadingBalance
+                        ? "Loading..."
+                        : formatCurrency(walletBalance)}
                     </div>
                   </div>
                 </div>
               </label>
 
               <label
-                className={`flex items-center gap-3 p-4 border rounded-[8px] cursor-pointer transition-colors ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
+                className={`flex items-center gap-3 p-4 border rounded-[8px] cursor-pointer transition-colors ${
+                  selectedPayment === "online"
+                    ? "border-[#005823] bg-[#00582305]"
+                    : "border-[#231F2040] hover:bg-gray-50"
+                }`}
               >
                 <input
                   type="radio"
@@ -622,15 +587,17 @@ export default function BookingSummary2() {
             />
           </div>
 
-
           {/* Action Buttons */}
           <div className="flex gap-3 pb-6">
-            <button className="flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold hover:bg-gray-50 transition-colors"
+            >
               Cancel
             </button>
             <button
               onClick={handleConfirmAndPay}
-              disabled={isProcessing || (!bookingDetails.provider && !(providerDetails?.id || providerDetails?._id))}
+              disabled={isProcessing}
               className="flex-1 py-4 px-6 text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isProcessing
@@ -639,19 +606,13 @@ export default function BookingSummary2() {
             </button>
           </div>
 
-          {(!bookingDetails.provider && !(providerDetails?.id || providerDetails?._id)) && (
-            <p className="text-center text-red-500 font-medium mb-4">
-              No provider assigned yet. Cannot proceed to payment.
-            </p>
-          )}
-
           <p className="text-center text-[#231F2080]">
             Rider will proceed once payment is confirmed
           </p>
-        </div >
-      </div >
+        </div>
+      </div>
 
-      {showSuccessModal && <SuccessModal txReference={reference} />}
+      {showSuccessModal && <SuccessModal />}
     </>
   );
 }

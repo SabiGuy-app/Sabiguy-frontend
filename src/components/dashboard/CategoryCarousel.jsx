@@ -66,6 +66,7 @@ export default function ({ categories }) {
                 title={cat.title}
                 description={cat.description}
                 bgColor={cat.bgColor}
+                comingSoon={cat.comingSoon}
               />
             </div>
           ))}

@@ -53,6 +53,7 @@ export default function DashboardHome() {
       description: "Your items delivered quickly and safely",
       image: Dispatch2,
       // bgColor: "#6467F24D",
+      comingSoon: false,
     },
     {
       title: "Electrician",
@@ -60,42 +61,49 @@ export default function DashboardHome() {
         "Professional wiring, repairs, and power solutions on demand",
       image: electrician,
       bgColor: "#BF4A0B4D",
+      comingSoon: true,
     },
     {
       title: "Welding",
       description: "Reliable welding for repairs and fabrication",
       image: Welding,
       bgColor: "#72280080",
+      comingSoon: true,
     },
     {
       title: "Household Support",
       description: "Quick, dependable household assistance anytime.",
       image: Household,
       bgColor: "#0054AE80",
+      comingSoon: true,
     },
     {
       title: "Towing & Roadside",
       description: "Fast help for breakdowns and emergencies",
       image: Towing,
       bgColor: "#B100004D",
+      comingSoon: true,
     },
     {
       title: "Legal & Financial",
       description: "Expert guidance for legal and financial needs",
       image: Legal,
       bgColor: "#4800D94D",
+      comingSoon: true,
     },
     {
       title: "Plumbing",
       description: "Fast help for breakdowns and emergencies",
       image: Plumbing,
       bgColor: "#BF4A0B4D",
+      comingSoon: true,
     },
     {
       title: "Digital Design",
       description: "Modern designs for web, brand, and media.",
       image: Design,
       bgColor: "#A30B4B4D",
+      comingSoon: true,
     },
   ];
 
