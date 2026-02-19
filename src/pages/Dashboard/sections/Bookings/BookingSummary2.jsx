@@ -546,89 +546,85 @@ export default function BookingSummary2() {
                     </div>
                   </div>
                 </div>
-            </div>
-          </label>
+              </label>
 
-          <label
-            className={`flex items-center gap-3 p-4 border rounded-[8px] cursor-pointer transition-colors ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
-          >
-            <input
-              type="radio"
-              name="payment"
-              value="online"
-              checked={selectedPayment === "online"}
-              onChange={(e) => setSelectedPayment(e.target.value)}
-              className="w-5 h-5 accent-[#005823]"
+              <label
+                className={`flex items-center gap-3 p-4 border rounded-[8px] cursor-pointer transition-colors ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  value="online"
+                  checked={selectedPayment === "online"}
+                  onChange={(e) => setSelectedPayment(e.target.value)}
+                  className="w-5 h-5 accent-[#005823]"
+                />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-gray-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="font-medium text-[16px] text-[#231F20]">Pay Online</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Additional Notes */}
+          <div className="mb-6">
+            <h3 className="text-[20px] font-semibold text-[#231F20] mb-3">
+              Additional notes (optional)
+            </h3>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add extra instructions for the service provider.."
+              className="w-full p-4 border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              rows="4"
             />
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="font-medium text-[16px] text-[#231F20]">Pay Online</div>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      {/* Additional Notes */}
-      <div className="mb-6">
-        <h3 className="text-[20px] font-semibold text-[#231F20] mb-3">
-          Additional notes (optional)
-        </h3>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Add extra instructions for the service provider.."
-          className="w-full p-4 border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          rows="4"
-        />
-      </div>
+          </div>
 
 
-      {/* Action Buttons */}
-      <div className="flex gap-3 pb-6">
-        <button className="flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold hover:bg-gray-50 transition-colors">
-          Cancel
-        </button>
-        <button
-          onClick={handleConfirmAndPay}
-          disabled={isProcessing || (!bookingDetails.provider && !(providerDetails?.id || providerDetails?._id))}
-          className="flex-1 py-4 px-6 text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isProcessing
-            ? "Processing..."
-            : `Confirm & Pay ${formatCurrency(totalAmount)}`}
-        </button>
-      </div>
+          {/* Action Buttons */}
+          <div className="flex gap-3 pb-6">
+            <button className="flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmAndPay}
+              disabled={isProcessing || (!bookingDetails.provider && !(providerDetails?.id || providerDetails?._id))}
+              className="flex-1 py-4 px-6 text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing
+                ? "Processing..."
+                : `Confirm & Pay ${formatCurrency(totalAmount)}`}
+            </button>
+          </div>
 
-      {(!bookingDetails.provider && !(providerDetails?.id || providerDetails?._id)) && (
-        <p className="text-center text-red-500 font-medium mb-4">
-          No provider assigned yet. Cannot proceed to payment.
-        </p>
-      )}
+          {(!bookingDetails.provider && !(providerDetails?.id || providerDetails?._id)) && (
+            <p className="text-center text-red-500 font-medium mb-4">
+              No provider assigned yet. Cannot proceed to payment.
+            </p>
+          )}
 
-      <p className="text-center text-[#231F2080]">
-        Rider will proceed once payment is confirmed
-      </p>
-    </div >
+          <p className="text-center text-[#231F2080]">
+            Rider will proceed once payment is confirmed
+          </p>
+        </div >
       </div >
 
-    { showSuccessModal && <SuccessModal txReference={reference} />
-}
+      {showSuccessModal && <SuccessModal txReference={reference} />}
     </>
   );
 }
-
-
