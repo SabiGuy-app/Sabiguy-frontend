@@ -73,7 +73,7 @@ export default function WalletCallback() {
     };
 
     const handleWalletSuccess = () => {
->>>>>>> origin/feature/initial-dev
+
         navigate("/dashboard/settings?payment_success=true");
     };
 
@@ -82,8 +82,7 @@ export default function WalletCallback() {
         navigate("/dashboard/settings");
     };
 
-<<<<<<< HEAD
-=======
+
     // SIMPLE RENDER TO MATCH MODAL STYLE
     if (isBookingPayment) {
         return (
@@ -104,17 +103,12 @@ export default function WalletCallback() {
         );
     }
 
->>>>>>> origin/feature/initial-dev
     return (
         <PaymentConfirmationModal
             isOpen={showModal}
             reference={reference}
             onClose={handleClose}
-<<<<<<< HEAD
-            onSuccess={handleSuccess}
-=======
             onSuccess={handleWalletSuccess}
->>>>>>> origin/feature/initial-dev
         />
     );
 }
