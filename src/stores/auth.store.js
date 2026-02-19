@@ -8,6 +8,8 @@ export const useAuthStore = create(
         user: null,
         token: null,
         isAuthenticated: false,
+        id: null,
+        hydrated: false,
 
         setUser: (user) => set({ user, isAuthenticated: true }),
         updateUser: (updater) =>
@@ -19,12 +21,22 @@ export const useAuthStore = create(
           })),
         setToken: (token) => set({ token }),
         setId: (id) => set({ currentUserId: id }),
+        setHydrated: (hydrated) => set({ hydrated }),
         logout: () =>
-          set({ user: null, token: null, id: null, isAuthenticated: false }),
+          set({
+            user: null,
+            token: null,
+            id: null,
+            isAuthenticated: false,
+            hydrated: true,
+          }),
       }),
 
       {
         name: "sabiguy-auth", // localStorage key
+        onRehydrateStorage: () => (state) => {
+          state?.setHydrated?.(true);
+        },
       },
     ),
   ),

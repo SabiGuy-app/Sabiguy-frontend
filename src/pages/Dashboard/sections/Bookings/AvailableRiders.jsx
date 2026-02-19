@@ -15,8 +15,8 @@ export default function AvailableRiders() {
   const bookingId = bookingDetails._id;
   const bookingAmount = bookingDetails.calculatedPrice;
 
-  // console.log(providers);
-  // console.log(bookingDetails);
+  console.log(providers);
+  console.log(bookingDetails);
   // console.log(bookingId);
   // console.log(bookingAmount);
 
@@ -67,7 +67,7 @@ export default function AvailableRiders() {
                   key={provider.id}
                   className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
                 >
-                  <div className="flex flex-col md:flex-row gap-6 md:gap-10">
+                  <div className="flex flex-col md:flex-row gap-6 md:gap-4">
                     <div className="w-full md:w-1/2">
                       <div className="w-full h-[200px] sm:h-[250px] bg-gray-100 rounded-lg overflow-hidden">
                         <img
@@ -85,9 +85,9 @@ export default function AvailableRiders() {
                     <div className="w-full md:w-1/2">
                       <div className="flex flex-col h-full justify-between">
                         <div>
-                          <h2 className="text-[30px] font-semibold text-gray-900">
+                          <h2 className="text-[20px] font-medium text-[#231F20]">
                             {provider.fullName}{" "}
-                            <span className="text-gray-500 font-normal text-[20px]">
+                            <span className="text-[#231F2080] font-semibold text-[17px]">
                               •{" "}
                               {provider.services?.[0]?.title?.replace(
                                 /_/g,
@@ -104,40 +104,40 @@ export default function AvailableRiders() {
                                 ? provider.rating.average.toFixed(1)
                                 : "New"}
                             </span>
-                            <span className="text-sm text-gray-500">
+                            <span className="text-[14px] text-[#231F2080]">
                               ({provider.rating?.count} reviews)
                             </span>
                           </div>
 
                           {/* Distance */}
                           <div className="flex items-center gap-1 mt-1">
-                            <MapPin className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">
-                              {provider.distance?.toFixed(1)} km away
+                            <MapPin className="w-4 h-4 text-[#231F20BF]" />
+                            <span className="text-[14px] text-[#231F20BF]">
+                              {provider.distance?.toFixed(1)} miles away
                             </span>
                           </div>
 
                           {/* Completed jobs */}
-                          <div className="mt-1">
+                          {/* <div className="mt-1">
                             <span className="text-sm text-gray-500">
                               {provider.completedJobs} job
                               {provider.completedJobs !== 1 ? "s" : ""}{" "}
                               completed
                             </span>
-                          </div>
+                          </div> */}
 
                           {/* Price */}
-                          <h2 className="text-2xl sm:text-[25px] text-[#005823] font-semibold mt-2">
+                          <h2 className="text-2xl sm:text-[25px] text-[#005823] font-semibold mt-4">
                             ₦{bookingAmount}
                           </h2>
                         </div>
 
                         {/* Actions */}
-                        <div className="space-y-1 sm:flex-row gap-2">
+                        <div className="space-y-3 sm:flex-row gap-2">
                           <button
                             onClick={() => handleAccept(provider.id)}
                             disabled={!!acceptingId}
-                            className="w-full py-2.5 px-4 rounded-md font-medium transition-colors bg-[#005823CC] hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full py-2.5 px-4 rounded-md text-[16px] font-medium transition-colors bg-[#005823CC] hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             <span className="flex items-center justify-center gap-2 text-white">
                               {acceptingId === provider.id ? (
@@ -147,7 +147,7 @@ export default function AvailableRiders() {
                                 </>
                               ) : (
                                 <>
-                                  <Check className="w-4 h-4" />
+                                  <Check className="w-[24px] h-[24px]" />
                                   Accept
                                 </>
                               )}
@@ -157,7 +157,7 @@ export default function AvailableRiders() {
                           <button
                             onClick={() => handleDecline(provider.id)}
                             disabled={!!acceptingId}
-                            className="w-full py-2.5 px-4 rounded-md font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full py-2.5 px-4 text-[16px] rounded-md font-medium bg-white border border-[#231F2040] text-[#231F20] hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             Decline
                           </button>

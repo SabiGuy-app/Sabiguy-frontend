@@ -17,8 +17,21 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
+
+  // Don't render until store is hydrated
+  if (!hydrated) {
+    return (
+      <nav className="bg-white border-b border-gray-200 h-20 flex items-center px-6 fixed top-0 left-0 right-0 z-30">
+        <div className="flex justify-between items-center w-full">
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
+        </div>
+      </nav>
+    );
+  }
 
   const fetchUnreadCount = async () => {
     try {
@@ -254,7 +267,7 @@ export default function Navbar() {
             className="flex items-center"
           >
             <img
-              src={user.data?.profilePicture || "/avatar.png"}
+              src={user?.data?.profilePicture || "/avatar.png"}
               className="w-8 h-8 rounded-full border"
             />
           </button>

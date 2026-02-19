@@ -87,7 +87,7 @@ export const payBookingOnline = async (bookingId, amount) => {
 };
 
 export const getAllProviders = async () => {
-    const { data } = await api.get("/providers");
+    const { data } = await api.get("users/providers");
     return data;
 };
 

@@ -19,11 +19,14 @@ const ProviderChat = () => {
   const [socket, setSocket] = useState(null);
   const [typingStatus, setTypingStatus] = useState({});
   const messagesEndRef = useRef(null);
+  const hydrated = useAuthStore((state) => state.hydrated);
   const currentUserId = useAuthStore((state) => state.user?.data?._id);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    if (!hydrated) return;
+
     const token = useAuthStore.getState().token;
     if (!token) return;
 
