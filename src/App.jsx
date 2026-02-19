@@ -82,6 +82,7 @@ function App() {
             />
             <Route path="/dashboard/settings" element={<ProfilePage />} />
             <Route path="/wallet/funding/callback" element={<WalletCallback />} />
+            <Route path="/payment/callback" element={<WalletCallback />} />
             <Route path="/dashboard/help" element={<ContactPage />} />
             <Route path="/dashboard/provider/help" element={<ProviderHelp />} />
             <Route path="/dashboard/categories" element={<Categories />} />

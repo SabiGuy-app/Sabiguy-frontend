@@ -171,6 +171,7 @@ export default function Bookings() {
       //   .min(1000, "Budget must be at least ₦1,000"),
     }),
     onSubmit: async (values) => {
+      console.log("Submitting booking with values:", values);
       setLoading(true);
       setSuccessMessage("");
       setErrorMessage("");
@@ -189,14 +190,16 @@ export default function Bookings() {
           // autoAcceptNearest: values.autoAcceptNearest,
         };
 
+        console.log("Calling bookingPost with payload:", payload);
         const res = await bookingPost(payload);
-        console.log(res);
+        console.log("Booking created response:", res);
 
         setBooking(res);
 
         setSuccessMessage(res?.message || "Booking created successfully!");
 
         formik.resetForm();
+        console.log("Navigating to searching page...");
         navigate("/dashboard/provider/searching");
 
         setTimeout(() => {
@@ -207,10 +210,11 @@ export default function Bookings() {
           }
         }, 2500);
       } catch (error) {
+        console.error("Booking creation error:", error);
         if (error.response) {
           setErrorMessage(
             error.response.data?.message ||
-              "Booking creation failed. Try again.",
+            "Booking creation failed. Try again.",
           );
         } else if (error.request) {
           setErrorMessage(
@@ -235,11 +239,10 @@ export default function Bookings() {
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
-              activeFilter === filter.toLowerCase()
+            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${activeFilter === filter.toLowerCase()
                 ? "bg-[#2D6A3E] text-white"
                 : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
-            }`}
+              }`}
           >
             {filter}
           </button>
@@ -279,21 +282,19 @@ export default function Bookings() {
         <div className="flex border-b">
           <button
             onClick={() => setActiveTab("request")}
-            className={`px-6 py-3 font-medium transition-colors relative ${
-              activeTab === "request"
+            className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "request"
                 ? "text-[#005823] border-b-2 border-[#005823]"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             Request a service
           </button>
           <button
             onClick={() => setActiveTab("requests")}
-            className={`px-6 py-3 font-medium transition-colors relative ${
-              activeTab === "requests"
+            className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "requests"
                 ? "text-[#005823] border-b-2 border-[#005823]"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             My Requests
           </button>
@@ -507,11 +508,10 @@ export default function Bookings() {
                       onClick={() =>
                         formik.setFieldValue("modeOfDelivery", vehicle.value)
                       }
-                      className={`text-left p-4 rounded-xl border-2 transition-all ${
-                        isSelected
+                      className={`text-left p-4 rounded-xl border-2 transition-all ${isSelected
                           ? "border-[#005823] bg-[#f0f9f4]"
                           : "border-gray-200 bg-white hover:border-gray-300"
-                      }`}
+                        }`}
                     >
                       <div
                         className={`mb-2 ${isSelected ? "text-[#005823]" : "text-gray-600"}`}

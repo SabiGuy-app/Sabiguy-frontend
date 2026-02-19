@@ -33,8 +33,13 @@ export default function WalletTab() {
   const fetchBalance = async () => {
     try {
       setIsLoadingBalance(true);
-      const data = await getWalletBalance();
-      setBalance(data.data.available || 0);
+      const data = await getWalletBalance({ bustCache: true });
+      const availableBalance =
+        data?.data?.walletBalance?.available ??
+        data?.data?.available ??
+        data?.available ??
+        0;
+      setBalance(availableBalance);
     } catch (error) {
       console.error("Failed to fetch wallet balance:", error);
     } finally {
@@ -97,10 +102,6 @@ export default function WalletTab() {
 
       {/* Recent Transaction Section */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Recent transaction
-        </h3>
-
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-3 mb-4">
           <div className="relative flex-1">

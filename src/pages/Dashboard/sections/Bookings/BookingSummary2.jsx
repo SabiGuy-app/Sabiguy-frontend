@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Phone,
   MessageCircle,
@@ -12,20 +12,77 @@ import {
 } from "lucide-react";
 import bookingCar from "/bookings.png";
 import Navbar from "../../../../components/dashboard/Navbar";
+import { toast } from "react-hot-toast";
 import { FiChevronLeft } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
+import {
+  getWalletBalance,
+  payWithWallet,
+  getAllProviders,
+} from "../../../../api/provider";
+
+import { initializePayment } from "../../../../api/payment";
+import { getBookingsDetails, selectProvider } from "../../../../api/bookings";
+import { useSearchParams } from "react-router-dom";
+// ... imports ...
+
+
 
 export default function BookingSummary2() {
   const [selectedPayment, setSelectedPayment] = useState("wallet");
   const [notes, setNotes] = useState("");
-  const [walletBalance, setWalletBalance] = useState(60000);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryBookingId = searchParams.get("bookingId");
+  const paymentSuccess = searchParams.get("payment_success");
+  const reference = searchParams.get("reference");
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const data = await getWalletBalance();
+        setWalletBalance(data?.data?.available ?? 0);
+      } catch (err) {
+        console.error("Failed to fetch wallet balance:", err);
+      } finally {
+        setIsLoadingBalance(false);
+      }
+    };
+    fetchBalance();
+  }, []);
+
+  // Fetch Booking Details & Handle Payment Success
+  useEffect(() => {
+    if (queryBookingId) {
+      const fetchBooking = async () => {
+        try {
+          const data = await getBookingsDetails(queryBookingId);
+          // Update global store with fetched booking details so UI renders
+          useBookingStore.getState().setBooking(data);
+
+          // Only show modal if payment flow just completed
+          if (paymentSuccess === "true") {
+            setShowSuccessModal(true);
+          }
+        } catch (error) {
+          console.error("Failed to fetch booking details:", error);
+          if (paymentSuccess === "true") {
+            toast.error("Payment successful but failed to load booking details.");
+          }
+        }
+      };
+
+      fetchBooking();
+    }
+  }, [paymentSuccess, queryBookingId]);
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
@@ -39,6 +96,7 @@ export default function BookingSummary2() {
     ? `${bookingDetails.distance.value} ${bookingDetails.distance.unit}`
     : "—";
   const serviceCost = bookingDetails?.calculatedPrice || 0;
+  // User explicitly requested 2%
   const serviceChargeRate = 0.02;
   const serviceCharge = serviceCost * serviceChargeRate;
   const totalAmount = serviceCost + serviceCharge;
@@ -53,29 +111,114 @@ export default function BookingSummary2() {
   };
 
   const handleConfirmAndPay = async () => {
+    console.log("Starting payment. Selected method:", selectedPayment);
+    console.log("Wallet Balance:", walletBalance);
+    console.log("Total Amount:", totalAmount);
+
     setErrorMessage("");
     setIsProcessing(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const bookingId = bookingDetails?._id;
 
-    if (selectedPayment === "wallet") {
-      if (walletBalance < totalAmount) {
-        setErrorMessage(
-          `Insufficient wallet balance. You need ${formatCurrency(totalAmount - walletBalance)} more to complete this transaction.`,
-        );
-        setIsProcessing(false);
+      if (!bookingId) {
+        toast.error("Booking ID not found. Please refresh.");
         return;
       }
-      setWalletBalance((prev) => prev - totalAmount);
-      setShowSuccessModal(true);
-      setIsProcessing(false);
-    } else if (selectedPayment === "online") {
-      setShowSuccessModal(true);
+
+      // Ensure provider is selected
+      if (!bookingDetails.provider) {
+        const providerId = providerDetails?.id || providerDetails?._id;
+
+        if (providerId) {
+          try {
+            console.log("Auto-selecting provider:", providerId);
+            await selectProvider(bookingId, providerId);
+            toast.success("Provider assigned");
+          } catch (selError) {
+            console.error("Failed to select provider:", selError);
+            toast.error("Failed to assign provider. Please try again.");
+            return;
+          }
+        } else {
+          console.error("No provider details found in booking object:", booking);
+          toast.error("Booking invalid: No provider info available.");
+          return;
+        }
+      }
+
+      if (selectedPayment === "wallet") {
+        if (walletBalance < totalAmount) {
+          toast.error("Insufficient wallet balance");
+          return;
+        }
+
+        const response = await payWithWallet(bookingId, totalAmount);
+
+        const apiNewBalance =
+          response?.data?.walletBalance?.available ??
+          response?.data?.wallet?.available ??
+          response?.data?.available ??
+          null;
+
+        // Calculate what the balance SHOULD be after payment
+        const expectedBalance = walletBalance - totalAmount;
+
+        // If API returns a balance that suggests no deduction (>= current), ignore it
+        // and use our calculated value. Otherwise trust the API if it shows a decrease.
+        const finalBalance = (apiNewBalance !== null && apiNewBalance < walletBalance)
+          ? apiNewBalance
+          : expectedBalance;
+
+        setWalletBalance(finalBalance);
+
+        // Background sync to ensure server consistency
+        // We delay slightly to allow backend processing to settle
+        setTimeout(async () => {
+          try {
+            const balanceData = await getWalletBalance({ bustCache: true });
+            // Only update if significantly different (optional, simple overwrite is fine too)
+            if (balanceData?.data?.available !== undefined) {
+              setWalletBalance(balanceData.data.available);
+            }
+          } catch (e) {
+            console.error("Background balance sync failed", e);
+          }
+        }, 2000);
+
+        setShowSuccessModal(true);
+      } else if (selectedPayment === "online") {
+        console.log("Processing Online Payment (Direct Escrow)...");
+        // Handle Online Payment via Direct Escrow Endpoint
+        const response = await initializePayment(bookingId);
+        console.log("Online Payment Response:", response);
+
+        const authUrl = response?.data?.authorizationUrl || response?.authorizationUrl;
+
+        if (authUrl) {
+          // Store bookingId for callback recovery
+          localStorage.setItem("pendingBookingPaymentId", bookingId);
+          toast.success("Redirecting to payment gateway...");
+          window.location.href = authUrl;
+        } else {
+          console.error("No authorization URL found in response", response);
+          toast.error("Failed to initialize payment. Please try again.");
+        }
+      } else {
+        console.error("Unknown payment method selected:", selectedPayment);
+        toast.error("Please select a valid payment method.");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error(
+        error.response?.data?.message || "Payment processing failed"
+      );
+    } finally {
       setIsProcessing(false);
     }
   };
 
-  const SuccessModal = () => (
+  const SuccessModal = ({ txReference }) => (
     <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-8 relative animate-fadeIn">
         <button
@@ -105,15 +248,9 @@ export default function BookingSummary2() {
                 {formatCurrency(totalAmount)}
               </span>
             </div>
-            {selectedPayment === "wallet" && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">New Wallet Balance:</span>
-                <span className="font-semibold text-gray-900">
-                  {formatCurrency(walletBalance)}
-                </span>
-              </div>
-            )}
+
           </div>
+
 
           <button
             onClick={() => {
@@ -403,7 +540,8 @@ export default function BookingSummary2() {
                   <div>
                     <div className="font-medium text-gray-900">Wallet</div>
                     <div className="text-sm text-gray-500">
-                      Balance: {formatCurrency(walletBalance)}
+                      Balance:{" "}
+                      {isLoadingBalance ? "Loading..." : formatCurrency(walletBalance)}
                     </div>
                   </div>
                 </div>
@@ -456,6 +594,7 @@ export default function BookingSummary2() {
             />
           </div>
 
+
           {/* Action Buttons */}
           <div className="flex gap-3 pb-6">
             <button className="flex-1 py-4 px-6 bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
@@ -463,7 +602,7 @@ export default function BookingSummary2() {
             </button>
             <button
               onClick={handleConfirmAndPay}
-              disabled={isProcessing}
+              disabled={isProcessing || (!bookingDetails.provider && !(providerDetails?.id || providerDetails?._id))}
               className="flex-1 py-4 px-6 bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isProcessing
@@ -471,13 +610,22 @@ export default function BookingSummary2() {
                 : `Confirm & Pay ${formatCurrency(totalAmount)}`}
             </button>
           </div>
+
+          {(!bookingDetails.provider && !(providerDetails?.id || providerDetails?._id)) && (
+            <p className="text-center text-red-500 font-medium mb-4">
+              No provider assigned yet. Cannot proceed to payment.
+            </p>
+          )}
+
           <p className="text-center text-[#231F2080]">
             Rider will proceed once payment is confirmed
           </p>
         </div>
       </div>
 
-      {showSuccessModal && <SuccessModal />}
+      {showSuccessModal && <SuccessModal txReference={reference} />}
     </>
   );
 }
+
+

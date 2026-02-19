@@ -46,8 +46,11 @@ export const toggleAvailability = async () => {
     return data;
 };
 
-export const getWalletBalance = async () => {
-    const { data } = await api.get("/wallet/balance");
+export const getWalletBalance = async (options = {}) => {
+    const url = options.bustCache
+        ? `/wallet/balance?t=${Date.now()}`
+        : "/wallet/balance";
+    const { data } = await api.get(url);
     return data;
 };
 
@@ -69,8 +72,17 @@ export const getWalletTransactions = async (page = 1, limit = 10, type = "") => 
     return data;
 };
 
-export const payWithWallet = async (bookingId) => {
-    const { data } = await api.post("/wallet/pay", { bookingId });
+export const payWithWallet = async (bookingId, amount) => {
+    const payload = { bookingId };
+    if (amount) payload.amount = amount;
+    const { data } = await api.post("/wallet/pay", payload);
+    return data;
+};
+
+export const payBookingOnline = async (bookingId, amount) => {
+    const callbackUrl = `${window.location.origin}/wallet/funding/callback?bookingId=${bookingId}`;
+    const value = typeof amount === "string" ? parseFloat(amount.replace(/[^0-9.]/g, "")) : amount;
+    const { data } = await api.post("/wallet/fund", { amount: Number(value), callbackUrl, bookingId });
     return data;
 };
 

@@ -21,7 +21,7 @@ export default function WalletCard() {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await getWalletBalance();
+        const response = await getWalletBalance({ bustCache: true });
         console.log("🔍 Wallet API Full Response:", response);
 
         // Handle nested data structure
