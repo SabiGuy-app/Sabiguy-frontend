@@ -8,7 +8,6 @@ export default function WalletCallback() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
-
     // Safety check for nulls
     const reference = searchParams.get("reference") || "";
     const urlBookingId = searchParams.get("bookingId");
@@ -62,8 +61,8 @@ export default function WalletCallback() {
             }, 1000);
         } catch (error) {
             console.error("Booking verification failed:", error);
-            // Even if verification "fails" (e.g. 404 from double verify), 
-            // if we have a booking ID, let's try to go back to the summary 
+            // Even if verification "fails" (e.g. 404 from double verify),
+            // if we have a booking ID, let's try to go back to the summary
             // so the user isn't stuck on a white screen.
             setTimeout(() => {
                 navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_success=true&reference=${ref}`);
@@ -74,6 +73,7 @@ export default function WalletCallback() {
     };
 
     const handleWalletSuccess = () => {
+>>>>>>> origin/feature/initial-dev
         navigate("/dashboard/settings?payment_success=true");
     };
 
@@ -82,6 +82,8 @@ export default function WalletCallback() {
         navigate("/dashboard/settings");
     };
 
+<<<<<<< HEAD
+=======
     // SIMPLE RENDER TO MATCH MODAL STYLE
     if (isBookingPayment) {
         return (
@@ -102,12 +104,17 @@ export default function WalletCallback() {
         );
     }
 
+>>>>>>> origin/feature/initial-dev
     return (
         <PaymentConfirmationModal
             isOpen={showModal}
             reference={reference}
             onClose={handleClose}
+<<<<<<< HEAD
+            onSuccess={handleSuccess}
+=======
             onSuccess={handleWalletSuccess}
+>>>>>>> origin/feature/initial-dev
         />
     );
 }
