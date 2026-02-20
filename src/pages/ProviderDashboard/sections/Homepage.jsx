@@ -12,6 +12,7 @@ import RecentTransactions from "../../../components/provider-dashboard/RecentTra
 import { getDashboardStats, formatCurrency } from "../../../api/provider";
 import { useAuthStore } from "../../../stores/auth.store";
 
+
 export default function ProviderDashboard() {
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
@@ -58,7 +59,6 @@ export default function ProviderDashboard() {
   const totalRevenue = dashboardData?.totalEarnings || 0;
   const activeJobs = dashboardData?.activeBookings || 0;
   const averageRating = dashboardData?.averageRating || 0;
-
   return (
     <ProviderDashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
