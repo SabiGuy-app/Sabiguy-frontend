@@ -52,7 +52,7 @@ export const acceptBookings = async (bookingId) => {
 
 export const getProviderBookings = async () => {
   const token = localStorage.getItem("token");
-  const { data } = await api.get("/provider/bookings", {
+  const { data } = await api.get("/provider/bookings?page=1&limit=20", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -76,3 +76,20 @@ export const selectProvider = async (bookingId, providerId) => {
   );
   return data;
 };
+
+export const allowSystem = async (allowSystem) => { 
+   const token = localStorage.getItem("token");
+   const { data } = await api.put(
+    '/bookings/allow-system',
+    {
+      allowSystem,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  return data;
+
+}

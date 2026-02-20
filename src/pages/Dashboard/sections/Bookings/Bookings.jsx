@@ -5,6 +5,7 @@ import {
   jobTitles,
   allServices,
 } from "../../../signup/ServiceProvider/AccountSetup/SkillsSection/jobData";
+import { Bike } from "lucide-react";
 import Button from "../../../../components/button";
 import RequestCard from "../../../../components/dashboard/RequestsCard";
 import ServiceDetailsModal from "../ServiceDetailsModal";
@@ -12,27 +13,14 @@ import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { bookingPost } from "../../../../api/bookings";
+import { allowSystem } from "../../../../api/bookings";
 import useBookingStore from "../../../../stores/booking.store";
 
 const vehicleOptions = [
   {
     value: "bike",
     label: "Bike Delivery",
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className="w-7 h-7"
-        stroke="currentColor"
-        strokeWidth={1.6}
-      >
-        <circle cx="6" cy="18" r="3" />
-        <circle cx="18" cy="18" r="3" />
-        <path d="M6 18l4-8h4l2 3" />
-        <path d="M14 10l2 3h2" />
-        <path d="M10 10V7l3-1" />
-      </svg>
-    ),
+    icon: <Bike color="black" size={30} />,
     eta: "15 min",
     capacity: 2,
     description: "Best for small packages",
@@ -610,7 +598,15 @@ export default function Bookings() {
                 id="auto-accept"
                 name="autoAcceptNearest"
                 checked={formik.values.autoAcceptNearest}
-                onChange={formik.handleChange}
+                onChange={async (e) => {
+                  formik.handleChange(e);
+                  try {
+                    await allowSystem(e.target.checked);
+                  } catch (error) {
+                    console.error("Error updating allowSystem:", error);
+                    setErrorMessage("Failed to update auto-accept setting");
+                  }
+                }}
                 className="w-4 h-4 rounded cursor-pointer accent-[#005823]"
               />
               <label

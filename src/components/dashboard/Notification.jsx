@@ -75,13 +75,22 @@ export default function NotificationDrawer({
     // Call the mark as read function
     await onMarkAsRead(notification._id);
 
+    onClose();
+
+    // Route to hire alert page for new_booking_request type
+    if (notification.type === "new_booking_request") {
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          tab: "alert",
+        },
+      });
+    }
     // Route to chat page for new_message type
-    if (
+    else if (
       notification.type === "new_message" ||
       notification.type === "message_received"
     ) {
-      onClose();
-
       if (notification.messageId) {
         navigate(`/dashboard/chat?messageId=${notification.messageId}`);
       } else if (notification.data?.chatId) {

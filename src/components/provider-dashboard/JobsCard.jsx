@@ -55,7 +55,7 @@ export default function JobsCard({ job, onViewDetails, onMarkAsCompleted }) {
             {/* Price Section */}
             <div className="text-right">
               <div className="text-2xl font-bold text-[#2D6A3E]">
-                ₦{job.price.toLocaleString()}
+                ₦{job.calculatedPrice.toLocaleString()}
               </div>
               <p className="text-sm text-gray-600">
                 Delivery: {job.deliveryDate}

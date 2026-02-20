@@ -42,12 +42,14 @@ export default function HireAlerts() {
         const jobsList = bookingsData.filter(
           (booking) =>
             booking.status === "accepted" ||
+            booking.status === "provider_selected" ||
+            booking.status === "paid_escrow" ||
             booking.status === "in_progress" ||
             booking.status === "completed" ||
             booking.status === "waiting_confirmation"
         );
         const alertsList = bookingsData.filter(
-          (booking) => booking.status === "pending"
+          (booking) => booking.status === "pending_providers"
         );
 
         setJobs(jobsList);

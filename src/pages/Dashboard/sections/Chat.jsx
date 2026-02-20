@@ -26,6 +26,7 @@ export default function ChatPage() {
   const [typingStatus, setTypingStatus] = useState({});
   const messagesEndRef = useRef(null);
   const hydrated = useAuthStore((state) => state.hydrated);
+  const token = useAuthStore((state) => state.token);
   const currentUserId = useAuthStore((state) => state.user?.data?._id);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams] = useSearchParams();
