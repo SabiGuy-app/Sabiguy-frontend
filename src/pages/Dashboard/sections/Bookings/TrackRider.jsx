@@ -7,6 +7,7 @@ import {
   MapPin,
   Star,
   Shield,
+  BadgeCheck,
 } from "lucide-react";
 import Navbar from "../../../../components/dashboard/Navbar";
 import location from "/location.png";
@@ -22,7 +23,7 @@ export default function TrackRider() {
     (state) => state.selectedProviderId,
   );
   const providerDetails =
-    booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
+    booking?.data?.providers?.find((p) => p._id === selectedProviderId) ||
     booking?.data?.providers?.[0] ||
     {};
 
@@ -123,8 +124,8 @@ export default function TrackRider() {
                   <span className="font-semibold text-[20px] text-[#231F20]">
                     {providerDetails?.fullName || "Provider"}
                   </span>
-                  <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-[#8BC53F] text-xs font-medium rounded">
-                    <Shield className="w-3 h-3" /> Verified
+                  <span className="text-[#8BC53F]">
+                    <BadgeCheck className="w-[20px] h-[20px]" />
                   </span>
                 </div>
                 <div className="text-[#231F20BF] text-[16px] mb-1">
