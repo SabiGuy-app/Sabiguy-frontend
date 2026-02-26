@@ -16,10 +16,9 @@ export default function AvailableRiders() {
   const bookingId = bookingDetails._id;
   const bookingAmount = bookingDetails.calculatedPrice;
 
-  console.log(providers);
-  console.log(bookingDetails);
-  // console.log(bookingId);
-  // console.log(bookingAmount);
+  // Helper: extract provider ID from whichever field the API uses
+  const getProviderId = (provider) =>
+    provider._id || provider.id || provider.userId || provider.providerId;
 
   const [acceptingId, setAcceptingId] = useState(null);
   const [error, setError] = useState("");
@@ -66,7 +65,7 @@ export default function AvailableRiders() {
             <div className="space-y-4">
               {providers.map((provider) => (
                 <div
-                  key={provider.id}
+                  key={getProviderId(provider)}
                   className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
                 >
                   <div className="flex flex-col md:flex-row gap-6 md:gap-4">
@@ -137,7 +136,7 @@ export default function AvailableRiders() {
                         {/* Actions */}
                         <div className="space-y-3 sm:flex-row gap-2">
                           <button
-                            onClick={() => handleAccept(provider.id)}
+                            onClick={() => handleAccept(getProviderId(provider))}
                             disabled={!!acceptingId}
                             className="w-full py-2.5 px-4 rounded-md text-[16px] font-medium transition-colors bg-[#005823CC] hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
                           >

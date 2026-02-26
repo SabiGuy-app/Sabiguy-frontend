@@ -28,8 +28,6 @@ export default function WalletCallback() {
 
         const finalBookingId = urlBookingId || storedBookingId;
 
-        console.log("DEBUG: Callback Init", { reference, finalBookingId });
-
         if (reference) {
             if (finalBookingId) {
                 setBookingId(finalBookingId);

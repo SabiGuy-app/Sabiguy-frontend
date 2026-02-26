@@ -1,5 +1,5 @@
-export default function WithdrawStep2 ({ onBack, onConfirm, withdrawalInfo }) {
-    const sendFee = 0.00;
+export default function WithdrawStep2({ onBack, onConfirm, withdrawalInfo }) {
+  const sendFee = 0.00;
   const totalAmount = withdrawalInfo.amount + sendFee;
 
   return (

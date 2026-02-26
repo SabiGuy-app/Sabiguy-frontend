@@ -20,7 +20,7 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
 
   const handleNext = () => setStep(2);
   const handleBack = () => setStep(1);
-  
+
   const handleConfirm = async () => {
     // TODO: Call API to process withdrawal
     console.log("Processing withdrawal:", withdrawalInfo);
@@ -48,9 +48,9 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={handleClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
       title={getTitle()}
       showCloseButton={step !== 3}
     >
@@ -62,7 +62,7 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
           setWithdrawalInfo={setWithdrawalInfo}
         />
       )}
-      
+
       {step === 2 && (
         <WithdrawStep2
           onBack={handleBack}
@@ -70,7 +70,7 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
           withdrawalInfo={withdrawalInfo}
         />
       )}
-      
+
       {step === 3 && (
         <WithdrawStep3
           onClose={handleClose}

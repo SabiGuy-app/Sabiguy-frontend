@@ -72,19 +72,6 @@ export const getWalletTransactions = async (page = 1, limit = 10, type = "") => 
     return data;
 };
 
-export const payWithWallet = async (bookingId, amount) => {
-    const payload = { bookingId };
-    if (amount) payload.amount = amount;
-    const { data } = await api.post("/wallet/pay", payload);
-    return data;
-};
-
-export const payBookingOnline = async (bookingId, amount) => {
-    const callbackUrl = `${window.location.origin}/wallet/funding/callback?bookingId=${bookingId}`;
-    const value = typeof amount === "string" ? parseFloat(amount.replace(/[^0-9.]/g, "")) : amount;
-    const { data } = await api.post("/wallet/fund", { amount: Number(value), callbackUrl, bookingId });
-    return data;
-};
 
 export const getAllProviders = async () => {
     const { data } = await api.get("users/providers");

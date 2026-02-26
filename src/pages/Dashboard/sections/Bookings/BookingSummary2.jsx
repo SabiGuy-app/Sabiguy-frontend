@@ -19,18 +19,20 @@ import { toast } from "react-hot-toast";
 import { FiChevronLeft } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
-import { initializePayment } from "../../../../api/payment";
+import { initializePayment, payWithWallet } from "../../../../api/payment";
 import { getBookingsDetails } from "../../../../api/bookings";
+import { getWalletBalance } from "../../../../api/provider";
 import { useSearchParams } from "react-router-dom";
 
 export default function BookingSummary2() {
   const [selectedPayment, setSelectedPayment] = useState("wallet");
   const [notes, setNotes] = useState("");
-  const [walletBalance, setWalletBalance] = useState(15000);
-  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
   const navigate = useNavigate();
@@ -62,6 +64,28 @@ export default function BookingSummary2() {
   const serviceCharge = serviceCost * serviceChargeRate;
   const totalAmount = serviceCost + serviceCharge;
 
+  // Fetch wallet balance on mount
+  const fetchBalance = async () => {
+    try {
+      setIsLoadingBalance(true);
+      const data = await getWalletBalance({ bustCache: true });
+      const available =
+        data?.data?.walletBalance?.available ??
+        data?.data?.available ??
+        data?.available ??
+        0;
+      setWalletBalance(available);
+    } catch (error) {
+      console.error("Failed to fetch wallet balance:", error);
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalance();
+  }, []);
+
   // Fetch booking details if bookingId is in URL (e.g., payment callback)
   useEffect(() => {
     if (queryBookingId) {
@@ -71,6 +95,11 @@ export default function BookingSummary2() {
           setBooking(data);
 
           if (paymentSuccess === "true") {
+            setIsPaid(true);
+            // If we have a Paystack reference, it was an online payment
+            if (reference) {
+              setSelectedPayment("online");
+            }
             setShowSuccessModal(true);
           }
         } catch (error) {
@@ -108,17 +137,15 @@ export default function BookingSummary2() {
       }
 
       if (selectedPayment === "wallet") {
-        // 🟡 DUMMY WALLET PAYMENT — no API call
         if (walletBalance < totalAmount) {
-          toast.error("Insufficient wallet balance");
+          toast.error("Insufficient wallet balance. Please fund your wallet.");
           setIsProcessing(false);
           return;
         }
 
-        // Simulate processing delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setWalletBalance((prev) => prev - totalAmount);
+        await payWithWallet(bookingId);
+        await fetchBalance();
+        setIsPaid(true);
         setShowSuccessModal(true);
 
       } else if (selectedPayment === "online") {
@@ -133,14 +160,15 @@ export default function BookingSummary2() {
         } else {
           console.error("No authorization URL found in response", response);
           toast.error("Failed to initialize payment. Please try again.");
+          setIsProcessing(false);
         }
       } else {
         toast.error("Please select a valid payment method.");
+        setIsProcessing(false);
       }
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error.response?.data?.message || "Payment processing failed");
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -175,12 +203,21 @@ export default function BookingSummary2() {
                 {formatCurrency(totalAmount)}
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">New Wallet Balance:</span>
-              <span className="font-semibold text-gray-900">
-                {formatCurrency(walletBalance)}
-              </span>
-            </div>
+            {selectedPayment === "wallet" ? (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">New Wallet Balance:</span>
+                <span className="font-semibold text-gray-900">
+                  {formatCurrency(walletBalance)}
+                </span>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Payment Status:</span>
+                <span className="font-semibold text-[#005823]">
+                  Held in Escrow
+                </span>
+              </div>
+            )}
           </div>
 
           <button
@@ -457,7 +494,7 @@ export default function BookingSummary2() {
                 </h3>
                 <div className="space-y-3">
                   <label
-                    className={`flex items-center gap-3 p-3 border rounded-[8px] cursor-pointer transition-colors ${selectedPayment === "wallet" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
+                    className={`flex items-center gap-3 p-3 border rounded-[8px] transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedPayment === "wallet" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
                   >
                     <input
                       type="radio"
@@ -465,6 +502,7 @@ export default function BookingSummary2() {
                       value="wallet"
                       checked={selectedPayment === "wallet"}
                       onChange={(e) => setSelectedPayment(e.target.value)}
+                      disabled={isPaid}
                       className="w-5 h-5 accent-[#005823]"
                     />
                     <div className="flex items-center gap-3 flex-grow">
@@ -495,7 +533,7 @@ export default function BookingSummary2() {
                   </label>
 
                   <label
-                    className={`flex items-center gap-3 p-3 border rounded-[8px] cursor-pointer transition-colors ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
+                    className={`flex items-center gap-3 p-3 border rounded-[8px] transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
                   >
                     <input
                       type="radio"
@@ -503,6 +541,7 @@ export default function BookingSummary2() {
                       value="online"
                       checked={selectedPayment === "online"}
                       onChange={(e) => setSelectedPayment(e.target.value)}
+                      disabled={isPaid}
                       className="w-5 h-5 accent-[#005823]"
                     />
                     <div className="flex items-center gap-3">
@@ -541,24 +580,30 @@ export default function BookingSummary2() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add extra instructions for the service provider.."
-                  className="w-full p-4 border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  disabled={isPaid}
+                  className={`w-full p-4 border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isPaid ? "opacity-50 cursor-not-allowed" : ""}`}
                   rows="4"
                 />
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pb-6">
-                <button className="flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold hover:bg-gray-50 transition-colors">
+                <button
+                  disabled={isPaid}
+                  className={`flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
+                >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmAndPay}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isPaid}
                   className="flex-1 py-4 px-6 text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isProcessing
-                    ? "Processing..."
-                    : `Confirm & Pay ${formatCurrency(totalAmount)}`}
+                  {isPaid
+                    ? "Paid ✓"
+                    : isProcessing
+                      ? "Processing..."
+                      : `Confirm & Pay ${formatCurrency(totalAmount)}`}
                 </button>
               </div>
             </div>
