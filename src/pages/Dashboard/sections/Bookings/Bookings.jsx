@@ -1,6 +1,6 @@
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bike } from "lucide-react";
 import Button from "../../../../components/button";
 import RequestCard from "../../../../components/dashboard/RequestsCard";
@@ -8,7 +8,7 @@ import ServiceDetailsModal from "../ServiceDetailsModal";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { bookingPost } from "../../../../api/bookings";
+import { bookingPost, getUserBookings } from "../../../../api/bookings";
 import { allowSystem } from "../../../../api/bookings";
 import useBookingStore from "../../../../stores/booking.store";
 
@@ -42,23 +42,6 @@ const vehicleOptions = [
     capacity: 4,
     description: "Medium sized delivery",
   },
-  // Commented out: add more vehicle types when available
-  // {
-  //   value: "truck",
-  //   label: "Truck Delivery",
-  //   icon: (...),
-  //   eta: "35 min",
-  //   capacity: 10,
-  //   description: "Large or bulk items",
-  // },
-  // {
-  //   value: "van",
-  //   label: "Van Delivery",
-  //   icon: (...),
-  //   eta: "28 min",
-  //   capacity: 6,
-  //   description: "Medium to large packages",
-  // },
 ];
 
 export default function Bookings() {
@@ -70,9 +53,33 @@ export default function Bookings() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const setBooking = useBookingStore((state) => state.setBooking);
+  const [userBookings, setUserBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingsError, setBookingsError] = useState("");
 
+  const setBooking = useBookingStore((state) => state.setBooking);
   const navigate = useNavigate();
+  
+
+  useEffect(() => {
+    if (activeTab === "requests") {
+      const fetchBookings = async () => {
+        setBookingsLoading(true);
+        setBookingsError("");
+        try {
+          const data = await getUserBookings();
+          const bookings = data?.data || data || [];
+          setUserBookings(Array.isArray(bookings) ? bookings : []);
+        } catch (err) {
+          console.error("Failed to fetch bookings:", err);
+          setBookingsError("Failed to load your bookings. Please try again.");
+        } finally {
+          setBookingsLoading(false);
+        }
+      };
+      fetchBookings();
+    }
+  }, [activeTab]);
 
   const formik = useFormik({
     initialValues: {
@@ -85,22 +92,14 @@ export default function Bookings() {
       vehicle: "",
       modeOfDelivery: "",
       autoAcceptNearest: false,
-
-      // title: "",
-      // description: "",
-      // location: "",
-      // startDate: "",
-      // endDate: "",
     },
     validationSchema: Yup.object().shape({
       jobTitle: Yup.string().required("Work category is required"),
       service: Yup.string().required("Sub-category is required"),
-
       pickupAddress: Yup.string().required("Pickup location is required"),
       dropoffAddress: Yup.string().required("Dropoff location is required"),
       serviceType: Yup.string().required("Service type is required"),
       modeOfDelivery: Yup.string().required("Please choose a vehicle"),
-
       scheduleDate: Yup.date().when("serviceType", {
         is: "scheduled",
         then: (schema) =>
@@ -133,9 +132,7 @@ export default function Bookings() {
         console.log("Booking created response:", res);
 
         setBooking(res);
-
         setSuccessMessage(res?.message || "Booking created successfully!");
-
         formik.resetForm();
         console.log("Navigating to searching page...");
         navigate("/dashboard/provider/searching");
@@ -152,7 +149,7 @@ export default function Bookings() {
         if (error.response) {
           setErrorMessage(
             error.response.data?.message ||
-            "Booking creation failed. Try again.",
+              "Booking creation failed. Try again.",
           );
         } else if (error.request) {
           setErrorMessage(
@@ -175,10 +172,11 @@ export default function Bookings() {
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${activeFilter === filter.toLowerCase()
+            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
+              activeFilter === filter.toLowerCase()
                 ? "bg-[#2D6A3E] text-white"
                 : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
-              }`}
+            }`}
           >
             {filter}
           </button>
@@ -187,12 +185,66 @@ export default function Bookings() {
     );
   };
 
-  const filteredRequests = requests.filter((request) => {
-    if (statusFilter === "all") return true;
-    if (statusFilter === "active")
-      return request.status.toLowerCase() === "in progress";
-    return request.status.toLowerCase() === statusFilter;
+  const mapBookingToRequest = (booking) => ({
+    id: booking._id,
+    title:
+      booking.subCategory?.replace(/_/g, " ") ||
+      booking.serviceType ||
+      "Booking",
+    status: booking.status || "pending",
+
+    providerName: booking.providerId?.fullName || "—",
+    providerImage:
+      booking.providerId?.profilePicture || "/api/placeholder/80/80",
+    providerRole:
+      booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—",
+    providerRating: booking.providerId?.rating?.average || null,
+    providerReviews: booking.providerId?.rating?.count || 0,
+    providerPhone: booking.providerId?.phoneNumber || "—",
+
+    orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
+    price: booking.calculatedPrice || booking.agreedPrice || 0,
+    totalAmount: booking.totalAmount || 0,
+    serviceFee: booking.serviceFee || 0,
+
+    pickupAddress: booking.pickupLocation?.address || "—",
+    dropoffAddress: booking.dropoffLocation?.address || "—",
+    distance: booking.distance?.value
+      ? `${booking.distance.value} ${booking.distance.unit}`
+      : "—",
+
+    description: booking.description || null,
+    notes: null,
+    modeOfDelivery: booking.modeOfDelivery || "—",
+
+    scheduledDate: booking.createdAt
+      ? new Date(booking.createdAt).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—",
+    deliveryDate: booking.endDate
+      ? new Date(booking.endDate).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—",
+
+    startsIn: null,
+    ratings: booking.rating || null,
   });
+
+
+  const filteredRequests = userBookings
+    .map(mapBookingToRequest)
+    .filter((request) => {
+      if (statusFilter === "all") return true;
+      if (statusFilter === "active")
+        return request.status.toLowerCase() === "in progress";
+      return request.status.toLowerCase() === statusFilter;
+    });
 
   const handleViewDetails = (request) => {
     setSelectedRequest(request);
@@ -218,19 +270,21 @@ export default function Bookings() {
         <div className="flex border-b">
           <button
             onClick={() => setActiveTab("request")}
-            className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "request"
+            className={`px-6 py-3 font-medium transition-colors relative ${
+              activeTab === "request"
                 ? "text-[#005823] border-b-2 border-[#005823]"
                 : "text-gray-500 hover:text-gray-700"
-              }`}
+            }`}
           >
             Request a service
           </button>
           <button
             onClick={() => setActiveTab("requests")}
-            className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "requests"
+            className={`px-6 py-3 font-medium transition-colors relative ${
+              activeTab === "requests"
                 ? "text-[#005823] border-b-2 border-[#005823]"
                 : "text-gray-500 hover:text-gray-700"
-              }`}
+            }`}
           >
             My Requests
           </button>
@@ -273,7 +327,6 @@ export default function Bookings() {
               </div>
             </div>
 
-            {/* Subcategory */}
             <div>
               <InputField
                 label="Subcategory"
@@ -296,7 +349,6 @@ export default function Bookings() {
               )}
             </div>
 
-            {/* Pickup Location */}
             <div>
               <InputField
                 name="pickupAddress"
@@ -313,7 +365,6 @@ export default function Bookings() {
               )}
             </div>
 
-            {/* Dropoff Location */}
             <div>
               <InputField
                 name="dropoffAddress"
@@ -348,7 +399,6 @@ export default function Bookings() {
               </div>
             )}
 
-            {/* Service Type */}
             <div>
               <InputField
                 label="Service Type"
@@ -390,8 +440,6 @@ export default function Bookings() {
               </div>
             )}
 
-
-            {/* Choose Vehicle */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Choose Vehicle
@@ -407,10 +455,11 @@ export default function Bookings() {
                       onClick={() =>
                         formik.setFieldValue("modeOfDelivery", vehicle.value)
                       }
-                      className={`text-left p-4 rounded-xl border-2 transition-all ${isSelected
+                      className={`text-left p-4 rounded-xl border-2 transition-all ${
+                        isSelected
                           ? "border-[#005823] bg-[#f0f9f4]"
                           : "border-gray-200 bg-white hover:border-gray-300"
-                        }`}
+                      }`}
                     >
                       <div
                         className={`mb-2 ${isSelected ? "text-[#005823]" : "text-gray-600"}`}
@@ -489,7 +538,6 @@ export default function Bookings() {
                     clipRule="evenodd"
                   />
                 </svg>
-
                 <p className="text-sm text-white">
                   The system will automatically assign the nearest available
                   provider to your request.
@@ -497,7 +545,6 @@ export default function Bookings() {
               </div>
             )}
 
-            {/* Submit */}
             <div className="flex flex-col">
               <Button variant="secondary" type="submit" disabled={loading}>
                 {loading ? "Creating Booking..." : "Post Request"}
@@ -510,113 +557,65 @@ export default function Bookings() {
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
             />
-            <div className="space-y-4">
-              {filteredRequests.length > 0 ? (
-                filteredRequests.map((request) => (
-                  <RequestCard
-                    key={request.id}
-                    request={request}
-                    onViewDetails={handleViewDetails}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-12 bg-white rounded-lg">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
+
+            {/* ✅ Loading */}
+            {bookingsLoading && (
+              <div className="text-center py-12 bg-white rounded-lg">
+                <div className="w-8 h-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-gray-500">Loading your bookings...</p>
+              </div>
+            )}
+
+            {/* ✅ Error */}
+            {!bookingsLoading && bookingsError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {bookingsError}
+              </div>
+            )}
+
+            {/* ✅ Real bookings list */}
+            {!bookingsLoading && !bookingsError && (
+              <div className="space-y-4">
+                {filteredRequests.length > 0 ? (
+                  filteredRequests.map((request) => (
+                    <RequestCard
+                      key={request.id}
+                      request={request}
+                      onViewDetails={handleViewDetails}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-12 bg-white rounded-lg">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg
+                        className="w-8 h-8 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No requests found
+                    </h3>
+                    <p className="text-gray-600">
+                      {userBookings.length === 0
+                        ? "You haven't made any bookings yet."
+                        : "No requests match the selected filter."}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    No requests found
-                  </h3>
-                  <p className="text-gray-600">
-                    No requests match the selected filter.
-                  </p>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
     </DashboardLayout>
   );
 }
-
-// Sample requests data
-const requests = [
-  {
-    id: 1,
-    title: "Electrical Installation",
-    status: "Pending",
-    providerName: "Phil Crook",
-    providerImage: "https://i.pravatar.cc/40",
-    orderId: "ORD 001",
-    price: 50000,
-    deliveryDate: "Oct 13, 2025",
-    scheduledDate: "Oct 10, 2025 - 9 AM",
-    startsIn: "1h 57m 48s",
-    ratings: null,
-  },
-  {
-    id: 2,
-    title: "Electrical Installation",
-    status: "In Progress",
-    providerName: "Phil Crook",
-    providerImage: "https://i.pravatar.cc/49",
-    orderId: "ORD 001",
-    price: 50000,
-    deliveryDate: "Oct 13, 2025",
-    scheduledDate: "Oct 08, 2025 - 10 AM",
-    startsIn: null,
-    ratings: null,
-  },
-  {
-    id: 3,
-    title: "Plumbing Repair",
-    status: "Completed",
-    providerName: "John Smith",
-    providerImage: "https://i.pravatar.cc/45",
-    orderId: "ORD 002",
-    price: 35000,
-    deliveryDate: "Oct 05, 2025",
-    scheduledDate: "Oct 01, 2025 - 2 PM",
-    startsIn: null,
-    ratings: null,
-  },
-  {
-    id: 4,
-    title: "Plumbing Repair",
-    status: "Completed",
-    providerName: "John Smith",
-    providerImage: "https://i.pravatar.cc/45",
-    orderId: "ORD 002",
-    price: 35000,
-    deliveryDate: "Oct 05, 2025",
-    scheduledDate: "Oct 01, 2025 - 2 PM",
-    startsIn: null,
-    ratings: 3.0,
-  },
-  {
-    id: 5,
-    title: "Plumbing Repair",
-    status: "Waiting confirmation",
-    providerName: "John Smith",
-    providerImage: "https://i.pravatar.cc/45",
-    orderId: "ORD 002",
-    price: 35000,
-    deliveryDate: "Oct 05, 2025",
-    scheduledDate: "Oct 01, 2025 - 2 PM",
-    startsIn: null,
-    ratings: null,
-  },
-];

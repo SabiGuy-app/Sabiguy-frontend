@@ -7,6 +7,7 @@ import {
   MapPin,
   Star,
   Shield,
+  BadgeCheck,
 } from "lucide-react";
 import Navbar from "../../../../components/dashboard/Navbar";
 import location from "/location.png";
@@ -20,11 +21,15 @@ export default function TrackRider() {
   const bookingDetails = booking?.data?.booking || {};
   const selectedProviderId = useBookingStore(
     (state) => state.selectedProviderId,
-  )
+  );
+  console.log("booking from store:", booking);
+  console.log("selectedProviderId:", selectedProviderId);
   const providerDetails =
     booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
     booking?.data?.providers?.[0] ||
     {};
+  console.log("providers array:", providerDetails);
+
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
@@ -80,8 +85,8 @@ export default function TrackRider() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
-        <div className="">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:grid md:grid-cols-2 md:gap-10 space-y-8">
+        <div>
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
             Arrival in 12 mins
           </h1>
@@ -123,8 +128,8 @@ export default function TrackRider() {
                   <span className="font-semibold text-[20px] text-[#231F20]">
                     {providerDetails?.fullName || "Provider"}
                   </span>
-                  <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-[#8BC53F] text-xs font-medium rounded">
-                    <Shield className="w-3 h-3" /> Verified
+                  <span className="text-[#8BC53F]">
+                    <BadgeCheck className="w-[20px] h-[20px]" />
                   </span>
                 </div>
                 <div className="text-[#231F20BF] text-[16px] mb-1">
@@ -151,18 +156,18 @@ export default function TrackRider() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-6">
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="md:grid md:grid-cols-3 gap-6 space-y-3">
+              <button className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="md:flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <MessageCircle className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">
                   Message
                 </span>
               </button>
-              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
+              <button className="text-[#E90000] font-medium w-full md:text-[16px] text-[15px] px-3 hover:text-red-600 transition-colors">
                 Cancel Request
               </button>
             </div>
