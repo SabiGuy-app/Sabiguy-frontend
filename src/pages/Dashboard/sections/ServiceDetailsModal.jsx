@@ -122,7 +122,7 @@ export default function ServiceDetailsModal ({ isOpen, onClose, request }) {
 
           {/* Additional Notes */}
           <div>
-            <h4 className="font-semibold mb-3">Additional notes</h4>
+            <h4 className="font-semibold mb-3">Pickup notes</h4>
             <div className="bg-blue-50 border border-gray-200 rounded-lg p-4">
               <p className="text-sm text-gray-600 italic">
                 Please park in the driveway. The side door will be unlocked.

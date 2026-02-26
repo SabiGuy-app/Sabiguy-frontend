@@ -41,7 +41,7 @@ export default function CategoryCard({
         <p className="text-white text-lg sm:text-xl font-bold drop-shadow-md">
           {title}
         </p>
-        <p className="text-sm mt-1 text-white">{description}</p>
+        <p className="text-sm mt-1 text-white w-[50%]">{description}</p>
         {!comingSoon && (
           <div className="flex">
             <button className="bg-gray/5 mt-2 text-white rounded-2xl px-2 py-1 text-xs flex items-center gap-1 backdrop-blur-md border border-white/10">

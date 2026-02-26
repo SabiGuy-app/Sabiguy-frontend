@@ -36,7 +36,6 @@ export default function DashboardHome() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
-  // Don't render until store is hydrated
   if (!hydrated) {
     return (
       <DashboardLayout>
