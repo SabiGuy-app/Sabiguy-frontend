@@ -22,12 +22,12 @@ export default function CategoryCard({
       />
 
       {/* Overlay */}
-      {/* <div
+      <div
         className={`absolute inset-0 transition-colors ${
-          comingSoon ? "bg-black/60" : "group-hover:bg-black/50"
+          comingSoon ? "bg-black/60" : "group-hover:bg-black/20"
         }`}
         style={{ backgroundColor: comingSoon ? undefined : bgColor }}
-      ></div> */}
+      ></div>
 
       {/* Coming Soon Badge */}
       {/* {comingSoon && (
