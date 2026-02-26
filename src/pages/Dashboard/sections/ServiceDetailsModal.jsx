@@ -3,6 +3,8 @@ import Navbar from '../../../components/dashboard/Navbar';
 
 export default function ServiceDetailsModal ({ isOpen, onClose, request }) {
   if (!isOpen) return null;
+  console.log(request);
+  
 
   return (
     <div className="fixed inset-0 bg-gray-50  bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -40,11 +42,11 @@ export default function ServiceDetailsModal ({ isOpen, onClose, request }) {
                     <span className="font-semibold">{request.providerName}</span>
                     <div className="flex items-center gap-1 text-sm">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">4.6</span>
+                      <span className="font-medium">{request.providerReviews}</span>
                     </div>
                   </div>
                   <p className="text-sm text-gray-600">Electrician</p>
-                  <p className="text-xs text-gray-500">Home & Repair services</p>
+                  <p className="text-sm text-gray-500">{request.title}</p>
                 </div>
               </div>
               
@@ -63,26 +65,34 @@ export default function ServiceDetailsModal ({ isOpen, onClose, request }) {
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Start Date & Time</p>
+                  <p className="text-sm font-medium text-gray-700">Scheduled Date</p>
                   <p className="text-sm text-gray-600">{request.scheduledDate}</p>
                 </div>
               </div>
 
               {/* End Date */}
-              <div className="flex items-start gap-3">
+              {/* <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">End Date</p>
                   <p className="text-sm text-gray-600">{request.deliveryDate}</p>
                 </div>
-              </div>
+              </div> */}
 
               {/* Location */}
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Location</p>
-                  <p className="text-sm text-gray-600">24 Palm Avenue, Lagos</p>
+                  <p className="text-sm font-medium text-gray-700">Pickup Location</p>
+                  <p className="text-sm text-gray-600">{request.pickupAddress}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Dropoff Location</p>
+                  <p className="text-sm text-gray-600">{request.dropoffAddress}</p>
                 </div>
               </div>
 
@@ -93,14 +103,14 @@ export default function ServiceDetailsModal ({ isOpen, onClose, request }) {
                 </svg>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Service Cost</p>
-                  <p className="text-sm m mb-3 text-gray-600">₦{request.price.toLocaleString()}</p>
+                  <p className="text-sm m mb-3 text-gray-600">₦{request.totalAmount.toLocaleString()}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Project Description */}
-          <div>
+          {/* <div>
             <h4 className="font-semibold mb-3">Project Description</h4>
             <p className="text-sm text-gray-700 leading-relaxed">
               Need a licensed electrician to install new wiring for a home office setup. This includes 
@@ -108,7 +118,7 @@ export default function ServiceDetailsModal ({ isOpen, onClose, request }) {
               the second floor. All materials will be provided, but please bring standard tools and safety 
               equipment.
             </p>
-          </div>
+          </div> */}
 
           {/* Additional Notes */}
           <div>

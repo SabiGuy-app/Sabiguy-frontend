@@ -76,3 +76,14 @@ export const selectProvider = async (bookingId, providerId) => {
   );
   return data;
 };
+
+export const getUserBookings = async () => {
+  const token = localStorage.getItem("token");
+  const { data } = await api.get("/bookings/user", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return data;
+};

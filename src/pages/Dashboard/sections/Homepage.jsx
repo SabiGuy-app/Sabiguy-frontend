@@ -20,6 +20,9 @@ import Towing from "/Towing.jpg";
 import Legal from "/Legal.jpg";
 import Plumbing from "/Plumbing.jpg";
 import Design from "/Design.jpg";
+import new1 from "/new1.png";
+import new2 from "/new2.png";
+import new3 from "/new3.png";
 import { sendTestNotification } from "../../../api/fcm";
 import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 
@@ -49,59 +52,59 @@ export default function DashboardHome() {
 
   const categories = [
     {
-      title: "Dispatch Riders",
+      title: "Package Delivery",
       description: "Your items delivered quickly and safely",
-      image: Dispatch2,
+      image: new1,
       // bgColor: "#6467F24D",
       comingSoon: false,
     },
     {
-      title: "Electrician",
+      title: "Book a Ride",
       description:
-        "Professional wiring, repairs, and power solutions on demand",
-      image: electrician,
-      bgColor: "#BF4A0B4D",
-      comingSoon: true,
+        "Reliable rides, ready whenever you are.",
+      image: new2,
+      // bgColor: "#BF4A0B4D",
+      comingSoon: false,
     },
     {
       title: "Welding",
       description: "Reliable welding for repairs and fabrication",
-      image: Welding,
-      bgColor: "#72280080",
+      image: new3,
+      // bgColor: "#72280080",
       comingSoon: true,
     },
     {
       title: "Household Support",
       description: "Quick, dependable household assistance anytime.",
-      image: Household,
+      image: new1,
       bgColor: "#0054AE80",
       comingSoon: true,
     },
     {
       title: "Towing & Roadside",
       description: "Fast help for breakdowns and emergencies",
-      image: Towing,
+      image: new2,
       bgColor: "#B100004D",
       comingSoon: true,
     },
     {
       title: "Legal & Financial",
       description: "Expert guidance for legal and financial needs",
-      image: Legal,
+      image: new3,
       bgColor: "#4800D94D",
       comingSoon: true,
     },
     {
       title: "Plumbing",
       description: "Fast help for breakdowns and emergencies",
-      image: Plumbing,
+      image: new1,
       bgColor: "#BF4A0B4D",
       comingSoon: true,
     },
     {
       title: "Digital Design",
       description: "Modern designs for web, brand, and media.",
-      image: Design,
+      image: new2,
       bgColor: "#A30B4B4D",
       comingSoon: true,
     },
