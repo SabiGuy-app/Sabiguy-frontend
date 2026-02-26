@@ -132,7 +132,22 @@ export const getUserBookings = async () => {
 
   return data;
 };
+export const allowSystem = async (allowSystem) => { 
+   const token = localStorage.getItem("token");
+   const { data } = await api.put(
+    '/bookings/allow-system',
+    {
+      allowSystem,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  return data;
 
+}
 export const selectProvider = async (bookingId, providerId) => {
   const token = localStorage.getItem("token");
   const { data } = await api.put(
