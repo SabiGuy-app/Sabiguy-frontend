@@ -7,7 +7,7 @@ export const getDashboardStats = async () => {
 
 export const getProviderBookings = async (status = null) => {
     const params = status ? { status } : {};
-    const { data } = await api.get("/provider/bookings", { params });
+    const { data } = await api.get("/provider/bookings?limit=40", { params });
     return data;
 };
 

@@ -89,7 +89,7 @@ export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, o
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-[20px]">
-                        {alert.fullName}
+                        {alert?.subCategory}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-sm">

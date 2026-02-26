@@ -37,7 +37,38 @@ class LocationService {
    */
   onLocationUpdate(position) {
     const { latitude, longitude, accuracy } = position.coords;
+// Determine location source based on accuracy
+  let locationSource;
+  let sourceEmoji;
+  
+  if (accuracy < 20) {
+    locationSource = 'GPS (Satellite)';
+    sourceEmoji = '🛰️';
+  } else if (accuracy < 100) {
+    locationSource = 'Wi-Fi Positioning';
+    sourceEmoji = '📶';
+  } else if (accuracy < 1000) {
+    locationSource = 'Cell Tower Triangulation';
+    sourceEmoji = '📡';
+  } else {
+    locationSource = 'IP Geolocation (ISP Server)';
+    sourceEmoji = '🌐';
+  }
 
+  console.log(`${sourceEmoji} Location Source: ${locationSource}`);
+  console.log('📍 Coordinates:', { 
+    latitude, 
+    longitude, 
+    accuracy: `${Math.round(accuracy)}m`,
+    timestamp: new Date(position.timestamp).toLocaleTimeString()
+  });
+
+  // ✅ ADDED: Check if this is your actual location
+  if (accuracy > 1000) {
+    console.warn('⚠️ WARNING: Very poor accuracy! This is likely IP-based (ISP location, not GPS)');
+    console.warn('⚠️ Expected accuracy for GPS: < 20m');
+    console.warn('⚠️ Current accuracy:', Math.round(accuracy), 'm');
+  }
     console.log('📍 Location updated:', { latitude, longitude, accuracy });
 
     // Send to backend via Socket.IO (real-time)

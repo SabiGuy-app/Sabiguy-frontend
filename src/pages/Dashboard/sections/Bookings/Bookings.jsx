@@ -1,10 +1,6 @@
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
 import { useState } from "react";
-import {
-  jobTitles,
-  allServices,
-} from "../../../signup/ServiceProvider/AccountSetup/SkillsSection/jobData";
 import { Bike } from "lucide-react";
 import Button from "../../../../components/button";
 import RequestCard from "../../../../components/dashboard/RequestsCard";
@@ -18,7 +14,7 @@ import useBookingStore from "../../../../stores/booking.store";
 
 const vehicleOptions = [
   {
-    value: "bike",
+    value: "Bike",
     label: "Bike Delivery",
     icon: <Bike color="black" size={30} />,
     eta: "15 min",
@@ -26,7 +22,7 @@ const vehicleOptions = [
     description: "Best for small packages",
   },
   {
-    value: "car",
+    value: "Car",
     label: "Car Delivery",
     icon: (
       <svg
@@ -106,57 +102,13 @@ export default function Bookings() {
       modeOfDelivery: Yup.string().required("Please choose a vehicle"),
 
       scheduleDate: Yup.date().when("serviceType", {
-        is: "schedule",
+        is: "scheduled",
         then: (schema) =>
           schema
             .required("Schedule date is required")
             .min(new Date(), "Date must be in the future"),
         otherwise: (schema) => schema.notRequired(),
       }),
-
-      // title: Yup.string().when("jobTitle", {
-      //   is: (val) => val !== "transport",
-      //   then: (schema) => schema.required("Request title is required"),
-      //   otherwise: (schema) => schema.notRequired(),
-      // }),
-      // description: Yup.string().when("jobTitle", {
-      //   is: (val) => val !== "transport",
-      //   then: (schema) =>
-      //     schema
-      //       .required("Task description is required")
-      //       .min(10, "Description must be at least 10 characters"),
-      //   otherwise: (schema) => schema.notRequired(),
-      // }),
-      // location: Yup.string().when("jobTitle", {
-      //   is: (val) => val !== "transport",
-      //   then: (schema) => schema.required("Location is required"),
-      //   otherwise: (schema) => schema.notRequired(),
-      // }),
-      // startDate: Yup.date().when(["serviceType", "jobTitle"], {
-      //   is: (serviceType, jobTitle) =>
-      //     serviceType === "schedule" && jobTitle !== "transport",
-      //   then: (schema) =>
-      //     schema
-      //       .required("Start date is required")
-      //       .min(new Date(), "Start date must be in the future"),
-      //   otherwise: (schema) => schema.notRequired(),
-      // }),
-      // endDate: Yup.date().when(["serviceType", "jobTitle", "startDate"], {
-      //   is: (serviceType, jobTitle, startDate) =>
-      //     serviceType === "schedule" && jobTitle !== "transport" && startDate,
-      //   then: (schema) =>
-      //     schema
-      //       .required("End date is required")
-      //       .min(Yup.ref("startDate"), "End date must be after start date"),
-      //   otherwise: (schema) => schema.notRequired(),
-      // }),
-
-      // Budget validation — commented out globally, restore when ready
-      // budget: Yup.number()
-      //   .required("Budget is required")
-      //   .positive("Budget must be a positive number")
-      //   .integer("Budget must be a whole number")
-      //   .min(1000, "Budget must be at least ₦1,000"),
     }),
     onSubmit: async (values) => {
       console.log("Submitting booking with values:", values);
@@ -172,10 +124,8 @@ export default function Bookings() {
           dropoffAddress: values.dropoffAddress,
           scheduleType: values.serviceType,
           vehicle: values.vehicle,
-          // budget: 2000,
           modeOfDelivery: values.modeOfDelivery,
-          // attachments: values.attachments,
-          // autoAcceptNearest: values.autoAcceptNearest,
+          scheduleDate: values.scheduleDate
         };
 
         console.log("Calling bookingPost with payload:", payload);
@@ -216,8 +166,6 @@ export default function Bookings() {
       }
     },
   });
-
-  const serviceOptions = allServices[formik.values.jobTitle] || [];
 
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
@@ -302,22 +250,6 @@ export default function Bookings() {
             )}
 
             <input type="hidden" name="jobTitle" value="transport" />
-            {/* <div>
-              <InputField
-                label="Select work category"
-                select
-                options={jobTitles}
-                value={formik.values.jobTitle}
-                onChange={(option) => {
-                  formik.setFieldValue("jobTitle", option.value);
-                  formik.setFieldValue("service", "");
-                }}
-                onBlur={() => formik.setFieldTouched("jobTitle", true)}
-              />
-              {formik.touched.jobTitle && formik.errors.jobTitle && (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.jobTitle}</p>
-              )}
-            </div> */}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -348,7 +280,8 @@ export default function Bookings() {
                 select
                 options={[
                   { label: "Select Services", value: "" },
-                  ...serviceOptions,
+                  { label: "Package delivery", value: "package delivery" },
+                  { label: "Book a ride", value: "book a ride" },
                 ]}
                 value={formik.values.service}
                 onChange={(option) =>
@@ -423,7 +356,7 @@ export default function Bookings() {
                 options={[
                   { label: "Select service type", value: "" },
                   { label: "Pickup now", value: "immediate" },
-                  { label: "Schedule", value: "schedule" },
+                  { label: "Schedule", value: "scheduled" },
                 ]}
                 value={formik.values.serviceType}
                 onChange={(option) =>
@@ -438,7 +371,7 @@ export default function Bookings() {
               )}
             </div>
 
-            {formik.values.serviceType === "schedule" && (
+            {formik.values.serviceType === "scheduled" && (
               <div>
                 <InputField
                   name="scheduleDate"
@@ -457,28 +390,6 @@ export default function Bookings() {
               </div>
             )}
 
-            {/* {formik.values.serviceType === "schedule" && formik.values.jobTitle !== "transport" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <InputField name="startDate" label="Start Date" type="date"
-                    min={new Date().toISOString().split("T")[0]}
-                    value={formik.values.startDate}
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} />
-                  {formik.touched.startDate && formik.errors.startDate && (
-                    <p className="mt-1 text-sm text-red-600">{formik.errors.startDate}</p>
-                  )}
-                </div>
-                <div>
-                  <InputField name="endDate" label="End Date" type="date"
-                    min={new Date().toISOString().split("T")[0]}
-                    value={formik.values.endDate}
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} />
-                  {formik.touched.endDate && formik.errors.endDate && (
-                    <p className="mt-1 text-sm text-red-600">{formik.errors.endDate}</p>
-                  )}
-                </div>
-              </div>
-            )} */}
 
             {/* Choose Vehicle */}
             <div>
@@ -538,58 +449,6 @@ export default function Bookings() {
                 </p>
               )}
             </div>
-
-            {/* <div>
-              <InputField
-                name="budget"
-                label="Your Budget"
-                placeholder="Enter Amount"
-                type="number"
-                value={formik.values.budget}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.budget && formik.errors.budget && (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.budget}</p>
-              )}
-            </div> */}
-
-            {/* <>
-              <div>
-                <InputField name="title" label="Request a title"
-                  placeholder="e.g Need an electrician home wiring."
-                  value={formik.values.title}
-                  onChange={formik.handleChange} onBlur={formik.handleBlur} />
-                {formik.touched.title && formik.errors.title && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.title}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Task Description</label>
-                <textarea name="description" placeholder="Tell us the details of your task" rows={4}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent"
-                  value={formik.values.description}
-                  onChange={formik.handleChange} onBlur={formik.handleBlur} />
-                {formik.touched.description && formik.errors.description && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.description}</p>
-                )}
-              </div>
-              <div className="w-1/3">
-                <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 text-sm cursor-pointer hover:border-gray-400 hover:text-gray-600 transition">
-                  <Upload className="w-5 h-5" />
-                  <span>Add photo/video (optional)</span>
-                  <input type="file" className="hidden" accept="image/*,video/*" multiple />
-                </label>
-              </div>
-              <div>
-                <InputField name="location" label="Location" placeholder="Your Location"
-                  value={formik.values.location}
-                  onChange={formik.handleChange} onBlur={formik.handleBlur} />
-                {formik.touched.location && formik.errors.location && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.location}</p>
-                )}
-              </div>
-            </> */}
 
             {/* Auto-accept checkbox */}
             <div className="flex items-center gap-3">
