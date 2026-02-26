@@ -69,7 +69,6 @@ export default function Bookings() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // ✅ Real bookings state
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
@@ -78,7 +77,6 @@ export default function Bookings() {
   const navigate = useNavigate();
   
 
-  // ✅ Fetch real bookings when My Requests tab is opened
   useEffect(() => {
     if (activeTab === "requests") {
       const fetchBookings = async () => {
@@ -204,7 +202,6 @@ export default function Bookings() {
     );
   };
 
-  // ✅ Map API booking shape → RequestCard shape
   const mapBookingToRequest = (booking) => ({
     id: booking._id,
     title:
@@ -213,7 +210,6 @@ export default function Bookings() {
       "Booking",
     status: booking.status || "pending",
 
-    // ✅ provider data is inside providerId, not provider
     providerName: booking.providerId?.fullName || "—",
     providerImage:
       booking.providerId?.profilePicture || "/api/placeholder/80/80",
@@ -258,7 +254,6 @@ export default function Bookings() {
   });
 
 
-  // ✅ Filter real API bookings (no more hardcoded requests array)
   const filteredRequests = userBookings
     .map(mapBookingToRequest)
     .filter((request) => {
