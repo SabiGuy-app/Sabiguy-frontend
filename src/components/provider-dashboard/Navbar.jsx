@@ -363,7 +363,7 @@ export default function ProviderNavbar() {
         {/* Logo */}
         <button
           className="hidden sm:block text-xl sm:text-2xl md:text-3xl font-bold text-[#005823]"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/dashboard/provider")}
         >
           SabiGuy
         </button>

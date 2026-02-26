@@ -43,7 +43,7 @@ export default function AvailableRiders() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen grid grid-cols-2 gap-10 bg-gray-50 p-4 sm:p-8">
+      <div className="min-h-screen md:grid md:grid-cols-2 space-y-4 gap-10 bg-gray-50 p-4 sm:p-8">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 mb-6">
             Available providers

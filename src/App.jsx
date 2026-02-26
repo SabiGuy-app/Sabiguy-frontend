@@ -30,6 +30,8 @@ import ProviderDetails from "./pages/Dashboard/sections/ProviderDetails";
 import ProviderDashboard from "./pages/ProviderDashboard/sections/Homepage";
 import HireAlerts from "./pages/ProviderDashboard/sections/HireAlerts/HireAlerts";
 import LiveTrackingPage from "./pages/ProviderDashboard/sections/HireAlerts/TrackProvider";
+import StartNavigation from "./pages/ProviderDashboard/sections/HireAlerts/StartNavigation";
+import TrackDelivery from "./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery";
 import ProviderProfilePage from "./pages/ProviderDashboard/sections/Settings";
 import Notifications from "./pages/ProviderDashboard/sections/Notification";
 import ReviewModalsExample from "./pages/Dashboard/Examples";
@@ -69,6 +71,14 @@ function App() {
             <Route
               path="/dashboard/provider/hire-alert"
               element={<HireAlerts />}
+            />
+            <Route
+              path="/dashboard/provider/start-navigation"
+              element={<StartNavigation />}
+            />
+            <Route
+              path="/dashboard/provider/track-delivery"
+              element={<TrackDelivery />}
             />
             <Route path="/dashboard/provider" element={<ProviderDashboard />} />
             <Route path="/bookings" element={<Bookings />} />

@@ -143,11 +143,16 @@ export default function BookingSummary2() {
           return;
         }
 
+<<<<<<< HEAD
         await payWithWallet(bookingId);
         await fetchBalance();
         setIsPaid(true);
-        setShowSuccessModal(true);
+=======
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
+        setWalletBalance((prev) => prev - totalAmount);
+>>>>>>> 150ca081913a5ff87f7043550cfc003e725779b9
+        setShowSuccessModal(true);
       } else if (selectedPayment === "online") {
         const response = await initializePayment(bookingId);
         const authUrl =
@@ -304,7 +309,7 @@ export default function BookingSummary2() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-8">
+        <div className="md:grid md:grid-cols-2 space-y-4 gap-8">
           <div className="space-y-8">
             <div className="shadow-sm p-6 rounded-[16px] space-y-6">
               <div className="flex items-start gap-4">
@@ -382,16 +387,16 @@ export default function BookingSummary2() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-5">
-                <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="md:flex gap-5">
+                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
                 </button>
-                <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <MessageCircle className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Message</span>
                 </button>
-                <button className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors">
+                <button className="text-red-500  font-medium px-4 hover:text-red-600 transition-colors">
                   Cancel Request
                 </button>
               </div>
@@ -596,8 +601,13 @@ export default function BookingSummary2() {
                 </button>
                 <button
                   onClick={handleConfirmAndPay}
+<<<<<<< HEAD
                   disabled={isProcessing || isPaid}
                   className="flex-1 py-4 px-6 text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+=======
+                  disabled={isProcessing}
+                  className="flex-1 py-4 px-6 text-sm md:text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+>>>>>>> 150ca081913a5ff87f7043550cfc003e725779b9
                 >
                   {isPaid
                     ? "Paid ✓"
