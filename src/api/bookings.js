@@ -124,7 +124,7 @@ export const getProviderBookings = async () => {
 
 export const getUserBookings = async () => {
   const token = localStorage.getItem("token");
-  const { data } = await api.get("/user/bookings?page=1&limit=20", {
+  const { data } = await api.get("/bookings/user?page=1&limit=20", {
     headers: {
       Authorization: `Bearer ${token}`,
     },

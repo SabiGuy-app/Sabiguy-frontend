@@ -11,7 +11,9 @@ export default function Navbar() {
   return (
 <nav className="w-full flex justify-between items-center px-6 py-4 bg-white shadow-sm border-b border-gray-400">
       {/* Logo */}
-      <div className="text-2xl font-bold text-[#005823]">SabiGuy</div>
+      <div className="text-2xl font-bold text-[#005823]">
+        <img src="/logo.jpg" alt="SabiGuy Logo" className="h-8 w-auto" />
+      </div>
 
       {/* Desktop buttons */}
       <div className=" hidden md:flex space-x-4">

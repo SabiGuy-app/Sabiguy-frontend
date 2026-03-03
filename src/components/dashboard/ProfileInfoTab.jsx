@@ -1,4 +1,9 @@
 export default function ProfileInfoTab({ user, onProfileUpdate }) {
+
+  const fullName = user.data?.fullName || "";
+
+const [firstName, ...rest] = fullName.split(" ");
+const lastName = rest.join(" ");
   return (
     <div className="mb-12">
       <h2 className="text-xl font-semibold text-gray-900 mt-5 mb-6">Personal Information</h2>
@@ -12,7 +17,7 @@ export default function ProfileInfoTab({ user, onProfileUpdate }) {
             </label>
             <input
               type="text"
-              defaultValue={user.data?.fullName}
+              defaultValue={firstName}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
@@ -23,7 +28,7 @@ export default function ProfileInfoTab({ user, onProfileUpdate }) {
             </label>
             <input
               type="text"
-              defaultValue={user.data?.fullName}
+              defaultValue={lastName}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
@@ -62,13 +67,12 @@ export default function ProfileInfoTab({ user, onProfileUpdate }) {
           </label>
           <input
             type="text"
-            defaultValue={user.data?.address}
+            defaultValue={user.data?.city}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
           />
         </div>
 
-        {/* City and State */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               City
@@ -90,7 +94,7 @@ export default function ProfileInfoTab({ user, onProfileUpdate }) {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>
-        </div>
+        </div> */}
       </form>
     </div>
   );

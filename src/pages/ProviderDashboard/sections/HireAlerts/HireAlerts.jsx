@@ -7,7 +7,7 @@ import AlertDetailsModal from "./AlertDetails";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import { getProviderBookings } from "../../../../api/provider";
-import { getAllBookings, acceptBookings, startJob } from "../../../../api/bookings";
+import { getAllBookings, acceptBookings} from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
 
 
@@ -26,7 +26,6 @@ export default function HireAlerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
-  const [startJobAlertId, setStartJobAlertId] = useState(null);
 
 
 
@@ -114,6 +113,8 @@ export default function HireAlerts() {
         title: booking.title || formattedSubCategory || booking.serviceType || "Untitled job",
         price:
           booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
+        calculatedPrice: booking.calculatedPrice || booking.agreedPrice || booking.budget || 0,
+        agreedPrice: booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
         deliveryDate: booking.endDate
           ? new Date(booking.endDate).toLocaleDateString("en-US", {
             month: "short",
@@ -141,6 +142,12 @@ export default function HireAlerts() {
               : "TBD",
         location:
           booking.location?.address || booking.pickupLocation?.address || "N/A",
+        pickupLocation: booking.pickupLocation || null,
+        dropoffLocation: booking.dropoffLocation || null,
+        scheduleType: booking.scheduleType || "N/A",
+        createdAt: booking.createdAt || null,
+        modeOfDelivery: booking.modeOfDelivery || "",
+        distance: booking.distance || null,
         // Store original data for modal details
         originalData: booking,
       };
