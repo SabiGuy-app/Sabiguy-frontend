@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { verifyPayment as verifyPaymentAPI } from "../../api/payment";
 
 const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess }) => {
     const [status, setStatus] = useState("verifying");
@@ -7,27 +8,18 @@ const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess }) => 
 
     useEffect(() => {
         if (isOpen && reference) {
-            verifyPayment();
+            handleVerify();
         }
     }, [isOpen, reference]);
 
-    const verifyPayment = async () => {
+    const handleVerify = async () => {
         try {
             setStatus("verifying");
             setMessage("Verifying your payment...");
 
-            const response = await fetch(
-                `${import.meta.env.VITE_BASE_URL}/wallet/fund/verify/${reference}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                }
-            );
+            const data = await verifyPaymentAPI(reference);
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 setStatus("success");
                 setMessage("Your payment has been confirmed!");
                 if (onSuccess) {
@@ -41,7 +33,7 @@ const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess }) => 
             }
         } catch (error) {
             setStatus("error");
-            setMessage("Failed to verify payment. Please contact support.");
+            setMessage(error?.response?.data?.message || "Failed to verify payment. Please contact support.");
         }
     };
 

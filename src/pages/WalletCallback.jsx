@@ -59,12 +59,22 @@ export default function WalletCallback() {
             }, 1000);
         } catch (error) {
             console.error("Booking verification failed:", error);
-            // Even if verification "fails" (e.g. 404 from double verify),
-            // if we have a booking ID, let's try to go back to the summary
-            // so the user isn't stuck on a white screen.
-            setTimeout(() => {
-                navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_success=true&reference=${ref}`);
-            }, 2000);
+            const isDoubleVerify = error?.response?.status === 404 || error?.response?.status === 409;
+
+            if (isDoubleVerify) {
+                // Already verified (double-redirect) — treat as success
+                toast.success("Payment already verified!", { id: "verify-booking" });
+                localStorage.removeItem("pendingBookingPaymentId");
+                setTimeout(() => {
+                    navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_success=true&reference=${ref}`);
+                }, 1000);
+            } else {
+                // Real failure — do NOT show success
+                toast.error("Payment verification failed. Please contact support.", { id: "verify-booking" });
+                setTimeout(() => {
+                    navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_failed=true`);
+                }, 2000);
+            }
         } finally {
             setIsProcessing(false);
         }

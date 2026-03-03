@@ -2,16 +2,35 @@ import Modal from "../Modal";
 import WithdrawStep1 from "./WithdrawFunds1";
 import WithdrawStep2 from "./WithdrawFunds2";
 import WithdrawStep3 from "./WithdrawFunds3";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuthStore } from "../../stores/auth.store";
+import { withdrawFromWallet } from "../../api/provider";
+import toast from "react-hot-toast";
 
 export default function WithdrawFundsModal({ isOpen, onClose, availableBalance = 100000 }) {
+  const { user } = useAuthStore();
   const [step, setStep] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [withdrawalInfo, setWithdrawalInfo] = useState({
     amount: 0,
-    accountName: "Phil Crook",
-    bankName: "Providus Bank",
-    accountNumber: "****221",
+    accountName: user?.data?.accountName || "",
+    bankName: user?.data?.bankName || "",
+    accountNumber: user?.data?.accountNumber || "",
   });
+
+  const hasBankDetails = !!(withdrawalInfo.accountName && withdrawalInfo.bankName && withdrawalInfo.accountNumber);
+
+  // Sync state if user data dynamically loads after render
+  useEffect(() => {
+    if (user?.data?.accountName) {
+      setWithdrawalInfo(prev => ({
+        ...prev,
+        accountName: user.data.accountName,
+        bankName: user.data.bankName,
+        accountNumber: user.data.accountNumber,
+      }));
+    }
+  }, [user]);
 
   const handleClose = () => {
     setStep(1);
@@ -22,20 +41,20 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
   const handleBack = () => setStep(1);
 
   const handleConfirm = async () => {
-    // TODO: Call API to process withdrawal
-    console.log("Processing withdrawal:", withdrawalInfo);
-    /*
+    setIsProcessing(true);
     try {
-      await axios.post(`${API_URL}/wallet/withdraw`, {
-        amount: withdrawalInfo.amount,
-        accountNumber: withdrawalInfo.fullAccountNumber
-      });
-      setStep(3);
+      const response = await withdrawFromWallet(withdrawalInfo.amount);
+      if (response?.success) {
+        setStep(3);
+      } else {
+        toast.error(response?.message || "Withdrawal failed. Please try again.");
+      }
     } catch (error) {
-      console.error("Withdrawal error:", error);
+      const message = error?.response?.data?.message || error.message || "Withdrawal failed. Please try again.";
+      toast.error(message);
+    } finally {
+      setIsProcessing(false);
     }
-    */
-    setStep(3);
   };
 
   const getTitle = () => {
@@ -60,6 +79,7 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
           availableBalance={availableBalance}
           withdrawalInfo={withdrawalInfo}
           setWithdrawalInfo={setWithdrawalInfo}
+          hasBankDetails={hasBankDetails}
         />
       )}
 
@@ -68,6 +88,7 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
           onBack={handleBack}
           onConfirm={handleConfirm}
           withdrawalInfo={withdrawalInfo}
+          isProcessing={isProcessing}
         />
       )}
 

@@ -143,15 +143,9 @@ export default function BookingSummary2() {
           return;
         }
 
-<<<<<<< HEAD
         await payWithWallet(bookingId);
         await fetchBalance();
         setIsPaid(true);
-=======
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setWalletBalance((prev) => prev - totalAmount);
->>>>>>> 150ca081913a5ff87f7043550cfc003e725779b9
         setShowSuccessModal(true);
       } else if (selectedPayment === "online") {
         const response = await initializePayment(bookingId);
@@ -601,13 +595,8 @@ export default function BookingSummary2() {
                 </button>
                 <button
                   onClick={handleConfirmAndPay}
-<<<<<<< HEAD
                   disabled={isProcessing || isPaid}
                   className="flex-1 py-4 px-6 text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-=======
-                  disabled={isProcessing}
-                  className="flex-1 py-4 px-6 text-sm md:text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
->>>>>>> 150ca081913a5ff87f7043550cfc003e725779b9
                 >
                   {isPaid
                     ? "Paid ✓"

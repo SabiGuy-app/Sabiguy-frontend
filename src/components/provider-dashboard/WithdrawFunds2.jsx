@@ -1,4 +1,9 @@
-export default function WithdrawStep2({ onBack, onConfirm, withdrawalInfo }) {
+const maskAccountNumber = (num) => {
+  if (!num || num.length < 4) return num || "";
+  return "****" + num.slice(-4);
+};
+
+export default function WithdrawStep2({ onBack, onConfirm, withdrawalInfo, isProcessing }) {
   const sendFee = 0.00;
   const totalAmount = withdrawalInfo.amount + sendFee;
 
@@ -42,7 +47,7 @@ export default function WithdrawStep2({ onBack, onConfirm, withdrawalInfo }) {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Account number</span>
-            <span className="text-gray-900 font-medium">{withdrawalInfo.accountNumber}</span>
+            <span className="text-gray-900 font-medium">{maskAccountNumber(withdrawalInfo.accountNumber)}</span>
           </div>
         </div>
 
@@ -55,15 +60,24 @@ export default function WithdrawStep2({ onBack, onConfirm, withdrawalInfo }) {
       <div className="flex gap-3">
         <button
           onClick={onBack}
-          className="flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+          disabled={isProcessing}
+          className="flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
         >
           Back
         </button>
         <button
           onClick={onConfirm}
-          className="flex-1 px-6 py-3 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors"
+          disabled={isProcessing}
+          className="flex-1 px-6 py-3 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          Confirm Withdrawal
+          {isProcessing ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Processing...
+            </>
+          ) : (
+            "Confirm Withdrawal"
+          )}
         </button>
       </div>
     </>
