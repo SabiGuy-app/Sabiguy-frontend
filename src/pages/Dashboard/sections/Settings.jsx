@@ -65,16 +65,14 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Middle - Rating */}
-            <div className="flex flex-col items-start md:items-center">
+            {/* <div className="flex flex-col items-start md:items-center">
               <span className="text-sm text-gray-600 mb-2">Overall Rating</span>
               <StarRating rating={profile.rating} />
             </div>
 
-            {/* Right Side - Edit Button */}
             <button className="p-2 bg-[#8BC53F] text-white font-medium rounded-lg hover:bg-[#7ab335] transition-colors self-start md:self-center">
               Edit Profile
-            </button>
+            </button> */}
           </div>
         </div>
 

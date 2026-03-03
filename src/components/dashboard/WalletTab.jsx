@@ -256,16 +256,13 @@ export default function WalletTab() {
         </div>
       </div>
 
-      {/* Manage Cards Section */}
-      <div>
+      {/* <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Manage Cards
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Card 1 - Green Mastercard */}
           <div className="relative bg-gradient-to-br from-[#005823] to-[#003d18] rounded-xl p-6 text-white h-48 flex flex-col justify-between overflow-hidden">
-            {/* Mastercard circles */}
             <div className="absolute top-4 right-4 flex items-center gap-1">
               <div className="w-8 h-8 bg-red-500 rounded-full opacity-80"></div>
               <div className="w-8 h-8 bg-orange-400 rounded-full opacity-80 -ml-4"></div>
@@ -289,7 +286,6 @@ export default function WalletTab() {
             </div>
           </div>
 
-          {/* Card 2 - Light Visa */}
           <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-6 text-gray-800 h-48 flex flex-col justify-between border border-gray-300">
             <div className="absolute top-4 right-4 text-2xl font-bold text-blue-600">
               VISA
@@ -313,7 +309,6 @@ export default function WalletTab() {
             </div>
           </div>
 
-          {/* Add Card Button */}
           <div className="border-2 border-dashed border-gray-300 rounded-xl h-48 flex items-center justify-center hover:border-gray-400 transition-colors cursor-pointer group">
             <div className="text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-gray-200 transition-colors">
@@ -322,8 +317,8 @@ export default function WalletTab() {
               <p className="text-sm text-gray-600 font-medium">Add New Card</p>
             </div>
           </div>
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
 
       <FundWalletModal
         isOpen={isModalOpen}
