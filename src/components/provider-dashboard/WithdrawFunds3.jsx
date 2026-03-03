@@ -1,4 +1,10 @@
 import { FiCheck } from "react-icons/fi";
+
+const maskAccountNumber = (num) => {
+  if (!num || num.length < 4) return num || "";
+  return "****" + num.slice(-4);
+};
+
 export default function WithdrawStep3({ onClose, withdrawalInfo }) {
   return (
     <div className="text-center">
@@ -26,7 +32,7 @@ export default function WithdrawStep3({ onClose, withdrawalInfo }) {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Account number:</span>
-            <span className="text-gray-900 font-medium">{withdrawalInfo.accountNumber}</span>
+            <span className="text-gray-900 font-medium">{maskAccountNumber(withdrawalInfo.accountNumber)}</span>
           </div>
         </div>
       </div>
