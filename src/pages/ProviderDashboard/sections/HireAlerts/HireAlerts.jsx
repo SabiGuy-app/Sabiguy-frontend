@@ -211,7 +211,10 @@ export default function HireAlerts() {
   const mapJobStatus = (apiStatus) => {
     const statusMap = {
       provider_selected: "Awaiting Job Commencement",
-      in_progress: "In Progress",
+      in_progress: "Enroute to Pickup",
+      arrived_at_dropoff: "Arrived at Dropoff",
+      arrived_at_pickup: "Arrived at Pickup",
+      enroute_to_dropoff: "Enroute to Dropoff",
       waiting_confirmation: "Waiting confirmation",
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
@@ -358,6 +361,45 @@ export default function HireAlerts() {
     fetchBookings();
   };
 
+  const handleShowNavigation = (job) => {
+    const rawStatus = String(job?.status || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+    const normalizedStatus =
+      rawStatus === "in_progress" ? "enroute_to_pickup" : rawStatus;
+
+    if (normalizedStatus === "paid_escrow") {
+      navigate("/dashboard/provider/start-navigation", {
+        state: { alert: job },
+      });
+      return;
+    }
+
+    if (
+      normalizedStatus === "arrived_at_dropoff" ||
+      normalizedStatus === "enroute_to_dropoff" ||
+      normalizedStatus === "arrived_at_pickup" ||
+      normalizedStatus === "enroute_to_pickup"
+    ) {
+      navigate("/dashboard/provider/track-delivery", {
+        state: { alert: job, status: normalizedStatus },
+      });
+    }
+  };
+
+  const handleMessageCustomer = (job) => {
+    const booking = job?.originalData || {};
+    const bookingId = booking?._id || job?.id;
+    const customer = booking?.userId || null;
+
+    if (!bookingId) return;
+
+    navigate(`/dashboard/provider/chat?bookingId=${bookingId}`, {
+      state: { booking, customer },
+    });
+  };
+
   const handleAcceptBooking = async (alert) => {
     if (!alert?.id) return;
     try {
@@ -499,6 +541,8 @@ export default function HireAlerts() {
                   job={job}
                   onViewDetails={handleViewJob}
                   onMarkAsCompleted={handleMark}
+                  onShowNavigation={handleShowNavigation}
+                  onMessageCustomer={handleMessageCustomer}
                 />
               ))
             ) : (
