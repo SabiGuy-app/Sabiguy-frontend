@@ -24,6 +24,13 @@ export default function ProviderProfilePage() {
   const [isViewingImage, setIsViewingImage] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState(null);
 
+  // Detect if provider signed up via Google (no password to manage)
+  const isGoogleUser = !!(
+    user?.data?.googleId ||
+    user?.data?.authProvider === "google" ||
+    user?.data?.loginType === "google"
+  );
+
   const hasFetchedProfile = useRef(false);
 
   // Fetch absolutely fresh data from database on mount (once only)
@@ -210,7 +217,24 @@ export default function ProviderProfilePage() {
           {/* Tab Content */}
           {activeTab === "profile" && <ProviderProfileInfoTab user={user} />}
           {activeTab === "wallet" && <ProviderWalletTab profile={profile} />}
-          {activeTab === "password" && <PasswordTab profile={profile} />}
+          {activeTab === "password" && (
+            isGoogleUser ? (
+              <div className="max-w-2xl py-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <img src="/Google.svg" alt="Google" className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Password management is not available
+                </h3>
+                <p className="text-sm text-gray-600 max-w-md mx-auto">
+                  You signed in with Google, so your account doesn't have a password.
+                  Your account security is managed through your Google account.
+                </p>
+              </div>
+            ) : (
+              <PasswordTab profile={profile} />
+            )
+          )}
           {activeTab === "service" && (
             <ProviderServiceProfileTab profile={profile} />
           )}
