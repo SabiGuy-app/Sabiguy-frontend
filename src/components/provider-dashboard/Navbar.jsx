@@ -256,19 +256,6 @@ export default function ProviderNavbar() {
     fetchNotifications();
   };
 
-  // Test notification (remove after debugging)
-  const testNotification = () => {
-    const testNotif = {
-      _id: Date.now().toString(),
-      title: "Test Notification",
-      message: "This is a test notification to verify the toast is working!",
-      type: "test",
-      read: false,
-      createdAt: new Date(),
-    };
-    showNotificationToast(testNotif);
-  };
-
   const toggleAvailability = async () => {
     const newAvailability = !isAvailable;
 

@@ -84,9 +84,6 @@ export default function TrackDelivery() {
 
   const [bookingStatus, setBookingStatus] = useState(initialStatus);
 
-  // const bookingId =
-  //   alert?.originalData?._id || alert?._id || bookingDetails?._id;
-
   const bookingId =
   alert?.id || alert?.originalData?._id || bookingDetails?._id
 
@@ -113,7 +110,14 @@ export default function TrackDelivery() {
     }).format(amount);
   };
 
-  const deliverySteps = [
+  const normalizedSubCategory = String(
+    alert?.originalData?.subCategory || bookingDetails?.subCategory || "",
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, " ");
+
+  const packageDeliverySteps = [
     {
       id: 1,
       title: "En route to pickup",
@@ -140,6 +144,39 @@ export default function TrackDelivery() {
       subtitle: "Package delivered",
     },
   ];
+
+  const bookARideSteps = [
+    {
+      id: 1,
+      title: "En route to pickup",
+      subtitle: "On the way to pickup",
+    },
+    {
+      id: 2,
+      title: "Arrived at pickup location",
+      subtitle: "At pickup point",
+    },
+    {
+      id: 3,
+      title: "En route to destination",
+      subtitle: "Leaving for dropoff location",
+    },
+    {
+      id: 4,
+      title: "Arrived at destination",
+      subtitle: "At dropoff location",
+    },
+    {
+      id: 5,
+      title: "Ride completed",
+      subtitle: "Ride completed",
+    },
+  ];
+
+  const deliverySteps =
+    normalizedSubCategory === "book a ride"
+      ? bookARideSteps
+      : packageDeliverySteps;
 console.log("alert:", routeLocation.state?.alert)
 
   const completedStepIds = STEPS_COMPLETED_BY_STATUS[bookingStatus] || [1];

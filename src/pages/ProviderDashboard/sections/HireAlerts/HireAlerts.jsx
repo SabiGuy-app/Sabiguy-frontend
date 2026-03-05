@@ -222,7 +222,8 @@ export default function HireAlerts() {
       user_accepted_completion: "Job Confirmed",
       funds_released: "Funds Released",
       paid_escrow: 'Paid Escrow',
-      payment_pending: 'Payment Pending'
+      payment_pending: 'Payment Pending',
+      user_accepted_completion: 'Completed',
 
     };
     const normalizedStatus = String(apiStatus || "").trim().toLowerCase();
@@ -300,7 +301,6 @@ export default function HireAlerts() {
 
     if (statusFilter === "active") {
       return (
-        status === "completed" ||
         status === "in progress" ||
         status === "paid escrow" ||
         status === "waiting confirmation" ||
@@ -319,6 +319,7 @@ export default function HireAlerts() {
       return (
        
         status === "funds released" ||
+        status === "completed" ||
         status === "job confirmed"
       );
     }
@@ -464,6 +465,8 @@ export default function HireAlerts() {
         onClose={handleCloseJob}
         job={selectedJob || {}}
         onRefresh={handleRefresh}
+       onMessageCustomer={handleMessageCustomer}
+
       />
 
       <MarkAsCompleted

@@ -3,6 +3,7 @@ import { FiMessageSquare, FiCalendar, FiBell } from "react-icons/fi";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuthStore } from "../../stores/auth.store";
 
 export default function NotificationDrawer({
   isOpen,
@@ -16,7 +17,13 @@ export default function NotificationDrawer({
 }) {
   const navigate = useNavigate();
   const [markingAsRead, setMarkingAsRead] = useState(null); // Track which notification is being marked as read
-  const [deleting, setDeleting] = useState(null); // Track which notification is being deleted
+  const [deleting, setDeleting] = useState(null); 
+  const user = useAuthStore((state) => state.user);
+  const isProvider = user?.data?.role === "provider";
+  const chatBase = isProvider ? "/dashboard/provider/chat" : "/dashboard/chat";
+
+
+
 
   // Filter to only show UNREAD notifications
   const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -92,13 +99,13 @@ export default function NotificationDrawer({
       notification.type === "message_received"
     ) {
       if (notification.messageId) {
-        navigate(`/dashboard/chat?messageId=${notification.messageId}`);
+        navigate(`${chatBase}?messageId=${notification.messageId}`);
       } else if (notification.data?.chatId) {
-        navigate(`/dashboard/chat?chatId=${notification.data.chatId}`);
+        navigate(`${chatBase}?chatId=${notification.data.chatId}`);
       } else if (notification.data?.bookingId) {
-        navigate(`/dashboard/chat?bookingId=${notification.data.bookingId}`);
+        navigate(`${chatBase}?bookingId=${notification.data.bookingId}`);
       } else {
-        navigate("/dashboard/chat");
+        navigate(chatBase);
       }
     }
 

@@ -10,7 +10,7 @@ import {
   Wrench,
 } from "lucide-react";
 
-export default function JobDetailsModal({ isOpen, onClose, job }) {
+export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustomer}) {
   const formatTitle = (value) =>
     String(value || "Untitled job")
       .split(" ")
@@ -90,13 +90,15 @@ export default function JobDetailsModal({ isOpen, onClose, job }) {
                   <PhoneCall className="w-4 h-4" />
                   Call
                 </button>
-                <button className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                <button 
+                className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                onClick={() => onMessageCustomer?.(job)}>
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </button>
-                <button className="px-5 py-2 mt-3 bg-white text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center gap-2">
+                {/* <button className="px-5 py-2 mt-3 bg-white text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center gap-2">
                   Cancel Request
-                </button>
+                </button> */}
               </div>
             </div>
 

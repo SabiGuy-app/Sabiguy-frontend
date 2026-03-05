@@ -80,7 +80,6 @@ export default function JobsCard({
     "arrived_at_pickup",
     "enroute_to_dropoff",
     "arrived_at_dropoff",
-    "completed",
   ].includes(bookingStatus);
 
   return (
@@ -104,7 +103,7 @@ export default function JobsCard({
                 {job?.status || "Pending"}
               </span>
               <div className="text-2xl font-bold text-[#2D6A3E]">NGN {Number(amount).toLocaleString()}</div>
-              <p className="text-sm text-gray-600">Delivery: {job?.originalData?.scheduleType || "N/A"}</p>
+              <p className="text-sm text-gray-600">Delivery: {formatTitle(job?.originalData?.scheduleType || "N/A")}</p>
             </div>
           </div>
 
@@ -153,7 +152,7 @@ export default function JobsCard({
               normalizedStatus === "awaiting_confirmation") && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">Completed {job?.completed || "recently"}</span>
+                <span className="font-medium">Completed {job?.completedAt || "recently"}</span>
               </div>
             )}
           </div>
@@ -162,7 +161,7 @@ export default function JobsCard({
             {normalizedStatus !== "completed" && (
               <button
                 onClick={() => onViewDetails(job)}
-                className="px-3 py-1 mt-3 bg-[#2D6A3E] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
+                className="px-3 py-2 mt-3 bg-[#2D6A3E] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
               >
                 View Details
               </button>
@@ -170,23 +169,32 @@ export default function JobsCard({
 
           {normalizedStatus === "awaiting_confirmation" && (
               <button
-                className="px-3 py-3 mt-3 bg-gray-100 text-black rounded-lg font-medium transition-colors"
+                className="px-3 py-2 mt-3 bg-gray-100 text-black rounded-lg font-medium transition-colors"
               >
                 Awaiting Customer's Review
               </button>
             )}
 
             {normalizedStatus === "completed" && (
-              <div className="mt-3">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-gray-500 mt-1 text-sm">He did a very good job</p>
-              </div>
-            )}
+  <div className="mt-3">
+    <div className="flex">
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className={`w-4 h-4 ${
+            i < (job?.originalData?.rating?.score || 0)
+              ? "fill-yellow-400 text-yellow-400"
+              : "text-gray-300"
+          }`}
+        />
+      ))}
+    </div>
 
+    <p className="text-gray-500 mt-1 text-sm">
+      {job?.originalData?.rating?.review || "No review available"}
+    </p>
+  </div>
+)}
             {normalizedStatus === "in_progress" && (
               <button
                 onClick={() => onMarkAsCompleted(job)}
@@ -203,7 +211,7 @@ export default function JobsCard({
             )}
 
             {normalizedStatus === "waiting_confirmation" && (
-              <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+              <button className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                 Awaiting customer's review
               </button>
             )}
@@ -224,6 +232,13 @@ export default function JobsCard({
               >
                   <MessageCircle className="w-4 h-4" />
                 Message
+              </button>
+            )}
+             {normalizedStatus === "awaiting_job_commencement" && (
+              <button
+                className="px-3 py-2 mt-3 bg-gray-50 text-[#DC2626] rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              >
+                Cancel
               </button>
             )}
           </div>
