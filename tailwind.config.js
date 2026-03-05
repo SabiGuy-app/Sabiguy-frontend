@@ -1,9 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-  "./index.html", // make sure index.html is included if using Vite
-  "./src/**/*.{js,ts,jsx,tsx,mdx}",
-],
+    "./index.html", // make sure index.html is included if using Vite
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
   theme: {
     extend: {
       colors: {
@@ -18,9 +18,9 @@ export default {
   },
   plugins: [],
   safelist: [
-  'bg-primary',
-  'hover:bg-primary',
-  'text-white',
-],
+    'bg-primary',
+    'hover:bg-primary',
+    'text-white',
+  ],
 };
 

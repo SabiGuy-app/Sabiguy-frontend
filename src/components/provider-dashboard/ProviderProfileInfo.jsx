@@ -190,7 +190,8 @@ export default function ProviderProfileInfoTab({ user }) {
             />
           </div>
         </div>
-        <CoverageRadius />
+        {/* <CoverageRadius /> */}
+        {/* Bio — commented out
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Bio
@@ -204,6 +205,7 @@ export default function ProviderProfileInfoTab({ user }) {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
           />
         </div>
+        */}
 
         <div className="flex justify-end mt-8">
           <button
