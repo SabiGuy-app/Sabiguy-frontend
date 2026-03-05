@@ -464,9 +464,9 @@ export default function ProviderServiceProfileTab({ profile, onProfileUpdate }) 
           </button>
         )}
 
+        {/* Add your Services & Pricing — commented out
         <div>
-
-          <p className="font-semibold text-xl">Add your Services & Pricing</p>
+          <p className="font-semibold text-xl">Add your Services &amp; Pricing</p>
           <p>List the services you offer and set fair prices so customers know what to expect.</p>
           <div className="flex flex-col gap-3 mt-3">
             {services.map((service, index) => (
@@ -502,6 +502,7 @@ export default function ProviderServiceProfileTab({ profile, onProfileUpdate }) 
           </button>
         </div>
         <h3 className="font-semibold border-t border-gray-300"></h3>
+        */}
 
 
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
