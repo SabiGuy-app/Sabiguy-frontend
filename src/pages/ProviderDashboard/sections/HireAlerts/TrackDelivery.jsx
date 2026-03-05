@@ -17,6 +17,7 @@ import { updateBookingStatus, markAsComplete } from "../../../../api/bookings";
 
 const STATUS_FLOW = {
   // current booking status -> what clicking the button SENDS to the API
+  enroute_to_pickup: "arrived_at_pickup",
   in_progress: "arrived_at_pickup",
   arrived_at_pickup: "enroute_to_dropoff",
   enroute_to_dropoff: "arrived_at_dropoff",
@@ -24,6 +25,7 @@ const STATUS_FLOW = {
 };
 
 const BUTTON_LABELS = {
+  enroute_to_pickup: "Arrived at Pickup",
   in_progress: "Arrived at Pickup",     // page mounts here
   arrived_at_pickup: "Start Trip",
   enroute_to_dropoff: "Arrived at Destination",
@@ -32,7 +34,8 @@ const BUTTON_LABELS = {
 
 // Which delivery steps are completed per status
 const STEPS_COMPLETED_BY_STATUS = {
-  in_progress: [1],                     // en route to pickup is already active on mount
+  enroute_to_pickup: [1],
+  in_progress: [1],                     
   arrived_at_pickup: [1, 2],
   enroute_to_dropoff: [1, 2, 3],
   arrived_at_dropoff: [1, 2, 3, 4],
@@ -42,6 +45,15 @@ const STEPS_COMPLETED_BY_STATUS = {
 export default function TrackDelivery() {
   const routeLocation = useLocation();
   const user = useAuthStore((state) => state.user);
+  const normalizeStatus = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+  const toCanonicalStatus = (value) => {
+    const normalized = normalizeStatus(value);
+    return normalized === "in_progress" ? "enroute_to_pickup" : normalized;
+  };
 
   const alert = routeLocation.state?.alert || {};
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] = useState(true);
@@ -56,7 +68,19 @@ export default function TrackDelivery() {
     {};
 
   // Track current booking status in local state so UI updates immediately
-  const initialStatus = "in_progress"; 
+  const routeStatus = toCanonicalStatus(routeLocation.state?.status);
+  const alertStatus = toCanonicalStatus(alert?.status || alert?.originalData?.status);
+  const initialStatusCandidate = routeStatus || alertStatus || "enroute_to_pickup";
+  const supportedStatuses = [
+    "enroute_to_pickup",
+    "arrived_at_pickup",
+    "enroute_to_dropoff",
+    "arrived_at_dropoff",
+    "completed",
+  ];
+  const initialStatus = supportedStatuses.includes(initialStatusCandidate)
+    ? initialStatusCandidate
+    : "enroute_to_pickup";
 
   const [bookingStatus, setBookingStatus] = useState(initialStatus);
 

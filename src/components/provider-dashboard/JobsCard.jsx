@@ -1,7 +1,13 @@
-import { Calendar, MapPin, Clock, Star } from "lucide-react";
+import { Calendar, MapPin, Clock, Star, MessageCircle } from "lucide-react";
 
 // Reusable Request Card Component
-export default function JobsCard({ job, onViewDetails, onMarkAsCompleted }) {
+export default function JobsCard({
+  job,
+  onViewDetails,
+  onMarkAsCompleted,
+  onShowNavigation,
+  onMessageCustomer,
+}) {
   const normalizedStatus = String(job?.status || "")
     .trim()
     .toLowerCase()
@@ -34,6 +40,10 @@ export default function JobsCard({ job, onViewDetails, onMarkAsCompleted }) {
       payment_pending: "bg-orange-100 text-orange-700 border-orange-200",
       active: "bg-blue-100 text-blue-600 border-blue-200",
       in_progress: "bg-blue-100 text-blue-800 border-blue-200",
+      enroute_to_pickup: "bg-blue-100 text-blue-800 border-blue-200",
+      enroute_to_dropoff: "bg-blue-100 text-blue-800 border-blue-200",
+      arrived_at_pickup: "bg-green-100 text-green-700 border-green-200",
+      arrived_at_dropoff: "bg-green-100 text-green-700 border-green-200",
       waiting_confirmation: "bg-orange-200 text-orange-800 border-orange-200",
       awaiting_confirmation: "bg-orange-200 text-orange-800 border-orange-200",
       awaiting_job_commencement: "bg-slate-100 text-slate-700 border-slate-200",
@@ -53,6 +63,25 @@ export default function JobsCard({ job, onViewDetails, onMarkAsCompleted }) {
   const dropoffAddress =
     job?.dropoffLocation?.address || job?.originalData?.dropoffLocation?.address || "N/A";
   const amount = job?.agreedPrice ?? job?.calculatedPrice ?? job?.price ?? 0;
+  const shouldShowNavigation =
+    normalizedStatus === "paid_escrow" ||
+    normalizedStatus === "in_progress" ||
+    normalizedStatus === "arrived_at_dropoff" ||
+    normalizedStatus === "enroute_to_dropoff" ||
+    normalizedStatus === "arrived_at_pickup" ||
+    normalizedStatus === "enroute_to_pickup";
+  const bookingStatus = String(job?.originalData?.status || job?.status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  const shouldShowMessageButton = [
+    "paid_escrow",
+    "in_progress",
+    "arrived_at_pickup",
+    "enroute_to_dropoff",
+    "arrived_at_dropoff",
+    "completed",
+  ].includes(bookingStatus);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
@@ -176,6 +205,25 @@ export default function JobsCard({ job, onViewDetails, onMarkAsCompleted }) {
             {normalizedStatus === "waiting_confirmation" && (
               <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                 Awaiting customer's review
+              </button>
+            )}
+
+            {shouldShowNavigation && (
+              <button
+                onClick={() => onShowNavigation?.(job)}
+                className="px-2 py-1 mt-3 bg-white text-[#2D6A3E] border border-[#2D6A3E] rounded-lg font-medium hover:bg-[#E6EFE9] transition-colors flex items-center gap-2"
+              >
+                Show navigation
+              </button>
+            )}
+
+            {shouldShowMessageButton && (
+              <button
+                onClick={() => onMessageCustomer?.(job)}
+              className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                  <MessageCircle className="w-4 h-4" />
+                Message
               </button>
             )}
           </div>

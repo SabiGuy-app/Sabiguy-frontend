@@ -59,7 +59,7 @@ export default function JobDetailsModal({ isOpen, onClose, job }) {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <img
-                    src={job?.originalData?.providerId?.profilePicture || "https://i.pravatar.cc/40"}
+                    src={job?.originalData?.providerId?.profilePicture || "/avatar.png"}
                     alt={job.providerName}
                     className="w-18 h-18 rounded-full object-cover"
                   />
