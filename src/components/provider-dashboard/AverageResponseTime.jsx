@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { 
-  FiChevronDown, 
-  FiTrendingUp, 
+import {
+  FiChevronDown,
+  FiTrendingUp,
   FiTrendingDown,
   FiCopy,
   FiCheckCircle,
@@ -11,7 +11,7 @@ import {
 import { FaPencilAlt, FaPaperPlane } from "react-icons/fa";
 
 function AverageResponseTime() {
-   const [timeRange, setTimeRange] = useState("Last 7 days");
+  const [timeRange, setTimeRange] = useState("Last 7 days");
 
   const weekData = [
     { day: "Mon", hours: 2.5 },
@@ -55,7 +55,7 @@ function AverageResponseTime() {
 
         {/* Line and area */}
         <div className="ml-8 relative" style={{ height: 'calc(100% - 32px)' }}>
-          <svg className="w-full h-full" preserveAspectRatio="none" style={{ display: 'block' }}>
+          <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none" style={{ display: 'block' }}>
             <defs>
               <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" style={{ stopColor: '#93C5FD', stopOpacity: 0.3 }} />
@@ -64,25 +64,25 @@ function AverageResponseTime() {
             </defs>
             {/* Area fill */}
             <path
-              d={`M 0,${(1 - weekData[0].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 1}%,${(1 - weekData[1].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 2}%,${(1 - weekData[2].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 3}%,${(1 - weekData[3].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 4}%,${(1 - weekData[4].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 5}%,${(1 - weekData[5].hours / maxHours) * 100}% 
-                  L 100%,${(1 - weekData[6].hours / maxHours) * 100}%
-                  L 100%,100% L 0,100% Z`}
+              d={`M 0,${(1 - weekData[0].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 1},${(1 - weekData[1].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 2},${(1 - weekData[2].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 3},${(1 - weekData[3].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 4},${(1 - weekData[4].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 5},${(1 - weekData[5].hours / maxHours) * 100} 
+                  L 100,${(1 - weekData[6].hours / maxHours) * 100}
+                  L 100,100 L 0,100 Z`}
               fill="url(#lineGradient)"
             />
             {/* Line */}
             <path
-              d={`M 0,${(1 - weekData[0].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 1}%,${(1 - weekData[1].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 2}%,${(1 - weekData[2].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 3}%,${(1 - weekData[3].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 4}%,${(1 - weekData[4].hours / maxHours) * 100}% 
-                  L ${(100 / 6) * 5}%,${(1 - weekData[5].hours / maxHours) * 100}% 
-                  L 100%,${(1 - weekData[6].hours / maxHours) * 100}%`}
+              d={`M 0,${(1 - weekData[0].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 1},${(1 - weekData[1].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 2},${(1 - weekData[2].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 3},${(1 - weekData[3].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 4},${(1 - weekData[4].hours / maxHours) * 100} 
+                  L ${(100 / 6) * 5},${(1 - weekData[5].hours / maxHours) * 100} 
+                  L 100,${(1 - weekData[6].hours / maxHours) * 100}`}
               stroke="#60A5FA"
               strokeWidth="2.5"
               fill="none"
@@ -90,7 +90,7 @@ function AverageResponseTime() {
               strokeLinejoin="round"
             />
           </svg>
-          
+
           {/* X-axis labels */}
           <div className="flex justify-between text-xs text-gray-600 mt-2 absolute bottom-0 left-0 right-0" style={{ bottom: '-28px' }}>
             {weekData.map((d, i) => (

@@ -16,6 +16,8 @@ import useBookingStore from "../../../../stores/booking.store";
 import { updateBookingStatus, markAsComplete } from "../../../../api/bookings";
 
 const STATUS_FLOW = {
+  // current booking status -> what clicking the button SENDS to the API
+  enroute_to_pickup: "arrived_at_pickup",
   in_progress: "arrived_at_pickup",
   arrived_at_pickup: "enroute_to_dropoff",
   enroute_to_dropoff: "arrived_at_dropoff",
@@ -23,14 +25,16 @@ const STATUS_FLOW = {
 };
 
 const BUTTON_LABELS = {
-  in_progress: "Arrived at Pickup",
+  enroute_to_pickup: "Arrived at Pickup",
+  in_progress: "Arrived at Pickup",     // page mounts here
   arrived_at_pickup: "Start Trip",
   enroute_to_dropoff: "Arrived at Destination",
   arrived_at_dropoff: "Complete Trip",
 };
 
 const STEPS_COMPLETED_BY_STATUS = {
-  in_progress: [1],
+  enroute_to_pickup: [1],
+  in_progress: [1],                     
   arrived_at_pickup: [1, 2],
   enroute_to_dropoff: [1, 2, 3],
   arrived_at_dropoff: [1, 2, 3, 4],
@@ -40,6 +44,15 @@ const STEPS_COMPLETED_BY_STATUS = {
 export default function TrackDelivery() {
   const routeLocation = useLocation();
   const user = useAuthStore((state) => state.user);
+  const normalizeStatus = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+  const toCanonicalStatus = (value) => {
+    const normalized = normalizeStatus(value);
+    return normalized === "in_progress" ? "enroute_to_pickup" : normalized;
+  };
 
   const alert = routeLocation.state?.alert || {};
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
@@ -56,7 +69,20 @@ export default function TrackDelivery() {
     booking?.data?.providers?.[0] ||
     {};
 
-  const initialStatus = "in_progress";
+  // Track current booking status in local state so UI updates immediately
+  const routeStatus = toCanonicalStatus(routeLocation.state?.status);
+  const alertStatus = toCanonicalStatus(alert?.status || alert?.originalData?.status);
+  const initialStatusCandidate = routeStatus || alertStatus || "enroute_to_pickup";
+  const supportedStatuses = [
+    "enroute_to_pickup",
+    "arrived_at_pickup",
+    "enroute_to_dropoff",
+    "arrived_at_dropoff",
+    "completed",
+  ];
+  const initialStatus = supportedStatuses.includes(initialStatusCandidate)
+    ? initialStatusCandidate
+    : "enroute_to_pickup";
 
   const [bookingStatus, setBookingStatus] = useState(initialStatus);
 
@@ -86,7 +112,14 @@ export default function TrackDelivery() {
     }).format(amount);
   };
 
-  const deliverySteps = [
+  const normalizedSubCategory = String(
+    alert?.originalData?.subCategory || bookingDetails?.subCategory || "",
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, " ");
+
+  const packageDeliverySteps = [
     {
       id: 1,
       title: "En route to pickup",
@@ -113,7 +146,40 @@ export default function TrackDelivery() {
       subtitle: "Package delivered",
     },
   ];
-  console.log("alert:", routeLocation.state?.alert);
+
+  const bookARideSteps = [
+    {
+      id: 1,
+      title: "En route to pickup",
+      subtitle: "On the way to pickup",
+    },
+    {
+      id: 2,
+      title: "Arrived at pickup location",
+      subtitle: "At pickup point",
+    },
+    {
+      id: 3,
+      title: "En route to destination",
+      subtitle: "Leaving for dropoff location",
+    },
+    {
+      id: 4,
+      title: "Arrived at destination",
+      subtitle: "At dropoff location",
+    },
+    {
+      id: 5,
+      title: "Ride completed",
+      subtitle: "Ride completed",
+    },
+  ];
+
+  const deliverySteps =
+    normalizedSubCategory === "book a ride"
+      ? bookARideSteps
+      : packageDeliverySteps;
+console.log("alert:", routeLocation.state?.alert)
 
   const completedStepIds = STEPS_COMPLETED_BY_STATUS[bookingStatus] || [1];
 

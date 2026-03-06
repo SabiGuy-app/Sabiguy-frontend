@@ -256,19 +256,6 @@ export default function ProviderNavbar() {
     fetchNotifications();
   };
 
-  // Test notification (remove after debugging)
-  const testNotification = () => {
-    const testNotif = {
-      _id: Date.now().toString(),
-      title: "Test Notification",
-      message: "This is a test notification to verify the toast is working!",
-      type: "test",
-      read: false,
-      createdAt: new Date(),
-    };
-    showNotificationToast(testNotif);
-  };
-
   const toggleAvailability = async () => {
     const newAvailability = !isAvailable;
 
@@ -365,7 +352,7 @@ export default function ProviderNavbar() {
           className="hidden sm:block text-xl sm:text-2xl md:text-3xl font-bold text-[#005823]"
           onClick={() => navigate("/dashboard/provider")}
         >
-          SabiGuy
+          <img src="/logo.jpg" alt="SabiGuy Logo" className="h-8 w-auto" />
         </button>
 
         {/* Desktop Search */}
@@ -394,9 +381,8 @@ export default function ProviderNavbar() {
                 <MapPin size={14} className="text-green-500 animate-pulse" />
               )}
               <span
-                className={`text-xs font-medium transition-colors ${
-                  isAvailable ? "text-gray-700" : "text-gray-400"
-                }`}
+                className={`text-xs font-medium transition-colors ${isAvailable ? "text-gray-700" : "text-gray-400"
+                  }`}
               >
                 {isAvailable
                   ? locationEnabled
@@ -409,9 +395,8 @@ export default function ProviderNavbar() {
             <button
               onClick={toggleAvailability}
               disabled={updatingAvailability}
-              className={`relative w-11 h-6 rounded-full transition-all duration-300 ${
-                isAvailable ? "bg-green-500" : "bg-gray-300"
-              } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`relative w-11 h-6 rounded-full transition-all duration-300 ${isAvailable ? "bg-green-500" : "bg-gray-300"
+                } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label="Toggle availability and location"
               title={
                 isAvailable
@@ -425,9 +410,8 @@ export default function ProviderNavbar() {
                 </div>
               ) : (
                 <div
-                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${
-                    isAvailable ? "translate-x-6" : "translate-x-0.5"
-                  }`}
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${isAvailable ? "translate-x-6" : "translate-x-0.5"
+                    }`}
                 />
               )}
             </button>
@@ -499,9 +483,8 @@ export default function ProviderNavbar() {
               <div className="mb-6 p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200">
                   <span
-                    className={`text-[10px] sm:text-xs font-medium transition-colors hidden sm:block ${
-                      isAvailable ? "text-gray-700" : "text-gray-400"
-                    }`}
+                    className={`text-[10px] sm:text-xs font-medium transition-colors hidden sm:block ${isAvailable ? "text-gray-700" : "text-gray-400"
+                      }`}
                   >
                     {isAvailable ? "Available for Jobs" : "Not Available"}
                   </span>
@@ -509,16 +492,14 @@ export default function ProviderNavbar() {
                 <button
                   onClick={toggleAvailability}
                   disabled={updatingAvailability}
-                  className={`relative w-full h-8 rounded-full transition-all duration-300 ${
-                    isAvailable ? "bg-green-500" : "bg-gray-300"
-                  } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`relative w-full h-8 rounded-full transition-all duration-300 ${isAvailable ? "bg-green-500" : "bg-gray-300"
+                    } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <div
-                    className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
-                      isAvailable
+                    className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${isAvailable
                         ? "translate-x-[calc(100%-1.75rem)]"
                         : "translate-x-1"
-                    }`}
+                      }`}
                   />
                 </button>
               </div>

@@ -1,50 +1,34 @@
 import { useState, useEffect } from "react";
 import {
-  FiChevronDown,
-  FiTrendingUp,
-  FiTrendingDown,
   FiCopy,
-  FiCheckCircle,
   FiArrowUpRight,
-  FiArrowDownLeft
 } from "react-icons/fi";
-import { FaPencilAlt, FaPaperPlane } from "react-icons/fa";
 import { getWalletBalance, formatCurrency } from "../../api/provider";
+import WithdrawFundsModal from "./WithdrawFundModal";
 
 export default function WalletCard() {
   const [walletData, setWalletData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+
+  const fetchWalletBalance = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await getWalletBalance({ bustCache: true });
+      const data = response.data?.data || response.data || response;
+      setWalletData(data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load wallet data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchWalletBalance = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await getWalletBalance({ bustCache: true });
-        console.log("🔍 Wallet API Full Response:", response);
-
-        // Handle nested data structure
-        const data = response.data?.data || response.data || response;
-        console.log("💰 Extracted Wallet Data:", data);
-        console.log("💵 Available Balance:", data?.available);
-        console.log("⏳ Pending:", data?.pending);
-        console.log("📤 Total Withdrawals:", data?.totalWithdrawals);
-
-        setWalletData(data);
-      } catch (err) {
-        console.error("❌ Error fetching wallet balance:", err);
-        console.error("❌ Error response:", err.response);
-        setError(err.response?.data?.message || "Failed to load wallet data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchWalletBalance();
   }, []);
-
-  // Removed loading skeleton - wallet displays immediately with default values
 
   if (error) {
     return (
@@ -67,7 +51,10 @@ export default function WalletCard() {
           </button>
         </div>
         <h2 className="text-3xl font-bold text-gray-900 mb-4">{formatCurrency(balance)}</h2>
-        <button className="w-full px-4 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors flex items-center justify-center gap-2">
+        <button
+          onClick={() => setIsWithdrawOpen(true)}
+          className="w-full px-4 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors flex items-center justify-center gap-2"
+        >
           <FiArrowUpRight size={18} />
           Withdraw
         </button>
@@ -83,6 +70,15 @@ export default function WalletCard() {
           <p className="text-lg font-semibold text-gray-900">{formatCurrency(walletData?.pending || 0)}</p>
         </div>
       </div>
+
+      <WithdrawFundsModal
+        isOpen={isWithdrawOpen}
+        onClose={() => {
+          setIsWithdrawOpen(false);
+          fetchWalletBalance(); // Refresh balance after withdrawal
+        }}
+        availableBalance={balance}
+      />
     </div>
   );
 }

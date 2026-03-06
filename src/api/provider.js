@@ -72,17 +72,42 @@ export const getWalletTransactions = async (page = 1, limit = 10, type = "") => 
     return data;
 };
 
-export const payWithWallet = async (bookingId, amount) => {
-    const payload = { bookingId };
-    if (amount) payload.amount = amount;
-    const { data } = await api.post("/wallet/pay", payload);
+export const withdrawFromWallet = async (amount) => {
+    // Swagger: POST /api/v1/payment/withdraw-fund
+    // Body: { amount } | Response: { success, message, data }
+    const { data } = await api.post("/payment/withdraw-fund", { amount });
     return data;
 };
 
-export const payBookingOnline = async (bookingId, amount) => {
-    const callbackUrl = `${window.location.origin}/wallet/funding/callback?bookingId=${bookingId}`;
-    const value = typeof amount === "string" ? parseFloat(amount.replace(/[^0-9.]/g, "")) : amount;
-    const { data } = await api.post("/wallet/fund", { amount: Number(value), callbackUrl, bookingId });
+
+export const getProviderProfile = async () => {
+    // Correct endpoint based on swagger
+    const { data } = await api.get("/provider/profile");
+    return data;
+};
+
+export const updateProviderProfile = async (profileData) => {
+    const { data } = await api.put("/provider/profile", profileData);
+    return data;
+};
+
+export const updateProviderBankInfo = async (bankData) => {
+    const { data } = await api.put("/provider/bank-info", bankData);
+    return data;
+};
+
+export const updateProviderWorkVisuals = async (visualsData) => {
+    const { data } = await api.put("/provider/work-visuals", visualsData);
+    return data;
+};
+
+export const updateProviderLocation = async (locationData) => {
+    const { data } = await api.put("/provider/location", locationData);
+    return data;
+};
+
+export const updateProviderProfilePic = async (picData) => {
+    const { data } = await api.put("/provider/profile-pic", picData);
     return data;
 };
 

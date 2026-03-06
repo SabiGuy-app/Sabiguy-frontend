@@ -7,7 +7,7 @@ import AlertDetailsModal from "./AlertDetails";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import { getProviderBookings } from "../../../../api/provider";
-import { getAllBookings, acceptBookings, startJob } from "../../../../api/bookings";
+import { getAllBookings, acceptBookings} from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
 
 
@@ -26,7 +26,6 @@ export default function HireAlerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
-  const [startJobAlertId, setStartJobAlertId] = useState(null);
 
 
 
@@ -114,6 +113,8 @@ export default function HireAlerts() {
         title: booking.title || formattedSubCategory || booking.serviceType || "Untitled job",
         price:
           booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
+        calculatedPrice: booking.calculatedPrice || booking.agreedPrice || booking.budget || 0,
+        agreedPrice: booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
         deliveryDate: booking.endDate
           ? new Date(booking.endDate).toLocaleDateString("en-US", {
             month: "short",
@@ -141,6 +142,12 @@ export default function HireAlerts() {
               : "TBD",
         location:
           booking.location?.address || booking.pickupLocation?.address || "N/A",
+        pickupLocation: booking.pickupLocation || null,
+        dropoffLocation: booking.dropoffLocation || null,
+        scheduleType: booking.scheduleType || "N/A",
+        createdAt: booking.createdAt || null,
+        modeOfDelivery: booking.modeOfDelivery || "",
+        distance: booking.distance || null,
         // Store original data for modal details
         originalData: booking,
       };
@@ -204,7 +211,10 @@ export default function HireAlerts() {
   const mapJobStatus = (apiStatus) => {
     const statusMap = {
       provider_selected: "Awaiting Job Commencement",
-      in_progress: "In Progress",
+      in_progress: "Enroute to Pickup",
+      arrived_at_dropoff: "Arrived at Dropoff",
+      arrived_at_pickup: "Arrived at Pickup",
+      enroute_to_dropoff: "Enroute to Dropoff",
       waiting_confirmation: "Waiting confirmation",
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
@@ -212,7 +222,8 @@ export default function HireAlerts() {
       user_accepted_completion: "Job Confirmed",
       funds_released: "Funds Released",
       paid_escrow: 'Paid Escrow',
-      payment_pending: 'Payment Pending'
+      payment_pending: 'Payment Pending',
+      user_accepted_completion: 'Completed',
 
     };
     const normalizedStatus = String(apiStatus || "").trim().toLowerCase();
@@ -290,7 +301,6 @@ export default function HireAlerts() {
 
     if (statusFilter === "active") {
       return (
-        status === "completed" ||
         status === "in progress" ||
         status === "paid escrow" ||
         status === "waiting confirmation" ||
@@ -309,6 +319,7 @@ export default function HireAlerts() {
       return (
        
         status === "funds released" ||
+        status === "completed" ||
         status === "job confirmed"
       );
     }
@@ -349,6 +360,45 @@ export default function HireAlerts() {
 
   const handleRefresh = () => {
     fetchBookings();
+  };
+
+  const handleShowNavigation = (job) => {
+    const rawStatus = String(job?.status || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+    const normalizedStatus =
+      rawStatus === "in_progress" ? "enroute_to_pickup" : rawStatus;
+
+    if (normalizedStatus === "paid_escrow") {
+      navigate("/dashboard/provider/start-navigation", {
+        state: { alert: job },
+      });
+      return;
+    }
+
+    if (
+      normalizedStatus === "arrived_at_dropoff" ||
+      normalizedStatus === "enroute_to_dropoff" ||
+      normalizedStatus === "arrived_at_pickup" ||
+      normalizedStatus === "enroute_to_pickup"
+    ) {
+      navigate("/dashboard/provider/track-delivery", {
+        state: { alert: job, status: normalizedStatus },
+      });
+    }
+  };
+
+  const handleMessageCustomer = (job) => {
+    const booking = job?.originalData || {};
+    const bookingId = booking?._id || job?.id;
+    const customer = booking?.userId || null;
+
+    if (!bookingId) return;
+
+    navigate(`/dashboard/provider/chat?bookingId=${bookingId}`, {
+      state: { booking, customer },
+    });
   };
 
   const handleAcceptBooking = async (alert) => {
@@ -415,6 +465,8 @@ export default function HireAlerts() {
         onClose={handleCloseJob}
         job={selectedJob || {}}
         onRefresh={handleRefresh}
+       onMessageCustomer={handleMessageCustomer}
+
       />
 
       <MarkAsCompleted
@@ -492,6 +544,8 @@ export default function HireAlerts() {
                   job={job}
                   onViewDetails={handleViewJob}
                   onMarkAsCompleted={handleMark}
+                  onShowNavigation={handleShowNavigation}
+                  onMessageCustomer={handleMessageCustomer}
                 />
               ))
             ) : (

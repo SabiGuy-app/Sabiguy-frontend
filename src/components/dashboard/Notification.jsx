@@ -1,8 +1,10 @@
-import { X, Trash2, Check, Loader2 } from "lucide-react";
+import { X, Trash2, Check, Loader2, Eye } from "lucide-react";
 import { FiMessageSquare, FiCalendar, FiBell } from "react-icons/fi";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuthStore } from "../../stores/auth.store";
+import ActivityDetailsModal from "./ActivityDetailsModal";
 
 export default function NotificationDrawer({
   isOpen,
@@ -16,7 +18,14 @@ export default function NotificationDrawer({
 }) {
   const navigate = useNavigate();
   const [markingAsRead, setMarkingAsRead] = useState(null); // Track which notification is being marked as read
-  const [deleting, setDeleting] = useState(null); // Track which notification is being deleted
+  const [deleting, setDeleting] = useState(null); 
+  const [selectedNotification, setSelectedNotification] = useState(null); 
+  const user = useAuthStore((state) => state.user);
+  const isProvider = user?.data?.role === "provider";
+  const chatBase = isProvider ? "/dashboard/provider/chat" : "/dashboard/chat";
+
+
+
 
   // Filter to only show UNREAD notifications
   const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -92,18 +101,26 @@ export default function NotificationDrawer({
       notification.type === "message_received"
     ) {
       if (notification.messageId) {
-        navigate(`/dashboard/chat?messageId=${notification.messageId}`);
+        navigate(`${chatBase}?messageId=${notification.messageId}`);
       } else if (notification.data?.chatId) {
-        navigate(`/dashboard/chat?chatId=${notification.data.chatId}`);
+        navigate(`${chatBase}?chatId=${notification.data.chatId}`);
       } else if (notification.data?.bookingId) {
-        navigate(`/dashboard/chat?bookingId=${notification.data.bookingId}`);
+        navigate(`${chatBase}?bookingId=${notification.data.bookingId}`);
       } else {
-        navigate("/dashboard/chat");
+        navigate(chatBase);
       }
     }
 
     // Reset marking state
     setMarkingAsRead(null);
+  };
+
+  const handleViewDetails = async (e, notification) => {
+    e.stopPropagation();
+    // Close the drawer first so modal is fully visible
+    onClose();
+    // Open the details modal (do NOT mark as read — let user do that explicitly)
+    setSelectedNotification(notification);
   };
 
   const handleMarkAsRead = async (e, notificationId) => {
@@ -128,11 +145,10 @@ export default function NotificationDrawer({
     return (
       <div
         onClick={() => !isProcessing && handleNotificationClick(notification)}
-        className={`flex items-start gap-4 p-4 rounded-lg transition-all cursor-pointer relative group ${
-          isProcessing
-            ? "opacity-50 bg-gray-100"
-            : "hover:bg-gray-50 bg-blue-50"
-        }`}
+        className={`flex items-start gap-4 p-4 rounded-lg transition-all cursor-pointer relative group ${isProcessing
+          ? "opacity-50 bg-gray-100"
+          : "hover:bg-gray-50 bg-blue-50"
+          }`}
       >
         <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
           {getIcon(notification.type)}
@@ -169,6 +185,13 @@ export default function NotificationDrawer({
           {/* Action buttons - only show when not processing */}
           {!isProcessing && (
             <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={(e) => handleViewDetails(e, notification)}
+                className="text-xs text-[#005823] hover:underline flex items-center gap-1 font-medium"
+              >
+                <Eye size={14} />
+                View Details
+              </button>
               <button
                 onClick={(e) => handleMarkAsRead(e, notification._id)}
                 className="text-xs text-[#005823] hover:underline flex items-center gap-1"
@@ -303,6 +326,13 @@ export default function NotificationDrawer({
           )}
         </div>
       </div>
+
+      {/* Activity Details Modal */}
+      <ActivityDetailsModal
+        isOpen={!!selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+        notification={selectedNotification}
+      />
     </>
   );
 }

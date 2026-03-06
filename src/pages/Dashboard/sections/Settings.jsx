@@ -15,6 +15,13 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const user = useAuthStore((state) => state.user);
 
+  // Detect if user signed up via Google (no password to manage)
+  const isGoogleUser = !!(
+    user?.data?.googleId ||
+    user?.data?.authProvider === "google" ||
+    user?.data?.loginType === "google"
+  );
+
   // Mock profile data
   const profile = {
     name: "Stephen Gerrad",
@@ -29,6 +36,16 @@ export default function ProfilePage() {
     avatar: null,
   };
 
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-20">
+          <div className="h-8 w-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       {/* Header */}
@@ -42,10 +59,10 @@ export default function ProfilePage() {
             <div className="flex items-center gap-4">
               {/* Avatar */}
               <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                {user.data?.profilePicture ? (
+                {user?.data?.profilePicture ? (
                   <img
-                    src={user.data?.profilePicture}
-                    alt={user.data?.fullName}
+                    src={user?.data?.profilePicture}
+                    alt={user?.data?.fullName}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -56,25 +73,23 @@ export default function ProfilePage() {
               {/* User Info */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                  {user.data?.fullName}
+                  {user?.data?.fullName}
                 </h2>
-                <p className="text-sm text-gray-600 mb-1">{user.data?.email}</p>
+                <p className="text-sm text-gray-600 mb-1">{user?.data?.email}</p>
                 <p className="text-sm text-gray-600">
-                  {user.data?.phoneNumber}
+                  {user?.data?.phoneNumber}
                 </p>
               </div>
             </div>
 
-            {/* Middle - Rating */}
-            <div className="flex flex-col items-start md:items-center">
+            {/* <div className="flex flex-col items-start md:items-center">
               <span className="text-sm text-gray-600 mb-2">Overall Rating</span>
               <StarRating rating={profile.rating} />
             </div>
 
-            {/* Right Side - Edit Button */}
             <button className="p-2 bg-[#8BC53F] text-white font-medium rounded-lg hover:bg-[#7ab335] transition-colors self-start md:self-center">
               Edit Profile
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -85,7 +100,24 @@ export default function ProfilePage() {
           {/* Tab Content */}
           {activeTab === "profile" && <ProfileInfoTab user={user} />}
           {activeTab === "wallet" && <WalletTab />}
-          {activeTab === "password" && <PasswordTab />}
+          {activeTab === "password" && (
+            isGoogleUser ? (
+              <div className="max-w-2xl py-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <img src="/Google.svg" alt="Google" className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Password management is not available
+                </h3>
+                <p className="text-sm text-gray-600 max-w-md mx-auto">
+                  You signed in with Google, so your account doesn't have a password.
+                  Your account security is managed through your Google account.
+                </p>
+              </div>
+            ) : (
+              <PasswordTab />
+            )
+          )}
           {activeTab === "settings" && <SettingsTab />}
           {activeTab === "referrals" && <ReferralsTab profile={profile} />}
         </div>

@@ -10,8 +10,27 @@ import {
   Wrench,
 } from "lucide-react";
 
-export default function JobDetailsModal({ isOpen, onClose, job }) {
+export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustomer}) {
+  const formatTitle = (value) =>
+    String(value || "Untitled job")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   if (!isOpen) return null;
+
+  const formatDateTime = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   return (
     <div>
@@ -34,13 +53,13 @@ export default function JobDetailsModal({ isOpen, onClose, job }) {
           <div className="p-6 space-y-6">
             {/* Service Title */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">{job.title}</h3>
+              <h3 className="text-lg font-semibold mb-4">{formatTitle(job?.title)}</h3>
 
               {/* Provider Info */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <img
-                    src={job.providerImage || "https://i.pravatar.cc/40"}
+                    src={job?.originalData?.providerId?.profilePicture || "/avatar.png"}
                     alt={job.providerName}
                     className="w-18 h-18 rounded-full object-cover"
                   />
@@ -64,21 +83,22 @@ export default function JobDetailsModal({ isOpen, onClose, job }) {
 
                 {/* Status Badge */}
                 <span className="px-3 py-1 bg-green-100 text-sm font-medium rounded-full border border-green-200">
-                  Active Booking
-                </span>
+{job.status}                </span>
               </div>
               <div className="flex mt-3 gap-8">
                 <button className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                   <PhoneCall className="w-4 h-4" />
                   Call
                 </button>
-                <button className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                <button 
+                className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                onClick={() => onMessageCustomer?.(job)}>
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </button>
-                <button className="px-5 py-2 mt-3 bg-white text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center gap-2">
+                {/* <button className="px-5 py-2 mt-3 bg-white text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center gap-2">
                   Cancel Request
-                </button>
+                </button> */}
               </div>
             </div>
 
@@ -93,7 +113,7 @@ export default function JobDetailsModal({ isOpen, onClose, job }) {
                     <p className="text-sm font-medium text-gray-700">
                       Service Type
                     </p>
-                    <p className="text-sm text-gray-600">{job.title}</p>
+                    <p className="text-sm text-gray-600">{formatTitle(job?.title)}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -102,7 +122,8 @@ export default function JobDetailsModal({ isOpen, onClose, job }) {
                     <p className="text-sm font-medium text-gray-700">
                       Start Date & Time
                     </p>
-                    <p className="text-sm text-gray-600">{job.scheduledDate}</p>
+                    <p className="text-sm text-gray-600">{formatDateTime(job?.createdAt || job?.originalData?.createdAt)}
+</p>
                   </div>
                 </div>
 

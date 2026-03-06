@@ -11,3 +11,8 @@ export const verifyPayment = async (reference) => {
     const { data } = await api.get(`/payment/verify/${reference}`);
     return data;
 };
+
+export const payWithWallet = async (bookingId) => {
+    const { data } = await api.post("/wallet/pay", { bookingId });
+    return data;
+};
