@@ -11,7 +11,11 @@ import { useState } from "react";
 import distance from "/distance.png";
 
 // Reusable Request Card Component
-export default function RequestCard({ request, onViewDetails }) {
+export default function RequestCard({
+  request,
+  onViewDetails,
+  onTrackProvider,
+}) {
   const getStatusStyles = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-[#FFC107] border-yellow-200",
@@ -25,14 +29,21 @@ export default function RequestCard({ request, onViewDetails }) {
     return styles[status.toLowerCase()] || styles.pending;
   };
 
+  console.log(request);
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
       <div className="flex-1">
-        <div className="flex border-b pb-3 border-[#231F2080]">
+        <div className="flex gap-2 border-b pb-3 border-[#231F2080]">
           <img
-            src={request.providerImage || "/api/placeholder/80/80"}
+            src={
+              request.providerImage &&
+              request.providerImage !== "/api/placeholder/80/80"
+                ? request.providerImage
+                : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
+            }
             alt={request.providerName}
-            className="w-16 h-16 rounded-full object-cover"
+            className="w-10 h-10 rounded-full object-cover"
           />
           <div className="w-full">
             <div className="flex justify-between mb-2 w-full">
@@ -132,13 +143,16 @@ export default function RequestCard({ request, onViewDetails }) {
           >
             View Details
           </button>
-          {request.status.toLowerCase() === "paid_escrow" && (
-            <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+          {request.status.toLowerCase() !== "completed" && (
+            <button
+              onClick={() => onTrackProvider(request.id)} // ← was empty before
+              className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+            >
               <Send className="w-4 h-4" />
               Track provider
             </button>
           )}
-          {request.status.toLowerCase() !== "paid_escrow" && (
+          {request.status.toLowerCase() !== "completed" && (
             <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
               Message Provider
@@ -165,7 +179,7 @@ export default function RequestCard({ request, onViewDetails }) {
                 </div>
               ) : (
                 <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
-                  Leave review
+                  Accept Job Completion
                 </button>
               )}
             </>
