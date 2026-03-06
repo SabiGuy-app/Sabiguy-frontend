@@ -16,7 +16,6 @@ const useBookingStore = create(
             ...newBooking,
             data: {
               ...newBooking?.data,
-              // ✅ Keep existing providers if new data doesn't have them
               providers: incomingProviders?.length ? incomingProviders : existingProviders,
             },
           },

@@ -9,11 +9,11 @@ import {
   Shield,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import Navbar from "../../../../components/dashboard/Navbar";
 import location from "/location.png";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { updateBookingStatus, markAsComplete } from "../../../../api/bookings";
+import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
 
 const STATUS_FLOW = {
   // current booking status -> what clicking the button SENDS to the API
@@ -26,7 +26,7 @@ const STATUS_FLOW = {
 
 const BUTTON_LABELS = {
   enroute_to_pickup: "Arrived at Pickup",
-  in_progress: "Arrived at Pickup",     // page mounts here
+  in_progress: "Arrived at Pickup", // page mounts here
   arrived_at_pickup: "Start Trip",
   enroute_to_dropoff: "Arrived at Destination",
   arrived_at_dropoff: "Complete Trip",
@@ -34,7 +34,7 @@ const BUTTON_LABELS = {
 
 const STEPS_COMPLETED_BY_STATUS = {
   enroute_to_pickup: [1],
-  in_progress: [1],                     
+  in_progress: [1],
   arrived_at_pickup: [1, 2],
   enroute_to_dropoff: [1, 2, 3],
   arrived_at_dropoff: [1, 2, 3, 4],
@@ -71,8 +71,11 @@ export default function TrackDelivery() {
 
   // Track current booking status in local state so UI updates immediately
   const routeStatus = toCanonicalStatus(routeLocation.state?.status);
-  const alertStatus = toCanonicalStatus(alert?.status || alert?.originalData?.status);
-  const initialStatusCandidate = routeStatus || alertStatus || "enroute_to_pickup";
+  const alertStatus = toCanonicalStatus(
+    alert?.status || alert?.originalData?.status,
+  );
+  const initialStatusCandidate =
+    routeStatus || alertStatus || "enroute_to_pickup";
   const supportedStatuses = [
     "enroute_to_pickup",
     "arrived_at_pickup",
@@ -179,7 +182,7 @@ export default function TrackDelivery() {
     normalizedSubCategory === "book a ride"
       ? bookARideSteps
       : packageDeliverySteps;
-console.log("alert:", routeLocation.state?.alert)
+  console.log("alert:", routeLocation.state?.alert);
 
   const completedStepIds = STEPS_COMPLETED_BY_STATUS[bookingStatus] || [1];
 
@@ -217,7 +220,7 @@ console.log("alert:", routeLocation.state?.alert)
 
   return (
     <>
-      <Navbar />
+      <ProviderNavbar />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
         <div>
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
