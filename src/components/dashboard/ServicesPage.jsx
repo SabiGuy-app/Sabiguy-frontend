@@ -3,19 +3,17 @@ import ProviderCard from "./ProviderCard";
 import Breadcrumbs from "./BreadCrumbs";
 import { Home, ChevronRight } from "lucide-react";
 
-export default function ServicesPage ({
-    title,
-    description,
-    providers,
-    breadcrumbs,
-})  {
-    return (
+export default function ServicesPage({
+  title,
+  description,
+  providers,
+  breadcrumbs,
+}) {
+  return (
     <>
-    
       <Navbar />
 
       <div className="px-9 py-8">
-
         {/* Use reusable Breadcrumbs */}
         <Breadcrumbs paths={breadcrumbs} />
 
@@ -40,10 +38,10 @@ export default function ServicesPage ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {providers.map((item, idx) => (
-              <ProviderCard key={item._id || item.id || idx} {...item} />
-            ))}
+            <ProviderCard key={item._id || item.id || idx} {...item} />
+          ))}
         </div>
       </div>
     </>
-    );
+  );
 }
