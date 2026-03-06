@@ -22,7 +22,6 @@ export default function StartNavigation() {
   const user = useAuthStore((state) => state.user);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
-  
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
@@ -57,7 +56,7 @@ export default function StartNavigation() {
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
         <div className="">
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
-{alert?.subCategory}
+            {alert?.subCategory}
           </h1>
 
           <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
@@ -67,7 +66,9 @@ export default function StartNavigation() {
               </div>
               <div>
                 <span className="text-[#231F2080] text-[16px]">Pickup</span>
-                <p className="text-[#231F20BF] text-[20px]">{alert?.originalData?.pickupLocation?.address}</p>
+                <p className="text-[#231F20BF] text-[20px]">
+                  {alert?.originalData?.pickupLocation?.address}
+                </p>
               </div>
             </div>
 
@@ -77,7 +78,9 @@ export default function StartNavigation() {
               </div>
               <div>
                 <span className="text-[#231F2080] text-[16px]">Dropoff</span>
-                <p className="text-[#231F20BF] text-[20px]">{alert?.originalData?.dropoffLocation?.address}</p>
+                <p className="text-[#231F20BF] text-[20px]">
+                  {alert?.originalData?.dropoffLocation?.address}
+                </p>
               </div>
             </div>
           </div>
@@ -89,13 +92,13 @@ export default function StartNavigation() {
                   user?.data?.profilePicture ||
                   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
                 }
-                alt={ user?.data?.fullName || "Provider"}
+                alt={user?.data?.fullName || "Provider"}
                 className="w-14 h-14 rounded-full object-cover"
               />
               <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="font-semibold text-[20px] text-[#231F20]">
-                    { user?.data?.fullName || "Provider"}
+                    {user?.data?.fullName || "Provider"}
                   </span>
                   <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-[#8BC53F] text-xs font-medium rounded">
                     <Shield className="w-3 h-3" /> Verified
@@ -114,12 +117,12 @@ export default function StartNavigation() {
                 <div className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                   <span className="text-sm font-medium text-gray-900">
-                    { user?.data?.rating?.average > 0
-                      ?  user?.data?.rating.average.toFixed(1)
+                    {user?.data?.rating?.average > 0
+                      ? user?.data?.rating.average.toFixed(1)
                       : "New"}
                   </span>
                   <span className="text-xs text-gray-500">
-                    ({ user?.data?.rating?.count ?? 0} reviews)
+                    ({user?.data?.rating?.count ?? 0} reviews)
                   </span>
                 </div>
               </div>
@@ -157,9 +160,7 @@ export default function StartNavigation() {
               </span>
             </div>
           </div>
-          {error && (
-            <p className="text-sm text-red-600 mb-3">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
           <button
             onClick={handleStartNavigation}
             disabled={starting}
@@ -167,7 +168,7 @@ export default function StartNavigation() {
           >
             {starting ? "Starting..." : "Start Navigation"}
           </button>
-          </div>      
+        </div>
 
         <div>
           <img src={location} alt="" className="w-[700px] h-[660px]" />

@@ -86,7 +86,7 @@ export const updateBookingStatus = async (bookingId, status) => {
     `/provider/bookings/${bookingId}/status`,
     {},
     {
-            params: { status },
+      params: { status },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -98,7 +98,7 @@ export const updateBookingStatus = async (bookingId, status) => {
 
 export const markAsComplete = async (bookingId) => {
   const token = localStorage.getItem("token");
-  const { data } = await api.patch( 
+  const { data } = await api.patch(
     `/provider/bookings/${bookingId}/complete`,
     {},
     {
@@ -132,10 +132,11 @@ export const getUserBookings = async () => {
 
   return data;
 };
-export const allowSystem = async (allowSystem) => { 
-   const token = localStorage.getItem("token");
-   const { data } = await api.put(
-    '/bookings/allow-system',
+
+export const allowSystem = async (allowSystem) => {
+  const token = localStorage.getItem("token");
+  const { data } = await api.put(
+    "/bookings/allow-system",
     {
       allowSystem,
     },
@@ -146,8 +147,7 @@ export const allowSystem = async (allowSystem) => {
     },
   );
   return data;
-
-}
+};
 export const selectProvider = async (bookingId, providerId) => {
   const token = localStorage.getItem("token");
   const { data } = await api.put(
