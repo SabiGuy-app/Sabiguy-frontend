@@ -172,7 +172,7 @@ export const acceptCompletion = async (bookingId, payload) => {
   return data;
 };
 
-export const cancelBooking = async (bookingId) => {
-  const { data } = await api.patch(`/bookings/${bookingId}/cancel`);
+export const cancelBooking = async (bookingId, reason) => {
+  const { data } = await api.patch(`/bookings/${bookingId}/cancel`, { reason });
   return data;
 };
