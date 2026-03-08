@@ -11,6 +11,7 @@ import distance from "/distance.png";
 import { acceptCompletion, cancelBooking } from "../../api/bookings";
 
 function CancelModal({ isOpen, onClose, onConfirm, loading }) {
+  const [reason, setReason] = useState("");
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -18,10 +19,22 @@ function CancelModal({ isOpen, onClose, onConfirm, loading }) {
         <h2 className="text-lg font-semibold text-gray-900 mb-1">
           Cancel Booking
         </h2>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-gray-500 mb-4">
           Are you sure you want to cancel this booking? This action cannot be
           undone.
         </p>
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Reason <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            rows={3}
+            placeholder="e.g. Change of plans"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-red-400 resize-none"
+          />
+        </div>
         <div className="flex gap-3">
           <button
             onClick={onClose}
@@ -30,8 +43,8 @@ function CancelModal({ isOpen, onClose, onConfirm, loading }) {
             Go Back
           </button>
           <button
-            onClick={onConfirm}
-            disabled={loading}
+            onClick={() => onConfirm(reason)}
+            disabled={!reason.trim() || loading}
             className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Cancelling..." : "Yes, Cancel"}
@@ -136,7 +149,7 @@ export default function RequestCard({
   const getStatusStyles = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-[#FFC107] border-yellow-200",
-      paid_escrow: "bg-[#007BFF1A] text-[#007BFF] border-[##007BFF]",
+      paid_escrow: "bg-[#007BFF1A] text-[#007BFF] border-[#007BFF]",
       active: "bg-blue-100 text-blue-600 border-blue-200",
       "in progress": "bg-blue-100 text-blue-800 border-blue-200",
       "waiting confirmation": "bg-orange-200 text-orange-800 border-orange-200",
@@ -146,10 +159,10 @@ export default function RequestCard({
     return styles[status.toLowerCase()] || styles.pending;
   };
 
-  const handleCancel = async () => {
+  const handleCancel = async (reason) => {
     setCancelLoading(true);
     try {
-      await cancelBooking(request.id);
+      await cancelBooking(request.id, reason);
       setCancelModalOpen(false);
       if (onBookingCancelled) onBookingCancelled();
     } catch (err) {
