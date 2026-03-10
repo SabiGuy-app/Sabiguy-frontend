@@ -129,12 +129,13 @@ export default function ProviderProfilePage() {
 
   return (
     <ProviderDashboardLayout>
-      <div className="w-190">
+      <div className="w-[70%]">
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-9 mb-6">
-          <h1 className="mb-4 font-bold">My Profile</h1>
-          <h1 className="border-b border-gray-300"></h1>
-          <div className="flex flex-col mt-4 md:flex-row md:items-center md:justify-between gap-6">
+        <div className="bg-white rounded-2xl border border-gray-200 mb-6">
+          <div className="border-b border-gray-300 px-9 py-4">
+            <h1 className="font-bold text-[20px]">My Profile</h1>
+          </div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 px-9 py-6">
             {/* Left Side - Avatar and Info */}
             <div className="flex items-center gap-4">
               {/* Avatar */}
