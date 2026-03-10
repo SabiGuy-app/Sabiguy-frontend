@@ -1,13 +1,14 @@
 export default function ProfileInfoTab({ user, onProfileUpdate }) {
-
   const fullName = user.data?.fullName || "";
 
-const [firstName, ...rest] = fullName.split(" ");
-const lastName = rest.join(" ");
+  const [firstName, ...rest] = fullName.split(" ");
+  const lastName = rest.join(" ");
   return (
     <div className="mb-12">
-      <h2 className="text-xl font-semibold text-gray-900 mt-5 mb-6">Personal Information</h2>
-      
+      <h2 className="text-xl font-semibold text-gray-900 mt-5 mb-6">
+        Personal Information
+      </h2>
+
       <form className="space-y-6">
         {/* First Name and Last Name */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

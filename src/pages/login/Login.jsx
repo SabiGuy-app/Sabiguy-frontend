@@ -231,7 +231,7 @@ export default function Login() {
                     name="password"
                     label="Password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Use a minimum of 6 characters"
+                    placeholder="Use a minimum of 8 characters"
                     value={values.password}
                     onChange={handleChange}
                     onBlur={handleBlur}

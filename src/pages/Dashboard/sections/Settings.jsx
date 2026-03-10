@@ -32,7 +32,7 @@ export default function ProfilePage() {
     address: "24, Eleyele street",
     city: "Ibadan",
     state: "Oyo",
-    rating: 4.6,
+    // rating: 4.6,
     avatar: null,
   };
 
@@ -82,14 +82,14 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* <div className="flex flex-col items-start md:items-center">
+            <div className="flex flex-col items-start md:items-center">
               <span className="text-sm text-gray-600 mb-2">Overall Rating</span>
               <StarRating rating={profile.rating} />
             </div>
 
             <button className="p-2 bg-[#8BC53F] text-white font-medium rounded-lg hover:bg-[#7ab335] transition-colors self-start md:self-center">
               Edit Profile
-            </button> */}
+            </button>
           </div>
         </div>
 
