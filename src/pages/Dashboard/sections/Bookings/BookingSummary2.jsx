@@ -266,13 +266,20 @@ export default function BookingSummary2() {
     <>
       <Navbar />
       <div className=" w-[90%] m-auto">
-        <div className="flex items-center gap-3 mb-6 mt-8">
-          <button className="text-gray-600 hover:text-gray-900">
-            <FiChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-semibold text-gray-900">
-            Booking summary
-          </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-6 mt-8">
+          <div className="flex items-center gap-3">
+            <button className="text-gray-600 hover:text-gray-900">
+              <FiChevronLeft size={24} />
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900">
+              Booking summary
+            </h1>
+          </div>
+          {bookingDetails?._id && (
+            <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-md border border-[#0058234D] w-fit">
+              Booking #{bookingDetails._id.slice(-6).toUpperCase()}
+            </span>
+          )}
         </div>
         {/* Error Message */}
         {errorMessage && (
@@ -319,14 +326,21 @@ export default function BookingSummary2() {
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
                       {providerDetails?.fullName || "Provider"}
                     </h2>
                     <span className="text-[#8BC53F]">
                       <BadgeCheck className="w-[20px] h-[20px]" />
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">
+                  {providerDetails?._id && (
+                    <div className="mb-1">
+                        <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 inline-block">
+                            ID: {providerDetails._id.slice(-6).toUpperCase()}
+                        </span>
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-600 mb-1 capitalize">
                     {providerDetails?.services?.[0]?.title?.replace(
                       /_/g,
                       " ",

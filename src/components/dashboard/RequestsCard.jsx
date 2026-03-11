@@ -223,23 +223,35 @@ export default function RequestCard({
               <div className="flex justify-between mb-2 w-full">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {request.title}
+                    <h3 className="text-xl font-semibold text-gray-900 capitalize">
+                      {request.title.replace(/_/g, ' ')}
                     </h3>
                     <span
-                      className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(request.status)}`}
+                      className={`px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusStyles(request.status)}`}
                     >
-                      {request.status}
+                      {request.status.replace(/_/g, ' ')}
                     </span>
                   </div>
-                  <p className="text-[16px] text-[#231F20BF]">
-                    {request.providerName}
-                  </p>
-                </div>
-                <div className="flex justify-end">
-                  <div className="text-2xl font-bold text-[#2D6A3E]">
-                    ₦{request.price.toLocaleString()}
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-[16px] text-[#231F20BF] capitalize">
+                      {request.providerName}
+                    </p>
+                    {request.providerIdDisplay && request.providerIdDisplay !== "—" && (
+                      <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
+                        ID: {request.providerIdDisplay}
+                      </span>
+                    )}
                   </div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <div className="text-2xl font-bold text-[#2D6A3E]">
+                    ₦{request.price?.toLocaleString()}
+                  </div>
+                  {request.orderId && request.orderId !== "—" && (
+                    <div className="text-xs text-gray-400 mt-1 font-mono">
+                      Booking #{request.orderId}
+                    </div>
+                  )}
                 </div>
               </div>
 

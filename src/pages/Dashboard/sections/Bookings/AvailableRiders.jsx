@@ -45,9 +45,16 @@ export default function AvailableRiders() {
       <Navbar />
       <div className="min-h-screen md:grid md:grid-cols-2 space-y-4 gap-10 bg-gray-50 p-4 sm:p-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">
             Available providers
           </h1>
+          {bookingId && (
+            <div className="mb-6">
+                <span className="text-[12px] font-mono text-gray-500 bg-white px-2 py-1 rounded-md border border-gray-200">
+                    Booking #{bookingId.slice(-6).toUpperCase()}
+                </span>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -86,9 +93,9 @@ export default function AvailableRiders() {
                     <div className="w-full md:w-1/2">
                       <div className="flex flex-col h-full justify-between">
                         <div>
-                          <h2 className="text-[20px] font-medium text-[#231F20]">
+                          <h2 className="text-[20px] font-medium text-[#231F20] capitalize">
                             {provider.fullName}{" "}
-                            <span className="text-[#231F2080] font-semibold text-[17px]">
+                            <span className="text-[#231F2080] font-semibold text-[17px] capitalize">
                               •{" "}
                               {provider.services?.[0]?.title?.replace(
                                 /_/g,
@@ -96,6 +103,13 @@ export default function AvailableRiders() {
                               )}
                             </span>
                           </h2>
+                          {getProviderId(provider) && (
+                            <div className="mt-1 mb-1">
+                                <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200 inline-block">
+                                    ID: {getProviderId(provider).slice(-6).toUpperCase()}
+                                </span>
+                            </div>
+                          )}
 
                           {/* Rating */}
                           <div className="flex items-center gap-1 mt-1">
