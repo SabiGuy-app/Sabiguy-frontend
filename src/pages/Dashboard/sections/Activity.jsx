@@ -334,6 +334,7 @@ export default function ActivityPage() {
         onClose={() => setSelectedNotification(null)}
         notification={selectedNotification}
       />
+     </div>
     </DashboardLayout>
   );
 }
