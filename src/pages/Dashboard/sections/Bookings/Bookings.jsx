@@ -167,12 +167,12 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-      <div className="flex gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:flex gap-2 mb-6">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
+            className={`w-full text-center px-3 py-2 rounded-lg font-medium text-sm transition-colors whitespace-normal break-words ${
               activeFilter === filter.toLowerCase()
                 ? "bg-[#2D6A3E] text-white"
                 : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
@@ -258,7 +258,7 @@ export default function Bookings() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
         <ServiceDetailsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
@@ -267,7 +267,7 @@ export default function Bookings() {
         <h1 className="text-xl font-semibold p-4">My Bookings</h1>
 
         {/* Tabs */}
-        <div className="flex border-b">
+        <div className="flex flex-col sm:flex-row border-b">
           <button
             onClick={() => setActiveTab("request")}
             className={`px-6 py-3 font-medium transition-colors relative ${
@@ -291,7 +291,7 @@ export default function Bookings() {
         </div>
 
         {activeTab === "request" ? (
-          <form onSubmit={formik.handleSubmit} className="space-y-5 p-5">
+          <form onSubmit={formik.handleSubmit} className="space-y-5 p-5 max-w-xl mx-auto">
             {errorMessage && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
                 {errorMessage}
@@ -444,7 +444,7 @@ export default function Bookings() {
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Choose Vehicle
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {vehicleOptions.map((vehicle) => {
                   const isSelected =
                     formik.values.modeOfDelivery === vehicle.value;
@@ -552,7 +552,7 @@ export default function Bookings() {
             </div>
           </form>
         ) : (
-          <div className="mt-5 p-5">
+          <div className="mt-5 p-5 max-w-xl mx-auto">
             <StatusFilter
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
@@ -575,7 +575,7 @@ export default function Bookings() {
 
             {/* ✅ Real bookings list */}
             {!bookingsLoading && !bookingsError && (
-              <div className="space-y-4">
+              <div className="space-y-4 w-full">
                 {filteredRequests.length > 0 ? (
                   filteredRequests.map((request) => (
                     <RequestCard

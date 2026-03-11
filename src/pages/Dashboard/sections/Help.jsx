@@ -9,7 +9,7 @@ export default function ContactPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-9">
+      <div className="p-4 sm:p-9">
         <ContactSection openChat={() => setOpen(true)} />
 
         <ChatBotDrawer isOpen={open} onClose={() => setOpen(false)}>

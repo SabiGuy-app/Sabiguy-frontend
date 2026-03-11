@@ -25,11 +25,11 @@ export default function InputField({
 
   // Width variants
   const widthClasses = {
-    full: "w-full",
-    large: "w-[500px] max-w-full",
-    medium: "h-[10px] max-w-full",
-    small: "w-[250px] max-w-full",
-    xs: "w-[150px] max-w-full",
+    full: "w-full max-w-md",
+    large: "w-full sm:w-96 md:w-[500px] max-w-full",
+    medium: "w-full sm:w-80 md:w-96 max-w-full",
+    small: "w-full sm:w-64 md:w-80 max-w-full",
+    xs: "w-full sm:w-48 md:w-64 max-w-full",
   };
 
   const widthClass = widthClasses[size] || widthClasses.full;

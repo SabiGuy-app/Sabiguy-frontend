@@ -26,24 +26,24 @@ export default function Activities({ activity }) {
   const { icon: Icon, bgColor } = getIconConfig(activity.type);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-lg border border-gray-200 p-2 sm:p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4">
         {/* Icon */}
-        <div className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
-          <Icon className="text-white" size={20} />
+        <div className={`w-8 sm:w-10 h-8 sm:h-10 ${bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+          <Icon className="text-white" size={16} />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">
+              <h3 className="font-semibold text-gray-900 mb-1 text-xs sm:text-sm break-words">
                 {activity.title}
               </h3>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words">
                 {activity.description}
               </p>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 break-words">
                 {activity.timestamp}
               </span>
             </div>
@@ -52,7 +52,7 @@ export default function Activities({ activity }) {
             {activity.action && (
               <button
                 onClick={activity.action.onClick}
-                className="px-4 py-2 text-sm font-medium text-[#005823] hover:bg-[#8BC53FBF] border border-gray-300 rounded-lg transition-colors whitespace-nowrap"
+                className="px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium text-[#005823] hover:bg-[#8BC53FBF] border border-gray-300 rounded-lg transition-colors whitespace-nowrap"
               >
                 {activity.action.label}
               </button>

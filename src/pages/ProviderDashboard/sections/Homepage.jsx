@@ -97,17 +97,17 @@ const Job = user?.data?.job
         />
       </div>
 
-      <div className="grid grid-cols-1 mt-5 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 mt-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="md:col-span-1 lg:col-span-1 xl:col-span-2 space-y-6">
           <RevenueOverview data={dashboardData?.revenueData} />
           <AverageResponseTime data={dashboardData?.responseTimeData} />
         </div>
 
-        <div className="gap-10">
-          <div className="w-90">
+        <div className="flex flex-col gap-6">
+          <div>
             <WalletCard data={dashboardData?.walletData} />
           </div>
-          <div className="mt-12 w-90">
+          <div>
             <RevenueByServiceType data={dashboardData?.revenueByService} />
           </div>
         </div>

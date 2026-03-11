@@ -26,8 +26,9 @@ export default function RequestCard({ request, onViewDetails }) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-      <div className="flex-1">
+    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow w-full max-w-full">
+
+      <div className="flex-1 min-w-0">
         <div className="flex border-b pb-3 border-[#231F2080]">
           <img
             src={request.providerImage || "/api/placeholder/80/80"}
@@ -35,10 +36,10 @@ export default function RequestCard({ request, onViewDetails }) {
             className="w-16 h-16 rounded-full object-cover"
           />
           <div className="w-full">
-            <div className="flex justify-between mb-2 w-full">
+            <div className="flex flex-col sm:flex-row sm:justify-between mb-2 w-full gap-2">
               <div>
                 <div className="flex items-center gap-3">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-gray-900 truncate max-w-full">
                     {request.title}
                   </h3>
                   <span
@@ -89,13 +90,13 @@ export default function RequestCard({ request, onViewDetails }) {
                   <p className="text-sm font-medium text-gray-700">
                     Pickup Location
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 break-words">
                     {request.pickupAddress}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-end  gap-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-8">
                 <div className="flex items-start gap-3">
                   <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
                     <MapPin className="w-3 h-3 text-[#005823]" />
@@ -104,7 +105,7 @@ export default function RequestCard({ request, onViewDetails }) {
                     <p className="text-sm font-medium text-gray-700">
                       Dropoff Location
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 break-words">
                       {request.dropoffAddress}
                     </p>
                   </div>
@@ -125,21 +126,21 @@ export default function RequestCard({ request, onViewDetails }) {
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={() => onViewDetails(request)}
-            className="px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"
+            className="px-3 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors text-sm"
           >
             View Details
           </button>
           {request.status.toLowerCase() === "paid_escrow" && (
-            <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+            <button className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm">
               <Send className="w-4 h-4" />
               Track provider
             </button>
           )}
           {request.status.toLowerCase() !== "paid_escrow" && (
-            <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+            <button className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm">
               <MessageCircle className="w-4 h-4" />
               Message Provider
             </button>
@@ -148,7 +149,7 @@ export default function RequestCard({ request, onViewDetails }) {
             request.status.toLowerCase() === "waiting confirmation") && (
             <>
               {request.ratings ? (
-                <div className="px-3 py-1 mt-3 flex items-center gap-1">
+                <div className="px-2 py-1 mt-3 flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
@@ -164,7 +165,7 @@ export default function RequestCard({ request, onViewDetails }) {
                   </span>
                 </div>
               ) : (
-                <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                <button className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm">
                   Leave review
                 </button>
               )}
@@ -172,7 +173,7 @@ export default function RequestCard({ request, onViewDetails }) {
           )}
           {(request.status.toLowerCase() === "pending" ||
             request.status.toLowerCase() === "in progress") && (
-            <button className="px-3 py-1 mt-3 bg-white text-red-600 border border-red-300 rounded-lg font-medium hover:bg-red-50 transition-colors">
+            <button className="px-2 py-1 mt-3 bg-white text-red-600 border border-red-300 rounded-lg font-medium hover:bg-red-50 transition-colors text-sm">
               Close Request
             </button>
           )}

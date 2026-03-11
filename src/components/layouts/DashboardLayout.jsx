@@ -3,7 +3,7 @@ import Navbar from "../dashboard/Navbar";
 
 export default function DashboardLayout({ children }) {
   return (
-    <div>
+    <div className="overflow-x-hidden">
       <Navbar />
 
       <div className="flex  min-h-screen bg-gray-50">

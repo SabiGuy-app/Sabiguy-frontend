@@ -122,6 +122,7 @@ export default function ActivityPage() {
 
   return (
     <DashboardLayout>
+      <div className="w-full mx-auto px-4 sm:px-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <ServiceDetailsModal
@@ -131,7 +132,7 @@ export default function ActivityPage() {
         />
         <h1 className="font-bold text-2xl">Activity</h1>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         <ActivityCard
           title="Active orders"
           value="₦0.00"
@@ -172,7 +173,7 @@ export default function ActivityPage() {
           <input
             type="text"
             placeholder="Search activity"
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-white text-sm"
+            className="w-full pl-11 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-white text-xs sm:text-sm"
           />
         </div>
       </div>
@@ -183,6 +184,7 @@ export default function ActivityPage() {
           <Activities key={activity.id} activity={activity} />
         ))}
       </div>
+      </div> {/* end container max-w-xl */}
     </DashboardLayout>
   );
 }
