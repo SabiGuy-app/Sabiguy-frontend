@@ -82,7 +82,7 @@ export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, o
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <img
-                    src={alert.providerImage || "https://i.pravatar.cc/40"}
+                    src={alert.providerImage || "/avatar.png"}
                     alt={alert.providerName || "Provider"}
                     className="w-18 h-18 rounded-full object-cover"
                   />

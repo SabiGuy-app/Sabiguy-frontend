@@ -144,13 +144,13 @@ export default function SettingsTab() {
       </div>
 
       {/* 2-Step Authentication Section */}
-      <div className="border-t border-gray-200 pt-8">
+      {/* <div className="border-t border-gray-200 pt-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">2-Step Authentication</h2>
         <p className="text-sm text-gray-600 mb-6">Add additional security to your account with 2-step verification.</p>
         <button className="px-6 py-3 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors">
           Get Started
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -110,24 +110,18 @@ export default function Navbar() {
 
   // Show toast notification
   const showNotificationToast = (notification) => {
-    console.log("🔔 showNotificationToast called with:", notification);
-
     // Play sound
-    console.log("🔊 Playing notification sound...");
     notificationSoundService.play();
 
     // Show toast
-    console.log("📢 Displaying toast notification...");
     toast.custom(
       (t) => (
         <NotificationToast
           notification={notification}
           onClose={() => {
-            console.log("🔔 Toast closed");
             toast.dismiss(t.id);
           }}
           onClick={() => {
-            console.log("🔔 Toast clicked");
             toast.dismiss(t.id);
             setShowNotifications(true);
           }}
@@ -147,6 +141,9 @@ export default function Navbar() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
+    // Track seen notification IDs to prevent duplicate toasts
+    const seenNotifications = new Set();
+
     const newSocket = io(
       import.meta.env.VITE_SOCKET_URL || "http://localhost:3000",
       {
@@ -165,7 +162,16 @@ export default function Navbar() {
 
     // Listen for new notifications via socket
     newSocket.on("new_notification", (notification) => {
-      console.log("📬 New notification received:", notification);
+      const notifId = notification._id || notification.id;
+
+      // Skip if we already showed a toast for this notification
+      if (notifId && seenNotifications.has(notifId)) {
+        return;
+      }
+      if (notifId) {
+        seenNotifications.add(notifId);
+      }
+
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
       // Show toast with sound
@@ -173,6 +179,11 @@ export default function Navbar() {
     });
 
     setSocket(newSocket);
+
+    // Cleanup: disconnect socket on unmount to prevent duplicates
+    return () => {
+      newSocket.disconnect();
+    };
   }, []);
 
   // Fetch initial data
@@ -220,7 +231,7 @@ export default function Navbar() {
           className="text-2xl md:text-3xl font-bold text-[#005823]"
           onClick={() => navigate("/dashboard")}
         >
-          SabiGuy
+          <img src="/logo.jpg" alt="SabiGuy Logo" className="h-8 w-auto" />
         </button>
 
         {/* Desktop Search */}

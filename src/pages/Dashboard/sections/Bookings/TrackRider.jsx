@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Phone,
   MessageCircle,
@@ -6,80 +6,113 @@ import {
   ChevronUp,
   MapPin,
   Star,
-  Shield,
   BadgeCheck,
 } from "lucide-react";
 import Navbar from "../../../../components/dashboard/Navbar";
 import location from "/location.png";
 import useBookingStore from "../../../../stores/booking.store";
+import { getBookingsDetails } from "../../../../api/bookings";
+
+const STEPS_COMPLETED_BY_STATUS = {
+  in_progress: [1],
+  arrived_at_pickup: [1, 2],
+  enroute_to_dropoff: [1, 2, 3],
+  arrived_at_dropoff: [1, 2, 3, 4],
+  completed: [1, 2, 3, 4, 5],
+};
+
+const STATUS_LABELS = {
+  in_progress: "Rider is on the way",
+  arrived_at_pickup: "Rider arrived at pickup",
+  enroute_to_dropoff: "En route to you",
+  arrived_at_dropoff: "Rider arrived at destination",
+  completed: "Delivery completed!",
+};
+
+const POLL_INTERVAL_MS = 6000;
 
 export default function TrackRider() {
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
     useState(true);
+  const [bookingStatus, setBookingStatus] = useState("in_progress");
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
   const selectedProviderId = useBookingStore(
     (state) => state.selectedProviderId,
   );
-  console.log("booking from store:", booking);
-  console.log("selectedProviderId:", selectedProviderId);
   const providerDetails =
     booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
     booking?.data?.providers?.[0] ||
     {};
-  console.log("providers array:", providerDetails);
 
+  const bookingId = bookingDetails?._id;
+
+  useEffect(() => {
+    const stored = bookingDetails?.status;
+    if (stored && STEPS_COMPLETED_BY_STATUS[stored]) {
+      setBookingStatus(stored);
+    }
+  }, [bookingDetails?.status]);
+
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (!bookingId) return;
+
+    const poll = async () => {
+      try {
+        const res = await getBookingsDetails(bookingId);
+        console.log(res);        
+        const latestStatus = res?.data?.booking?.status || res?.data?.status;
+        if (latestStatus && STEPS_COMPLETED_BY_STATUS[latestStatus]) {
+          setBookingStatus(latestStatus);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    };
+
+    poll();
+    intervalRef.current = setInterval(poll, POLL_INTERVAL_MS);
+    return () => clearInterval(intervalRef.current);
+  }, [bookingId]);
+
+  useEffect(() => {
+    if (bookingStatus === "completed") {
+      clearInterval(intervalRef.current);
+    }
+  }, [bookingStatus]);
+
+  const completedStepIds = STEPS_COMPLETED_BY_STATUS[bookingStatus] || [1];
+  const isFullyComplete = bookingStatus === "completed";
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
   const serviceCost = bookingDetails?.calculatedPrice || 0;
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-NG", {
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: "NGN",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
-  };
 
   const deliverySteps = [
-    {
-      id: 1,
-      title: "En route to pickup",
-      subtitle: "On the way to pickup",
-      completed: true,
-      active: false,
-    },
-    {
-      id: 2,
-      title: "Arrived at pickup location",
-      subtitle: "At pickup point",
-      completed: false,
-      active: false,
-    },
+    { id: 1, title: "En route to pickup", subtitle: "On the way to pickup" },
+    { id: 2, title: "Arrived at pickup location", subtitle: "At pickup point" },
     {
       id: 3,
       title: "En route to delivery",
       subtitle: "Leaving for dropoff location",
-      completed: false,
-      active: false,
     },
     {
       id: 4,
-      title: "Arrived at delivery Location",
+      title: "Arrived at delivery location",
       subtitle: "At delivery location",
-      completed: false,
-      active: false,
     },
-    {
-      id: 5,
-      title: "Delivery completed",
-      subtitle: "Package delivered",
-      completed: false,
-      active: false,
-    },
+    { id: 5, title: "Delivery completed", subtitle: "Package delivered" },
   ];
 
   return (
@@ -87,21 +120,23 @@ export default function TrackRider() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:grid md:grid-cols-2 md:gap-10 space-y-8">
         <div>
-          <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
-            Arrival in 12 mins
+          <h1 className="text-[28px] font-semibold text-[#231F20] mb-1">
+            {isFullyComplete ? "Delivery Completed 🎉" : "Arrival in 12 mins"}
           </h1>
+          <p className="text-sm text-[#005823] font-medium mb-4">
+            {STATUS_LABELS[bookingStatus]}
+          </p>
 
           <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
+                <div className="w-3 h-3 bg-[#005823] rounded-full" />
               </div>
               <div>
                 <span className="text-[#231F2080] text-[16px]">Pickup</span>
                 <p className="text-[#231F20BF] text-[20px]">{pickupAddress}</p>
               </div>
             </div>
-
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
                 <MapPin className="w-3 h-3 text-[#005823]" />
@@ -182,11 +217,9 @@ export default function TrackRider() {
 
           <div className="mb-4">
             <h3 className="text-[16px] font-semibold text-[#231F20]">Fare</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-[20px] font-bold text-[#231F20]">
-                {formatCurrency(serviceCost)}
-              </span>
-            </div>
+            <span className="text-[20px] font-bold text-[#231F20]">
+              {formatCurrency(serviceCost)}
+            </span>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -208,56 +241,57 @@ export default function TrackRider() {
 
             {isDeliveryStatusExpanded && (
               <div className="px-4 pb-4">
-                {deliverySteps.map((step, index) => (
-                  <div key={step.id} className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          step.completed
-                            ? "border-green-500 bg-green-500"
-                            : "border-gray-300 bg-white"
-                        }`}
-                      >
-                        {step.completed && (
-                          <svg
-                            className="w-3 h-3 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={3}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        )}
-                        {!step.completed && (
-                          <div className="w-2 h-2 bg-[#908E8F] rounded-full"></div>
-                        )}
-                      </div>
-                      {index < deliverySteps.length - 1 && (
+                {deliverySteps.map((step, index) => {
+                  const isCompleted = completedStepIds.includes(step.id);
+                  return (
+                    <div key={step.id} className="flex gap-3">
+                      <div className="flex flex-col items-center">
                         <div
-                          className={`w-0.5 h-12 ${step.completed ? "bg-green-500" : "bg-gray-200"}`}
-                        ></div>
-                      )}
-                    </div>
-
-                    <div className="pb-12 last:pb-0">
-                      <div
-                        className={`text-[16px] font-medium ${step.completed ? "text-[#005823]" : "text-[#231F20BF] text-[16px]"}`}
-                      >
-                        {step.title}
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isCompleted
+                              ? "border-green-500 bg-green-500"
+                              : "border-gray-300 bg-white"
+                          }`}
+                        >
+                          {isCompleted ? (
+                            <svg
+                              className="w-3 h-3 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          ) : (
+                            <div className="w-2 h-2 bg-[#908E8F] rounded-full" />
+                          )}
+                        </div>
+                        {index < deliverySteps.length - 1 && (
+                          <div
+                            className={`w-0.5 h-12 ${isCompleted ? "bg-green-500" : "bg-gray-200"}`}
+                          />
+                        )}
                       </div>
-                      <div
-                        className={`text-[12px] ${step.completed ? "text-gray-500" : "text-[#231F20BF]"}`}
-                      >
-                        {step.subtitle}
+                      <div className="pb-12 last:pb-0">
+                        <div
+                          className={`text-[16px] font-medium ${isCompleted ? "text-[#005823]" : "text-[#231F20BF]"}`}
+                        >
+                          {step.title}
+                        </div>
+                        <div
+                          className={`text-[12px] ${isCompleted ? "text-gray-500" : "text-[#231F20BF]"}`}
+                        >
+                          {step.subtitle}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

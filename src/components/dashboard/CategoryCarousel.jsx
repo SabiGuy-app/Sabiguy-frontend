@@ -2,7 +2,7 @@ import CategoryCard from "./CategoryCard";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useState } from "react";
 
-export default function ({ categories }) {
+export default function ({ categories, onCategoryClick  }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 3;
   const maxIndex = Math.max(0, categories.length - itemsPerPage);
@@ -67,6 +67,7 @@ export default function ({ categories }) {
                 description={cat.description}
                 bgColor={cat.bgColor}
                 comingSoon={cat.comingSoon}
+                onClick={() => onCategoryClick(cat)}
               />
             </div>
           ))}

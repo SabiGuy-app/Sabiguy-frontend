@@ -1,7 +1,7 @@
 import { ArrowBigLeft, X } from "lucide-react";
 import React, { useState } from "react";
 import { fundWallet } from "../../api/provider";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const FundWalletModal = ({ isOpen, onClose }) => {
   const [currentModal, setCurrentModal] = useState(1);

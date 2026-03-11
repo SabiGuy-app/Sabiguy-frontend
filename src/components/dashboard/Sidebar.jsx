@@ -7,7 +7,7 @@ import { handleLogout } from "../../api/auth";
 const links = [
   { name: "Home", path: "/dashboard", icon: <Home/> },
   { name: "My Bookings", path: "/bookings", icon: <Book/> },
-  { name: "Saved Profile", path: "/dashboard/saved", icon: <Heart/> },
+  // { name: "Saved Profile", path: "/dashboard/saved", icon: <Heart/> },
   { name: "Chat", path: "/dashboard/chat", icon: <MessageCircle/> },
   { name: "Activity", path: "/dashboard/activity", icon: <ClipboardList/> },
   // { name: "Referrals", path: "/dashboard/", icon: <Gift/> },

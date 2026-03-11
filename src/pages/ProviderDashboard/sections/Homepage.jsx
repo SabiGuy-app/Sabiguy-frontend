@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ProviderDashboardLayout from "../../../components/layouts/ProviderDashboardLayout";
 import DashboardCard from "../../../components/dashboard/DashboardCard";
-import { Wallet, Bookmark, Star } from "lucide-react";
+import { Wallet, Bookmark, Star, CheckCircle } from "lucide-react";
 import RevenueOverview from "../../../components/provider-dashboard/RevenueOverview";
 import AverageResponseTime from "../../../components/provider-dashboard/AverageResponseTime";
 import PeakHourAnalysis from "../../../components/provider-dashboard/Analysis";
@@ -34,7 +34,7 @@ export default function ProviderDashboard() {
       </ProviderDashboardLayout>
     );
   }
-const Job = user?.data?.job
+  const Job = user?.data?.job
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
@@ -59,7 +59,7 @@ const Job = user?.data?.job
 
   const totalRevenue = dashboardData?.totalEarnings || 0;
   const activeJobs = dashboardData?.activeBookings || 0;
-  const averageRating = dashboardData?.averageRating || 0;
+  const completedJobs = dashboardData?.completedBookings || 0;
   return (
     <ProviderDashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -91,9 +91,9 @@ const Job = user?.data?.job
         />
 
         <DashboardCard
-          title="Average Ratings"
-          amount={averageRating.toFixed(1)}
-          icon={<Star size={20} />}
+          title="Completed Jobs"
+          amount={completedJobs.toString()}
+          icon={<CheckCircle size={20} />}
         />
       </div>
 

@@ -5,10 +5,14 @@ import { Bike } from "lucide-react";
 import Button from "../../../../components/button";
 import RequestCard from "../../../../components/dashboard/RequestsCard";
 import ServiceDetailsModal from "../ServiceDetailsModal";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { bookingPost, getUserBookings } from "../../../../api/bookings";
+import {
+  bookingPost,
+  getUserBookings,
+  getBookingsDetails,
+} from "../../../../api/bookings";
 import { allowSystem } from "../../../../api/bookings";
 import useBookingStore from "../../../../stores/booking.store";
 
@@ -59,7 +63,6 @@ export default function Bookings() {
 
   const setBooking = useBookingStore((state) => state.setBooking);
   const navigate = useNavigate();
-  
 
   useEffect(() => {
     if (activeTab === "requests") {
@@ -81,10 +84,14 @@ export default function Bookings() {
     }
   }, [activeTab]);
 
+  const location = useLocation();
+  const preselectedService =
+    new URLSearchParams(location.search).get("service") ?? "";
+
   const formik = useFormik({
     initialValues: {
       jobTitle: "transport",
-      service: "",
+      service: preselectedService,
       pickupAddress: "",
       dropoffAddress: "",
       serviceType: "",
@@ -124,7 +131,7 @@ export default function Bookings() {
           scheduleType: values.serviceType,
           vehicle: values.vehicle,
           modeOfDelivery: values.modeOfDelivery,
-          scheduleDate: values.scheduleDate
+          scheduleDate: values.scheduleDate,
         };
 
         console.log("Calling bookingPost with payload:", payload);
@@ -164,6 +171,50 @@ export default function Bookings() {
     },
   });
 
+  const handleTrackProvider = async (requestId) => {
+    try {
+      const data = await getBookingsDetails(requestId);
+
+      const bookingData = data?.data?.booking || data?.booking || {};
+      const providerRaw = bookingData?.providerId;
+
+      const providers = providerRaw
+        ? [
+            {
+              id: providerRaw._id,
+              _id: providerRaw._id,
+              fullName: providerRaw.fullName,
+              profilePicture: providerRaw.profilePicture,
+              phoneNumber: providerRaw.phoneNumber,
+              rating: providerRaw.rating,
+              services: providerRaw.services,
+              completedJobs: providerRaw.completedJobs,
+              distance: providerRaw.distance,
+            },
+          ]
+        : [];
+
+      const shapedData = {
+        ...data,
+        data: {
+          ...data?.data,
+          booking: bookingData,
+          providers,
+        },
+      };
+
+      setBooking(shapedData);
+
+      if (providerRaw?._id) {
+        useBookingStore.getState().setSelectedProviderId(providerRaw._id);
+      }
+
+      navigate("/bookings/trackrider");
+    } catch (err) {
+      console.error("Failed to load booking for tracking:", err);
+    }
+  };
+
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
@@ -192,10 +243,10 @@ export default function Bookings() {
       booking.serviceType ||
       "Booking",
     status: booking.status || "pending",
-
     providerName: booking.providerId?.fullName || "—",
     providerImage:
-      booking.providerId?.profilePicture || "/api/placeholder/80/80",
+      booking.providerId?.profilePicture ||
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
     providerRole:
       booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—",
     providerRating: booking.providerId?.rating?.average || null,
@@ -233,22 +284,38 @@ export default function Bookings() {
       : "—",
 
     startsIn: null,
-    ratings: booking.rating || null,
+    ratings: booking.rating?.score || null,
   });
-
 
   const filteredRequests = userBookings
     .map(mapBookingToRequest)
     .filter((request) => {
+      const status = request.status.toLowerCase();
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
-        return request.status.toLowerCase() === "in progress";
-      return request.status.toLowerCase() === statusFilter;
+        return ["in_progress", "paid_escrow", "provider_selected"].includes(
+          status,
+        );
+      if (statusFilter === "pending")
+        return ["pending_providers", "payment_pending"].includes(status);
+      if (statusFilter === "completed")
+        return [
+          "completed",
+          "funds_released",
+          "user_accepted_completion",
+        ].includes(status);
+      return false;
     });
 
   const handleViewDetails = (request) => {
     setSelectedRequest(request);
     setIsModalOpen(true);
+  };
+
+  const refreshBookings = async () => {
+    const data = await getUserBookings();
+    const bookings = data?.data || data || [];
+    setUserBookings(Array.isArray(bookings) ? bookings : []);
   };
 
   const handleCloseModal = () => {
@@ -582,6 +649,8 @@ export default function Bookings() {
                       key={request.id}
                       request={request}
                       onViewDetails={handleViewDetails}
+                      onTrackProvider={handleTrackProvider}
+                      onBookingCancelled={refreshBookings}
                     />
                   ))
                 ) : (

@@ -5,7 +5,7 @@ import { FiSearch, FiSend, FiPaperclip, FiPhone, FiBell } from "react-icons/fi";
 import { io } from "socket.io-client";
 import { chatService } from "../../../api/chat";
 import { useAuthStore } from "../../../stores/auth.store";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
@@ -23,6 +23,7 @@ const ProviderChat = () => {
   const currentUserId = useAuthStore((state) => state.user?.data?._id);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   useEffect(() => {
     if (!hydrated) return;
@@ -105,6 +106,37 @@ const ProviderChat = () => {
   useEffect(() => {
     const bookingId = searchParams.get("bookingId");
     const chatId = searchParams.get("chatId");
+    const routeBooking = location.state?.booking || null;
+    const routeCustomer = location.state?.customer || routeBooking?.userId || null;
+    const routeBookingId = routeBooking?._id || routeBooking?.id || null;
+    const routeChat =
+      routeBookingId
+        ? {
+            _id: `route-${routeBookingId}`,
+            bookingId: {
+              _id: routeBookingId,
+              serviceType:
+                routeBooking?.serviceType || routeBooking?.subCategory || "Service",
+              status: routeBooking?.status || "Active Booking",
+            },
+            otherParticipant: {
+              _id: routeCustomer?._id || null,
+              name:
+                routeCustomer?.fullName ||
+                routeCustomer?.name ||
+                routeCustomer?.email ||
+                routeCustomer?.phoneNumber ||
+                "Customer",
+              avatar:
+                routeCustomer?.profilePicture || routeCustomer?.avatar || null,
+              profilePicture:
+                routeCustomer?.profilePicture || routeCustomer?.avatar || null,
+            },
+            unreadCount: 0,
+            lastMessage: null,
+            lastMessageTime: routeBooking?.updatedAt || routeBooking?.createdAt || null,
+          }
+        : null;
 
     if ((bookingId || chatId) && chats.length > 0) {
       const chat = chats.find(
@@ -112,9 +144,22 @@ const ProviderChat = () => {
       );
       if (chat) {
         setSelectedChat(chat);
+        return;
       }
     }
-  }, [searchParams, chats]);
+
+    if (bookingId && chats.length > 0) {
+      const bookingChat = chats.find((c) => c.bookingId._id === bookingId);
+      if (bookingChat) {
+        setSelectedChat(bookingChat);
+        return;
+      }
+    }
+
+    if (routeChat) {
+      setSelectedChat(routeChat);
+    }
+  }, [searchParams, chats, location.state]);
 
   useEffect(() => {
     if (selectedChat) {

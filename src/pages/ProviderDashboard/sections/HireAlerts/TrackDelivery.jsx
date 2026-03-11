@@ -9,30 +9,32 @@ import {
   Shield,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import Navbar from "../../../../components/dashboard/Navbar";
 import location from "/location.png";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { updateBookingStatus, markAsComplete } from "../../../../api/bookings";
+import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
 
 const STATUS_FLOW = {
   // current booking status -> what clicking the button SENDS to the API
+  enroute_to_pickup: "arrived_at_pickup",
   in_progress: "arrived_at_pickup",
   arrived_at_pickup: "enroute_to_dropoff",
   enroute_to_dropoff: "arrived_at_dropoff",
-  arrived_at_dropoff: "completed", // triggers markAsComplete instead
+  arrived_at_dropoff: "completed",
 };
 
 const BUTTON_LABELS = {
-  in_progress: "Arrived at Pickup",     // page mounts here
+  enroute_to_pickup: "Arrived at Pickup",
+  in_progress: "Arrived at Pickup", // page mounts here
   arrived_at_pickup: "Start Trip",
   enroute_to_dropoff: "Arrived at Destination",
   arrived_at_dropoff: "Complete Trip",
 };
 
-// Which delivery steps are completed per status
 const STEPS_COMPLETED_BY_STATUS = {
-  in_progress: [1],                     // en route to pickup is already active on mount
+  enroute_to_pickup: [1],
+  in_progress: [1],
   arrived_at_pickup: [1, 2],
   enroute_to_dropoff: [1, 2, 3],
   arrived_at_dropoff: [1, 2, 3, 4],
@@ -42,29 +44,53 @@ const STEPS_COMPLETED_BY_STATUS = {
 export default function TrackDelivery() {
   const routeLocation = useLocation();
   const user = useAuthStore((state) => state.user);
+  const normalizeStatus = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+  const toCanonicalStatus = (value) => {
+    const normalized = normalizeStatus(value);
+    return normalized === "in_progress" ? "enroute_to_pickup" : normalized;
+  };
 
   const alert = routeLocation.state?.alert || {};
-  const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] = useState(true);
+  const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
+    useState(true);
   const [updating, setUpdating] = useState(false);
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
-  const selectedProviderId = useBookingStore((state) => state.selectedProviderId);
+  const selectedProviderId = useBookingStore(
+    (state) => state.selectedProviderId,
+  );
   const providerDetails =
     booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
     booking?.data?.providers?.[0] ||
     {};
 
   // Track current booking status in local state so UI updates immediately
-  const initialStatus = "in_progress"; 
+  const routeStatus = toCanonicalStatus(routeLocation.state?.status);
+  const alertStatus = toCanonicalStatus(
+    alert?.status || alert?.originalData?.status,
+  );
+  const initialStatusCandidate =
+    routeStatus || alertStatus || "enroute_to_pickup";
+  const supportedStatuses = [
+    "enroute_to_pickup",
+    "arrived_at_pickup",
+    "enroute_to_dropoff",
+    "arrived_at_dropoff",
+    "completed",
+  ];
+  const initialStatus = supportedStatuses.includes(initialStatusCandidate)
+    ? initialStatusCandidate
+    : "enroute_to_pickup";
 
   const [bookingStatus, setBookingStatus] = useState(initialStatus);
 
-  // const bookingId =
-  //   alert?.originalData?._id || alert?._id || bookingDetails?._id;
-
   const bookingId =
-  alert?.id || alert?.originalData?._id || bookingDetails?._id
+    alert?.id || alert?.originalData?._id || bookingDetails?._id;
 
   const pickupAddress =
     alert?.originalData?.pickupLocation?.address ||
@@ -89,7 +115,14 @@ export default function TrackDelivery() {
     }).format(amount);
   };
 
-  const deliverySteps = [
+  const normalizedSubCategory = String(
+    alert?.originalData?.subCategory || bookingDetails?.subCategory || "",
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, " ");
+
+  const packageDeliverySteps = [
     {
       id: 1,
       title: "En route to pickup",
@@ -116,16 +149,48 @@ export default function TrackDelivery() {
       subtitle: "Package delivered",
     },
   ];
-console.log("alert:", routeLocation.state?.alert)
+
+  const bookARideSteps = [
+    {
+      id: 1,
+      title: "En route to pickup",
+      subtitle: "On the way to pickup",
+    },
+    {
+      id: 2,
+      title: "Arrived at pickup location",
+      subtitle: "At pickup point",
+    },
+    {
+      id: 3,
+      title: "En route to destination",
+      subtitle: "Leaving for dropoff location",
+    },
+    {
+      id: 4,
+      title: "Arrived at destination",
+      subtitle: "At dropoff location",
+    },
+    {
+      id: 5,
+      title: "Ride completed",
+      subtitle: "Ride completed",
+    },
+  ];
+
+  const deliverySteps =
+    normalizedSubCategory === "book a ride"
+      ? bookARideSteps
+      : packageDeliverySteps;
+  console.log("alert:", routeLocation.state?.alert);
 
   const completedStepIds = STEPS_COMPLETED_BY_STATUS[bookingStatus] || [1];
 
   const handleStatusUpdate = async () => {
+    console.log("bookingId:", bookingId);
+    console.log("bookingStatus:", bookingStatus);
+    console.log("nextStatus:", STATUS_FLOW[bookingStatus]);
 
-     console.log("bookingId:", bookingId);
-  console.log("bookingStatus:", bookingStatus);
-  console.log("nextStatus:", STATUS_FLOW[bookingStatus]);
-  
     if (!bookingId) return console.error("No bookingId found");
 
     const isCompleting = bookingStatus === "arrived_at_dropoff";
@@ -133,7 +198,7 @@ console.log("alert:", routeLocation.state?.alert)
     setUpdating(true);
     try {
       if (isCompleting) {
-         await markAsComplete(bookingId);
+        await markAsComplete(bookingId);
         // await updateBookingStatus(bookingId, "completed"); // replace with markAsComplete(bookingId) when ready
         setBookingStatus("completed");
       } else {
@@ -149,15 +214,13 @@ console.log("alert:", routeLocation.state?.alert)
     }
   };
 
-  // Determine current button label
   const buttonLabel = BUTTON_LABELS[bookingStatus] || "Arrived at Pickup";
 
-  // Hide button once trip is fully complete
   const isFullyComplete = bookingStatus === "completed";
 
   return (
     <>
-      <Navbar />
+      <ProviderNavbar />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
         <div>
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
@@ -334,9 +397,7 @@ console.log("alert:", routeLocation.state?.alert)
                       <div className="pb-12 last:pb-0">
                         <div
                           className={`text-[16px] font-medium ${
-                            isCompleted
-                              ? "text-[#005823]"
-                              : "text-[#231F20BF]"
+                            isCompleted ? "text-[#005823]" : "text-[#231F20BF]"
                           }`}
                         >
                           {step.title}

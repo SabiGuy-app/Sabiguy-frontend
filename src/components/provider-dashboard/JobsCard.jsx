@@ -1,131 +1,201 @@
-import {
-  ChevronDown,
-  Calendar,
-  MapPin,
-  Send,
-  Clock,
-  Star,
-  MessageCircle,
-} from "lucide-react";
-import { useState } from "react";
+import { Calendar, MapPin, Clock, Star, MessageCircle } from "lucide-react";
 
 // Reusable Request Card Component
-export default function JobsCard({ job, onViewDetails, onMarkAsCompleted }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function JobsCard({
+  job,
+  onViewDetails,
+  onMarkAsCompleted,
+  onShowNavigation,
+  onMessageCustomer,
+}) {
+  const normalizedStatus = String(job?.status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+
+  const formatDateTime = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const formatTitle = (value) =>
+    String(value || "Untitled job")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
 
   const getStatusStyles = (status) => {
     const styles = {
-      funds_released: "bg-blue-100 text-[#FFC107] border-yellow-200",
-      pending: "bg-yellow-100 text-[#FFC107] border-yellow-200",
+      funds_released: "bg-green-100 text-green-700 border-green-200",
+      paid_escrow: "bg-yellow-100 text-[#FFC107] border-yellow-200",
+      payment_pending: "bg-orange-100 text-orange-700 border-orange-200",
       active: "bg-blue-100 text-blue-600 border-blue-200",
       in_progress: "bg-blue-100 text-blue-800 border-blue-200",
+      enroute_to_pickup: "bg-blue-100 text-blue-800 border-blue-200",
+      enroute_to_dropoff: "bg-blue-100 text-blue-800 border-blue-200",
+      arrived_at_pickup: "bg-green-100 text-green-700 border-green-200",
+      arrived_at_dropoff: "bg-green-100 text-green-700 border-green-200",
+      waiting_confirmation: "bg-orange-200 text-orange-800 border-orange-200",
       awaiting_confirmation: "bg-orange-200 text-orange-800 border-orange-200",
-
+      awaiting_job_commencement: "bg-slate-100 text-slate-700 border-slate-200",
       completed: "bg-green-100 text-green-700 border-green-200",
+      cancelled: "bg-red-100 text-red-700 border-red-200",
+      pending: "bg-gray-100 text-gray-700 border-gray-200",
     };
-    const normalizedStatus = String(status || "")
+    const normalized = String(status || "")
       .trim()
       .toLowerCase()
       .replace(/\s+/g, "_");
-    return styles[normalizedStatus] || styles.pending;
+    return styles[normalized] || styles.pending;
   };
+
+  const pickupAddress =
+    job?.pickupLocation?.address || job?.originalData?.pickupLocation?.address || "N/A";
+  const dropoffAddress =
+    job?.dropoffLocation?.address || job?.originalData?.dropoffLocation?.address || "N/A";
+  const amount = job?.agreedPrice ?? job?.calculatedPrice ?? job?.price ?? 0;
+  const shouldShowNavigation =
+    normalizedStatus === "paid_escrow" ||
+    normalizedStatus === "in_progress" ||
+    normalizedStatus === "arrived_at_dropoff" ||
+    normalizedStatus === "enroute_to_dropoff" ||
+    normalizedStatus === "arrived_at_pickup" ||
+    normalizedStatus === "enroute_to_pickup";
+  const bookingStatus = String(job?.originalData?.status || job?.status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  const shouldShowMessageButton = [
+    "paid_escrow",
+    "in_progress",
+    "arrived_at_pickup",
+    "enroute_to_dropoff",
+    "arrived_at_dropoff",
+  ].includes(bookingStatus);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-start gap-4">
-        {/* Main Content */}
         <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {job.title}
-                </h3>
-                <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(
-                    job.status,
-                  )}`}
-                >
-                  {job.status}
-                </span>
+                <h3 className="text-xl font-semibold text-gray-900">{formatTitle(job?.title)}</h3>
               </div>
-              <p className="text-sm text-gray-600">
-                Provider: {job.providerName}
-              </p>
-              {/* <p className="text-sm text-gray-500">
-                Order ID: {request.orderId}
-              </p> */}
+              <p className="text-sm text-gray-600">Provider: {job?.providerName || "You"}</p>
             </div>
 
-            {/* Price Section */}
             <div className="text-right">
-              <div className="text-2xl font-bold text-[#2D6A3E]">
-                {/* ₦{job.calculatedPrice.toLocaleString() || 'null'} */}
-              </div>
-              <p className="text-sm text-gray-600">
-                Delivery: {job.deliveryDate}
-              </p>
+              <span
+                className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(
+                  job?.status,
+                )}`}
+              >
+                {job?.status || "Pending"}
+              </span>
+              <div className="text-2xl font-bold text-[#2D6A3E]">NGN {Number(amount).toLocaleString()}</div>
+              <p className="text-sm text-gray-600">Delivery: {formatTitle(job?.originalData?.scheduleType || "N/A")}</p>
             </div>
           </div>
 
-          {/* Date and Time Info */}
           <div className="flex flex-col gap-2 mb-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[#2D6A3E]" />
-              <span>{job.scheduledDate}</span>
+              <span>{formatDateTime(job?.createdAt || job?.originalData?.createdAt)}</span>
             </div>
-            {job.status.toLowerCase() === "in progress" && (
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
+              </div>
+              <div>
+                <span className="text-[#231F2080] text-[16px]">Pickup</span>
+                <p className="text-[#231F20BF] text-[18px]">{pickupAddress}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start justify-between gap-3">
+              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-3 h-3 text-[#005823]" />
+              </div>
+              <div className="flex-1">
+                <span className="text-[#231F2080] text-[16px]">Dropoff</span>
+                <p className="text-[#231F20BF] text-[18px]">{dropoffAddress}</p>
+              </div>
+            </div>
+
+            {normalizedStatus === "in_progress" && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">
-                  Est. Completion: {job.est_completion}
-                </span>
+                <span className="font-medium">Est. Completion: {job?.est_completion || "N/A"}</span>
               </div>
             )}
-            {job.status.toLowerCase() === "pending" && (
+
+            {normalizedStatus === "pending" && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">Starts in: {job.startsIn}</span>
+                <span className="font-medium">Starts in: {job?.startsIn || "N/A"}</span>
               </div>
             )}
-            {(job.status.toLowerCase() === "waiting confirmation" ||
-              job.status.toLowerCase() === "completed") && (
+
+            {(normalizedStatus === "waiting_confirmation" ||
+              normalizedStatus === "completed" ||
+              normalizedStatus === "awaiting_confirmation") && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">
-                  {job.status.toLowerCase() === "completed"
-                    ? `Completed ${job.completed}`
-                    : `Completed ${job.completed}`}{" "}
-                </span>
+                <span className="font-medium">Completed {job?.completedAt || "recently"}</span>
               </div>
             )}
           </div>
-          {/* Buttons */}
+
           <div className="flex gap-3 border-t">
-            {job.status.toLowerCase() !== "completed" && (
+            {normalizedStatus !== "completed" && (
               <button
                 onClick={() => onViewDetails(job)}
-                className="px-3 py-1 mt-3 bg-[#2D6A3E] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
+                className="px-3 py-2 mt-3 bg-[#2D6A3E] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
               >
                 View Details
               </button>
             )}
-            {job.status.toLowerCase() === "completed" && (
-              <div className="mt-3">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                    />
-                  ))}
-                </div>
-                <p className="text-gray-500 mt-1 text-sm">
-                  He did a very good job
-                </p>
-              </div>
+
+          {normalizedStatus === "awaiting_confirmation" && (
+              <button
+                className="px-3 py-2 mt-3 bg-gray-100 text-black rounded-lg font-medium transition-colors"
+              >
+                Awaiting Customer's Review
+              </button>
             )}
-            {job.status.toLowerCase() === "in progress" && (
+
+            {normalizedStatus === "completed" && (
+  <div className="mt-3">
+    <div className="flex">
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className={`w-4 h-4 ${
+            i < (job?.originalData?.rating?.score || 0)
+              ? "fill-yellow-400 text-yellow-400"
+              : "text-gray-300"
+          }`}
+        />
+      ))}
+    </div>
+
+    <p className="text-gray-500 mt-1 text-sm">
+      {job?.originalData?.rating?.review || "No review available"}
+    </p>
+  </div>
+)}
+            {normalizedStatus === "in_progress" && (
               <button
                 onClick={() => onMarkAsCompleted(job)}
                 className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -133,14 +203,42 @@ export default function JobsCard({ job, onViewDetails, onMarkAsCompleted }) {
                 Mark as Completed
               </button>
             )}
-            {job.status.toLowerCase() === "pending" && (
+
+            {normalizedStatus === "pending" && (
               <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                 En route
               </button>
             )}
-            {job.status.toLowerCase() === "waiting confirmation" && (
-              <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+
+            {normalizedStatus === "waiting_confirmation" && (
+              <button className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                 Awaiting customer's review
+              </button>
+            )}
+
+            {shouldShowNavigation && (
+              <button
+                onClick={() => onShowNavigation?.(job)}
+                className="px-2 py-1 mt-3 bg-white text-[#2D6A3E] border border-[#2D6A3E] rounded-lg font-medium hover:bg-[#E6EFE9] transition-colors flex items-center gap-2"
+              >
+                Show navigation
+              </button>
+            )}
+
+            {shouldShowMessageButton && (
+              <button
+                onClick={() => onMessageCustomer?.(job)}
+              className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                  <MessageCircle className="w-4 h-4" />
+                Message
+              </button>
+            )}
+             {normalizedStatus === "awaiting_job_commencement" && (
+              <button
+                className="px-3 py-2 mt-3 bg-gray-50 text-[#DC2626] rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              >
+                Cancel
               </button>
             )}
           </div>

@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { useState } from "react";
@@ -18,12 +18,22 @@ export default function InputField({
   italicPlaceholder = false,
   onBlur,
   name,
-  size = "full", // New prop: "full", "large", "medium", "small", "xs"
+  size = "full",
   ...props
 }) {
-  const [selected, setSelected] = useState(value || options[0]);
+  const getSelected = () => {
+    if (!value) return options[0];
+    return options.find((opt) => opt.value === value) || options[0];
+  };
+  const [selected, setSelected] = useState(getSelected);
 
-  // Width variants
+  useEffect(() => {
+    if (value !== undefined) {
+      const match = options.find((opt) => opt.value === value);
+      if (match) setSelected(match);
+    }
+  }, [value]);
+
   const widthClasses = {
     full: "w-full max-w-md",
     large: "w-full sm:w-96 md:w-[500px] max-w-full",
@@ -39,18 +49,17 @@ export default function InputField({
       <div
         onClick={onClick}
         className={`flex items-center gap-4 ${widthClass} px-5 py-4 border rounded-md cursor-pointer transition-colors
-          ${isSelected ? 'bg-[#005823BF] border-[#005823] text-white' : 'bg-gray-50 border-gray-400 text-black'}
+          ${isSelected ? "bg-[#005823BF] border-[#005823] text-white" : "bg-gray-50 border-gray-400 text-black"}
         `}
       >
         <div
           className={`w-4 h-4 flex items-center justify-center border-2 rounded-full transition-colors
-            ${isSelected ? 'border-[#8BC53FBF] bg-white' : 'border-gray-400'}
+            ${isSelected ? "border-[#8BC53FBF] bg-white" : "border-gray-400"}
           `}
         >
           {isSelected && <FaCheck className="w-3 h-3 text-[#005823BF]" />}
         </div>
 
-        {/* Placeholder Text */}
         <span className="text-sm font-medium">{placeholder}</span>
       </div>
     );
@@ -89,13 +98,13 @@ export default function InputField({
                     value={option}
                     className={({ active }) =>
                       `cursor-pointer select-none px-4 py-2 ${
-                        active ? 'bg-[#005823BF] text-white' : 'text-gray-900'
+                        active ? "bg-[#005823BF] text-white" : "text-gray-900"
                       }`
                     }
                   >
                     {({ selected }) => (
                       <div className="flex justify-between items-center">
-                        <span className={selected ? 'font-semibold' : ''}>
+                        <span className={selected ? "font-semibold" : ""}>
                           {option.label}
                         </span>
                         {selected && (
@@ -118,7 +127,7 @@ export default function InputField({
           onChange={onChange}
           onBlur={onBlur}
           className={`w-full px-5 py-4 bg-gray-50 border border-gray-400 rounded-md focus:border-[#8BC53FBF] focus:ring-1 focus:ring-[#8BC53FBF] focus:outline-none ${
-            italicPlaceholder ? 'placeholder:italic' : ''
+            italicPlaceholder ? "placeholder:italic" : ""
           }`}
           placeholder={placeholder}
           {...props}

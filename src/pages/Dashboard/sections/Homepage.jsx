@@ -12,14 +12,6 @@ import family from "/family.png";
 import delivery from "/delivery.png";
 import handtool from "/hand-tools.png";
 import siren from "/siren.png";
-import Dispatch2 from "/Dispatch2.png";
-import electrician from "/electrician.png";
-import Welding from "/Welding.jpg";
-import Household from "/Household.jpg";
-import Towing from "/Towing.jpg";
-import Legal from "/Legal.jpg";
-import Plumbing from "/Plumbing.jpg";
-import Design from "/Design.jpg";
 import new1 from "/new1.png";
 import new2 from "/new2.png";
 import new3 from "/new3.png";
@@ -59,8 +51,7 @@ export default function DashboardHome() {
     },
     {
       title: "Book a Ride",
-      description:
-        "Reliable rides, ready whenever you are.",
+      description: "Reliable rides, ready whenever you are.",
       image: new2,
       // bgColor: "#BF4A0B4D",
       comingSoon: false,
@@ -172,13 +163,30 @@ export default function DashboardHome() {
     },
   ];
 
+  const categoryServiceMap = {
+    "Package Delivery": "package delivery",
+    "Book a Ride": "book a ride",
+  };
+
   const handleServiceClick = (service, isDisabled) => {
     if (isDisabled) {
       setSelectedService(service);
       setModalOpen(true);
     } else {
-      // Handle active service click (navigate or other action)
-      console.log("Active service clicked:", service.title);
+      navigate("/bookings");
+      // console.log("Active service clicked:", service.title);
+    }
+  };
+
+  const handleCategoryClick = (category) => {
+    if (category.comingSoon) return;
+    const serviceValue = categoryServiceMap[category.title];
+    if (serviceValue) {
+      navigate(
+        `/bookings?service=${encodeURIComponent(serviceValue)}`,
+      );
+    } else {
+      navigate("/bookings");
     }
   };
 
@@ -223,7 +231,7 @@ export default function DashboardHome() {
         </div> */}
       </div>
 
-      <CategoryCarousel categories={categories} />
+      <CategoryCarousel categories={categories} onCategoryClick={handleCategoryClick} />
       <div className="mb-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
           <h3 className="text-lg font-semibold mb-4">Explore Categories</h3>

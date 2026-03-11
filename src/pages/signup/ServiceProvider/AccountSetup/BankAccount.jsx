@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import AccountSetupLayout from "./layout";
@@ -14,6 +14,7 @@ export default function BankAccountForm({ onBack, onNext }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [verifyingAccount, setVerifyingAccount] = useState(false);
+  const verifyAbortRef = useRef(null);
 
   // Fetch banks on component mount
   useEffect(() => {
@@ -32,7 +33,7 @@ export default function BankAccountForm({ onBack, onNext }) {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         // Extract only name and code from the response
         const bankList = data.data.map(bank => ({
@@ -63,40 +64,41 @@ export default function BankAccountForm({ onBack, onNext }) {
       return;
     }
 
+    // Cancel any in-flight verification request
+    if (verifyAbortRef.current) {
+      verifyAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    verifyAbortRef.current = controller;
+
     setVerifyingAccount(true);
     setErrorMessage("");
-    
+
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BASE_URL}/provider/bank-account`,
+        `${import.meta.env.VITE_BASE_URL}/payment/verify-bank`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify({ 
-            accountNumber, 
-            bankCode,
-            verifyOnly: true
+          body: JSON.stringify({
+            accountNumber,
+            bankCode
           }),
+          signal: controller.signal,
         }
       );
 
       const data = await response.json();
-      console.log('Verification response:', data);
-      console.log('Account details:', data.verificationDetails);
-      
+
       if (data.success) {
-        // Check both locations for account name
-        const accountName = data.data?.accountName || data.verificationDetails?.accountName;
-        
-        console.log('Extracted account name:', accountName);
-        
+        const accountName = data.data?.accountName;
+
         if (accountName) {
           formik.setFieldValue("accountName", accountName);
         } else {
-          console.error('Account name not found in response');
           setErrorMessage("Could not retrieve account name");
           formik.setFieldValue("accountName", "");
         }
@@ -105,7 +107,7 @@ export default function BankAccountForm({ onBack, onNext }) {
         formik.setFieldValue("accountName", "");
       }
     } catch (error) {
-      console.error("Account verification error:", error);
+      if (error.name === "AbortError") return;
       setErrorMessage("Failed to verify account number");
       formik.setFieldValue("accountName", "");
     } finally {
@@ -131,14 +133,8 @@ export default function BankAccountForm({ onBack, onNext }) {
       setLoading(true);
       setErrorMessage("");
       setSuccessMessage("");
-      
-      try {
-        console.log('Submitting bank info:', {
-          accountNumber: values.accountNumber,
-          bankCode: values.bankCode,
-          bankName: values.bankName
-        });
 
+      try {
         const res = await fetch(`${import.meta.env.VITE_BASE_URL}/provider/bank-info`, {
           method: "PUT",
           headers: {
@@ -147,14 +143,13 @@ export default function BankAccountForm({ onBack, onNext }) {
           },
           body: JSON.stringify({
             accountNumber: values.accountNumber,
-            bankCode: values.bankCode
+            bankCode: values.bankCode,
+            bankName: values.bankName
           }),
         });
 
         const data = await res.json();
-        console.log('Save bank info response:', data);
-        console.log('Verification details:', data.verificationDetails);
-        
+
         if (data.success) {
           setSuccessMessage("Bank account added successfully!");
           setTimeout(() => onNext?.(), 1500);
@@ -162,7 +157,6 @@ export default function BankAccountForm({ onBack, onNext }) {
           setErrorMessage(data.message || "Failed to add bank account");
         }
       } catch (err) {
-        console.error("Bank info update failed:", err);
         setErrorMessage("Something went wrong. Please try again.");
       } finally {
         setLoading(false);
@@ -172,12 +166,11 @@ export default function BankAccountForm({ onBack, onNext }) {
 
   // Handle bank selection
   const handleBankSelect = (bank) => {
-    console.log('Selected bank:', bank);
     formik.setFieldValue("bankName", bank.name);
     formik.setFieldValue("bankCode", bank.code);
     setSearchQuery(bank.name);
     setShowDropdown(false);
-    
+
     // Verify account if account number already entered
     if (formik.values.accountNumber.length === 10) {
       verifyAccountNumber(formik.values.accountNumber, bank.code);
@@ -186,14 +179,11 @@ export default function BankAccountForm({ onBack, onNext }) {
 
   // Handle account number change
   const handleAccountNumberChange = (e) => {
-    const value = e.target.value;
-    formik.handleChange(e);
-    
-    console.log('Account number changed:', value);
-    
+    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+    formik.setFieldValue("accountNumber", value);
+
     // Auto-verify when 10 digits entered and bank selected
     if (value.length === 10 && formik.values.bankCode) {
-      console.log('Triggering verification for:', value, formik.values.bankCode);
       verifyAccountNumber(value, formik.values.bankCode);
     } else if (value.length !== 10) {
       formik.setFieldValue("accountName", "");
@@ -240,7 +230,7 @@ export default function BankAccountForm({ onBack, onNext }) {
               disabled={loadingBanks}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#005823BF]"
             />
-            
+
             {/* Dropdown */}
             {showDropdown && searchQuery && filteredBanks.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -255,7 +245,7 @@ export default function BankAccountForm({ onBack, onNext }) {
                 ))}
               </div>
             )}
-            
+
             {showDropdown && searchQuery && filteredBanks.length === 0 && !loadingBanks && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg px-4 py-2 text-gray-500">
                 No banks found
@@ -315,9 +305,8 @@ export default function BankAccountForm({ onBack, onNext }) {
             <button
               type="submit"
               disabled={loading || verifyingAccount || !formik.values.accountName}
-              className={`px-6 py-2 rounded-md text-white bg-[#005823BF] hover:bg-[#004e1a] transition ${
-                (loading || verifyingAccount || !formik.values.accountName) && "opacity-70 cursor-not-allowed"
-              }`}
+              className={`px-6 py-2 rounded-md text-white bg-[#005823BF] hover:bg-[#004e1a] transition ${(loading || verifyingAccount || !formik.values.accountName) && "opacity-70 cursor-not-allowed"
+                }`}
             >
               {loading ? "Saving..." : "Save & Continue"}
             </button>

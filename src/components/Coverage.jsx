@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function CoverageRadius({onChange, initialRadius = 5, initialAllowOutside = true }) {
+export default function CoverageRadius({ onChange, initialRadius = 5, initialAllowOutside = true }) {
   const [radius, setRadius] = useState(initialRadius);
   const [allowOutside, setAllowOutside] = useState(initialAllowOutside);
   const [customValue, setCustomValue] = useState('');
@@ -37,7 +37,7 @@ export default function CoverageRadius({onChange, initialRadius = 5, initialAllo
     if (isCustom) {
       setCustomValue(value.toString());
     }
-     notifyChange(value, allowOutside);
+    notifyChange(value, allowOutside);
 
   };
 
@@ -45,7 +45,7 @@ export default function CoverageRadius({onChange, initialRadius = 5, initialAllo
     const value = e.target.value;
     if (value === '' || (Number(value) >= 1 && Number(value) <= 50)) {
       setCustomValue(value);
-     if (value) {
+      if (value) {
         const numValue = Number(value);
         setRadius(numValue);
         notifyChange(numValue, allowOutside);
@@ -55,27 +55,26 @@ export default function CoverageRadius({onChange, initialRadius = 5, initialAllo
 
   return (
     <div className="max-w-1xl bg-white rounded-lg">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">
+      {/* <h2 className="text-xl font-semibold text-gray-800 mb-6">
         Work coverage radius
-      </h2>
+      </h2> */}
 
       {/* Preset buttons */}
       <div className="flex gap-3 mb-6">
         {presetValues.map((value) => (
           <button
-          type='button'
+            type='button'
             key={value}
             onClick={() => handlePresetClick(value)}
-            className={`px-4 py-2 rounded-full font-medium transition-colors ${
-              radius === value && !isCustom
-                ? 'bg-green-700 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-full font-medium transition-colors ${radius === value && !isCustom
+              ? 'bg-green-700 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             {value}km
           </button>
         ))}
-        
+
         {/* Custom button */}
         {isCustom ? (
           <input
@@ -97,7 +96,7 @@ export default function CoverageRadius({onChange, initialRadius = 5, initialAllo
           />
         ) : (
           <button
-                    type='button'
+            type='button'
 
             onClick={handleCustomClick}
             className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium"
@@ -108,7 +107,7 @@ export default function CoverageRadius({onChange, initialRadius = 5, initialAllo
       </div>
 
       {/* Slider */}
-      <div className="mb-2">
+      {/* <div className="mb-2">
         <input
           type="range"
           min="1"
@@ -120,17 +119,17 @@ export default function CoverageRadius({onChange, initialRadius = 5, initialAllo
             background: `linear-gradient(to right, #15803d 0%, #15803d ${((radius - 1) / 49) * 100}%, #e5e7eb ${((radius - 1) / 49) * 100}%, #e5e7eb 100%)`
           }}
         />
-      </div>
+      </div> */}
 
       {/* Slider labels */}
-      <div className="flex justify-between text-sm text-gray-500 mb-8">
+      {/* <div className="flex justify-between text-sm text-gray-500 mb-8">
         <span>1km</span>
         <span>{radius}km</span>
         <span>50km</span>
-      </div>
+      </div> */}
 
       {/* Checkbox */}
-      <label className="flex items-start gap-3 cursor-pointer group">
+      {/* <label className="flex items-start gap-3 cursor-pointer group">
         <div className="relative flex-shrink-0 mt-0.5">
           <input
             type="checkbox"
@@ -162,7 +161,7 @@ export default function CoverageRadius({onChange, initialRadius = 5, initialAllo
             You'll receive requests from clients beyond your preferred radius
           </div>
         </div>
-      </label>
+      </label> */}
 
       <style jsx>{`
         .slider::-webkit-slider-thumb {

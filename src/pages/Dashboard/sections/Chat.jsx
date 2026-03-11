@@ -114,7 +114,7 @@ export default function ChatPage() {
 
     if ((bookingId || chatId) && chats.length > 0) {
       const chat = chats.find(
-        (c) => c.bookingId._id === bookingId || c._id === chatId,
+        (c) => c.bookingId === bookingId || c._id === chatId,
       );
       if (chat) {
         setSelectedChat(chat);
@@ -179,7 +179,7 @@ export default function ChatPage() {
 
       setChats((prev) =>
         prev.map((chat) =>
-          chat.bookingId._id === bookingId ? { ...chat, unreadCount: 0 } : chat,
+          chat.bookingId === bookingId ? { ...chat, unreadCount: 0 } : chat,
         ),
       );
     } catch (error) {
@@ -191,7 +191,7 @@ export default function ChatPage() {
   const updateChatLastMessage = (bookingId, newMessage) => {
     setChats((prev) =>
       prev.map((chat) => {
-        if (chat.bookingId._id === bookingId) {
+        if (chat.bookingId === bookingId) {
           return {
             ...chat,
             lastMessage: {
