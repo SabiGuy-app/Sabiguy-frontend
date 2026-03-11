@@ -129,7 +129,7 @@ export default function ProviderProfilePage() {
 
   return (
     <ProviderDashboardLayout>
-      <div className="w-[70%]">
+      <div>
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-200 mb-6">
           <div className="border-b border-gray-300 px-9 py-4">
