@@ -34,7 +34,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">
-                      {request.providerName}
+                      {request.providerName ?? "Provider"}
                     </span>
                     <div className="flex items-center gap-1 text-sm">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -125,7 +125,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     Service Cost
                   </p>
                   <p className="text-sm m mb-3 text-gray-600">
-                    ₦{request.totalAmount.toLocaleString()}
+                    ₦{request.price.toLocaleString() ?? "0"}
                   </p>
                 </div>
               </div>

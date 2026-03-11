@@ -10,7 +10,12 @@ import {
   Wrench,
 } from "lucide-react";
 
-export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustomer}) {
+export default function JobDetailsModal({
+  isOpen,
+  onClose,
+  job,
+  onMessageCustomer,
+}) {
   const formatTitle = (value) =>
     String(value || "Untitled job")
       .split(" ")
@@ -31,6 +36,7 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
       hour12: true,
     });
   };
+  console.log(job);
 
   return (
     <div>
@@ -53,13 +59,18 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
           <div className="p-6 space-y-6">
             {/* Service Title */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">{formatTitle(job?.title)}</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                {formatTitle(job?.title)}
+              </h3>
 
               {/* Provider Info */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <img
-                    src={job?.originalData?.providerId?.profilePicture || "/avatar.png"}
+                    src={
+                      job?.originalData?.providerId?.profilePicture ||
+                      "/avatar.png"
+                    }
                     alt={job.providerName}
                     className="w-18 h-18 rounded-full object-cover"
                   />
@@ -83,16 +94,18 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
 
                 {/* Status Badge */}
                 <span className="px-3 py-1 bg-green-100 text-sm font-medium rounded-full border border-green-200">
-{job.status}                </span>
+                  {job.status}{" "}
+                </span>
               </div>
               <div className="flex mt-3 gap-8">
                 <button className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                   <PhoneCall className="w-4 h-4" />
                   Call
                 </button>
-                <button 
-                className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-                onClick={() => onMessageCustomer?.(job)}>
+                <button
+                  className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  onClick={() => onMessageCustomer?.(job)}
+                >
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </button>
@@ -113,22 +126,27 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
                     <p className="text-sm font-medium text-gray-700">
                       Service Type
                     </p>
-                    <p className="text-sm text-gray-600">{formatTitle(job?.title)}</p>
+                    <p className="text-sm text-gray-600">
+                      {formatTitle(job?.title)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-700">
-                      Start Date & Time
+                      Scheduled Date
                     </p>
-                    <p className="text-sm text-gray-600">{formatDateTime(job?.createdAt || job?.originalData?.createdAt)}
-</p>
+                    <p className="text-sm text-gray-600">
+                      {formatDateTime(
+                        job?.createdAt || job?.originalData?.createdAt,
+                      )}
+                    </p>
                   </div>
                 </div>
 
                 {/* End Date */}
-                <div className="flex items-start gap-3">
+                {/* <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-700">
@@ -136,16 +154,32 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
                     </p>
                     <p className="text-sm text-gray-600">{job.deliveryDate}</p>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Location */}
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-2 h-2 bg-[#005823] rounded-full" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Pickup Location
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {job.pickupLocation.address}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-700">
-                      Location
+                      Dropoff Location
                     </p>
-                    <p className="text-sm text-gray-600">{job.location}</p>
+                    <p className="text-sm text-gray-600">
+                      {job.dropoffLocation.address}
+                    </p>
                   </div>
                 </div>
 
@@ -169,7 +203,7 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
                       Service Cost
                     </p>
                     <p className="text-sm m mb-3 text-gray-600">
-                      ₦{job.price.toLocaleString()}
+                      ₦{job.agreedPrice.toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -177,7 +211,7 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
             </div>
 
             {/* Project Description */}
-            <div>
+            {/* <div>
               <h4 className="font-semibold mb-3">Project Description</h4>
               <p className="text-sm text-gray-700 leading-relaxed">
                 Need a licensed electrician to install new wiring for a home
@@ -186,11 +220,11 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
                 second floor. All materials will be provided, but please bring
                 standard tools and safety equipment.
               </p>
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <h3 className="font-semibold mb-3">Attached photos</h3>
-            </div>
+            </div> */}
 
             {/* Additional Notes */}
             <div>
@@ -202,9 +236,9 @@ export default function JobDetailsModal({ isOpen, onClose, job,  onMessageCustom
               </div>
             </div>
 
-            <p className="flex mt-15 items-center  text-sm justify-center">
+            {/* <p className="flex mt-15 items-center  text-sm justify-center">
               Update the job status to keep the customer informed
-            </p>
+            </p> */}
           </div>
         </div>
       </div>

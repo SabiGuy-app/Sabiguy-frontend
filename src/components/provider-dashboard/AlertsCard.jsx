@@ -6,13 +6,17 @@ import {
   Clock,
   Star,
   MessageCircle,
-  
 } from "lucide-react";
 import { FaBicycle } from "react-icons/fa";
 import { useState } from "react";
 
 // Reusable Request Card Component
-export default function AlertsCard({ alert, onViewDetails, onAcceptBooking, accepting }) {
+export default function AlertsCard({
+  alert,
+  onViewDetails,
+  onAcceptBooking,
+  accepting,
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const formatCreatedAt = (value) => {
     if (!value) return "N/A";
@@ -49,10 +53,9 @@ export default function AlertsCard({ alert, onViewDetails, onAcceptBooking, acce
             <div>
               <h3 className="text-xl font-semibold text-gray-900">
                 {alert?.subCategory
-  ?.split(' ')
-  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-  .join(' ')
-}
+                  ?.split(" ")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ")}
               </h3>
 
               <div className="flex flex-col mb-4 mt-2 gap-3 text-sm text-gray-600">
@@ -62,25 +65,30 @@ export default function AlertsCard({ alert, onViewDetails, onAcceptBooking, acce
                 </div>
 
                 <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                                <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
-                              </div>
-                              <div>
-                                <span className="text-[#231F2080] text-[16px]">Pickup</span>
-                                <p className="text-[#231F20BF] text-[18px]">{alert?.originalData?.pickupLocation.address}</p>
-                              </div>
-                            </div>
-                
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                                <MapPin className="w-3 h-3 text-[#005823]" />
-                              </div>
-                              <div className="flex-1">
-                                <span className="text-[#231F2080] text-[16px]">Dropoff</span>
-                                <p className="text-[#231F20BF] text-[18px]">{alert?.originalData?.dropoffLocation?.address}</p>
-                              </div>
-                              
-                              </div>
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
+                  </div>
+                  <div>
+                    <span className="text-[#231F2080] text-[16px]">Pickup</span>
+                    <p className="text-[#231F20BF] text-[18px]">
+                      {alert?.originalData?.pickupLocation.address}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start justify-between gap-3">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-3 h-3 text-[#005823]" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-[#231F2080] text-[16px]">
+                      Dropoff
+                    </span>
+                    <p className="text-[#231F20BF] text-[18px]">
+                      {alert?.originalData?.dropoffLocation?.address}
+                    </p>
+                  </div>
+                </div>
 
                 {/* <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
@@ -90,7 +98,7 @@ export default function AlertsCard({ alert, onViewDetails, onAcceptBooking, acce
                   <div className="flex items-center gap-3">
                     <Clock className="w-4 h-4 text-yellow-500" />
                     <span className="font-medium">Posted: {alert.posted}</span>
-                     <div className="flex items-center gap-2 whitespace-nowrap">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
                       <FaBicycle className="w-7 h-7 text-[#2D6A3E]" />
                       <span>{alert.distance}</span>
                     </div>
