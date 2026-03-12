@@ -9,11 +9,11 @@ import {
   Shield,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Navbar from "../../../../components/dashboard/Navbar";
 import location from "/location.png";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { startJob } from "../../../../api/bookings";
+import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
 
 export default function StartNavigation() {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ export default function StartNavigation() {
 
   return (
     <>
-      <Navbar />
+      <ProviderNavbar />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
         <div className="">
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">

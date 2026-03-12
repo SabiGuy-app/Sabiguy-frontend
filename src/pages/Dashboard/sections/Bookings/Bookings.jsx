@@ -244,8 +244,10 @@ export default function Bookings() {
       "Booking",
     status: booking.status || "pending",
     providerName: booking.providerId?.fullName || "—",
+    providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     providerImage:
-      booking.providerId?.profilePicture || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
+      booking.providerId?.profilePicture ||
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
     providerRole:
       booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—",
     providerRating: booking.providerId?.rating?.average || null,
@@ -283,7 +285,7 @@ export default function Bookings() {
       : "—",
 
     startsIn: null,
-    ratings: booking.rating || null,
+    ratings: booking.rating?.score || null,
   });
 
   const filteredRequests = userBookings
@@ -298,13 +300,23 @@ export default function Bookings() {
       if (statusFilter === "pending")
         return ["pending_providers", "payment_pending"].includes(status);
       if (statusFilter === "completed")
-        return ["completed", "funds_released"].includes(status);
+        return [
+          "completed",
+          "funds_released",
+          "user_accepted_completion",
+        ].includes(status);
       return false;
     });
 
   const handleViewDetails = (request) => {
     setSelectedRequest(request);
     setIsModalOpen(true);
+  };
+
+  const refreshBookings = async () => {
+    const data = await getUserBookings();
+    const bookings = data?.data || data || [];
+    setUserBookings(Array.isArray(bookings) ? bookings : []);
   };
 
   const handleCloseModal = () => {
@@ -639,6 +651,7 @@ export default function Bookings() {
                       request={request}
                       onViewDetails={handleViewDetails}
                       onTrackProvider={handleTrackProvider}
+                      onBookingCancelled={refreshBookings}
                     />
                   ))
                 ) : (

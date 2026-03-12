@@ -163,3 +163,16 @@ export const selectProvider = async (bookingId, providerId) => {
   );
   return data;
 };
+
+export const acceptCompletion = async (bookingId, payload) => {
+  const { data } = await api.patch(
+    `/bookings/${bookingId}/accept-completion`,
+    payload,
+  );
+  return data;
+};
+
+export const cancelBooking = async (bookingId, reason) => {
+  const { data } = await api.patch(`/bookings/${bookingId}/cancel`, { reason });
+  return data;
+};

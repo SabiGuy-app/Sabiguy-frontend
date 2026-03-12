@@ -34,7 +34,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">
-                      {request.providerName}
+                      {request.providerName ?? "Provider"}
                     </span>
                     <div className="flex items-center gap-1 text-sm">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -43,7 +43,14 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                       </span>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500">{request.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-500 capitalize">{request.title.replace(/_/g, ' ')}</p>
+                    {request.providerIdDisplay && request.providerIdDisplay !== "—" && (
+                      <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
+                        ID: {request.providerIdDisplay}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -56,6 +63,19 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
           <div className="border-t border-gray-200">
             <h4 className="font-semibold mb-3 mt-2">Booking Information</h4>
             <div className="space-y-3">
+              {/* Booking ID */}
+              {request.orderId && request.orderId !== "—" && (
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-[#005823] text-[10px] font-bold">#</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Booking ID</p>
+                    <p className="text-sm text-gray-600 font-mono">{request.orderId}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Start Date & Time */}
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
@@ -125,7 +145,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     Service Cost
                   </p>
                   <p className="text-sm m mb-3 text-gray-600">
-                    ₦{request.totalAmount.toLocaleString()}
+                    ₦{request.price.toLocaleString() ?? "0"}
                   </p>
                 </div>
               </div>

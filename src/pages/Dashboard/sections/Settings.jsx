@@ -32,7 +32,7 @@ export default function ProfilePage() {
     address: "24, Eleyele street",
     city: "Ibadan",
     state: "Oyo",
-    rating: 4.6,
+    // rating: 4.6,
     avatar: null,
   };
 
@@ -49,12 +49,15 @@ export default function ProfilePage() {
   return (
     <DashboardLayout>
       {/* Header */}
-      <div className="">
+      <div>
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-9 mb-6">
-          <h1 className="mb-4 font-bold">My Profile</h1>
-          <h1 className="border-b border-gray-300"></h1>
-          <div className="flex flex-col mt-4 md:flex-row md:items-center md:justify-between gap-6">
+        <div className="bg-white rounded-2xl border border-gray-200 mb-6">
+          <div className="border-b border-gray-300 px-9 py-4">
+            <h1 className="font-bold text-[20px]">
+              My Profile
+            </h1>
+          </div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 px-9 py-9">
             {/* Left Side - Avatar and Info */}
             <div className="flex items-center gap-4">
               {/* Avatar */}
@@ -75,7 +78,9 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-1">
                   {user?.data?.fullName}
                 </h2>
-                <p className="text-sm text-gray-600 mb-1">{user?.data?.email}</p>
+                <p className="text-sm text-gray-600 mb-1">
+                  {user?.data?.email}
+                </p>
                 <p className="text-sm text-gray-600">
                   {user?.data?.phoneNumber}
                 </p>
@@ -100,8 +105,8 @@ export default function ProfilePage() {
           {/* Tab Content */}
           {activeTab === "profile" && <ProfileInfoTab user={user} />}
           {activeTab === "wallet" && <WalletTab />}
-          {activeTab === "password" && (
-            isGoogleUser ? (
+          {activeTab === "password" &&
+            (isGoogleUser ? (
               <div className="max-w-2xl py-12 text-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <img src="/Google.svg" alt="Google" className="w-8 h-8" />
@@ -110,14 +115,14 @@ export default function ProfilePage() {
                   Password management is not available
                 </h3>
                 <p className="text-sm text-gray-600 max-w-md mx-auto">
-                  You signed in with Google, so your account doesn't have a password.
-                  Your account security is managed through your Google account.
+                  You signed in with Google, so your account doesn't have a
+                  password. Your account security is managed through your Google
+                  account.
                 </p>
               </div>
             ) : (
               <PasswordTab />
-            )
-          )}
+            ))}
           {activeTab === "settings" && <SettingsTab />}
           {activeTab === "referrals" && <ReferralsTab profile={profile} />}
         </div>

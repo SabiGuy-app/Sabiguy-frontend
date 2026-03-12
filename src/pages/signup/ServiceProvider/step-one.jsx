@@ -17,6 +17,8 @@ export default function StepOne({ onNext }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [termAccepted, setTermAccepted] = useState(false);
+  const [termError, setTermError] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -26,6 +28,12 @@ export default function StepOne({ onNext }) {
   };
 
   const handleSubmit = async (values, { setSubmitting }) => {
+    if (!termAccepted) {
+      setTermError("You must accept the Privacy Policy and Terms of Service.");
+      setSubmitting(false);
+      return;
+    }
+
     setLoading(true);
     setSuccessMessage("");
     try {
@@ -311,7 +319,7 @@ export default function StepOne({ onNext }) {
                     name="password"
                     label="Password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Use a minimum of 6 characters"
+                    placeholder="Use a minimum of 8 characters"
                     value={values.password}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -345,31 +353,36 @@ export default function StepOne({ onNext }) {
                   </div>
                 )}
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    className="accent-[#005823BF]"
-                  />
-                  <label
-                    htmlFor="terms"
-                    value={values.term}
-                    className="text-sm text-gray-600"
-                  >
-                    I agree to the{" "}
-                    <a href="#" className="text-[#005823BF] font-medium">
-                      Privacy Policy
-                    </a>{" "}
-                    and{" "}
-                    <a href="#" className="text-[#005823BF] font-medium">
-                      Terms of Services
-                    </a>
-                  </label>
-                  <ErrorMessage
-                    name="term"
-                    component="span"
-                    className="text-[#db3a3a]"
-                  />
+                <div className="">
+                  <div className="flex gap-2">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={termAccepted}
+                      onChange={() => {
+                        setTermAccepted((prev) => !prev);
+                        setTermError("");
+                      }}
+                      className="accent-[#005823BF]"
+                    />
+                    <label
+                      htmlFor="terms"
+                      value={values.term}
+                      className="text-sm text-gray-600"
+                    >
+                      I agree to the{" "}
+                      <a href="#" className="text-[#005823BF] font-medium">
+                        Privacy Policy
+                      </a>{" "}
+                      and{" "}
+                      <a href="#" className="text-[#005823BF] font-medium">
+                        Terms of Services
+                      </a>
+                    </label>
+                  </div>
+                  {termError && (
+                    <span className="text-[#db3a3a] text-sm">{termError}</span>
+                  )}
                 </div>
 
                 <Button type="submit">

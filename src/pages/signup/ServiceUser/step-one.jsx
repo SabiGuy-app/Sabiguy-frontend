@@ -10,25 +10,31 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
-import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 import Loader from "../../../components/Loader";
-
 
 export default function StepOne({ onNext }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [googleLoading, setGoogleLoading] = useState(false); // Fixed typo
-
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [termAccepted, setTermAccepted] = useState(false);
+  const [termError, setTermError] = useState("");
 
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
 
   const handleSubmit = async (values, { setSubmitting }) => {
+    if (!termAccepted) {
+      setTermError("You must accept the Privacy Policy and Terms of Service.");
+      setSubmitting(false);
+      return;
+    }
     setLoading(true);
     setSuccessMessage("");
+
     try {
       const payload = {
         fullName: values.fullName,
@@ -36,26 +42,30 @@ export default function StepOne({ onNext }) {
         city: values.city,
         email: values.email,
         password: values.password,
-        term: values.term
+        term: values.term,
       };
 
-      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth/buyer`, payload);
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/auth/buyer`,
+        payload,
+      );
 
       console.log("Backend response:", response);
 
       if (response.status === 200 || response.status === 201) {
         const token = response.data?.token;
         if (token) {
-          localStorage.setItem("token", token)
+          localStorage.setItem("token", token);
         }
         setSuccessMessage("Registration successful");
         onNext?.({ email: values.email });
         localStorage.setItem("email", values.email);
-
       } else {
         const data = response.data;
         if (data.debugMessage === "Email already in use") {
-          setErrorMessage(`${data.debugMessage}. Please login to continue your sign-up process.`);
+          setErrorMessage(
+            `${data.debugMessage}. Please login to continue your sign-up process.`,
+          );
         } else {
           setErrorMessage(data.message || "Something went wrong");
         }
@@ -102,8 +112,8 @@ export default function StepOne({ onNext }) {
   //       onNext();
   //     } else {
   //       setErrorMessage("data.message");
-  //     } 
-      
+  //     }
+
   //     if (data.message === "Email already in use") {
   //       setErrorMessage(data.message);
   //     }
@@ -119,7 +129,7 @@ export default function StepOne({ onNext }) {
     onSuccess: async (tokenResponse) => {
       try {
         setGoogleLoading(true);
-        
+
         // Get Google user info
         const userInfo = await fetch(
           "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -127,27 +137,30 @@ export default function StepOne({ onNext }) {
             headers: {
               Authorization: `Bearer ${tokenResponse.access_token}`,
             },
-          }
+          },
         );
-        
+
         const profile = await userInfo.json();
         console.log("Google Profile:", profile);
-        
-        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/auth/google`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ token: tokenResponse.access_token }),
           },
-          body: JSON.stringify({ token: tokenResponse.access_token }), 
-        });
-        
+        );
+
         const data = await res.json();
         console.log("Server response:", data);
-        
+
         if (data?.token) {
           localStorage.setItem("token", data.token);
         }
-        
+
         if (data?.newUser?.email) {
           localStorage.setItem("google-email", data.newUser.email);
           setGoogleLoading(false);
@@ -165,13 +178,12 @@ export default function StepOne({ onNext }) {
         setErrorMessage("Google login failed");
       }
     },
-    
+
     onError: () => {
       setErrorMessage("Google login failed.");
       setGoogleLoading(false);
     },
   });
-
 
   // Show loader when Google login is in progress
   if (googleLoading) {
@@ -193,7 +205,9 @@ export default function StepOne({ onNext }) {
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-          <h2 className="text-2xl font-semibold text-center mt-7 mb-1">Let's get you started</h2>
+          <h2 className="text-2xl font-semibold text-center mt-7 mb-1">
+            Let's get you started
+          </h2>
           <p className="text-gray-500 text-center mb-6">
             Please enter your details and let's get you started
           </p>
@@ -206,7 +220,7 @@ export default function StepOne({ onNext }) {
               city: "",
               phoneNumber: "",
               password: "",
-              term:false
+              term: false,
             }}
             onSubmit={handleSubmit}
             validationSchema={SignUpSchema}
@@ -214,74 +228,74 @@ export default function StepOne({ onNext }) {
             {({ values, handleChange, handleBlur, handleSubmit }) => (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
-                <InputField
-                  name="fullName"
-                  label="Full Name"
-                  placeholder="Enter your first and last name"
-                  value={values.fullName}
-                  onChange={handleChange}
-                  onBlur={handleBlur}           
-                />
-                <ErrorMessage
+                  <InputField
+                    name="fullName"
+                    label="Full Name"
+                    placeholder="Enter your first and last name"
+                    value={values.fullName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  />
+                  <ErrorMessage
                     name="fullName"
                     component="span"
                     className="text-[#db3a3a]"
                   />
-</div>
-<div>
-                <InputField
-                  name="email"
-                  label="Email"
-                  placeholder="Enter your email"
-                  value={values.email}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                />
-                <ErrorMessage
+                </div>
+                <div>
+                  <InputField
+                    name="email"
+                    label="Email"
+                    placeholder="Enter your email"
+                    value={values.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  />
+                  <ErrorMessage
                     name="email"
                     component="span"
                     className="text-[#db3a3a]"
                   />
-                  </div>
-                 
-                 <div>
-                <InputField
-                  name="city"
-                  label="Address"
-                  placeholder="Enter your address"
-                  value={values.city}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                />
-                <ErrorMessage
+                </div>
+
+                <div>
+                  <InputField
+                    name="city"
+                    label="Address"
+                    placeholder="Enter your address"
+                    value={values.city}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  />
+                  <ErrorMessage
                     name="city"
                     component="span"
                     className="text-[#db3a3a]"
                   />
-                  </div>
-                 
-                 <div>
-                <InputField
-                  name="phoneNumber"
-                  label="Phone number"
-                  placeholder="Enter your phone number"
-                  value={values.phoneNumber}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                />
-                <ErrorMessage
+                </div>
+
+                <div>
+                  <InputField
+                    name="phoneNumber"
+                    label="Phone number"
+                    placeholder="Enter your phone number"
+                    value={values.phoneNumber}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  />
+                  <ErrorMessage
                     name="phoneNumber"
                     component="span"
                     className="text-[#db3a3a]"
                   />
-                  </div>
+                </div>
 
                 <div className="relative">
                   <InputField
                     name="password"
                     label="Password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Use a minimum of 6 characters"
+                    placeholder="Use a minimum of 8 characters"
                     value={values.password}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -305,29 +319,42 @@ export default function StepOne({ onNext }) {
                 </div>
 
                 {errorMessage && (
-                  <div className="text-center text-[#db3a3a] mt-2">{errorMessage}</div>
+                  <div className="text-center text-[#db3a3a] mt-2">
+                    {errorMessage}
+                  </div>
                 )}
                 {successMessage && (
-                  <div className="text-center text-[#005823BF] mt-2">{successMessage}</div>
+                  <div className="text-center text-[#005823BF] mt-2">
+                    {successMessage}
+                  </div>
                 )}
 
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="terms" className="accent-[#005823BF]" />
-                  <label htmlFor="terms" value={values.term} className="text-sm text-gray-600">
-                    I agree to the{" "}
-                    <a href="#" className="text-[#005823BF] font-medium">
-                      Privacy Policy
-                    </a>{" "}
-                    and{" "}
-                    <a href="#" className="text-[#005823BF] font-medium">
-                      Terms of Services
-                    </a>
-                  </label>
-                  <ErrorMessage
-                    name="term"
-                    component="span"
-                    className="text-[#db3a3a]"
-                  />
+                <div className="">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={termAccepted}
+                      onChange={() => {
+                        setTermAccepted((prev) => !prev);
+                        setTermError("");
+                      }}
+                      className="accent-[#005823BF]"
+                    />
+                    <label htmlFor="terms" className="text-sm text-gray-600">
+                      I agree to the{" "}
+                      <a href="#" className="text-[#005823BF] font-medium">
+                        Privacy Policy
+                      </a>{" "}
+                      and{" "}
+                      <a href="#" className="text-[#005823BF] font-medium">
+                        Terms of Services
+                      </a>
+                    </label>
+                  </div>
+                  {termError && (
+                    <span className="text-[#db3a3a] text-sm">{termError}</span>
+                  )}
                 </div>
 
                 <Button type="submit">
@@ -349,13 +376,15 @@ export default function StepOne({ onNext }) {
                 /> */}
 
                 <button
-  onClick={() => googleLogin()}
-  className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
->
-  <img src="/Google.svg" alt="Google" className="w-5 h-5" />
-  <span className="text-gray-700 font-medium">Continue with Google</span>
-</button>
-                
+                  onClick={() => googleLogin()}
+                  className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
+                >
+                  <img src="/Google.svg" alt="Google" className="w-5 h-5" />
+                  <span className="text-gray-700 font-medium">
+                    Continue with Google
+                  </span>
+                </button>
+
                 <p className="text-center text-sm mt-2 mb-5">
                   Already have an account?
                   <Link
