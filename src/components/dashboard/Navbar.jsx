@@ -222,13 +222,13 @@ export default function Navbar() {
       <Toaster position="top-right" />
       <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
         {/* Mobile Menu Button */}
-        <button className="md:hidden" onClick={() => setShowMenu(true)}>
-          <Menu size={26} className="text-gray-700" />
+        <button className="md:hidden p-2" onClick={() => setShowMenu(true)}>
+          <Menu size={23} className="text-gray-700" />
         </button>
 
         {/* Logo */}
         <button
-          className="text-3xl font-bold text-[#005823]"
+          className="text-2xl md:text-3xl font-bold text-[#005823]"
           onClick={() => navigate("/dashboard")}
         >
           <img src="/logo.jpg" alt="SabiGuy Logo" className="h-8 w-auto" />
