@@ -1,32 +1,42 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, HelpCircle, MessageCircle, Home, LogOut, Gift, Heart, Book, ClipboardList, Cog} from "lucide-react";
+import {
+  Menu,
+  X,
+  HelpCircle,
+  MessageCircle,
+  Home,
+  LogOut,
+  Gift,
+  Heart,
+  Book,
+  ClipboardList,
+  Cog,
+} from "lucide-react";
 import { handleLogout } from "../../api/auth";
 
-
 const links = [
-  { name: "Home", path: "/dashboard", icon: <Home/> },
-  { name: "My Bookings", path: "/bookings", icon: <Book/> },
+  { name: "Home", path: "/dashboard", icon: <Home /> },
+  { name: "My Bookings", path: "/bookings", icon: <Book /> },
   // { name: "Saved Profile", path: "/dashboard/saved", icon: <Heart/> },
-  { name: "Chat", path: "/dashboard/chat", icon: <MessageCircle/> },
-  { name: "Activity", path: "/dashboard/activity", icon: <ClipboardList/> },
+  { name: "Chat", path: "/dashboard/chat", icon: <MessageCircle /> },
+  { name: "Activity", path: "/dashboard/activity", icon: <ClipboardList /> },
   // { name: "Referrals", path: "/dashboard/", icon: <Gift/> },
-  { name: "Settings", path: "/dashboard/settings", icon: <Cog/> },
-  { name: "Help", path: "/dashboard/help", icon: <HelpCircle/> },
-  { name: "Logout", icon: <LogOut/> },
-
-
+  { name: "Settings", path: "/dashboard/settings", icon: <Cog /> },
+  { name: "Help", path: "/dashboard/help", icon: <HelpCircle /> },
 ];
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const onLogout = async () => {
     try {
       await handleLogout();
       setOpen(false);
+      setShowLogoutConfirm(false);
       // Add a small delay to ensure stores are cleared before redirect
       setTimeout(() => {
         navigate("/");
@@ -49,6 +59,34 @@ export default function Sidebar() {
         {open ? <X size={24} /> : <Menu size={24} />}
       </button>
 
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-6 w-80 shadow-xl">
+            <div className="flex items-center gap-3 mb-2">
+              <LogOut className="text-red-500" size={22} />
+              <h2 className="text-lg font-semibold text-gray-800">Log out?</h2>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to log out of your account?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onLogout}
+                className="flex-1 px-4 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 text-sm font-medium"
+              >
+                Log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
@@ -70,20 +108,34 @@ export default function Sidebar() {
             }
 
             return (
-            <Link
-              key={link.path}
-              to={link.path}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-[#005823]/10 ${
-                pathname === link.path ? "bg-[#005823] text-white font-medium" : ""
-              }`}
-            >
-              <span>{link.icon}</span>
-              <span>{link.name}</span>
-            </Link>
-            )
-})}
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-[#005823]/10 ${
+                  pathname === link.path
+                    ? "bg-[#005823] text-white font-medium"
+                    : ""
+                }`}
+              >
+                <span>{link.icon}</span>
+                <span>{link.name}</span>
+              </Link>
+            );
+          })}
         </nav>
+
+        <div className="mt-60">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+          >
+            <span>
+              <LogOut />
+            </span>
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
     </>
   );
