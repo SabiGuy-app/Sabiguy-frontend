@@ -1,5 +1,5 @@
 import AuthLayout from "../../components/layouts/layout";
-import Navbar from "../../components/layouts/navbar";
+import SignupNavbar from "../../components/layouts/navbar";
 import { FaArrowRight, FaSearch, FaWrench } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 export default function Welcome() {
   return (
     <div className="h-screen">
-      <Navbar />
+      <SignupNavbar />
       <AuthLayout
         title="Welcome Back!"
         description="Join us to discover reliable professionals

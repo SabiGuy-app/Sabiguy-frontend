@@ -1,7 +1,7 @@
 import AuthLayout from "../../components/layouts/layout";
 import Button from "../../components/button";
 import InputField from "../../components/InputField";
-import Navbar from "../../components/layouts/navbar";
+import LoginNavbar from "../../components/layouts/loginNavbar";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
@@ -182,7 +182,7 @@ export default function Login() {
 
   return (
     <div className="h-screen">
-      <Navbar />
+      <LoginNavbar />
       <AuthLayout
         title="Welcome Back!"
         description="Log in with your detail to keep exploring our platform"
