@@ -61,7 +61,7 @@ const email = localStorage.getItem("passwordEmail");
       <>
                <Modal isOpen={isOpen} onClose={onClose} title="Forgot Password?">
 
-        <p className="text-gray-500">Please enter the code sent to your {email}</p>
+        <p className="text-gray-500">Please enter the code sent to your email: {email}</p>
 
         <div className="flex flex-col gap-4 items-center">
                <div class="flex justify-center gap-2">
