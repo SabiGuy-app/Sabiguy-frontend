@@ -156,6 +156,7 @@ export default function ActivityPage() {
 
   return (
     <DashboardLayout>
+      <div className="w-full mx-auto px-4 sm:px-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="font-bold text-2xl">Activity</h1>
@@ -333,6 +334,7 @@ export default function ActivityPage() {
         onClose={() => setSelectedNotification(null)}
         notification={selectedNotification}
       />
+     </div>
     </DashboardLayout>
   );
 }

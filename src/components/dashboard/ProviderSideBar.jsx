@@ -129,7 +129,7 @@ export default function ProviderSidebar() {
           })}
         </nav>
 
-        <div className="mt-60">
+        <div className="mt-36">
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"

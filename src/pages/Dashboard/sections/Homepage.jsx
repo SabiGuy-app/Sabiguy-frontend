@@ -173,7 +173,7 @@ export default function DashboardHome() {
       setSelectedService(service);
       setModalOpen(true);
     } else {
-      navigate("/bookings");
+      // navigate("/bookings");
       // console.log("Active service clicked:", service.title);
     }
   };
