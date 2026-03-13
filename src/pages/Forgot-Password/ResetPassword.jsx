@@ -24,6 +24,12 @@ export default function ResetPassword ({ isOpen, onClose })  {
     setLoading(true);
     setMessage("");
 
+    if (newPassword !== confirmPassword) {
+      setMessage("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth/reset`, {
          newPassword,
@@ -59,17 +65,22 @@ export default function ResetPassword ({ isOpen, onClose })  {
         <InputField
           name="email"
           label="New password"
-          placeholder="Enter your email"
+          type="password"
+          placeholder="Enter your new password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
         />
         <InputField
-          // name="email"
+          name="confirmPassword"
           label="Confirm new password"
+          type="password"
           placeholder="Confirm your new password"
-          // value={newPassword}
-          // onChange={(e) => setNewPassword(e.target.value)}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
         />
+         <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+                    Password must be at least 8 characters long and include a letter, number, and special character
+                  </p>
 {message && (
           <p
             className={`text-sm ${
@@ -79,10 +90,7 @@ export default function ResetPassword ({ isOpen, onClose })  {
             {message}
           </p>
         )}
-<Button 
-        type="submit"
-     onClick={handleSubmit}
-        >
+<Button type="submit">
           {loading ? "Please wait..." : "Continue"}</Button>
         </form>
 
