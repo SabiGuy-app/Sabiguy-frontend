@@ -129,17 +129,17 @@ export default function ProviderProfilePage() {
 
   return (
     <ProviderDashboardLayout>
-      <div className="w-[70%]">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-200 mb-6">
-          <div className="border-b border-gray-300 px-9 py-4">
-            <h1 className="font-bold text-[20px]">My Profile</h1>
+          <div className="border-b border-gray-300 px-4 sm:px-6 lg:px-9 py-4">
+            <h1 className="font-bold text-lg sm:text-[20px]">My Profile</h1>
           </div>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 px-9 py-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6 px-4 sm:px-6 lg:px-9 py-4 sm:py-6">
             {/* Left Side - Avatar and Info */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               {/* Avatar */}
-              <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 relative group">
+              <div className="w-16 sm:w-20 h-16 sm:h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 relative group">
                 {isUploading ? (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -186,30 +186,30 @@ export default function ProviderProfilePage() {
 
               {/* User Info */}
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                <h2 className="text-base sm:text-xl font-semibold text-gray-900 mb-1">
                   {profile.name}
                 </h2>
-                <p className="text-sm text-gray-600 mb-1">{profile.email || <span className="italic text-gray-400">No email set</span>}</p>
-                <p className="text-sm text-gray-600">{profile.phone || <span className="italic text-gray-400">No phone set</span>}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1">{profile.email || <span className="italic text-gray-400">No email set</span>}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{profile.phone || <span className="italic text-gray-400">No phone set</span>}</p>
               </div>
             </div>
 
             {/* Middle - Rating */}
-            <div className="flex flex-col items-start md:items-center">
-              <span className="text-sm text-gray-600 mb-2">Overall Rating</span>
+            <div className="flex flex-col items-start md:items-center justify-start md:justify-center w-full md:w-auto">
+              <span className="text-xs sm:text-sm text-gray-600 mb-2">Overall Rating</span>
               <StarRating rating={profile.rating} />
             </div>
 
             {/* Right Side - Edit Button */}
             <button
               onClick={() => setActiveTab('profile')}
-              className="p-2 px-4 bg-[#8BC53F] text-white font-medium rounded-lg hover:bg-[#7ab335] transition-colors self-start md:self-center"
+              className="w-full md:w-auto p-2 px-4 bg-[#8BC53F] text-white font-medium rounded-lg hover:bg-[#7ab335] transition-colors text-sm sm:text-base"
             >
               Edit Profile
             </button>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 lg:p-8">
           <ProviderProfileTabs
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -220,14 +220,14 @@ export default function ProviderProfilePage() {
           {activeTab === "wallet" && <ProviderWalletTab profile={profile} />}
           {activeTab === "password" && (
             isGoogleUser ? (
-              <div className="max-w-2xl py-12 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <img src="/Google.svg" alt="Google" className="w-8 h-8" />
+              <div className="max-w-2xl py-8 sm:py-12 text-center">
+                <div className="w-14 sm:w-16 h-14 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <img src="/Google.svg" alt="Google" className="w-6 sm:w-8 h-6 sm:h-8" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                   Password management is not available
                 </h3>
-                <p className="text-sm text-gray-600 max-w-md mx-auto">
+                <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto px-4">
                   You signed in with Google, so your account doesn't have a password.
                   Your account security is managed through your Google account.
                 </p>

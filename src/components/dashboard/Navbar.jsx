@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Search, Menu, X } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
@@ -7,15 +7,16 @@ import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
+import { handleLogout } from "../../api/auth";
 import { io } from "socket.io-client";
 
-export default function Navbar() {
+export default function Navbar({ onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
@@ -221,9 +222,10 @@ export default function Navbar() {
     <>
       <Toaster position="top-right" />
       <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 shadow-sm">
-        {/* Mobile Menu Button */}
-        <button className="md:hidden p-2" onClick={() => setShowMenu(true)}>
-          <Menu size={23} className="text-gray-700" />
+
+        {/* Mobile Menu Button (toggles sidebar) */}
+        <button className="md:hidden p-2 text-gray-600 hover:text-gray-800 mr-2" onClick={onMenuClick}>
+          <Menu size={26} className="text-gray-600" />
         </button>
 
         {/* Logo */}
@@ -277,10 +279,18 @@ export default function Navbar() {
             onClick={() => navigate("/dashboard/settings")}
             className="flex items-center"
           >
-            <img
-              src={user?.data?.profilePicture || "/avatar.png"}
-              className="w-8 h-8 rounded-full border"
-            />
+            {user?.data?.profilePicture && !imageError ? (
+              <img
+                src={user.data.profilePicture}
+                alt="Profile"
+                onError={() => setImageError(true)}
+                className="w-8 h-8 rounded-full border"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-sm">
+                {user?.data?.firstName?.[0] || user?.data?.name?.[0] || "U"}
+              </div>
+            )}
           </button>
         </div>
 
@@ -298,47 +308,6 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* Mobile Slide-in Menu */}
-        {showMenu && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
-            onClick={() => setShowMenu(false)}
-          >
-            <div
-              className="absolute left-0 top-0 h-full w-64 bg-white shadow-lg p-6 animate-slideIn"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Icon */}
-              <button className="mb-6" onClick={() => setShowMenu(false)}>
-                <X size={26} className="text-gray-600" />
-              </button>
-
-              {/* Menu Links */}
-              <nav className="space-y-4 text-lg text-gray-700">
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="block"
-                >
-                  Dashboard
-                </button>
-
-                <button
-                  onClick={() => navigate("/dashboard/categories")}
-                  className="block"
-                >
-                  Categories
-                </button>
-
-                <button
-                  onClick={() => navigate("/dashboard/settings")}
-                  className="block"
-                >
-                  Settings
-                </button>
-              </nav>
-            </div>
-          </div>
-        )}
         <NotificationDrawer
           isOpen={showNotifications}
           onClose={() => setShowNotifications(false)}

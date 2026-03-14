@@ -1,6 +1,7 @@
 import React from "react";
 import ProviderDashboardLayout from "../../../components/layouts/ProviderDashboardLayout";
 import ActivityCard from "../../../components/dashboard/ActivityCard";
+import ProviderActivityItem from "../../../components/provider-dashboard/ProviderActivityItem";
 import {
   Wallet,
   Bookmark,
@@ -11,26 +12,12 @@ import {
 import { FiSearch } from "react-icons/fi";
 import { useState } from "react";
 import TabNavigation from "../../../components/dashboard/TabNav";
-import Activities from "../../../components/dashboard/Activities";
-import ServiceDetailsModal from "../../Dashboard/sections/ServiceDetailsModal";
 // import ServiceDetailsModal from "./ServiceDetailsModal";
 
 const ProviderActivity = () => {
   const [activeTab, setActiveTab] = useState("All");
-  const [isServiceDetailsModalOpen, setIsServiceDetailsModalOpen] =
-    useState(false);
 
   const tabs = ["All", "Bookings", "Payments", "Updates"];
-
-  const handleViewDetails = (request) => {
-    // setSelectedRequest(request);
-    setIsServiceDetailsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsServiceDetailsModalOpen(false);
-    // setSelectedRequest(null);
-  };
 
   const activities = [
     {
@@ -130,13 +117,9 @@ const ProviderActivity = () => {
   return (
     <ProviderDashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <ServiceDetailsModal
-          isOpen={isServiceDetailsModalOpen}
-          onClose={handleCloseModal}
-          // request={selectedRequest || {}}
-        />
         <h1 className="font-bold text-2xl">Activity</h1>
       </div>
+      {/* stat cards temporarily disabled
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ActivityCard
           title="Active orders"
@@ -159,6 +142,7 @@ const ProviderActivity = () => {
           icon={<Wallet size={20} className="text-red-600" />}
         />
       </div>
+      */}
       {/* Tabs */}
       <div className="mb-6 mt-6">
         <TabNavigation
@@ -186,7 +170,7 @@ const ProviderActivity = () => {
       {/* Activity List */}
       <div className="space-y-3">
         {activities.map((activity) => (
-          <Activities key={activity.id} activity={activity} />
+          <ProviderActivityItem key={activity.id} activity={activity} />
         ))}
       </div>
     </ProviderDashboardLayout>

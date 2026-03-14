@@ -18,15 +18,14 @@ const links = [
 
 ];
 
-export default function Sidebar() {
-  const [open, setOpen] = useState(false);
+export default function Sidebar({ open, onClose }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
   const onLogout = async () => {
     try {
       await handleLogout();
-      setOpen(false);
+      onClose();
       // Add a small delay to ensure stores are cleared before redirect
       setTimeout(() => {
         navigate("/");
@@ -34,26 +33,21 @@ export default function Sidebar() {
     } catch (error) {
       console.error("Logout failed:", error);
       // Still redirect even if logout has errors
-      setOpen(false);
+      onClose();
       navigate("/");
     }
   };
 
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        className="md:hidden p-3 fixed top-4 left-4 z-50 bg-[#005823] text-white rounded-lg"
-        onClick={() => setOpen(!open)}
-      >
-        {open ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      {/* Mobile toggle - Hidden to use Navbar grey hamburger instead */}
+      {/* Sidebar navigation */}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
-        ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        className={`fixed top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 transform transition-transform duration-300 overflow-y-auto ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
+        <div className="p-6">
         <nav className="space-y-2">
           {links.map((link) => {
             if (link.name === "Logout") {
@@ -84,6 +78,7 @@ export default function Sidebar() {
             )
 })}
         </nav>
+        </div>
       </aside>
     </>
   );
