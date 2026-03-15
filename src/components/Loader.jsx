@@ -35,23 +35,19 @@
 //   );
 // }
 
-
 import React from "react";
 
 export default function Loader() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="relative flex items-center justify-center">
-        
-        {/* Glow circle */}
-        {/* <div className="absolute w-40 h-40 rounded-full bg-[#005823]/20 animate-ping"></div> */}
-
-        {/* Logo */}
-        <img
-          src='/logo.jpg'
-          alt="SabiGuy Logo"
-          className="w-50 animate-pulse z-10"
-        />
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="w-[400px] h-[350px] bg-white rounded-2xl shadow-xl flex items-center justify-center">
+        <div className="relative flex items-center justify-center">
+          <img
+            src="/logo.jpg"
+            alt="SabiGuy Logo"
+            className="w-20 animate-pulse z-10"
+          />
+        </div>
       </div>
     </div>
   );
