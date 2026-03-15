@@ -28,7 +28,7 @@ export default function ProviderDashboardLayout({ children }) {
   });
 
   return (
-    <div className="overflow-x-hidden">
+    <div className="">
       <ProviderNavbar />
 
       <div className="flex min-h-screen bg-gray-50">

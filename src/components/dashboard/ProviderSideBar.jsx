@@ -93,7 +93,7 @@ export default function ProviderSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
+        className={`fixed top-20 left-0 h-[calc(100vh-5rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
       ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         <nav className="space-y-2">
@@ -129,7 +129,7 @@ export default function ProviderSidebar() {
           })}
         </nav>
 
-        <div className="mt-36">
+        <div>
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
