@@ -49,7 +49,7 @@ export default function ProfilePage() {
   return (
     <DashboardLayout>
       {/* Header */}
-      <div className="w-full md:w-[70%] mx-auto px-4 sm:px-0">
+      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-200 mb-6 p-4 sm:p-6">
           <div className="border-b border-gray-300 sm:px-9 sm:py-4 px-0 py-2 pb-4 mb-4 sm:mb-0">

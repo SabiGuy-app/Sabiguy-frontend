@@ -323,133 +323,146 @@ export default function Bookings() {
     setSelectedRequest(null);
   };
 
-  return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
-        <ServiceDetailsModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          request={selectedRequest || {}}
-        />
-        <h1 className="text-xl font-semibold p-4">My Bookings</h1>
+return (
+  <DashboardLayout>
+    <div className="max-w-7xl mx-0 bg-white min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+      <ServiceDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        request={selectedRequest || {}}
+      />
 
-        {/* Tabs */}
-        <div className="flex flex-col sm:flex-row border-b">
-          <button
-            onClick={() => setActiveTab("request")}
-            className={`px-6 py-3 font-medium transition-colors relative ${
-              activeTab === "request"
-                ? "text-[#005823] border-b-2 border-[#005823]"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Request a service
-          </button>
-          <button
-            onClick={() => setActiveTab("requests")}
-            className={`px-6 py-3 font-medium transition-colors relative ${
-              activeTab === "requests"
-                ? "text-[#005823] border-b-2 border-[#005823]"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            My Requests
-          </button>
-        </div>
+      <h1 className="text-xl font-semibold p-4">My Bookings</h1>
 
-        {activeTab === "request" ? (
-          <form onSubmit={formik.handleSubmit} className="space-y-5 p-5 max-w-xl mx-auto">
-            {errorMessage && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-                {errorMessage}
-              </div>
-            )}
-            {successMessage && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-                {successMessage}
-              </div>
-            )}
+      {/* Tabs */}
+      <div className="flex flex-col sm:flex-row border-b">
+        <button
+          onClick={() => setActiveTab("request")}
+          className={`px-6 py-3 font-medium transition-colors relative ${
+            activeTab === "request"
+              ? "text-[#005823] border-b-2 border-[#005823]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Request a service
+        </button>
 
-            <input type="hidden" name="jobTitle" value="transport" />
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={`px-6 py-3 font-medium transition-colors relative ${
+            activeTab === "requests"
+              ? "text-[#005823] border-b-2 border-[#005823]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          My Requests
+        </button>
+      </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Select work category
-              </label>
-              <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md text-gray-700 flex items-center justify-between">
-                <span>Transport &amp; Logistics</span>
-                <svg
-                  className="w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
+      {activeTab === "request" ? (
+        <form
+          onSubmit={formik.handleSubmit}
+          className="space-y-5 p-5 max-w-xl lg:max-w-xl xl:max-w-5xl mx-auto"
+        >
+          {errorMessage && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+              {errorMessage}
             </div>
+          )}
 
-            <div>
-              <InputField
-                label="Subcategory"
-                select
-                options={[
-                  { label: "Select Services", value: "" },
-                  { label: "Package delivery", value: "package delivery" },
-                  { label: "Book a ride", value: "book a ride" },
-                ]}
-                value={formik.values.service}
-                onChange={(option) =>
-                  formik.setFieldValue("service", option.value)
-                }
-                onBlur={() => formik.setFieldTouched("service", true)}
-              />
-              {formik.touched.service && formik.errors.service && (
-                <p className="mt-1 text-sm text-red-600">
-                  {formik.errors.service}
-                </p>
-              )}
+          {successMessage && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+              {successMessage}
             </div>
+          )}
 
-            <div>
-              <InputField
-                name="pickupAddress"
-                label="Pickup location"
-                placeholder="24 Palm Avenue, Lagos"
-                value={formik.values.pickupAddress}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.pickupAddress && formik.errors.pickupAddress && (
+          <input type="hidden" name="jobTitle" value="transport" />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Select work category
+            </label>
+
+            <div className="w-full max-w-lg px-4 py-3 bg-gray-50 border border-gray-300 rounded-md text-gray-700 flex items-center justify-between">
+              <span>Transport &amp; Logistics</span>
+
+              <svg
+                className="w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div>
+            <InputField
+              label="Subcategory"
+              select
+              options={[
+                { label: "Select Services", value: "" },
+                { label: "Package delivery", value: "package delivery" },
+                { label: "Book a ride", value: "book a ride" },
+              ]}
+              value={formik.values.service}
+              onChange={(option) =>
+                formik.setFieldValue("service", option.value)
+              }
+              onBlur={() => formik.setFieldTouched("service", true)}
+            />
+
+            {formik.touched.service && formik.errors.service && (
+              <p className="mt-1 text-sm text-red-600">
+                {formik.errors.service}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <InputField
+              name="pickupAddress"
+              label="Pickup location"
+              placeholder="24 Palm Avenue, Lagos"
+              value={formik.values.pickupAddress}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+
+            {formik.touched.pickupAddress &&
+              formik.errors.pickupAddress && (
                 <p className="mt-1 text-sm text-red-600">
                   {formik.errors.pickupAddress}
                 </p>
               )}
-            </div>
+          </div>
 
-            <div>
-              <InputField
-                name="dropoffAddress"
-                label="Dropoff location"
-                placeholder="24 Palm Avenue, Lagos"
-                value={formik.values.dropoffAddress}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.dropoffAddress &&
-                formik.errors.dropoffAddress && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {formik.errors.dropoffAddress}
-                  </p>
-                )}
-            </div>
+          <div>
+            <InputField
+              name="dropoffAddress"
+              label="Dropoff location"
+              placeholder="24 Palm Avenue, Lagos"
+              value={formik.values.dropoffAddress}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
 
-            {formik.values.pickupAddress && formik.values.dropoffAddress && (
+            {formik.touched.dropoffAddress &&
+              formik.errors.dropoffAddress && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formik.errors.dropoffAddress}
+                </p>
+              )}
+          </div>
+
+          {formik.values.pickupAddress &&
+            formik.values.dropoffAddress && (
               <div className="flex items-center gap-2 text-sm text-gray-500 -mt-2">
                 <svg
                   className="w-4 h-4"
@@ -466,225 +479,82 @@ export default function Bookings() {
               </div>
             )}
 
-            <div>
-              <InputField
-                label="Service Type"
-                select
-                options={[
-                  { label: "Select service type", value: "" },
-                  { label: "Pickup now", value: "immediate" },
-                  { label: "Schedule", value: "scheduled" },
-                ]}
-                value={formik.values.serviceType}
-                onChange={(option) =>
-                  formik.setFieldValue("serviceType", option.value)
-                }
-                onBlur={() => formik.setFieldTouched("serviceType", true)}
-              />
-              {formik.touched.serviceType && formik.errors.serviceType && (
-                <p className="mt-1 text-sm text-red-600">
-                  {formik.errors.serviceType}
-                </p>
-              )}
+
+
+         <div className="flex justify-center">
+  <div className="w-full sm:w-[300px] md:w-[400px] lg:w-[500px]">
+    <Button variant="secondary" type="submit" disabled={loading}>
+      {loading ? "Creating Booking..." : "Post Request"}
+    </Button>
+  </div>
+</div>
+        </form>
+      ) : (
+        <div className="mt-5 p-5 max-w-xl lg:max-w-4xl xl:max-w-5xl mx-auto">
+          <StatusFilter
+            activeFilter={statusFilter}
+            onFilterChange={setStatusFilter}
+          />
+
+          {bookingsLoading && (
+            <div className="text-center py-12 bg-white rounded-lg">
+              <div className="w-8 h-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-gray-500">Loading your bookings...</p>
             </div>
+          )}
 
-            {formik.values.serviceType === "scheduled" && (
-              <div>
-                <InputField
-                  name="scheduleDate"
-                  label="Select Date"
-                  type="date"
-                  min={new Date().toISOString().split("T")[0]}
-                  value={formik.values.scheduleDate}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-                {formik.touched.scheduleDate && formik.errors.scheduleDate && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {formik.errors.scheduleDate}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Choose Vehicle
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {vehicleOptions.map((vehicle) => {
-                  const isSelected =
-                    formik.values.modeOfDelivery === vehicle.value;
-                  return (
-                    <button
-                      key={vehicle.value}
-                      type="button"
-                      onClick={() =>
-                        formik.setFieldValue("modeOfDelivery", vehicle.value)
-                      }
-                      className={`text-left p-4 rounded-xl border-2 transition-all ${
-                        isSelected
-                          ? "border-[#005823] bg-[#f0f9f4]"
-                          : "border-gray-200 bg-white hover:border-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`mb-2 ${isSelected ? "text-[#005823]" : "text-gray-600"}`}
-                      >
-                        {vehicle.icon}
-                      </div>
-                      <p
-                        className={`font-semibold text-sm ${isSelected ? "text-[#005823]" : "text-gray-800"}`}
-                      >
-                        {vehicle.label}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
-                        <span>{vehicle.eta}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-0.5">
-                          <svg
-                            className="w-3 h-3"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
-                          </svg>
-                          {vehicle.capacity}
-                        </span>
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {vehicle.description}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-              {formik.touched.vehicle && formik.errors.vehicle && (
-                <p className="mt-2 text-sm text-red-600">
-                  {formik.errors.vehicle}
-                </p>
-              )}
+          {!bookingsLoading && bookingsError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {bookingsError}
             </div>
+          )}
 
-            {/* Auto-accept checkbox */}
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="auto-accept"
-                name="autoAcceptNearest"
-                checked={formik.values.autoAcceptNearest}
-                onChange={async (e) => {
-                  formik.handleChange(e);
-                  try {
-                    await allowSystem(e.target.checked);
-                  } catch (error) {
-                    console.error("Error updating allowSystem:", error);
-                    setErrorMessage("Failed to update auto-accept setting");
-                  }
-                }}
-                className="w-4 h-4 rounded cursor-pointer accent-[#005823]"
-              />
-              <label
-                htmlFor="auto-accept"
-                className="text-sm text-gray-500 cursor-pointer select-none"
-              >
-                Automatically accept the nearest provider
-              </label>
-            </div>
-
-            {formik.values.autoAcceptNearest && (
-              <div className="flex items-start gap-2 p-3 bg-[#005823] border border-[#005823] rounded-lg">
-                <svg
-                  className="w-5 h-5 text-white mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
+          {!bookingsLoading && !bookingsError && (
+            <div className="space-y-4 w-full">
+              {filteredRequests.length > 0 ? (
+                filteredRequests.map((request) => (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    onViewDetails={handleViewDetails}
+                    onTrackProvider={handleTrackProvider}
+                    onBookingCancelled={refreshBookings}
                   />
-                </svg>
-                <p className="text-sm text-white">
-                  The system will automatically assign the nearest available
-                  provider to your request.
-                </p>
-              </div>
-            )}
-
-            <div className="flex flex-col">
-              <Button variant="secondary" type="submit" disabled={loading}>
-                {loading ? "Creating Booking..." : "Post Request"}
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <div className="mt-5 p-5 max-w-xl mx-auto">
-            <StatusFilter
-              activeFilter={statusFilter}
-              onFilterChange={setStatusFilter}
-            />
-
-            {/* ✅ Loading */}
-            {bookingsLoading && (
-              <div className="text-center py-12 bg-white rounded-lg">
-                <div className="w-8 h-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-gray-500">Loading your bookings...</p>
-              </div>
-            )}
-
-            {/* ✅ Error */}
-            {!bookingsLoading && bookingsError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {bookingsError}
-              </div>
-            )}
-
-            {/* ✅ Real bookings list */}
-            {!bookingsLoading && !bookingsError && (
-              <div className="space-y-4 w-full">
-                {filteredRequests.length > 0 ? (
-                  filteredRequests.map((request) => (
-                    <RequestCard
-                      key={request.id}
-                      request={request}
-                      onViewDetails={handleViewDetails}
-                      onTrackProvider={handleTrackProvider}
-                      onBookingCancelled={refreshBookings}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12 bg-white rounded-lg">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg
-                        className="w-8 h-8 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      No requests found
-                    </h3>
-                    <p className="text-gray-600">
-                      {userBookings.length === 0
-                        ? "You haven't made any bookings yet."
-                        : "No requests match the selected filter."}
-                    </p>
+                ))
+              ) : (
+                <div className="text-center py-12 bg-white rounded-lg">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
-  );
+
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No requests found
+                  </h3>
+
+                  <p className="text-gray-600">
+                    {userBookings.length === 0
+                      ? "You haven't made any bookings yet."
+                      : "No requests match the selected filter."}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  </DashboardLayout>
+);
 }
