@@ -251,22 +251,29 @@ export default function Bookings() {
   const mapBookingToRequest = (booking) => ({
     id: booking._id,
     title:
-      booking.subCategory?.replace(/_/g, " ") ||
-      booking.serviceType ||
-      "Booking",
-    status: booking.status || "pending",
+      (booking.subCategory?.replace(/_/g, " ") ||
+        booking.serviceType ||
+        "Booking")
+        .replace(/\b\w/g, (l) => l.toUpperCase()),
+    status: (booking.status || "pending")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase()),
     providerName: booking.providerId?.fullName || "—",
     providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     providerImage:
       booking.providerId?.profilePicture ||
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
     providerRole:
-      booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—",
+      (booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—")
+        .replace(/\b\w/g, (l) => l.toUpperCase()),
     providerRating: booking.providerId?.rating?.average || null,
     providerReviews: booking.providerId?.rating?.count || 0,
     providerPhone: booking.providerId?.phoneNumber || "—",
 
     orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
+    fullOrderId: booking._id || "",
+    providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
+    fullProviderId: booking.providerId?._id || "",
     price: booking.calculatedPrice || booking.agreedPrice || 0,
     totalAmount: booking.totalAmount || 0,
     serviceFee: booking.serviceFee || 0,
@@ -677,6 +684,7 @@ export default function Bookings() {
                       onViewDetails={handleViewDetails}
                       onTrackProvider={handleTrackProvider}
                       onBookingCancelled={refreshBookings}
+                      onStatusUpdate={refreshBookings}
                     />
                   ))
                 ) : (

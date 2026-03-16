@@ -138,8 +138,10 @@ export default function HireAlerts() {
               hour12: true,
             })
             : booking.scheduleType
-              ? String(booking.scheduleType).replace(/_/g, " ")
-              : "TBD",
+            ? String(booking.scheduleType).replace(/_/g, " ")
+            : "TBD",
+        orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
+        fullOrderId: booking._id || "",
         location:
           booking.location?.address || booking.pickupLocation?.address || "N/A",
         pickupLocation: booking.pickupLocation || null,
