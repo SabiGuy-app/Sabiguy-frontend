@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HelpCircle, MessageCircle, LogOut } from "lucide-react";
 import {
@@ -51,7 +52,7 @@ export default function ProviderSidebar({ open = false, onClose }) {
 
   return (
     <>
-
+      
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 transform transition-transform duration-300 overflow-y-auto ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}

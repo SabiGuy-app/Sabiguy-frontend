@@ -17,7 +17,7 @@ import bookingCar from "/bookings.png";
 import Navbar from "../../../../components/dashboard/Navbar";
 import { toast } from "react-hot-toast";
 import { FiChevronLeft } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
 import { initializePayment, payWithWallet } from "../../../../api/payment";
 import { getBookingsDetails } from "../../../../api/bookings";
@@ -49,10 +49,10 @@ export default function BookingSummary2() {
   );
 
   const bookingDetails = booking?.data?.booking || {};
-  const providerDetails =
-    booking?.data?.providers?.find((p) => p._id === selectedProviderId) ||
-    booking?.data?.providers?.[0] ||
-    {};
+  // console.log(bookingDetails);
+
+  const providerDetails = bookingDetails?.providerId || {};
+  // console.log(providerDetails);
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
@@ -86,33 +86,30 @@ export default function BookingSummary2() {
     fetchBalance();
   }, []);
 
-  // Fetch booking details if bookingId is in URL (e.g., payment callback)
   useEffect(() => {
-    if (queryBookingId) {
-      const fetchBooking = async () => {
-        try {
-          const data = await getBookingsDetails(queryBookingId);
-          setBooking(data);
+    const bookingId = queryBookingId || bookingDetails?._id;
 
-          if (paymentSuccess === "true") {
-            setIsPaid(true);
-            // If we have a Paystack reference, it was an online payment
-            if (reference) {
-              setSelectedPayment("online");
-            }
-            setShowSuccessModal(true);
-          }
-        } catch (error) {
-          console.error("Failed to fetch booking details:", error);
-          if (paymentSuccess === "true") {
-            toast.error(
-              "Payment successful but failed to load booking details.",
-            );
-          }
+    if (!bookingId) return;
+
+    const fetchBooking = async () => {
+      try {
+        const data = await getBookingsDetails(bookingId);
+        setBooking(data);
+
+        if (paymentSuccess === "true") {
+          setIsPaid(true);
+          if (reference) setSelectedPayment("online");
+          setShowSuccessModal(true);
         }
-      };
-      fetchBooking();
-    }
+      } catch (error) {
+        console.error("Failed to fetch booking details:", error);
+        if (paymentSuccess === "true") {
+          toast.error("Payment successful but failed to load booking details.");
+        }
+      }
+    };
+
+    fetchBooking();
   }, [queryBookingId, paymentSuccess, setBooking]);
 
   const formatCurrency = (amount) => {
@@ -266,14 +263,22 @@ export default function BookingSummary2() {
     <>
       <Navbar />
       <div className=" w-[90%] m-auto">
-        <div className="flex items-center gap-3 mb-6 mt-8">
-          <button className="text-gray-600 hover:text-gray-900">
-            <FiChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-semibold text-gray-900">
-            Booking summary
-          </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-6 mt-8">
+          <Link to={"/bookings"} className="flex items-center gap-3">
+            <button className="text-gray-600 hover:text-gray-900">
+              <FiChevronLeft size={24} />
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900">
+              Booking summary
+            </h1>
+          </Link>
+          {bookingDetails?._id && (
+            <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-md border border-[#0058234D] w-fit">
+              Booking #{bookingDetails._id.slice(-6).toUpperCase()}
+            </span>
+          )}
         </div>
+
         {/* Error Message */}
         {errorMessage && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
@@ -319,14 +324,21 @@ export default function BookingSummary2() {
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
                       {providerDetails?.fullName || "Provider"}
                     </h2>
                     <span className="text-[#8BC53F]">
                       <BadgeCheck className="w-[20px] h-[20px]" />
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">
+                  {providerDetails?._id && (
+                    <div className="mb-1">
+                      <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 inline-block">
+                        ID: {providerDetails._id.slice(-6).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-600 mb-1 capitalize">
                     {providerDetails?.services?.[0]?.title?.replace(
                       /_/g,
                       " ",
@@ -398,7 +410,7 @@ export default function BookingSummary2() {
 
             {/* Vehicle Image */}
             <img
-              src={bookingCar}
+              src={providerDetails?.workVisuals?.[0]?.pictures?.[0] || bookingCar}
               alt="Vehicle"
               className="w-full h-auto object-contain"
             />

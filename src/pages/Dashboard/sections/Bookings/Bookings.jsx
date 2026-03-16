@@ -96,7 +96,8 @@ export default function Bookings() {
       dropoffAddress: "",
       serviceType: "",
       scheduleDate: "",
-      vehicle: "",
+      scheduleTime: "",
+      // vehicle: "",
       modeOfDelivery: "",
       autoAcceptNearest: false,
     },
@@ -109,10 +110,18 @@ export default function Bookings() {
       modeOfDelivery: Yup.string().required("Please choose a vehicle"),
       scheduleDate: Yup.date().when("serviceType", {
         is: "scheduled",
-        then: (schema) =>
-          schema
+        then: (schema) => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return schema
             .required("Schedule date is required")
-            .min(new Date(), "Date must be in the future"),
+            .min(today, "Date must be today or in the future");
+        },
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      scheduleTime: Yup.string().when("serviceType", {
+        is: "scheduled",
+        then: (schema) => schema.required("Schedule time is required"),
         otherwise: (schema) => schema.notRequired(),
       }),
     }),
@@ -129,9 +138,12 @@ export default function Bookings() {
           pickupAddress: values.pickupAddress,
           dropoffAddress: values.dropoffAddress,
           scheduleType: values.serviceType,
-          vehicle: values.vehicle,
+          // vehicle: values.modeOfDelivery,
           modeOfDelivery: values.modeOfDelivery,
-          scheduleDate: values.scheduleDate,
+          scheduleDate:
+            values.serviceType === "scheduled"
+              ? `${values.scheduleDate}T${values.scheduleTime}:00`
+              : undefined,
         };
 
         console.log("Calling bookingPost with payload:", payload);
@@ -244,6 +256,7 @@ export default function Bookings() {
       "Booking",
     status: booking.status || "pending",
     providerName: booking.providerId?.fullName || "—",
+    providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     providerImage:
       booking.providerId?.profilePicture ||
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
@@ -441,28 +454,24 @@ return (
                   {formik.errors.pickupAddress}
                 </p>
               )}
-          </div>
-
-          <div>
-            <InputField
-              name="dropoffAddress"
-              label="Dropoff location"
-              placeholder="24 Palm Avenue, Lagos"
-              value={formik.values.dropoffAddress}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            />
-
-            {formik.touched.dropoffAddress &&
-              formik.errors.dropoffAddress && (
-                <p className="mt-1 text-sm text-red-600">
-                  {formik.errors.dropoffAddress}
-                </p>
-              )}
-          </div>
-
-          {formik.values.pickupAddress &&
-            formik.values.dropoffAddress && (
+            </div>
+            <div>
+              <InputField
+                name="dropoffAddress"
+                label="Dropoff location"
+                placeholder="24 Palm Avenue, Lagos"
+                value={formik.values.dropoffAddress}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.dropoffAddress &&
+                formik.errors.dropoffAddress && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.dropoffAddress}
+                  </p>
+                )}
+            </div>
+            {/* {formik.values.pickupAddress && formik.values.dropoffAddress && (
               <div className="flex items-center gap-2 text-sm text-gray-500 -mt-2">
                 <svg
                   className="w-4 h-4"
@@ -477,24 +486,182 @@ return (
                 </svg>
                 <span>15km</span>
               </div>
+            )} */}
+            <div>
+              <InputField
+                label="Service Type"
+                select
+                options={[
+                  { label: "Select service type", value: "" },
+                  { label: "Pickup now", value: "immediate" },
+                  { label: "Schedule", value: "scheduled" },
+                ]}
+                value={formik.values.serviceType}
+                onChange={(option) =>
+                  formik.setFieldValue("serviceType", option.value)
+                }
+                onBlur={() => formik.setFieldTouched("serviceType", true)}
+              />
+              {formik.touched.serviceType && formik.errors.serviceType && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formik.errors.serviceType}
+                </p>
+              )}
+            </div>
+            {formik.values.serviceType === "scheduled" && (
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <InputField
+                    name="scheduleDate"
+                    label="Select Date"
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    value={formik.values.scheduleDate}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                  {formik.touched.scheduleDate &&
+                    formik.errors.scheduleDate && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {formik.errors.scheduleDate}
+                      </p>
+                    )}
+                </div>
+
+                <div className="flex-1">
+                  <InputField
+                    name="scheduleTime"
+                    label="Select Time"
+                    type="time"
+                    value={formik.values.scheduleTime}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                  {formik.touched.scheduleTime &&
+                    formik.errors.scheduleTime && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {formik.errors.scheduleTime}
+                      </p>
+                    )}
+                </div>
+              </div>
             )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Choose Vehicle
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {vehicleOptions.map((vehicle) => {
+                  const isSelected =
+                    formik.values.modeOfDelivery === vehicle.value;
+                  return (
+                    <button
+                      key={vehicle.value}
+                      type="button"
+                      onClick={() =>
+                        formik.setFieldValue("modeOfDelivery", vehicle.value)
+                      }
+                      className={`text-left p-4 rounded-xl border-2 transition-all ${
+                        isSelected
+                          ? "border-[#005823] bg-[#f0f9f4]"
+                          : "border-gray-200 bg-white hover:border-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`mb-2 ${isSelected ? "text-[#005823]" : "text-gray-600"}`}
+                      >
+                        {vehicle.icon}
+                      </div>
+                      <p
+                        className={`font-semibold text-sm ${isSelected ? "text-[#005823]" : "text-gray-800"}`}
+                      >
+                        {vehicle.label}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                        <span>{vehicle.eta}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-0.5">
+                          <svg
+                            className="w-3 h-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+                          </svg>
+                          {vehicle.capacity}
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {vehicle.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+              {formik.touched.modeOfDelivery &&
+                formik.errors.modeOfDelivery && (
+                  <p className="mt-2 text-sm text-red-600">
+                    {formik.errors.modeOfDelivery}
+                  </p>
+                )}
+            </div>
 
-
-
-         <div className="flex justify-center">
-  <div className="w-full sm:w-[300px] md:w-[400px] lg:w-[500px]">
-    <Button variant="secondary" type="submit" disabled={loading}>
-      {loading ? "Creating Booking..." : "Post Request"}
-    </Button>
-  </div>
-</div>
-        </form>
-      ) : (
-        <div className="mt-5 p-5 max-w-xl lg:max-w-4xl xl:max-w-5xl mx-auto">
-          <StatusFilter
-            activeFilter={statusFilter}
-            onFilterChange={setStatusFilter}
-          />
+            {/* Auto-accept checkbox */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="auto-accept"
+                name="autoAcceptNearest"
+                checked={formik.values.autoAcceptNearest}
+                onChange={async (e) => {
+                  formik.handleChange(e);
+                  try {
+                    await allowSystem(e.target.checked);
+                  } catch (error) {
+                    console.error("Error updating allowSystem:", error);
+                    setErrorMessage("Failed to update auto-accept setting");
+                  }
+                }}
+                className="w-4 h-4 rounded cursor-pointer accent-[#005823]"
+              />
+              <label
+                htmlFor="auto-accept"
+                className="text-sm text-gray-500 cursor-pointer select-none"
+              >
+                Automatically accept the nearest provider
+              </label>
+            </div>
+            {formik.values.autoAcceptNearest && (
+              <div className="flex items-start gap-2 p-3 bg-[#005823] border border-[#005823] rounded-lg">
+                <svg
+                  className="w-5 h-5 text-white mt-0.5 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p className="text-sm text-white">
+                  The system will automatically assign the nearest available
+                  provider to your request.
+                </p>
+              </div>
+            )}
+            <div className="flex flex-col">
+              <Button variant="secondary" type="submit" disabled={loading}>
+                {loading ? "Creating Booking..." : "Post Request"}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="mt-5 p-5 max-w-xl mx-auto">
+            <StatusFilter
+              activeFilter={statusFilter}
+              onFilterChange={setStatusFilter}
+            />
 
           {bookingsLoading && (
             <div className="text-center py-12 bg-white rounded-lg">

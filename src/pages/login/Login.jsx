@@ -1,7 +1,7 @@
 import AuthLayout from "../../components/layouts/layout";
 import Button from "../../components/button";
 import InputField from "../../components/InputField";
-import Navbar from "../../components/layouts/navbar";
+import LoginNavbar from "../../components/layouts/loginNavbar";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
@@ -109,9 +109,39 @@ export default function Login() {
       console.error("Login failed:", error);
 
       if (error.response) {
-        setErrorMessage(
-          error.response.data?.message || "Login failed. Try again.",
-        );
+        console.log("Login error response data:", error.response.data);
+        const raw = error.response.data;
+        let apiMessage = null;
+        if (typeof raw === "string") {
+          try {
+            const parsed = JSON.parse(raw);
+            apiMessage = parsed?.message || parsed?.error;
+          } catch {
+            const match = raw.match(/"message"\s*:\s*"([^"]+)"/);
+            apiMessage = match?.[1] || raw;
+          }
+        } else {
+          apiMessage =
+            raw?.message ||
+            raw?.error ||
+            raw?.error?.message ||
+            raw?.data?.message;
+        }
+        if (
+          typeof apiMessage === "string" &&
+          apiMessage.toLowerCase().includes("request failed with status code")
+        ) {
+          apiMessage = null;
+        }
+        let finalMessage = apiMessage || "Login failed. Try again.";
+        if (
+          typeof finalMessage === "string" &&
+          finalMessage.trim() === "Please verify your email before logging in"
+        ) {
+          finalMessage =
+            "Please verify your email before logging in. Try signing up again to recieve a verification mail.";
+        }
+        setErrorMessage(finalMessage);
       } else if (error.request) {
         setErrorMessage(
           "No response from server. Please check your connection.",
@@ -133,7 +163,19 @@ export default function Login() {
         const data = await googleLogin(tokenResponse.access_token);
 
         if (!data?.token) {
-          setErrorMessage(data.message || "Login failed");
+          const message =
+            typeof data === "string"
+              ? data
+              : data?.message || data?.error || data?.error?.message;
+          let finalMessage = message || "Login failed";
+          if (
+            typeof finalMessage === "string" &&
+            finalMessage.trim() === "Please verify your email before logging in"
+          ) {
+            finalMessage =
+              "Please verify your email before logging in. Try signing up again to receive a verification mail.";
+          }
+          setErrorMessage(finalMessage);
           setGoogleLoading(false);
           return;
         }
@@ -160,15 +202,46 @@ export default function Login() {
 
         setGoogleLoading(false);
       } catch (err) {
-        console.error(err);
+        console.error("Google login failed:", err);
+        const raw = err?.response?.data;
+        let apiMessage = null;
+        if (typeof raw === "string") {
+          try {
+            const parsed = JSON.parse(raw);
+            apiMessage = parsed?.message || parsed?.error;
+          } catch {
+            const match = raw.match(/"message"\s*:\s*"([^"]+)"/);
+            apiMessage = match?.[1] || raw;
+          }
+        } else {
+          apiMessage =
+            raw?.message ||
+            raw?.error ||
+            raw?.error?.message ||
+            raw?.data?.message;
+        }
+        if (
+          typeof apiMessage === "string" &&
+          apiMessage.toLowerCase().includes("request failed with status code")
+        ) {
+          apiMessage = null;
+        }
         setGoogleLoading(false);
-        setErrorMessage("Google login failed");
+        let finalMessage = apiMessage || err?.message || "Google login failed";
+        if (
+          typeof finalMessage === "string" &&
+          finalMessage.trim() === "Please verify your email before logging in"
+        ) {
+          finalMessage =
+            "Please verify your email before logging in. Try signing up again to receive a verification mail.";
+        }
+        setErrorMessage(finalMessage);
       }
     },
 
-    onError: () => {
+    onError: (err) => {
       setGoogleLoading(false);
-      setErrorMessage("Google login failed.");
+      setErrorMessage(err.message || "Google login failed.");
     },
   });
 
@@ -182,7 +255,7 @@ export default function Login() {
 
   return (
     <div className="h-screen">
-      <Navbar />
+      <LoginNavbar />
       <AuthLayout
         title="Welcome Back!"
         description="Log in with your detail to keep exploring our platform"
@@ -231,7 +304,7 @@ export default function Login() {
                     name="password"
                     label="Password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Use a minimum of 8 characters"
+                    placeholder="Enter your password"
                     value={values.password}
                     onChange={handleChange}
                     onBlur={handleBlur}

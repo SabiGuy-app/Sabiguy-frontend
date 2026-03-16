@@ -201,12 +201,12 @@ export default function ProviderProfilePage() {
             </div>
 
             {/* Right Side - Edit Button */}
-            <button
+            {/* <button
               onClick={() => setActiveTab('profile')}
               className="w-full md:w-auto p-2 px-4 bg-[#8BC53F] text-white font-medium rounded-lg hover:bg-[#7ab335] transition-colors text-sm sm:text-base"
             >
               Edit Profile
-            </button>
+            </button> */}
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 lg:p-8">

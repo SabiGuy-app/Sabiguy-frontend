@@ -5,25 +5,23 @@ import { Link } from "react-router-dom";
 import Modal from "../../components/Modal";
 import axios from "axios";
 import { useState } from "react";
+import { Formik, ErrorMessage } from "formik";
+import { ForgotPasswordSchema } from "./schema";
 import OtpInput from "./OtpInput";
 
 export default function ForgotPassword ({ isOpen, onClose })  {
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [showOtpModal, setShowOtpModal] = useState(false)
 
-
- 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values, { setSubmitting }) => {
     setLoading(true);
     setMessage("");
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth/password`,{ email });
+      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth/password`,{ email: values.email });
 
-      localStorage.setItem("passwordEmail", email);
+      localStorage.setItem("passwordEmail", values.email);
       
       setMessage(res.data?.message || "Check your email for reset instructions.");
       if (res.data) {
@@ -39,6 +37,7 @@ export default function ForgotPassword ({ isOpen, onClose })  {
       }
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -47,30 +46,44 @@ export default function ForgotPassword ({ isOpen, onClose })  {
 
         <Modal isOpen={isOpen} onClose={onClose} title="Forgot Password?">
           <p className="flex flex-col items-center justify-center text-gray-500 mb-5">Enter the email associated with your account to reset your password</p>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <InputField
-          name="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+      <Formik
+        initialValues={{ email: "" }}
+        onSubmit={handleSubmit}
+        validationSchema={ForgotPasswordSchema}
+      >
+        {({ values, handleChange, handleBlur, handleSubmit }) => (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div>
+              <InputField
+                name="email"
+                placeholder="Enter your email"
+                value={values.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              />
+              <ErrorMessage
+                name="email"
+                component="span"
+                className="text-[#db3a3a]"
+              />
+            </div>
 
-        {message && (
-          <p
-            className={`text-sm ${
-              message.toLowerCase().includes("check") ? "text-green-600" : "text-red-500"
-            }`}
-          >
-            {message}
-          </p>
+            {message && (
+              <p
+                className={`text-sm ${
+                  message.toLowerCase().includes("check") ? "text-green-600" : "text-red-500"
+                }`}
+              >
+                {message}
+              </p>
+            )}
+
+            <Button type="submit">
+              {loading ? "Sending..." : "Send Reset OTP"}
+            </Button>
+          </form>
         )}
-
-        <Button 
-        type="submit"
-     onClick={handleSubmit}
-        >
-          {loading ? "Sending..." : "Send Reset OTP"}</Button>
-      </form>
+      </Formik>
       <div className="flex item-center justify-center mt-5">
     <button
     onClick={onClose}

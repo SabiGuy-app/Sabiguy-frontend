@@ -59,9 +59,13 @@ export default function JobsCard({
   };
 
   const pickupAddress =
-    job?.pickupLocation?.address || job?.originalData?.pickupLocation?.address || "N/A";
+    job?.pickupLocation?.address ||
+    job?.originalData?.pickupLocation?.address ||
+    "N/A";
   const dropoffAddress =
-    job?.dropoffLocation?.address || job?.originalData?.dropoffLocation?.address || "N/A";
+    job?.dropoffLocation?.address ||
+    job?.originalData?.dropoffLocation?.address ||
+    "N/A";
   const amount = job?.agreedPrice ?? job?.calculatedPrice ?? job?.price ?? 0;
   const shouldShowNavigation =
     normalizedStatus === "paid_escrow" ||
@@ -89,9 +93,13 @@ export default function JobsCard({
           <div className="flex items-start justify-between mb-2">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h3 className="text-xl font-semibold text-gray-900">{formatTitle(job?.title)}</h3>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {formatTitle(job?.title)}
+                </h3>
               </div>
-              <p className="text-sm text-gray-600">Provider: {job?.providerName || "You"}</p>
+              <p className="text-sm text-gray-600">
+                Provider: {job?.providerName || "You"}
+              </p>
             </div>
 
             <div className="text-right">
@@ -102,15 +110,22 @@ export default function JobsCard({
               >
                 {job?.status || "Pending"}
               </span>
-              <div className="text-2xl font-bold text-[#2D6A3E]">NGN {Number(amount).toLocaleString()}</div>
-              <p className="text-sm text-gray-600">Delivery: {formatTitle(job?.originalData?.scheduleType || "N/A")}</p>
+              <div className="text-2xl font-bold text-[#2D6A3E]">
+                NGN {Number(amount).toLocaleString()}
+              </div>
+              <p className="text-sm text-gray-600">
+                Delivery:{" "}
+                {formatTitle(job?.originalData?.scheduleType || "N/A")}
+              </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-2 mb-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[#2D6A3E]" />
-              <span>{formatDateTime(job?.createdAt || job?.originalData?.createdAt)}</span>
+              <span>
+                {formatDateTime(job?.createdAt || job?.originalData?.createdAt)}
+              </span>
             </div>
 
             <div className="flex items-start gap-3">
@@ -136,14 +151,18 @@ export default function JobsCard({
             {normalizedStatus === "in_progress" && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">Est. Completion: {job?.est_completion || "N/A"}</span>
+                <span className="font-medium">
+                  Est. Completion: {job?.est_completion || "N/A"}
+                </span>
               </div>
             )}
 
             {normalizedStatus === "pending" && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">Starts in: {job?.startsIn || "N/A"}</span>
+                <span className="font-medium">
+                  Starts in: {job?.startsIn || "N/A"}
+                </span>
               </div>
             )}
 
@@ -152,7 +171,9 @@ export default function JobsCard({
               normalizedStatus === "awaiting_confirmation") && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">Completed {job?.completedAt || "recently"}</span>
+                <span className="font-medium">
+                  Completed {job?.completedAt || "recently"}
+                </span>
               </div>
             )}
           </div>
@@ -167,34 +188,32 @@ export default function JobsCard({
               </button>
             )}
 
-          {normalizedStatus === "awaiting_confirmation" && (
-              <button
-                className="px-3 py-2 mt-3 bg-gray-100 text-black rounded-lg font-medium transition-colors"
-              >
+            {normalizedStatus === "awaiting_confirmation" && (
+              <button className="px-3 py-2 mt-3 bg-gray-100 text-black rounded-lg font-medium transition-colors">
                 Awaiting Customer's Review
               </button>
             )}
 
             {normalizedStatus === "completed" && (
-  <div className="mt-3">
-    <div className="flex">
-      {[...Array(5)].map((_, i) => (
-        <Star
-          key={i}
-          className={`w-4 h-4 ${
-            i < (job?.originalData?.rating?.score || 0)
-              ? "fill-yellow-400 text-yellow-400"
-              : "text-gray-300"
-          }`}
-        />
-      ))}
-    </div>
+              <div className="mt-3">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${
+                        i < (job?.originalData?.rating?.score || 0)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </div>
 
-    <p className="text-gray-500 mt-1 text-sm">
-      {job?.originalData?.rating?.review || "No review available"}
-    </p>
-  </div>
-)}
+                <p className="text-gray-500 mt-1 text-sm">
+                  {job?.originalData?.rating?.review || "No review available"}
+                </p>
+              </div>
+            )}
             {normalizedStatus === "in_progress" && (
               <button
                 onClick={() => onMarkAsCompleted(job)}
@@ -228,16 +247,14 @@ export default function JobsCard({
             {shouldShowMessageButton && (
               <button
                 onClick={() => onMessageCustomer?.(job)}
-              className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
-                  <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-4 h-4" />
                 Message
               </button>
             )}
-             {normalizedStatus === "awaiting_job_commencement" && (
-              <button
-                className="px-3 py-2 mt-3 bg-gray-50 text-[#DC2626] rounded-lg font-medium hover:bg-gray-200 transition-colors"
-              >
+            {normalizedStatus === "awaiting_job_commencement" && (
+              <button className="px-3 py-2 mt-3 bg-gray-50 text-[#DC2626] rounded-lg font-medium hover:bg-gray-200 transition-colors">
                 Cancel
               </button>
             )}

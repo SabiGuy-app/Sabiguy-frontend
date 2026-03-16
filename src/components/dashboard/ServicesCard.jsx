@@ -34,8 +34,8 @@ export default function ServicesCard({ logo, title, onClick, image, disabled }) 
           <p className="text-[20px] font-semibold mt-3 text-[#231F20]">{title}</p>
         </div>
       ) : (
-        <Link 
-          to="/bookings" 
+        <div 
+          // to="/bookings" 
           className="absolute p-4 inset-0 flex flex-col items-center justify-center"
           onClick={handleClick}
         >
@@ -43,7 +43,7 @@ export default function ServicesCard({ logo, title, onClick, image, disabled }) 
             <img src={image} alt="" className="w-[50px] h-[50px]"/>
           </div>
           <p className="text-[20px] font-semibold mt-3 text-[#231F20]">{title}</p>
-        </Link>
+        </div>
       )}
     </div>
   );

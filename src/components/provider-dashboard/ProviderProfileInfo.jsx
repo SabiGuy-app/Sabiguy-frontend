@@ -104,6 +104,7 @@ export default function ProviderProfileInfoTab({ user }) {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
+              readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>
@@ -116,6 +117,7 @@ export default function ProviderProfileInfoTab({ user }) {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
+              readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
             />
           </div>
@@ -131,6 +133,7 @@ export default function ProviderProfileInfoTab({ user }) {
             name="email"
             value={formData.email}
             onChange={handleChange}
+            readOnly
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
           />
         </div>

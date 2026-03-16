@@ -1,17 +1,20 @@
 // src/components/Navbar.jsx
 
 import Button from "../button";
-import { Link } from "react-router-dom"; 
+import { Menu, X } from "lucide-react"; 
+import { Link, useNavigate } from "react-router-dom"; 
+import { useState } from "react";
 
-export default function Navbar() {
+export default function SignUpNavbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
 <nav className="w-full flex justify-between items-center px-6 py-4 bg-white shadow-sm border-b border-gray-400">
       {/* Logo */}
-      <div className="text-2xl font-bold text-[#005823]">
-        <img src="/logo.jpg" alt="SabiGuy Logo" className="h-8 w-auto" />
-      </div>
-
+      <Link to="/">
+  <img src="/logo.jpg" alt="SabiGuy Logo" className="h-8 w-auto" />
+</Link>
       {/* Desktop buttons */}
       <div className=" hidden md:flex space-x-4">
         <Link to="/login">
@@ -19,11 +22,11 @@ export default function Navbar() {
             Login
           </button>
         </Link>
-        <Link to="/">
+        {/* <Link to="/">
           <Button variant="primary" size="md">
             Sign Up
           </Button>
-        </Link>
+        </Link> */}
       </div>
 
 

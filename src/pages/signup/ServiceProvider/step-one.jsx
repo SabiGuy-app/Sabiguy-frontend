@@ -52,6 +52,21 @@ export default function StepOne({ onNext }) {
 
       console.log("Backend response:", response);
 
+      if (
+        response.data?.message?.startsWith(
+          "Email not verified. OTP sent to email",
+        )
+      ) {
+        setSuccessMessage(
+          "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
+        );
+        localStorage.setItem("email", values.email);
+        setTimeout(() => {
+          onNext?.({ email: values.email });
+        }, 5000);
+        return;
+      }
+
       if (response.status === 200 || response.status === 201) {
         const token = response.data?.token;
         if (token) {
@@ -73,7 +88,18 @@ export default function StepOne({ onNext }) {
     } catch (error) {
       console.error("An error occurred:", error);
       if (error.response) {
-        setErrorMessage(error.response.data?.message || "An error occurred");
+        const apiMessage = error.response.data?.message;
+        if (apiMessage?.startsWith("Email not verified. OTP sent to email")) {
+          setSuccessMessage(
+            "Your email is registered but not verified yet, you have however received another otp. You will be redirected to the otp input page in a moment...",
+          );
+          localStorage.setItem("email", values.email);
+          setTimeout(() => {
+            onNext?.({ email: values.email });
+          }, 5000);
+        } else {
+          setErrorMessage(apiMessage || "An error occurred");
+        }
       } else if (error.request) {
         setErrorMessage("No response from the server. Please try again later.");
       } else {
@@ -84,86 +110,6 @@ export default function StepOne({ onNext }) {
       setSubmitting(false);
     }
   };
-
-  //  Sign up with google
-  //  const handleGoogleSuccess = async (idToken, profile) => {
-  //   console.log("Google login successful:", { idToken, profile });
-
-  //   try {
-  //     const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/google-provider`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ token: idToken }), // Send ID token, not access token
-  //     });
-
-  //     const data = await res.json();
-  //     console.log("Server response:", data);
-
-  //     if (data?.token) {
-  //       localStorage.setItem("token", data.token);
-  //     }
-
-  //     if (data?.newUser?.email) {
-  //       localStorage.setItem("google-email", data.newUser.email);
-  //       setGoogleLoading(false);
-  //       onNext();
-  //     } else if (data.message === "Email already in use") {
-  //       setGoogleLoading(false);
-  //       setErrorMessage(data.message);
-  //     } else {
-  //       setGoogleLoading(false);
-  //       setErrorMessage("An error occurred. Please try again.");
-  //     }
-  //   } catch (err) {
-  //     console.error("Google login failed:", err);
-  //     setGoogleLoading(false);
-  //     setErrorMessage("Google login failed. Please try again.");
-  //   }
-  // };
-
-  // const googleLogin = useGoogleLogin({
-  //   onSuccess: async (tokenResponse) => {
-  //     try {
-  //       setGoogleLoading(true);
-
-  //       // Get Google user info
-  //       const userInfo = await fetch(
-  //         "https://www.googleapis.com/oauth2/v3/userinfo",
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${tokenResponse.access_token}`,
-  //           },
-  //         }
-  //       );
-
-  //       const profile = await userInfo.json();
-  //       console.log("Google Profile:", profile);
-
-  //       // Get ID token by exchanging the access token
-  //       const tokenInfo = await fetch(
-  //         `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${tokenResponse.access_token}`
-  //       );
-  //       const tokenData = await tokenInfo.json();
-
-  //       // OR use the code flow to get id_token directly
-  //       // For now, you might need to send profile data to your backend
-  //       // and verify on the server side, or switch to using Google Identity Services
-
-  //       await handleGoogleSuccess(tokenResponse.access_token, profile);
-  //     } catch (err) {
-  //       console.error(err);
-  //       setGoogleLoading(false);
-  //       setErrorMessage("Google login failed");
-  //     }
-  //   },
-
-  //   onError: () => {
-  //     setErrorMessage("Google login failed.");
-  //     setGoogleLoading(false);
-  //   },
-  // });
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -205,6 +151,25 @@ export default function StepOne({ onNext }) {
           localStorage.setItem("token", data.token);
         }
 
+        const googleEmail =
+          data?.email || data?.newUser?.email || profile?.email || "";
+
+        if (
+          data?.message?.startsWith(
+            "Email not verified. OTP sent to email",
+          )
+        ) {
+          setSuccessMessage(
+            "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
+          );
+          localStorage.setItem("email", googleEmail);
+          setTimeout(() => {
+            onNext?.({ email: googleEmail });
+          }, 5000);
+          setGoogleLoading(false);
+          return;
+        }
+
         if (data?.newUser?.email) {
           localStorage.setItem("google-email", data.newUser.email);
           setGoogleLoading(false);
@@ -228,9 +193,7 @@ export default function StepOne({ onNext }) {
       setGoogleLoading(false);
     },
   });
-  if (googleLoading) {
-    return <Loader />;
-  }
+  // Keep page visible; we'll disable Google button while loading
 
   return (
     <div className="h-screen">
@@ -319,7 +282,7 @@ export default function StepOne({ onNext }) {
                     name="password"
                     label="Password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Use a minimum of 8 characters"
+                    placeholder="Enter your password"
                     value={values.password}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -329,6 +292,9 @@ export default function StepOne({ onNext }) {
                     component="span"
                     className="text-[#db3a3a]"
                   />
+                   <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+                    Password must be at least 8 characters long and include a letter, number, and special character
+                  </p>
                   {showPassword ? (
                     <BsEye
                       onClick={handleShowPassword}
@@ -385,9 +351,21 @@ export default function StepOne({ onNext }) {
                   )}
                 </div>
 
-                <Button type="submit">
-                  {loading ? "Loading..." : "Continue"}
-                </Button>
+        
+                               <Button
+                                 type="submit"
+                                disabled={
+                                   !(
+                                  values.fullName.trim() &&
+                                  values.email.trim() &&
+                                     values.phoneNumber.trim() &&
+                                     values.password.trim() &&
+                                termAccepted
+                                   )
+                                 }
+                               >
+                                 {loading ? "Loading..." : "Continue"}
+                               </Button>
 
                 <div className="flex items-center my-4">
                   <div className="flex-grow border-t border-gray-300"></div>
@@ -395,23 +373,15 @@ export default function StepOne({ onNext }) {
                   <div className="flex-grow border-t border-gray-300"></div>
                 </div>
 
-                {/* <GoogleLogin onSuccess={handleGoogleSuccess}/> */}
-
-                {/* <GoogleLogin 
-                  onSuccess={handleGoogleSuccess}
-                  size="large"
-                  text="continue_with"
-                  theme="outline"
-                  logo_alignment="center"
-                /> */}
-
                 <button
+                  type="button"
                   onClick={() => googleLogin()}
+                  disabled={googleLoading}
                   className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
                 >
                   <img src="/Google.svg" alt="Google" className="w-5 h-5" />
                   <span className="text-gray-700 font-medium">
-                    Continue with Google
+                    {googleLoading ? "Just a moment..." : "Continue with Google"}
                   </span>
                 </button>
 
