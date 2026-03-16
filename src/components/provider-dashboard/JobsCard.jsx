@@ -1,4 +1,5 @@
-import { Calendar, MapPin, Clock, Star, MessageCircle } from "lucide-react";
+import { Calendar, MapPin, Clock, Star, MessageCircle, Copy, Check } from "lucide-react";
+import { useState } from "react";
 
 // Reusable Request Card Component
 export default function JobsCard({
@@ -8,6 +9,13 @@ export default function JobsCard({
   onShowNavigation,
   onMessageCustomer,
 }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const normalizedStatus = String(job?.status || "")
     .trim()
     .toLowerCase()
@@ -97,8 +105,19 @@ export default function JobsCard({
                   {formatTitle(job?.title)}
                 </h3>
               </div>
-              <p className="text-sm text-gray-600">
-                Provider: {job?.providerName || "You"}
+              <p className="text-sm text-gray-600 flex items-center gap-2">
+                <span>Provider: {job?.providerName || "You"}</span>
+                {job?.orderId && (
+                  <div className="flex items-center gap-1.5 ml-2">
+                    <span className="text-xs font-bold text-gray-500">#{job.orderId}</span>
+                    <button
+                      onClick={() => handleCopy(job.fullOrderId)}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
+                    >
+                      {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                    </button>
+                  </div>
+                )}
               </p>
             </div>
 

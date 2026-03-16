@@ -5,8 +5,11 @@ import {
   Clock,
   Star,
   MessageCircle,
+  Copy,
+  Check,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import distance from "/distance.png";
 import { acceptCompletion, cancelBooking } from "../../api/bookings";
 
@@ -55,16 +58,41 @@ function CancelModal({ isOpen, onClose, onConfirm, loading }) {
   );
 }
 
-function ReviewModal({ isOpen, onClose, onSubmit, loading }) {
+function ReviewModal({ isOpen, onClose, onSubmit, loading, apiError }) {
   const [score, setScore] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [review, setReview] = useState("");
+  const [tipAmount, setTipAmount] = useState("");
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (!isOpen) {
+      setScore(0);
+      setReview("");
+      setTipAmount("");
+      setErrors({});
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const validate = () => {
+    const newErrors = {};
+    if (!score) newErrors.score = "Please select a rating";
+    if (tipAmount && parseFloat(tipAmount) < 0) {
+      newErrors.tipAmount = "Tip amount must be a positive number";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = () => {
-    if (!score) return;
-    onSubmit({ score, review });
+    if (!validate()) return;
+    onSubmit({ 
+      score, 
+      review: review.trim(), 
+      tipAmount: tipAmount === "" ? 0 : parseFloat(tipAmount) 
+    });
   };
 
   return (
@@ -86,7 +114,10 @@ function ReviewModal({ isOpen, onClose, onSubmit, loading }) {
               <button
                 key={star}
                 type="button"
-                onClick={() => setScore(star)}
+                onClick={() => {
+                  setScore(star);
+                  if (errors.score) setErrors(prev => ({ ...prev, score: null }));
+                }}
                 onMouseEnter={() => setHovered(star)}
                 onMouseLeave={() => setHovered(0)}
               >
@@ -100,6 +131,9 @@ function ReviewModal({ isOpen, onClose, onSubmit, loading }) {
               </button>
             ))}
           </div>
+          {errors.score && (
+            <p className="mt-1 text-xs text-red-500">{errors.score}</p>
+          )}
         </div>
 
         <div className="mb-5">
@@ -115,6 +149,39 @@ function ReviewModal({ isOpen, onClose, onSubmit, loading }) {
           />
         </div>
 
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Add a Tip (optional)
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+              ₦
+            </span>
+            <input
+              type="number"
+              placeholder="0.00"
+              value={tipAmount}
+              onChange={(e) => {
+                setTipAmount(e.target.value);
+                if (errors.tipAmount) setErrors(prev => ({ ...prev, tipAmount: null }));
+              }}
+              className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#005823]"
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] text-gray-400 leading-tight">
+            Note: The tip amount will be deducted from your wallet
+          </p>
+          {errors.tipAmount && (
+            <p className="mt-1 text-xs text-red-500">{errors.tipAmount}</p>
+          )}
+        </div>
+
+        {apiError && (
+          <div className="mb-5 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
+            {apiError}
+          </div>
+        )}
+
         <div className="flex gap-3">
           <button
             onClick={onClose}
@@ -124,10 +191,17 @@ function ReviewModal({ isOpen, onClose, onSubmit, loading }) {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!score || loading}
-            className="flex-1 px-4 py-2.5 bg-[#005823] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 bg-[#005823] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? "Submitting..." : "Submit"}
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit"
+            )}
           </button>
         </div>
       </div>
@@ -139,12 +213,22 @@ export default function RequestCard({
   request,
   onViewDetails,
   onTrackProvider,
+  onBookingCancelled,
+  onStatusUpdate,
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+
+  const handleCopy = (text, idType) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(idType);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   const getStatusStyles = (status) => {
     const styles = {
@@ -172,14 +256,25 @@ export default function RequestCard({
     }
   };
 
-  const handleReviewSubmit = async ({ score, review }) => {
+  const handleReviewSubmit = async ({ score, review, tipAmount }) => {
     setSubmitLoading(true);
+    setApiError(null);
     try {
-      await acceptCompletion(request.id, { score, review });
+      const response = await acceptCompletion(request.id, { score, review, tipAmount });
+      const successMsg = response?.message || response?.data?.message || "Job completion accepted successfully";
+      toast.success(successMsg);
       setSubmitted(true);
       setModalOpen(false);
+      if (onStatusUpdate) onStatusUpdate();
     } catch (err) {
       console.error("Failed to submit review:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+      if (status === 400) message = "Invalid rating score or tip amount. Please check your inputs.";
+      else if (status === 401) message = "Unauthorized. Please log in again.";
+      else if (status === 409) message = "This booking has not been marked as completed by the provider yet.";
+      setApiError(message);
+      toast.error(message);
     } finally {
       setSubmitLoading(false);
     }
@@ -194,9 +289,13 @@ export default function RequestCard({
     <>
       <ReviewModal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setApiError(null);
+        }}
         onSubmit={handleReviewSubmit}
         loading={submitLoading}
+        apiError={apiError}
       />
 
       <CancelModal
@@ -232,68 +331,104 @@ export default function RequestCard({
                       {request.status}
                     </span>
                   </div>
-                  <p className="text-[16px] text-[#231F20BF]">
-                    {request.providerName}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[16px] text-[#231F20BF]">
+                      {request.providerName}
+                    </p>
+                    {request.providerIdDisplay && request.providerIdDisplay !== "—" && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
+                          ID: {request.providerIdDisplay}
+                        </span>
+                        <button
+                          onClick={() => handleCopy(request.fullProviderId, "provider")}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
+                          title="Copy Full Provider ID"
+                        >
+                          {copiedId === "provider" ? (
+                            <Check size={10} className="text-green-500" />
+                          ) : (
+                            <Copy size={10} />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-end">
+                <div className="flex flex-col items-end">
                   <div className="text-2xl font-bold text-[#2D6A3E]">
                     ₦{request.price.toLocaleString()}
                   </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 mb-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-[#2D6A3E]" />
-                  <span>{request.scheduledDate}</span>
-                </div>
-                {request.startsIn && (
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-yellow-500" />
-                    <span className="font-medium">
-                      Starts in: {request.startsIn}
+                  <div className="flex items-center gap-1 mt-1 justify-end">
+                    <span className="text-[10px] font-medium text-gray-400">
+                      #{request.orderId}
                     </span>
+                    <button
+                      onClick={() => handleCopy(request.fullOrderId, "booking")}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
+                      title="Copy Full Booking ID"
+                    >
+                      {copiedId === "booking" ? (
+                        <Check size={10} className="text-green-500" />
+                      ) : (
+                        <Copy size={10} />
+                      )}
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
+            </div>
+          </div>
 
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                    <div className="w-2 h-2 bg-[#005823] rounded-full" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">
-                      Pickup Location
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {request.pickupAddress}
-                    </p>
-                  </div>
-                </div>
+          <div className="flex flex-col gap-2 mb-4 text-sm text-gray-600 mt-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#2D6A3E]" />
+              <span>{request.scheduledDate}</span>
+            </div>
+            {request.startsIn && (
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-yellow-500" />
+                <span className="font-medium">
+                  Starts in: {request.startsIn}
+                </span>
+              </div>
+            )}
+          </div>
 
-                <div className="flex items-end gap-8">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-3 h-3 text-[#005823]" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Dropoff Location
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {request.dropoffAddress}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <img src={distance} alt="" />
-                    <p className="text-[#231F20BF]">
-                      Distance: <span>{request.distance}</span>
-                    </p>
-                  </div>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-2 h-2 bg-[#005823] rounded-full" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">
+                  Pickup Location
+                </p>
+                <p className="text-sm text-gray-600">
+                  {request.pickupAddress}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-end gap-8">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-3 h-3 text-[#005823]" />
                 </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">
+                    Dropoff Location
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {request.dropoffAddress}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src={distance} alt="" />
+                <p className="text-[#231F20BF]">
+                  Distance: <span>{request.distance}</span>
+                </p>
               </div>
             </div>
           </div>
