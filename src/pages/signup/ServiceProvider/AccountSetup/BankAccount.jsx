@@ -135,6 +135,12 @@ export default function BankAccountForm({ onBack, onNext }) {
       setSuccessMessage("");
 
       try {
+        console.log("Bank info payload:", {
+          accountNumber: values.accountNumber,
+          bankCode: values.bankCode,
+          bankName: values.bankName,
+          accountName: values.accountName,
+        });
         const res = await fetch(`${import.meta.env.VITE_BASE_URL}/provider/bank-info`, {
           method: "PUT",
           headers: {
@@ -144,7 +150,8 @@ export default function BankAccountForm({ onBack, onNext }) {
           body: JSON.stringify({
             accountNumber: values.accountNumber,
             bankCode: values.bankCode,
-            bankName: values.bankName
+            bankName: values.bankName, 
+            accountName: values.accountName
           }),
         });
 

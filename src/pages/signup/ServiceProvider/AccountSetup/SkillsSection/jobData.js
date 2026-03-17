@@ -29,10 +29,10 @@ export const allServices = {
   //   { label: "Peronal & Beauty Services", value: "beauty_services" },
   // ],
   transport: [
-    { label: "Book a Ride", value: "car_driver" },
+    { label: "Car Driver", value: "car_driver" },
   //  { label: "Dispatch Rider", value: "dispatch_rider" },
 
-    { label: "Package Delivery", value: "motorbike_rider" },
+    { label: "Motorbike Rider", value: "motorbike_rider" },
     // { label: "Package Delivery", value: "package_delivery" },
   ],
   // professional_services: [
