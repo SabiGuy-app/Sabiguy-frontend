@@ -15,23 +15,23 @@ export default function ProviderProfileTabs({ activeTab, onTabChange }) {
 
   return (
     <div className="border-b border-gray-200 mb-4">
-      <div className="flex gap-6 overflow-x-auto">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex items-center gap-2 px-1 py-3 text-sm font-medium whitespace-nowrap transition-colors relative ${
+              className={`flex items-center justify-center gap-2 px-2 md:px-1 py-3 text-xs sm:text-sm font-medium text-center transition-colors rounded-md relative ${
                 activeTab === tab.id
-                  ? "text-[#005823]"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "text-[#005823] bg-[#EAF5E8]"
+                  : "text-gray-600 hover:text-gray-900 bg-white"
               }`}
             >
               <Icon size={18} />
               <span>{tab.label}</span>
               {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-0.5 bg-[#005823] rounded" />
               )}
             </button>
           );
