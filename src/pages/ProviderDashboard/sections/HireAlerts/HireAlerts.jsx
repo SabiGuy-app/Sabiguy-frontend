@@ -7,7 +7,7 @@ import AlertDetailsModal from "./AlertDetails";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import { getProviderBookings } from "../../../../api/provider";
-import { getAllBookings, acceptBookings} from "../../../../api/bookings";
+import { getAllBookings, acceptBookings } from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
 
 
@@ -56,13 +56,13 @@ export default function HireAlerts() {
         .map((job) => {
           const modeOfDelivery = resolveModeOfDelivery(job);
           return (
-        getAllBookings({
-          status: "awaiting_provider_acceptance",
-          serviceType: String(job.service).trim().toLowerCase(),
-          modeOfDelivery,
-          page: 1,
-          limit: 20,
-        })
+            getAllBookings({
+              status: "awaiting_provider_acceptance",
+              serviceType: String(job.service).trim().toLowerCase(),
+              modeOfDelivery,
+              page: 1,
+              limit: 20,
+            })
           );
         });
 
@@ -138,8 +138,8 @@ export default function HireAlerts() {
               hour12: true,
             })
             : booking.scheduleType
-            ? String(booking.scheduleType).replace(/_/g, " ")
-            : "TBD",
+              ? String(booking.scheduleType).replace(/_/g, " ")
+              : "TBD",
         orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
         fullOrderId: booking._id || "",
         location:
@@ -175,7 +175,7 @@ export default function HireAlerts() {
             : "N/A",
           posted:
             bookingStatus === "pending_providers" ||
-            bookingStatus === "awaiting_provider_acceptance"
+              bookingStatus === "awaiting_provider_acceptance"
               ? getTimeAgo(booking.createdAt || booking.updatedAt)
               : null,
           offerSent:
@@ -311,15 +311,15 @@ export default function HireAlerts() {
       );
     }
 
-     if (statusFilter === "pending") {
+    if (statusFilter === "pending") {
       return (
         status === "awaiting job commencement"
       );
     }
 
-     if (statusFilter === "completed") {
+    if (statusFilter === "completed") {
       return (
-       
+
         status === "funds released" ||
         status === "completed" ||
         status === "job confirmed"
@@ -467,7 +467,7 @@ export default function HireAlerts() {
         onClose={handleCloseJob}
         job={selectedJob || {}}
         onRefresh={handleRefresh}
-       onMessageCustomer={handleMessageCustomer}
+        onMessageCustomer={handleMessageCustomer}
 
       />
 
@@ -482,8 +482,8 @@ export default function HireAlerts() {
         <button
           onClick={() => setActiveTab("alert")}
           className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "alert"
-              ? "text-[#005823] border-b-2 border-[#005823]"
-              : "text-gray-500 hover:text-gray-700"
+            ? "text-[#005823] border-b-2 border-[#005823]"
+            : "text-gray-500 hover:text-gray-700"
             }`}
         >
           Hire Alerts
@@ -497,8 +497,8 @@ export default function HireAlerts() {
         <button
           onClick={() => setActiveTab("jobs")}
           className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "jobs"
-              ? "text-[#005823] border-b-2 border-[#005823]"
-              : "text-gray-500 hover:text-gray-700"
+            ? "text-[#005823] border-b-2 border-[#005823]"
+            : "text-gray-500 hover:text-gray-700"
             }`}
         >
           Jobs

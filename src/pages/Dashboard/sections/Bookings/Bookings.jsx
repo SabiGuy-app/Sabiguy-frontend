@@ -272,7 +272,6 @@ export default function Bookings() {
 
     orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
     fullOrderId: booking._id || "",
-    providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     fullProviderId: booking.providerId?._id || "",
     price: booking.calculatedPrice || booking.agreedPrice || 0,
     totalAmount: booking.totalAmount || 0,
@@ -313,14 +312,13 @@ export default function Bookings() {
       const status = request.status.toLowerCase();
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
-        return ["in_progress", "paid_escrow", "provider_selected", "completed"].includes(
+        return ["in_progress", "paid_escrow", "provider_selected", "completed", "waiting_confirmation"].includes(
           status,
         );
       if (statusFilter === "pending")
         return ["pending_providers", "payment_pending", "awaiting_provider_acceptance"].includes(status);
       if (statusFilter === "completed")
         return [
-          // "completed",
           "funds_released",
           "user_accepted_completion",
         ].includes(status);

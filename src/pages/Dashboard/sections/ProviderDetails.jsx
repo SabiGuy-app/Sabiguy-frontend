@@ -11,8 +11,12 @@ import {
   Globe,
   Award,
   ShieldAlert,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from "lucide-react";
+import { useEffect } from "react";
+import { getProviderReviews } from "../../../api/provider";
+import StarRating from "../../../components/dashboard/StarRating";
 
 export default function ProviderDetails() {
   const { providerId } = useParams();
@@ -21,6 +25,9 @@ export default function ProviderDetails() {
   const [selectedService, setSelectedService] = useState(null);
   const [yourOffer, setYourOffer] = useState("");
   const [showBookingSummary, setShowBookingSummary] = useState(false);
+  const [reviewsList, setReviewsList] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState(null);
 
   // Find the provider by ID
   const provider = providers.find(p => p._id === providerId || p.id === providerId);
@@ -50,6 +57,24 @@ export default function ProviderDetails() {
     // Handle payment logic here
     console.log("Payment initiated for:", selectedService);
   };
+
+  useEffect(() => {
+    if (providerId) {
+      setReviewsLoading(true);
+      getProviderReviews(providerId)
+        .then((res) => {
+          setReviewsList(res.data || []);
+          setReviewsError(null);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch reviews:", err);
+          setReviewsError("Unable to load reviews");
+        })
+        .finally(() => {
+          setReviewsLoading(false);
+        });
+    }
+  }, [providerId]);
 
  const getStatusConfig = (status) => {
   const configs = {
@@ -214,27 +239,44 @@ const { icon, style } = getStatusConfig(provider.status);
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold mb-4">Recent Reviews</h2>
               <div className="space-y-4">
-                {[1, 2].map((review, idx) => (
-                  <div key={idx} className="flex gap-4 pb-4 border-b last:border-b-0">
-                    <div className="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white font-semibold">
-                      JW
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">John Waton</h3>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        Lorem ipsum tellus dolor nulla consequat quis elementum sollicitudin cum amet praesent eget sociis magna auctor quisque sit rhoncus vulputate cursus consectetur sit nulla scelerisque.
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">2 days ago</p>
-                    </div>
+                {reviewsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                    <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                    <p>Loading reviews...</p>
                   </div>
-                ))}
+                ) : reviewsError ? (
+                  <div className="text-center py-8 text-red-500">
+                    <p>{reviewsError}</p>
+                  </div>
+                ) : reviewsList.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 italic">
+                    No reviews yet
+                  </div>
+                ) : (
+                  reviewsList.map((review, idx) => (
+                    <div key={idx} className="flex gap-4 pb-4 border-b last:border-b-0">
+                      <div className="w-12 h-12 rounded-full bg-[#005823] flex items-center justify-center text-white font-semibold">
+                        {review.user?.fullName?.split(" ").map(n => n[0]).join("").toUpperCase() || "U"}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">{review.user?.fullName || "Anonymous"}</h3>
+                          <StarRating rating={review.score || 0} />
+                        </div>
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                          {review.review || "No feedback provided."}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {new Date(review.createdAt).toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
               {/* WORK VISUALS SECTION */}
