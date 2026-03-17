@@ -6,6 +6,8 @@ import {
   Clock,
   Star,
   MessageCircle,
+  Copy,
+  Check,
 } from "lucide-react";
 import { FaBicycle } from "react-icons/fa";
 import { useState } from "react";
@@ -18,6 +20,13 @@ export default function AlertsCard({
   accepting,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const formatCreatedAt = (value) => {
     if (!value) return "N/A";
     const date = new Date(value);
@@ -57,6 +66,17 @@ export default function AlertsCard({
                   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                   .join(" ")}
               </h3>
+              {alert?.orderId && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-xs font-bold text-gray-500">#{alert.orderId}</span>
+                  <button
+                    onClick={() => handleCopy(alert.fullOrderId)}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
+                  >
+                    {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                  </button>
+                </div>
+              )}
 
               <div className="flex flex-col mb-4 mt-2 gap-3 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
