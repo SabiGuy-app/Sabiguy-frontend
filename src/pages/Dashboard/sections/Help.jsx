@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ContactSection from "../../../components/dashboard/ContactSection";
 import ChatBotDrawer from "../../../components/dashboard/ChatBoxDrawer";
 import ChatBotUI from "../../../components/dashboard/ChatBotUI";
@@ -6,6 +7,8 @@ import DashboardLayout from "../../../components/layouts/DashboardLayout";
 
 export default function ContactPage() {
   const [open, setOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const bookingId = searchParams.get("bookingId");
 
   return (
     <DashboardLayout>
@@ -13,7 +16,7 @@ export default function ContactPage() {
         <ContactSection openChat={() => setOpen(true)} />
 
         <ChatBotDrawer isOpen={open} onClose={() => setOpen(false)}>
-          <ChatBotUI />
+          {open && <ChatBotUI userType="user" bookingId={bookingId} />}
         </ChatBotDrawer>
       </div>
     </DashboardLayout>
