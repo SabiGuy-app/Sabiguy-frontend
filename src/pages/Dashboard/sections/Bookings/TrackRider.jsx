@@ -10,8 +10,11 @@ import {
 } from "lucide-react";
 import Navbar from "../../../../components/dashboard/Navbar";
 import location from "/location.png";
+import { useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
-import { getBookingsDetails } from "../../../../api/bookings";
+import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
+import CancelModal from "../../../../components/CancelModal";
+import { toast } from "react-hot-toast";
 
 const STEPS_COMPLETED_BY_STATUS = {
   in_progress: [1],
@@ -35,6 +38,10 @@ export default function TrackRider() {
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
     useState(true);
   const [bookingStatus, setBookingStatus] = useState("in_progress");
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
@@ -47,6 +54,12 @@ export default function TrackRider() {
     {};
 
   const bookingId = bookingDetails?._id;
+
+  const estimatedDuration = bookingDetails?.estimatedDuration;
+  const arrivalText =
+    estimatedDuration?.value && estimatedDuration?.unit
+      ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
+      : "Tracking your rider";
 
   useEffect(() => {
     const stored = bookingDetails?.status;
@@ -115,13 +128,35 @@ export default function TrackRider() {
     { id: 5, title: "Delivery completed", subtitle: "Package delivered" },
   ];
 
+  const handleCancel = async (reason) => {
+    setCancelLoading(true);
+    try {
+      await cancelBooking(bookingDetails._id, reason);
+      setCancelModalOpen(false);
+      toast.success("Booking cancelled successfully.");
+      navigate("/bookings");
+    } catch (err) {
+      console.error("Failed to cancel booking:", err);
+      toast.error(err.response?.data?.message || "Failed to cancel booking.");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
   return (
     <>
       <Navbar />
+
+      <CancelModal
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        onConfirm={handleCancel}
+        loading={cancelLoading}
+      />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:grid md:grid-cols-2 md:gap-10 space-y-8">
         <div>
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-1">
-            {isFullyComplete ? "Delivery Completed 🎉" : "Arrival in 12 mins"}
+            {isFullyComplete ? "Delivery Completed 🎉" : arrivalText}
           </h1>
           <p className="text-sm text-[#005823] font-medium mb-4">
             {STATUS_LABELS[bookingStatus]}
@@ -152,8 +187,7 @@ export default function TrackRider() {
             <div className="flex items-center gap-3 mb-4">
               <img
                 src={
-                  providerDetails?.profilePicture ||
-                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
+                  providerDetails?.profilePicture
                 }
                 alt={providerDetails?.fullName || "Provider"}
                 className="w-14 h-14 rounded-full object-cover"
@@ -191,7 +225,7 @@ export default function TrackRider() {
               </div>
             </div>
 
-            <div className="md:grid md:grid-cols-3 gap-6 space-y-3">
+            <div className="md:grid md:grid-cols-3 gap-6">
               <button className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
@@ -202,7 +236,9 @@ export default function TrackRider() {
                   Message
                 </span>
               </button>
-              <button className="text-[#E90000] font-medium w-full md:text-[16px] text-[15px] px-3 hover:text-red-600 transition-colors">
+              <button
+                onClick={() => setCancelModalOpen(true)}
+                className="text-[#E90000] font-medium w-full md:text-[16px] text-[15px] px-3 hover:bg-[#E90000] hover:text-white rounded-lg hover:text-red-600 transition-colors">
                 Cancel Request
               </button>
             </div>

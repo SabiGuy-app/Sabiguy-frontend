@@ -21,9 +21,9 @@ export default function ({ categories, onCategoryClick  }) {
   );
 
   return (
-    <div className="mb-6 mt-4">
+    <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">What do you need today?</h3>
+        <h3 className="text-[20px] font-semibold">What do you need today?</h3>
 
         {/* Navigation Arrows */}
         <div className="flex items-center gap-2">

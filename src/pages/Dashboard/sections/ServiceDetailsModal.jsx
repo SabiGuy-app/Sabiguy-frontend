@@ -17,6 +17,11 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <h2 className="text-xl font-semibold">Service Details</h2>
+            {request.orderId && (
+              <span className="text-xl font-bold text-gray-901">
+                {request.orderId}
+              </span>
+            )}
           </div>
         </div>
 
