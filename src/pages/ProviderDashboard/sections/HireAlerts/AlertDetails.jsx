@@ -132,7 +132,7 @@ export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, o
                     "Accept Offer"
                   )}
                 </button>
-                <button 
+                <button
                   className="text-[#005823] font-semibold rounded-md text-sm border border-[#005823] px-2 py-2 hover:bg-gray-50 transition-colors"
                   disabled={accepting}
                 >

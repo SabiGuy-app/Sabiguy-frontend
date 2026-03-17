@@ -116,6 +116,11 @@ export const getAllProviders = async () => {
     return data;
 };
 
+export const getProviderReviews = async (providerId) => {
+    const { data } = await api.get(`/provider/${providerId}/reviews`);
+    return data;
+};
+
 export const formatBookingStatus = (apiStatus) => {
     const statusMap = {
         pending: "Pending",
