@@ -76,7 +76,7 @@ export default function ProfileInfoTab({ user, onProfileUpdate }) {
           />
         </div>
 
-        <div className="flex justify-end mt-8">
+        <div className="flex justify-center mt-8">
           <button
             type="submit"
             disabled={isSubmitting}

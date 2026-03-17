@@ -63,7 +63,7 @@ export default function ReferralsTab() {
         <label className="block text-sm font-medium text-gray-900 mb-3">
           Copy your Invite link
         </label>
-        <div className="flex gap-3 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <input
             type="text"
             value={referralLink}
@@ -72,7 +72,7 @@ export default function ReferralsTab() {
           />
           <button
             onClick={handleCopy}
-            className="px-6 py-3 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+            className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
           >
             {copied ? (
               <>
@@ -89,7 +89,7 @@ export default function ReferralsTab() {
         </div>
         <div className="flex flex-col items-center">
           <span className="text-sm text-gray-600 mb-4">OR</span>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap justify-center">
             <button
               onClick={() => handleShare("whatsapp")}
               className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
@@ -120,10 +120,10 @@ export default function ReferralsTab() {
           {referralHistory.map((referral, index) => (
             <div
               key={index}
-              className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-gray-100 last:border-b-0 gap-1 sm:gap-0"
             >
-              <span className="text-gray-900">{referral.email}</span>
-              <span className={`font-medium ${referral.statusColor}`}>
+              <span className="text-gray-900 text-sm sm:text-base truncate">{referral.email}</span>
+              <span className={`font-medium text-sm sm:text-base ${referral.statusColor}`}>
                 {referral.status}
               </span>
             </div>

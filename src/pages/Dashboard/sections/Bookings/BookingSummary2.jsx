@@ -13,16 +13,16 @@ import {
   Shield,
   BadgeCheck,
 } from "lucide-react";
-import bookingCar from "/bookings.png";
 import Navbar from "../../../../components/dashboard/Navbar";
 import { toast } from "react-hot-toast";
 import { FiChevronLeft } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
 import { initializePayment, payWithWallet } from "../../../../api/payment";
-import { getBookingsDetails } from "../../../../api/bookings";
+import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
 import { getWalletBalance } from "../../../../api/provider";
 import { useSearchParams } from "react-router-dom";
+import CancelModal from "../../../../components/CancelModal";
 
 export default function BookingSummary2() {
   const [selectedPayment, setSelectedPayment] = useState("wallet");
@@ -34,6 +34,8 @@ export default function BookingSummary2() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -49,10 +51,7 @@ export default function BookingSummary2() {
   );
 
   const bookingDetails = booking?.data?.booking || {};
-  // console.log(bookingDetails);
-
   const providerDetails = bookingDetails?.providerId || {};
-  // console.log(providerDetails);
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
@@ -119,6 +118,21 @@ export default function BookingSummary2() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleCancel = async (reason) => {
+    setCancelLoading(true);
+    try {
+      await cancelBooking(bookingDetails._id, reason);
+      setCancelModalOpen(false);
+      toast.success("Booking cancelled successfully.");
+      navigate("/bookings");
+    } catch (err) {
+      console.error("Failed to cancel booking:", err);
+      toast.error(err.response?.data?.message || "Failed to cancel booking.");
+    } finally {
+      setCancelLoading(false);
+    }
   };
 
   const handleConfirmAndPay = async () => {
@@ -262,6 +276,14 @@ export default function BookingSummary2() {
   return (
     <>
       <Navbar />
+
+      <CancelModal
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        onConfirm={handleCancel}
+        loading={cancelLoading}
+      />
+
       <div className=" w-[90%] m-auto">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-6 mt-8">
           <Link to={"/bookings"} className="flex items-center gap-3">
@@ -314,12 +336,9 @@ export default function BookingSummary2() {
               <div className="flex items-start gap-4">
                 <div className="relative">
                   <img
-                    src={providerDetails?.profilePicture || bookingCar}
+                    src={providerDetails?.profilePicture}
                     alt={providerDetails?.fullName || "Provider"}
                     className="w-16 h-16 rounded-full object-cover"
-                    onError={(e) => {
-                      e.target.src = bookingCar;
-                    }}
                   />
                 </div>
                 <div className="flex-grow">
@@ -402,16 +421,20 @@ export default function BookingSummary2() {
                   <MessageCircle className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Message</span>
                 </button>
-                <button className="text-red-500  font-medium px-4 hover:text-red-600 transition-colors">
-                  Cancel Request
-                </button>
+                {!isPaid && (
+                  <button
+                    onClick={() => setCancelModalOpen(true)}
+                    className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors"
+                  >
+                    Cancel Request
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Vehicle Image */}
             <img
-              src={providerDetails?.workVisuals?.[0]?.pictures?.[0] || bookingCar}
-              alt="Vehicle"
+              src={providerDetails?.workVisuals?.[0]?.pictures?.[0]}
               className="w-full h-auto object-contain"
             />
           </div>
@@ -600,6 +623,7 @@ export default function BookingSummary2() {
               {/* Action Buttons */}
               <div className="flex gap-3 pb-6">
                 <button
+                  onClick={() => setCancelModalOpen(true)}
                   disabled={isPaid}
                   className={`flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
                 >

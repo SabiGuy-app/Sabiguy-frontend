@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { Calendar, MapPin, ChevronLeft, Star, Settings } from "lucide-react";
+import { Calendar, MapPin, ChevronLeft, Star, Settings, Copy, Check } from "lucide-react";
 import { acceptBookings } from "../../../../api/bookings";
 
 export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, onAcceptSuccess }) {
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (!isOpen) return null;
 
@@ -138,6 +145,38 @@ export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, o
             <div className="border-t border-gray-200">
               <h4 className="font-semibold mb-3 mt-2">Booking Information</h4>
               <div className="space-y-3">
+                {/* Booking ID */}
+                {alertData?.orderId && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#005823] text-[10px] font-bold">
+                        #
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <p className="text-sm font-medium text-gray-700">
+                        Booking ID
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-600 font-bold uppercase transition-all duration-300">
+                          {alertData.orderId}
+                        </p>
+                        <button
+                          onClick={() => handleCopy(alertData.fullOrderId)}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
+                          title="Copy Full Booking ID"
+                        >
+                          {copied ? (
+                            <Check size={14} className="text-green-500" />
+                          ) : (
+                            <Copy size={14} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Service Type */}
                 <div className="flex items-start gap-3">
                   <Settings className="w-5 h-5 text-[#2D6A3E] mt-0.5" />

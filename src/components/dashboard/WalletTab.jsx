@@ -77,7 +77,7 @@ export default function WalletTab() {
   }, [currentPage, statusFilter]);
 
   return (
-    <div>
+    <div className="w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 mb-1">My Wallet</h2>
@@ -87,24 +87,24 @@ export default function WalletTab() {
       </div>
 
       {/* Available Balance Card */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 max-w-xs">
+      <div className="bg-white border border-gray-200 rounded-lg p-4 mb-8 w-full sm:max-w-xs">
         <p className="text-sm text-gray-600 mb-3">Available Balance</p>
-        <h3 className="text-4xl font-bold text-gray-900 mb-4">
+        <h3 className="text-3xl font-bold text-gray-900 mb-4">
           {isLoadingBalance ? "..." : `₦${balance.toLocaleString()}`}
         </h3>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full px-6 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors"
+          className="w-full px-4 py-2 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors"
         >
           Fund wallet
         </button>
       </div>
 
       {/* Recent Transaction Section */}
-      <div className="mb-8">
+      <div className="mb-8 w-full">
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-3 mb-4">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-3 mb-4 w-full max-w-full md:flex-row md:flex-wrap">
+          <div className="relative flex-1 min-w-0">
             <FiSearch
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
               size={18}
@@ -121,7 +121,7 @@ export default function WalletTab() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] text-sm text-gray-700 bg-white cursor-pointer"
+            className="w-full md:w-auto min-w-0 px-1 py-1 shrink border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] text-sm text-gray-700 bg-white cursor-pointer"
           >
             <option>All Status</option>
             <option>Credit</option>
@@ -134,7 +134,7 @@ export default function WalletTab() {
           <select
             value={timeFilter}
             onChange={(e) => setTimeFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] text-sm text-gray-700 bg-white cursor-pointer"
+            className="w-full md:w-auto min-w-0 px-1 py-1 shrink border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] text-sm text-gray-700 bg-white cursor-pointer"
           >
             <option>This month</option>
             <option>Last month</option>
@@ -145,23 +145,24 @@ export default function WalletTab() {
 
         {/* Transaction Table */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          {/* desktop/table view */}
+          <div className="hidden sm:block overflow-x-auto w-full max-w-full">
+            <table className="w-full min-w-full table-fixed">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Description
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    <span className="truncate block">Description</span>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Transaction Type
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    <span className="truncate block">Transaction Type</span>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="hidden sm:table-cell px-3 sm:px-6 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="hidden sm:table-cell px-3 sm:px-6 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
                 </tr>
@@ -185,19 +186,19 @@ export default function WalletTab() {
                       key={transaction._id}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {transaction.description || transaction.type}
+                      <td className="px-2 sm:px-4 py-4 text-sm text-gray-900 break-words max-w-[120px]">
+                        <span className="truncate block">{transaction.description || transaction.type}</span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 capitalize">
+                      <td className="hidden sm:table-cell px-4 sm:px-6 py-4 text-sm text-gray-900 capitalize">
                         {transaction.type}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
+                      <td className="px-4 sm:px-6 py-4 text-sm text-gray-900">
                         ₦{transaction.amount?.toLocaleString() || 0}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
+                      <td className="hidden sm:table-cell px-4 sm:px-6 py-4 text-sm text-gray-900">
                         {new Date(transaction.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4">
                         <span
                           className={`inline-flex px-3 py-1 text-xs font-medium rounded-full capitalize ${transaction.status === "completed"
                             ? "bg-green-100 text-green-700"
@@ -214,6 +215,47 @@ export default function WalletTab() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* mobile list view */}
+          <div className="sm:hidden">
+            {isLoadingTransactions ? (
+              <div className="p-6 text-center text-gray-500">
+                Loading transactions...
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">
+                No transactions found
+              </div>
+            ) : (
+              transactions.map((t) => (
+                <div key={t._id} className="p-4 border-b last:border-b-0">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-medium text-sm truncate">
+                      {t.description || t.type}
+                    </span>
+                    <span className="text-sm">
+                      ₦{t.amount?.toLocaleString() || 0}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 flex flex-wrap gap-2">
+                    <span className="capitalize">{t.type}</span>
+                    <span>{new Date(t.createdAt).toLocaleDateString()}</span>
+                    <span
+                      className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full capitalize ${
+                        t.status === "completed"
+                          ? "bg-green-100 text-green-700"
+                          : t.status === "pending"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {t.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Pagination */}
