@@ -46,7 +46,6 @@ export default function DashboardHome() {
       title: "Package Delivery",
       description: "Your items delivered quickly and safely",
       image: new1,
-      // bgColor: "#6467F24D",
       comingSoon: false,
     },
     {
@@ -210,25 +209,6 @@ export default function DashboardHome() {
           </h2>
           <p className="mb-3 text-sm">What would you like to get done today?</p>
         </div>
-        {/* <div className="flex gap-3 mt-4 md:mt-0">
-          <Button
-            variant="secondary"
-            onClick={() => navigate("/dashboard/categories")}
-          >
-            Browse service
-          </Button>
-          <Button variant="primary">Request service</Button>
-          <button
-            onClick={async () => {
-              await testSelectProvider(
-                "Hello!, THis is a test notification",
-                "Test notification",
-              );
-            }}
-          >
-            Send Test Notification
-          </button>
-        </div> */}
       </div>
 
       <CategoryCarousel categories={categories} onCategoryClick={handleCategoryClick} />
@@ -236,7 +216,7 @@ export default function DashboardHome() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
           <h3 className="text-[20px] font-semibold mb-4">Explore Categories</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {services.map((ser, idx) => {
             const isDisabled = ser.title !== "Transport & Logistics";
             return (

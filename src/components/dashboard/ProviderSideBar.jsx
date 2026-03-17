@@ -28,12 +28,14 @@ const links = [
   },
   { name: "Settings", path: "/dashboard/provider/settings", icon: <FaCog /> },
   { name: "Help", path: "/dashboard/provider/help", icon: <HelpCircle /> },
-  { name: "Logout", icon: <LogOut /> },
+  // { name: "Logout", icon: <LogOut /> },
 ];
 
 export default function ProviderSidebar({ open = false, onClose }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
 
   const onLogout = async () => {
     try {
@@ -52,11 +54,40 @@ export default function ProviderSidebar({ open = false, onClose }) {
 
   return (
     <>
+
+     {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-6 w-80 shadow-xl">
+            <div className="flex items-center gap-3 mb-2">
+              <LogOut className="text-red-500" size={22} />
+              <h2 className="text-lg font-semibold text-gray-800">Log out?</h2>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to log out of your account?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onLogout}
+                className="flex-1 px-4 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 text-sm font-medium"
+              >
+                Log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen mt-20 bg-white border-r border-gray-200 z-40 w-64 transform transition-transform duration-300 overflow-y-auto ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
-      >
+        className={`fixed top-20 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
+        ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      >      
         <div className="p-6">
         <nav className="space-y-2">
           {links.map((link) => {
@@ -90,6 +121,17 @@ export default function ProviderSidebar({ open = false, onClose }) {
             );
           })}
         </nav>
+        </div>
+         <div>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex w-full m-5 items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+          >
+            <span>
+              <LogOut />
+            </span>
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
     </>

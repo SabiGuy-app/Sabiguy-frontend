@@ -31,7 +31,7 @@ export default function ProviderDashboardLayout({ children }) {
   });
 
   return (
-    <div className="overflow-x-hidden">
+    <div className="">
       <ProviderNavbar onMenuClick={toggleSidebar} />
 
       <div className="flex min-h-screen bg-gray-50">
@@ -44,7 +44,7 @@ export default function ProviderDashboardLayout({ children }) {
         )}
         <ProviderSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="flex-1 md:ml-64 flex flex-col w-full">
-          <main className="flex-1 min-h-screen p-3 sm:p-6 w-full">
+          <main className="flex-1 min-h-screen p-3 sm:p-6 pt-24 w-full">
             <div className="max-w-7xl mx-auto w-full">{children}</div>
           </main>
         </div>

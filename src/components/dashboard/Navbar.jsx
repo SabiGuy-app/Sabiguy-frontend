@@ -288,7 +288,7 @@ export default function Navbar({ onMenuClick }) {
               />
             ) : (
               <div className="w-8 h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-sm">
-                {user?.data?.firstName?.[0] || user?.data?.name?.[0] || "U"}
+                {user?.data?.fullName?.[0] || user?.data?.name?.[0] || "U"}
               </div>
             )}
           </button>
