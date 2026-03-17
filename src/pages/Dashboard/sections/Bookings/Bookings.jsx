@@ -343,108 +343,120 @@ export default function Bookings() {
     setSelectedRequest(null);
   };
 
-  return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
-        <ServiceDetailsModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          request={selectedRequest || {}}
-        />
-        <h1 className="text-xl font-semibold p-4">My Bookings</h1>
+return (
+  <DashboardLayout>
+    <div className="max-w-7xl mx-0 bg-white min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+      <ServiceDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        request={selectedRequest || {}}
+      />
 
-        {/* Tabs */}
-        <div className="flex flex-col sm:flex-row border-b">
-          <button
-            onClick={() => setActiveTab("request")}
-            className={`px-6 py-3 font-medium transition-colors relative ${
-              activeTab === "request"
-                ? "text-[#005823] border-b-2 border-[#005823]"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Request a service
-          </button>
-          <button
-            onClick={() => setActiveTab("requests")}
-            className={`px-6 py-3 font-medium transition-colors relative ${
-              activeTab === "requests"
-                ? "text-[#005823] border-b-2 border-[#005823]"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            My Requests
-          </button>
-        </div>
+      <h1 className="text-xl font-semibold p-4">My Bookings</h1>
 
-        {activeTab === "request" ? (
-          <form
-            onSubmit={formik.handleSubmit}
-            className="space-y-5 p-5 max-w-xl mx-auto"
-          >
-            {errorMessage && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-                {errorMessage}
-              </div>
-            )}
-            {successMessage && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-                {successMessage}
-              </div>
-            )}
-            <input type="hidden" name="jobTitle" value="transport" />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Select work category
-              </label>
-              <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md text-gray-700 flex items-center justify-between">
-                <span>Transport &amp; Logistics</span>
-                <svg
-                  className="w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
+      {/* Tabs */}
+      <div className="flex flex-col sm:flex-row border-b">
+        <button
+          onClick={() => setActiveTab("request")}
+          className={`px-6 py-3 font-medium transition-colors relative ${
+            activeTab === "request"
+              ? "text-[#005823] border-b-2 border-[#005823]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Request a service
+        </button>
+
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={`px-6 py-3 font-medium transition-colors relative ${
+            activeTab === "requests"
+              ? "text-[#005823] border-b-2 border-[#005823]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          My Requests
+        </button>
+      </div>
+
+      {activeTab === "request" ? (
+        <form
+          onSubmit={formik.handleSubmit}
+          className="space-y-5 p-5 max-w-xl lg:max-w-xl xl:max-w-5xl mx-auto"
+        >
+          {errorMessage && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+              {errorMessage}
             </div>
-            <div>
-              <InputField
-                label="Subcategory"
-                select
-                options={[
-                  { label: "Select Services", value: "" },
-                  { label: "Package delivery", value: "package delivery" },
-                  { label: "Book a ride", value: "book a ride" },
-                ]}
-                value={formik.values.service}
-                onChange={(option) =>
-                  formik.setFieldValue("service", option.value)
-                }
-                onBlur={() => formik.setFieldTouched("service", true)}
-              />
-              {formik.touched.service && formik.errors.service && (
-                <p className="mt-1 text-sm text-red-600">
-                  {formik.errors.service}
-                </p>
-              )}
+          )}
+
+          {successMessage && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+              {successMessage}
             </div>
-            <div>
-              <InputField
-                name="pickupAddress"
-                label="Pickup location"
-                placeholder="24 Palm Avenue, Lagos"
-                value={formik.values.pickupAddress}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.pickupAddress && formik.errors.pickupAddress && (
+          )}
+
+          <input type="hidden" name="jobTitle" value="transport" />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Select work category
+            </label>
+
+            <div className="w-full max-w-lg px-4 py-3 bg-gray-50 border border-gray-300 rounded-md text-gray-700 flex items-center justify-between">
+              <span>Transport &amp; Logistics</span>
+
+              <svg
+                className="w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div>
+            <InputField
+              label="Subcategory"
+              select
+              options={[
+                { label: "Select Services", value: "" },
+                { label: "Package delivery", value: "package delivery" },
+                { label: "Book a ride", value: "book a ride" },
+              ]}
+              value={formik.values.service}
+              onChange={(option) =>
+                formik.setFieldValue("service", option.value)
+              }
+              onBlur={() => formik.setFieldTouched("service", true)}
+            />
+
+            {formik.touched.service && formik.errors.service && (
+              <p className="mt-1 text-sm text-red-600">
+                {formik.errors.service}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <InputField
+              name="pickupAddress"
+              label="Pickup location"
+              placeholder="24 Palm Avenue, Lagos"
+              value={formik.values.pickupAddress}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+
+            {formik.touched.pickupAddress &&
+              formik.errors.pickupAddress && (
                 <p className="mt-1 text-sm text-red-600">
                   {formik.errors.pickupAddress}
                 </p>
@@ -658,67 +670,66 @@ export default function Bookings() {
               onFilterChange={setStatusFilter}
             />
 
-            {/* ✅ Loading */}
-            {bookingsLoading && (
-              <div className="text-center py-12 bg-white rounded-lg">
-                <div className="w-8 h-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-gray-500">Loading your bookings...</p>
-              </div>
-            )}
+          {bookingsLoading && (
+            <div className="text-center py-12 bg-white rounded-lg">
+              <div className="w-8 h-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-gray-500">Loading your bookings...</p>
+            </div>
+          )}
 
-            {/* ✅ Error */}
-            {!bookingsLoading && bookingsError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {bookingsError}
-              </div>
-            )}
+          {!bookingsLoading && bookingsError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {bookingsError}
+            </div>
+          )}
 
-            {/* ✅ Real bookings list */}
-            {!bookingsLoading && !bookingsError && (
-              <div className="space-y-4 w-full">
-                {filteredRequests.length > 0 ? (
-                  filteredRequests.map((request) => (
-                    <RequestCard
-                      key={request.id}
-                      request={request}
-                      onViewDetails={handleViewDetails}
-                      onTrackProvider={handleTrackProvider}
-                      onBookingCancelled={refreshBookings}
+          {!bookingsLoading && !bookingsError && (
+            <div className="space-y-4 w-full">
+              {filteredRequests.length > 0 ? (
+                filteredRequests.map((request) => (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    onViewDetails={handleViewDetails}
+                    onTrackProvider={handleTrackProvider}
+                    onBookingCancelled={refreshBookings}
                       onStatusUpdate={refreshBookings}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12 bg-white rounded-lg">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg
-                        className="w-8 h-8 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      No requests found
-                    </h3>
-                    <p className="text-gray-600">
-                      {userBookings.length === 0
-                        ? "You haven't made any bookings yet."
-                        : "No requests match the selected filter."}
-                    </p>
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 bg-white rounded-lg">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
-  );
+
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No requests found
+                  </h3>
+
+                  <p className="text-gray-600">
+                    {userBookings.length === 0
+                      ? "You haven't made any bookings yet."
+                      : "No requests match the selected filter."}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  </DashboardLayout>
+);
 }

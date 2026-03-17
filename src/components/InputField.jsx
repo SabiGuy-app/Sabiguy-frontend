@@ -35,7 +35,7 @@ export default function InputField({
   }, [value]);
 
   const widthClasses = {
-    full: "w-full max-w-md",
+    full: "w-full max-w-lg",
     large: "w-full sm:w-96 md:w-[500px] max-w-full",
     medium: "w-full sm:w-80 md:w-96 max-w-full",
     small: "w-full sm:w-64 md:w-80 max-w-full",

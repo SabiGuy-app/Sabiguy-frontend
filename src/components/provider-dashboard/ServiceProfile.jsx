@@ -506,7 +506,7 @@ export default function ProviderServiceProfileTab({ profile, onProfileUpdate }) 
 
 
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h2 className="font-semibold text-lg">Portfolio/Work Gallery</h2>
               <p className="text-sm text-gray-500">Showcase photos and videos of your best work</p>
@@ -515,7 +515,7 @@ export default function ProviderServiceProfileTab({ profile, onProfileUpdate }) 
               type="button"
               onClick={handleSaveWorkVisuals}
               disabled={isSavingVisuals || isUploadingMedia}
-              className="px-5 py-2 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors disabled:opacity-50 flex items-center gap-2 text-sm"
+              className="px-4 sm:px-5 py-2 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
             >
               {isSavingVisuals ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -540,13 +540,13 @@ export default function ProviderServiceProfileTab({ profile, onProfileUpdate }) 
                 />
               )}
               {videos.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                   {videos.map((vid, idx) => (
                     <div key={idx} className="relative group">
                       <video
                         src={vid}
                         controls
-                        className="w-full h-40 object-cover rounded-lg border bg-black"
+                        className="w-full h-32 sm:h-40 object-cover rounded-lg border bg-black"
                       />
                       <button
                         type="button"
@@ -584,13 +584,13 @@ export default function ProviderServiceProfileTab({ profile, onProfileUpdate }) 
                 />
               )}
               {pictures.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                   {pictures.map((pic, idx) => (
                     <div key={idx} className="relative group">
                       <img
                         src={pic}
                         alt="portfolio"
-                        className="w-full h-40 object-cover rounded-lg border shadow-sm"
+                        className="w-full h-32 sm:h-40 object-cover rounded-lg border shadow-sm"
                       />
                       <button
                         type="button"
