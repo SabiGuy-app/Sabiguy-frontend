@@ -313,14 +313,14 @@ export default function Bookings() {
       const status = request.status.toLowerCase();
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
-        return ["in_progress", "paid_escrow", "provider_selected"].includes(
+        return ["in_progress", "paid_escrow", "provider_selected", "completed"].includes(
           status,
         );
       if (statusFilter === "pending")
-        return ["pending_providers", "payment_pending"].includes(status);
+        return ["pending_providers", "payment_pending", "awaiting_provider_acceptance"].includes(status);
       if (statusFilter === "completed")
         return [
-          "completed",
+          // "completed",
           "funds_released",
           "user_accepted_completion",
         ].includes(status);

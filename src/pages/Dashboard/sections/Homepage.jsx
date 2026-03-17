@@ -202,7 +202,7 @@ export default function DashboardHome() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col  md:flex-row md:items-center md:justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-lg font-semibold mb-3">
             {" "}
@@ -234,7 +234,7 @@ export default function DashboardHome() {
       <CategoryCarousel categories={categories} onCategoryClick={handleCategoryClick} />
       <div className="mb-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-          <h3 className="text-lg font-semibold mb-4">Explore Categories</h3>
+          <h3 className="text-[20px] font-semibold mb-4">Explore Categories</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((ser, idx) => {
