@@ -36,17 +36,24 @@ export const googleLogin = async (accessToken) => {
 
 export async function handleLogout() {
   try {
-    // Remove FCM token from backend
     await removeFCMToken();
   } catch (error) {
     console.error("FCM token removal error:", error);
-    // Continue with logout even if FCM removal fails
   }
 
   try {
-    // Clear all local storage
+    // ✅ Save tour keys before clearing
+    const tourKeys = Object.keys(localStorage).filter(key =>
+      key.startsWith("tourSeen_") || key.startsWith("bookingTourSeen_")
+    );
+    const savedTours = tourKeys.map(key => [key, localStorage.getItem(key)]);
+
+    // Clear everything
     localStorage.clear();
     sessionStorage.clear();
+
+    // ✅ Restore tour keys
+    savedTours.forEach(([key, value]) => localStorage.setItem(key, value));
 
     // Reset all Zustand stores
     useAuthStore.getState().logout();
@@ -54,7 +61,6 @@ export async function handleLogout() {
     useUIStore.getState().reset();
     useProviderStore.getState().reset();
 
-    // Clear any cached data
     if (window.caches) {
       const cacheNames = await window.caches.keys();
       cacheNames.forEach((cache) => window.caches.delete(cache));

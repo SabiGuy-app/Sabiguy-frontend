@@ -17,6 +17,7 @@ import new2 from "/new2.png";
 import new3 from "/new3.png";
 import { sendTestNotification } from "../../../api/fcm";
 import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
+import DashboardTour from "../../../components/tour/DashboardTour";
 
 export default function DashboardHome() {
   const [loading, setLoading] = useState(false);
@@ -182,9 +183,7 @@ export default function DashboardHome() {
     if (category.comingSoon) return;
     const serviceValue = categoryServiceMap[category.title];
     if (serviceValue) {
-      navigate(
-        `/bookings?service=${encodeURIComponent(serviceValue)}`,
-      );
+      navigate(`/bookings?service=${encodeURIComponent(serviceValue)}`);
     } else {
       navigate("/bookings");
     }
@@ -202,6 +201,7 @@ export default function DashboardHome() {
 
   return (
     <DashboardLayout>
+      <DashboardTour />
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-lg font-semibold mb-3">
@@ -231,25 +231,32 @@ export default function DashboardHome() {
         </div> */}
       </div>
 
-      <CategoryCarousel categories={categories} onCategoryClick={handleCategoryClick} />
+      <div id="service-cards">
+        <CategoryCarousel
+          categories={categories}
+          onCategoryClick={handleCategoryClick}
+        />
+      </div>
       <div className="mb-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
           <h3 className="text-[20px] font-semibold mb-4">Explore Categories</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((ser, idx) => {
-            const isDisabled = ser.title !== "Transport & Logistics";
-            return (
-              <ServicesCard
-                key={idx}
-                image={ser.image}
-                logo={ser.logo}
-                title={ser.title}
-                disabled={isDisabled}
-                onClick={() => handleServiceClick(ser, isDisabled)}
-              />
-            );
-          })}
+        <div id="explore-categories">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((ser, idx) => {
+              const isDisabled = ser.title !== "Transport & Logistics";
+              return (
+                <ServicesCard
+                  key={idx}
+                  image={ser.image}
+                  logo={ser.logo}
+                  title={ser.title}
+                  disabled={isDisabled}
+                  onClick={() => handleServiceClick(ser, isDisabled)}
+                />
+              );
+            })}
+          </div>
         </div>
 
         <ComingSoonModal

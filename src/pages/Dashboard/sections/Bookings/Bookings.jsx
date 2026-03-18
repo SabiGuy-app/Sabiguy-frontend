@@ -15,6 +15,7 @@ import {
 } from "../../../../api/bookings";
 import { allowSystem } from "../../../../api/bookings";
 import useBookingStore from "../../../../stores/booking.store";
+import BookingsTour from "../../../../components/tour/BookingsTour";
 
 const vehicleOptions = [
   {
@@ -230,7 +231,7 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-      <div className="grid grid-cols-2 sm:flex gap-2 mb-6">
+      <div className="w-[50%] grid grid-cols-2 sm:flex gap-2 mb-6">
         {filters.map((filter) => (
           <button
             key={filter}
@@ -250,11 +251,11 @@ export default function Bookings() {
 
   const mapBookingToRequest = (booking) => ({
     id: booking._id,
-    title:
-      (booking.subCategory?.replace(/_/g, " ") ||
-        booking.serviceType ||
-        "Booking")
-        .replace(/\b\w/g, (l) => l.toUpperCase()),
+    title: (
+      booking.subCategory?.replace(/_/g, " ") ||
+      booking.serviceType ||
+      "Booking"
+    ).replace(/\b\w/g, (l) => l.toUpperCase()),
     status: (booking.status || "pending")
       .replace(/_/g, " ")
       .replace(/\b\w/g, (l) => l.toUpperCase()),
@@ -263,9 +264,9 @@ export default function Bookings() {
     providerImage:
       booking.providerId?.profilePicture ||
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
-    providerRole:
-      (booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—")
-        .replace(/\b\w/g, (l) => l.toUpperCase()),
+    providerRole: (
+      booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—"
+    ).replace(/\b\w/g, (l) => l.toUpperCase()),
     providerRating: booking.providerId?.rating?.average || null,
     providerReviews: booking.providerId?.rating?.count || 0,
     providerPhone: booking.providerId?.phoneNumber || "—",
@@ -313,11 +314,18 @@ export default function Bookings() {
       const status = request.status.toLowerCase();
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
-        return ["in_progress", "paid_escrow", "provider_selected", "completed"].includes(
-          status,
-        );
+        return [
+          "in_progress",
+          "paid_escrow",
+          "provider_selected",
+          "completed",
+        ].includes(status);
       if (statusFilter === "pending")
-        return ["pending_providers", "payment_pending", "awaiting_provider_acceptance"].includes(status);
+        return [
+          "pending_providers",
+          "payment_pending",
+          "awaiting_provider_acceptance",
+        ].includes(status);
       if (statusFilter === "completed")
         return [
           // "completed",
@@ -345,6 +353,7 @@ export default function Bookings() {
 
   return (
     <DashboardLayout>
+      <BookingsTour />
       <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
         <ServiceDetailsModal
           isOpen={isModalOpen}
@@ -366,6 +375,7 @@ export default function Bookings() {
             Request a service
           </button>
           <button
+            id="booking-my-requests"
             onClick={() => setActiveTab("requests")}
             className={`px-6 py-3 font-medium transition-colors relative ${
               activeTab === "requests"
@@ -378,10 +388,7 @@ export default function Bookings() {
         </div>
 
         {activeTab === "request" ? (
-          <form
-            onSubmit={formik.handleSubmit}
-            className="space-y-5 p-5 max-w-xl mx-auto"
-          >
+          <form onSubmit={formik.handleSubmit} className="space-y-5 p-5">
             {errorMessage && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
                 {errorMessage}
@@ -393,7 +400,7 @@ export default function Bookings() {
               </div>
             )}
             <input type="hidden" name="jobTitle" value="transport" />
-            <div>
+            <div id="booking-category">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Select work category
               </label>
@@ -435,37 +442,41 @@ export default function Bookings() {
                 </p>
               )}
             </div>
-            <div>
-              <InputField
-                name="pickupAddress"
-                label="Pickup location"
-                placeholder="24 Palm Avenue, Lagos"
-                value={formik.values.pickupAddress}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.pickupAddress && formik.errors.pickupAddress && (
-                <p className="mt-1 text-sm text-red-600">
-                  {formik.errors.pickupAddress}
-                </p>
-              )}
+            <div id="booking-location">
+              <div>
+                <InputField
+                  name="pickupAddress"
+                  label="Pickup location"
+                  placeholder="24 Palm Avenue, Lagos"
+                  value={formik.values.pickupAddress}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+                {formik.touched.pickupAddress &&
+                  formik.errors.pickupAddress && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.pickupAddress}
+                    </p>
+                  )}
+              </div>
+              <div>
+                <InputField
+                  name="dropoffAddress"
+                  label="Dropoff location"
+                  placeholder="24 Palm Avenue, Lagos"
+                  value={formik.values.dropoffAddress}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+                {formik.touched.dropoffAddress &&
+                  formik.errors.dropoffAddress && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.dropoffAddress}
+                    </p>
+                  )}
+              </div>
             </div>
-            <div>
-              <InputField
-                name="dropoffAddress"
-                label="Dropoff location"
-                placeholder="24 Palm Avenue, Lagos"
-                value={formik.values.dropoffAddress}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.dropoffAddress &&
-                formik.errors.dropoffAddress && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {formik.errors.dropoffAddress}
-                  </p>
-                )}
-            </div>
+
             {/* {formik.values.pickupAddress && formik.values.dropoffAddress && (
               <div className="flex items-center gap-2 text-sm text-gray-500 -mt-2">
                 <svg
@@ -504,8 +515,8 @@ export default function Bookings() {
               )}
             </div>
             {formik.values.serviceType === "scheduled" && (
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="flex gap-6">
+                <div className="w-full">
                   <InputField
                     name="scheduleDate"
                     label="Select Date"
@@ -523,7 +534,7 @@ export default function Bookings() {
                     )}
                 </div>
 
-                <div className="flex-1">
+                <div className="w-full">
                   <InputField
                     name="scheduleTime"
                     label="Select Time"
@@ -602,7 +613,7 @@ export default function Bookings() {
             </div>
 
             {/* Auto-accept checkbox */}
-            <div className="flex items-center gap-3">
+            <div id="booking-auto-accept" className="flex items-center gap-3">
               <input
                 type="checkbox"
                 id="auto-accept"
@@ -652,7 +663,7 @@ export default function Bookings() {
             </div>
           </form>
         ) : (
-          <div className="mt-5 p-5 max-w-xl mx-auto">
+          <div className="mt-5 p-5">
             <StatusFilter
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
