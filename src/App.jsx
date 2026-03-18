@@ -34,7 +34,6 @@ import StartNavigation from "./pages/ProviderDashboard/sections/HireAlerts/Start
 import TrackDelivery from "./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery";
 import ProviderProfilePage from "./pages/ProviderDashboard/sections/Settings";
 import Notifications from "./pages/ProviderDashboard/sections/Notification";
-import ReviewModalsExample from "./pages/Dashboard/Examples";
 import SearchingLoader from "./components/dashboard/Searching";
 import AvailableProviders from "./pages/Dashboard/sections/Bookings/AvailableProviders";
 import BookingSummary from "./pages/Dashboard/sections/Bookings/BookingSummary";
@@ -58,7 +57,6 @@ function App() {
         <div>
           <Routes>
             <Route path="/" element={<Welcome />} />
-            <Route path="/eng" element={<ReviewModalsExample />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/service-provider/signup" element={<SignupForm />} />
             <Route path="/congrats" element={<Congrats />} />

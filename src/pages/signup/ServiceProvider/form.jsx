@@ -20,19 +20,21 @@ export default function Form() {
         gender: '',
         city: '',
         accountType: '',
-        radius: '',
-        allowAnywhere: true
     });
       
 
   const handleNext = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
-    setStep((prev) => prev + 1);
+    setStep((prev) => {
+      const shouldSkipOtp =
+        data?.skipOtp || !!localStorage.getItem("google-email");
+      if (prev === 0 && shouldSkipOtp) return prev + 2;
+      return prev + 1;
+    });
   };
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
   const forms = [
-
     <StepOne onNext={handleNext} />,
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
     <StepThree onNext={handleNext} onBack={handleBack} />,

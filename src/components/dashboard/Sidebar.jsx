@@ -26,8 +26,7 @@ const links = [
   { name: "Help", path: "/dashboard/help", icon: <HelpCircle /> },
 ];
 
-export default function Sidebar() {
-  const [open, setOpen] = useState(false);
+export default function Sidebar({ open, onClose }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -44,20 +43,15 @@ export default function Sidebar() {
     } catch (error) {
       console.error("Logout failed:", error);
       // Still redirect even if logout has errors
-      setOpen(false);
+      onClose();
       navigate("/");
     }
   };
 
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        className="md:hidden p-3 fixed top-4 left-4 z-50 bg-[#005823] text-white rounded-lg"
-        onClick={() => setOpen(!open)}
-      >
-        {open ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      {/* Mobile toggle - Hidden to use Navbar grey hamburger instead */}
+      {/* Sidebar navigation */}
 
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
@@ -93,6 +87,7 @@ export default function Sidebar() {
         className={`fixed top-20 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
+        <div className="p-6">
         <nav className="space-y-2">
           {links.map((link) => {
             if (link.name === "Logout") {
@@ -125,6 +120,7 @@ export default function Sidebar() {
             );
           })}
         </nav>
+        </div>
 
         <div>
           <button

@@ -165,7 +165,7 @@ export default function StepOne({ onNext }) {
         if (data?.newUser?.email) {
           localStorage.setItem("google-email", data.newUser.email);
           setGoogleLoading(false);
-          onNext();
+          onNext({ email: data.newUser.email, skipOtp: true });
         } else if (data.message === "Email already in use") {
           setGoogleLoading(false);
           setErrorMessage(data.message);

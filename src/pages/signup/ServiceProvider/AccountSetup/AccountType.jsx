@@ -2,20 +2,21 @@ import AccountSetupLayout from "./layout";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import InputField from "../../../../components/InputField";
-import { Field, Form, Formik } from 'formik';
+import { ErrorMessage, Formik } from 'formik';
+import * as Yup from "yup";
 import { IoIosArrowBack, IoIosAdd } from "react-icons/io";
 import axios from "axios";
 
 
 export default function AccountTypeForm({onNext, initialValues, onBack}) {
-    const [selected, setSelected] = useState("");
-   const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (values) => {
     setLoading(true);
     setErrorMessage('');
+    console.log("AccountType submit values:", values);
     
    const email = localStorage.getItem("email");
        const google_email =   localStorage.getItem("google-email")
@@ -23,6 +24,7 @@ export default function AccountTypeForm({onNext, initialValues, onBack}) {
 const token = localStorage.getItem("token");
 
 try {
+  const accountType = values.accountType;
   const uploadEndpoint =`${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/certificates`;
   let ninUrl = "";
   let cacUrl = "";
@@ -59,10 +61,10 @@ try {
 
   let response;
 
-  if (selected === "Individual") {
+  if (accountType === "Individual") {
   const providerPayload = {
     ninSlip: ninUrl,
-    accountType: selected,
+    accountType,
     address: initialValues.address,
     city: initialValues.city,
     gender: initialValues.gender,
@@ -84,7 +86,7 @@ try {
 };
 
   // ✅ Step 2: If Business, send business info
-  if (selected === "Business") {
+  if (accountType === "Business") {
     const businessPayload = {
       businessName: values.businessName,
       cacNumber: values.cacNumber,
@@ -126,6 +128,37 @@ try {
     };
 
 
+  const AccountTypeSchema = Yup.object().shape({
+    accountType: Yup.string().required("Please select an account type"),
+    ninSlip: Yup.mixed().nullable().when("accountType", {
+      is: "Individual",
+      then: (schema) => schema.required("NIN slip is required"),
+      otherwise: (schema) =>
+        schema.when("accountType", {
+          is: "Business",
+          then: (s) => s.required("NIN slip is required"),
+          otherwise: (s) => s.nullable(),
+        }),
+    }),
+    businessName: Yup.string().when("accountType", {
+      is: "Business",
+      then: (schema) => schema.required("Business name is required"),
+    }),
+    cacNumber: Yup.string().when("accountType", {
+      is: "Business",
+      then: (schema) => schema.required("CAC registration number is required"),
+    }),
+    businessAddress: Yup.string().when("accountType", {
+      is: "Business",
+      then: (schema) => schema.required("Business address is required"),
+    }),
+    cacFile: Yup.mixed().nullable().when("accountType", {
+      is: "Business",
+      then: (schema) => schema.required("CAC certificate is required"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+  });
+
   return (
     
     <AccountSetupLayout currentStep={1}>
@@ -143,19 +176,29 @@ We require this to make your profile setup easier        </p>
 <Formik
 
 initialValues={{
-     ninSlip: null,
-            businessName: "",
-            cacNumber: "",
-            businessAddress: "",
-            cacFile: null,
+  accountType: "",
+  ninSlip: null,
+  businessName: "",
+  cacNumber: "",
+  businessAddress: "",
+  cacFile: null,
 }}
+validationSchema={AccountTypeSchema}
 onSubmit={(values, { setSubmitting }) => {
     handleSubmit(values)
     setSubmitting(false)
 }}
 
 >
-            {({ values, setFieldValue, handleSubmit }) => (
+            {({
+              values,
+              setFieldValue,
+              setFieldTouched,
+              handleSubmit,
+              validateForm,
+              errors,
+              touched,
+            }) => (
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           
@@ -165,17 +208,28 @@ onSubmit={(values, { setSubmitting }) => {
   placeholder="Individual"
   value={values.individual}
 
-  isSelected={selected === "Individual"}
-  onClick={() => setSelected("Individual")} />
+  isSelected={values.accountType === "Individual"}
+  onClick={() => {
+    setFieldValue("accountType", "Individual");
+    setFieldTouched("accountType", true, true);
+  }} />
           <InputField  
           asRadio
           name= "business"
   placeholder="Business"
   value={values.business}
-  isSelected={selected === "Business"}
-  onClick={() => setSelected("Business")} />
+  isSelected={values.accountType === "Business"}
+  onClick={() => {
+    setFieldValue("accountType", "Business");
+    setFieldTouched("accountType", true, true);
+  }} />
+  <ErrorMessage
+    name="accountType"
+    component="span"
+    className="text-red-500 text-sm"
+  />
 
-  {selected === "Individual" && (
+                    {values.accountType === "Individual" && (
                         <div className="flex flex-col gap-4 mt-4">
                             <p className="font-semibold text-gray-700">Upload required document</p>
                             
@@ -196,7 +250,10 @@ onSubmit={(values, { setSubmitting }) => {
     id="ninSlip"
     type="file"
     accept="image/*"
-    onChange={(e) => setFieldValue("ninSlip", e.target.files[0])}
+    onChange={(e) => {
+      setFieldValue("ninSlip", e.target.files[0]);
+      setFieldTouched("ninSlip", true, true);
+    }}
     className="hidden"
   />
 
@@ -211,12 +268,15 @@ onSubmit={(values, { setSubmitting }) => {
   {values.ninSlip && (
   <p className="text-sm font-bold text-gray-600 mt-2">{values.ninSlip.name}</p>
 )}
+  {touched.ninSlip && errors.ninSlip && (
+    <p className="text-red-500 text-sm mt-1">{errors.ninSlip}</p>
+  )}
 </div>
 
                         </div>
                     )}
 
-                    {selected === "Business" && (
+                    {values.accountType === "Business" && (
                         <div className="flex flex-col gap-4 mt-4">
                             <p className="font-semibold text-gray-700">Upload required document</p>
                             
@@ -225,27 +285,42 @@ onSubmit={(values, { setSubmitting }) => {
                                 label="Registered Business Name"
                                 placeholder="Enter the exact name on your CAC certificate"
                                 onChange={(e) =>
-                      setFieldValue("BusinessName", e.target.value)
+                      setFieldValue("businessName", e.target.value)
                     }
+                            />
+                            <ErrorMessage
+                              name="businessName"
+                              component="span"
+                              className="text-red-500 text-sm"
                             />
                             
                             <InputField
-                                name= "regNumber"
+                                name= "cacNumber"
                                 label="CAC Registration Number"
                                 placeholder="e.g BN1234567"
                                 italicPlaceholder
                                 onChange={(e) =>
-                      setFieldValue("regNumber", e.target.value)
+                      setFieldValue("cacNumber", e.target.value)
                     }
+                            />
+                            <ErrorMessage
+                              name="cacNumber"
+                              component="span"
+                              className="text-red-500 text-sm"
                             />
                             
                             <InputField
-                                name= "BusinessAddress"
+                                name= "businessAddress"
                                 label="Business Address"
                                 placeholder="Address"
                                 onChange={(e) =>
-                      setFieldValue("BusinessAddress", e.target.value)
+                      setFieldValue("businessAddress", e.target.value)
                     }
+                            />
+                            <ErrorMessage
+                              name="businessAddress"
+                              component="span"
+                              className="text-red-500 text-sm"
                             />
                             
                           <div>
@@ -259,7 +334,10 @@ onSubmit={(values, { setSubmitting }) => {
     id="cacFile"
     type="file"
     accept="image/*"
-    onChange={(e) => setFieldValue("cacFile", e.target.files[0])}
+    onChange={(e) => {
+      setFieldValue("cacFile", e.target.files[0]);
+      setFieldTouched("cacFile", true, true);
+    }}
     className="hidden"
   />
 
@@ -274,6 +352,9 @@ onSubmit={(values, { setSubmitting }) => {
   {values.cacFile && (
   <p className="text-sm text-gray-600 mt-2">{values.cacFile.name}</p>
 )}
+  {touched.cacFile && errors.cacFile && (
+    <p className="text-red-500 text-sm mt-1">{errors.cacFile}</p>
+  )}
 </div>
 
                             <div>
@@ -286,7 +367,10 @@ onSubmit={(values, { setSubmitting }) => {
     id="ninSlip"
     type="file"
     accept="image/*"
-    onChange={(e) => setFieldValue("ninSlip", e.target.files[0])}
+    onChange={(e) => {
+      setFieldValue("ninSlip", e.target.files[0]);
+      setFieldTouched("ninSlip", true, true);
+    }}
     className="hidden"
   />
 
@@ -300,6 +384,9 @@ onSubmit={(values, { setSubmitting }) => {
   {values.ninSlip && (
   <p className="text-sm text-gray-600 mt-2">{values.ninSlip.name}</p>
 )}
+  {touched.ninSlip && errors.ninSlip && (
+    <p className="text-red-500 text-sm mt-1">{errors.ninSlip}</p>
+  )}
 </div>
 
                         </div>
@@ -310,7 +397,14 @@ onSubmit={(values, { setSubmitting }) => {
   <button
     type="submit"
     disabled={loading}
-    className="p-3 rounded-md text-white bg-[#005823]"
+    onClick={async () => {
+      const validationErrors = await validateForm();
+      console.log("AccountType validation:", {
+        values,
+        validationErrors,
+      });
+    }}
+    className="p-3 rounded-md text-white bg-[#005823] disabled:opacity-50 disabled:cursor-not-allowed"
   >
   {loading ? "Saving..." : "Save & Continue"}
   </button>

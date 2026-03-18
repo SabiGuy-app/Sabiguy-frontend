@@ -120,7 +120,7 @@ export default function UploadBox({
             )}
           </p>
           <p className="text-gray-400 text-sm">
-            JPEG, PNG, MP4, WEBM (Max {maxSizeMB} MB)
+            JPEG, PNG (Max {maxSizeMB} MB)
           </p>
         </div>
       </div>

@@ -58,5 +58,8 @@ export const notificationService = {
     return data;
   },
 
+getNotificationPreferences: () => api.get("/notifications/preferences"),
+updateNotificationPreferences: (body) => api.patch("/notifications/preferences", body),
+
 }
 

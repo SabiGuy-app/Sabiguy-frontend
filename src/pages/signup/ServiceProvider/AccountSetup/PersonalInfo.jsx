@@ -51,7 +51,15 @@ console.log('Initial values:', initialValues);
             onSubmit={handleSubmit}
           >
 
-            {({ values, handleChange, handleBlur, handleSubmit, setFieldValue}) => (
+            {({
+              values,
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              setFieldValue,
+              isValid,
+              dirty,
+            }) => (
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
@@ -107,16 +115,18 @@ console.log('Initial values:', initialValues);
                     className="text-[#db3a3a]"
                   />
                 </div>
-<CoverageRadius
+{/* <CoverageRadius
             initialRadius={values.radius}
             initialAllowOutside={values.allowAnywhere}
             onChange={(coverageData) => {
               setFieldValue('coverageRadius', coverageData);
             }}
-          />                <div className="flex justify-end mt-4">
+          />                */}
+                <div className="flex justify-end mt-4">
                   <button
                     type="submit"
-                    className="p-3 rounded-md text-white bg-[#005823BF] hover:bg-[#005823] transition-all duration-200"
+                    disabled={!isValid || !dirty}
+                    className="p-3 rounded-md text-white bg-[#005823BF] hover:bg-[#005823] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Save & Continue
                   </button>

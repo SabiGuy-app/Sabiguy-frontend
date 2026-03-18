@@ -1,156 +1,224 @@
-import { useState } from "react";
-export default function SettingsTab() {
-  const [notifications, setNotifications] = useState({
-    bookingsPush: true,
-    bookingsEmail: true,
-    jobCompletedPush: true,
-    jobCompletedEmail: true,
-    jobCompleted2Push: true,
-    jobCompleted2Email: true,
-  });
+import { useState, useEffect, useCallback } from "react";
+import { notificationService } from "../../api/notifications";
 
-  const toggleNotification = (key) => {
-    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+const DEFAULT_PREFERENCES = {
+  bookings: { push: true, email: true },
+  jobCompleted: { push: true, email: true },
+  chatMessages: { push: true, email: false },
+  walletPayments: { push: true, email: true },
+  promotions: { push: false, email: false },
+};
+
+const CATEGORIES = [
+  {
+    key: "bookings",
+    label: "Bookings",
+    description: "New booking requests, cancellations and status updates",
+  },
+  {
+    key: "jobCompleted",
+    label: "Job Completed",
+    description: "Notifications when a job is started or marked as done",
+  },
+  {
+    key: "chatMessages",
+    label: "Chat Messages",
+    description: "New messages from customers or providers",
+  },
+  {
+    key: "walletPayments",
+    label: "Wallet & Payments",
+    description: "Payment received, sent, and wallet funding alerts",
+  },
+  {
+    key: "promotions",
+    label: "Promotions",
+    description: "Platform announcements, offers and updates",
+  },
+];
+
+// Reusable toggle component
+const Toggle = ({ enabled, onChange, disabled }) => (
+  <button
+    onClick={onChange}
+    disabled={disabled}
+    className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+      enabled ? "bg-[#005823]" : "bg-gray-300"
+    }`}
+  >
+    <span
+      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+        enabled ? "translate-x-6" : "translate-x-0"
+      }`}
+    />
+  </button>
+);
+
+export default function SettingsTab() {
+  const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [savedKeys, setSavedKeys] = useState([]); // tracks which keys just saved for feedback
+
+  // Fetch preferences on mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        setLoading(true);
+        const res = await notificationService.getNotificationPreferences();
+        if (res.success) {
+          setPreferences({
+            ...DEFAULT_PREFERENCES,
+            ...res.data.notificationPreferences,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch notification preferences:", err);
+        setError("Failed to load preferences. Using defaults.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreferences();
+  }, []);
+
+  // Debounced save — fires 800ms after last toggle
+  const savePreferences = useCallback(
+    debounce(async (updated, changedKey) => {
+      try {
+        setSaving(true);
+        await notificationService.updateNotificationPreferences({
+          notificationPreferences: updated,
+        });
+        // Show brief "saved" indicator on the row
+        setSavedKeys((prev) => [...prev, changedKey]);
+        setTimeout(() => {
+          setSavedKeys((prev) => prev.filter((k) => k !== changedKey));
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to save preferences:", err);
+        setError("Failed to save. Please try again.");
+      } finally {
+        setSaving(false);
+      }
+    }, 800),
+    [],
+  );
+
+  const handleToggle = (categoryKey, channel) => {
+    const updated = {
+      ...preferences,
+      [categoryKey]: {
+        ...preferences[categoryKey],
+        [channel]: !preferences[categoryKey][channel],
+      },
+    };
+    setPreferences(updated);
+    savePreferences(updated, categoryKey);
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl">
+        <div className="animate-pulse space-y-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex justify-between items-center">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-32" />
+                <div className="h-3 bg-gray-100 rounded w-56" />
+              </div>
+              <div className="flex gap-4">
+                <div className="h-6 w-12 bg-gray-200 rounded-full" />
+                <div className="h-6 w-12 bg-gray-200 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl">
-      {/* Email Notifications Section */}
-      <div className="mb-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Email Notifications</h2>
-        <p className="text-sm text-gray-500 mb-8">Choose which update you want to receive via Email</p>
-
-        <div className="space-y-8">
-          {/* Bookings */}
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Bookings</h3>
-              <p className="text-sm text-gray-600">Receive an email on Bookings</p>
-            </div>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 min-w-[60px] text-right">Push</span>
-                <button
-                  onClick={() => toggleNotification("bookingsPush")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.bookingsPush ? "bg-[#005823]" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.bookingsPush ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 min-w-[60px] text-right">Email</span>
-                <button
-                  onClick={() => toggleNotification("bookingsEmail")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.bookingsEmail ? "bg-[#005823]" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.bookingsEmail ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Job Completed */}
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Job Completed</h3>
-              <p className="text-sm text-gray-600">Notification when the provider marks the job done</p>
-            </div>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 min-w-[60px] text-right">Push</span>
-                <button
-                  onClick={() => toggleNotification("jobCompletedPush")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.jobCompletedPush ? "bg-[#005823]" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.jobCompletedPush ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 min-w-[60px] text-right">Email</span>
-                <button
-                  onClick={() => toggleNotification("jobCompletedEmail")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.jobCompletedEmail ? "bg-[#005823]" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.jobCompletedEmail ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Job Completed (duplicate for demo) */}
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Job Completed</h3>
-              <p className="text-sm text-gray-600">Notification when the provider marks the job done</p>
-            </div>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 min-w-[60px] text-right">Push</span>
-                <button
-                  onClick={() => toggleNotification("jobCompleted2Push")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.jobCompleted2Push ? "bg-[#005823]" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.jobCompleted2Push ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 min-w-[60px] text-right">Email</span>
-                <button
-                  onClick={() => toggleNotification("jobCompleted2Email")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.jobCompleted2Email ? "bg-[#005823]" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.jobCompleted2Email ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
+      {error && (
+        <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex justify-between items-center">
+          {error}
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 ml-4">✕</button>
         </div>
+      )}
+
+      {/* Header row for channel labels */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+            Notification Preferences
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            Choose how you want to be notified for each activity
+          </p>
+        </div>
+        {saving && (
+          <span className="text-xs text-gray-400 animate-pulse">Saving...</span>
+        )}
       </div>
 
-      {/* 2-Step Authentication Section */}
-      {/* <div className="border-t border-gray-200 pt-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">2-Step Authentication</h2>
-        <p className="text-sm text-gray-600 mb-6">Add additional security to your account with 2-step verification.</p>
-        <button className="px-6 py-3 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors">
-          Get Started
-        </button>
-      </div> */}
+      {/* Channel label header */}
+      <div className="flex items-center justify-end gap-6 mb-4 pr-1">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-12 text-center">Push</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-12 text-center">Email</span>
+      </div>
+
+      {/* Email Notifications Section */}
+      <div className="mb-8 sm:mb-12">
+        <div className="space-y-1 divide-y divide-gray-100">
+          {CATEGORIES.map(({ key, label, description }) => (
+            <div
+              key={key}
+              className="flex items-center justify-between py-4 gap-4"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
+                    {label}
+                  </h3>
+                  {savedKeys.includes(key) && (
+                    <span className="text-xs text-[#005823] font-medium">
+                      ✓ Saved
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                  {description}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-6 flex-shrink-0">
+                <Toggle
+                  enabled={preferences[key]?.push ?? true}
+                  onChange={() => handleToggle(key, "push")}
+                  disabled={saving}
+                />
+                <Toggle
+                  enabled={preferences[key]?.email ?? true}
+                  onChange={() => handleToggle(key, "email")}
+                  disabled={saving}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
+}
+
+// Utility: debounce helper (no lodash needed)
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
 }

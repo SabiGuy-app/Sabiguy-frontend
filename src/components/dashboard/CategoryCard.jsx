@@ -37,14 +37,14 @@ export default function CategoryCard({
       )} */}
 
       {/* Text */}
-      <div className="absolute p-4 inset-0 flex flex-col items-start justify-center">
-        <p className="text-white text-lg sm:text-xl font-bold drop-shadow-md">
+      <div className="absolute p-3 inset-0 flex flex-col items-start justify-center">
+        <p className="text-white text-lg font-bold drop-shadow-md">
           {title}
         </p>
         <p className="text-sm mt-1 text-white md:w-[50%] sm:w-[20%]">{description}</p>
         {!comingSoon && (
           <div className="flex">
-            <button className="bg-gray/5 mt-2 text-white rounded-full px-4 py-1 shadow-lg text-[15px] bg-[#FFFFFF4D]/30 flex items-center gap-1 backdrop-blur-md border border-white/10">
+            <button className="bg-gray/5 mt-2 text-white rounded-full px-2 py-0.5 shadow-lg text-[15px] bg-[#FFFFFF4D]/70 flex items-center gap-1 backdrop-blur-md border border-white/10">
               <Link to={"/bookings"}>Book now</Link>
               <ArrowRight size={10} />
             </button>

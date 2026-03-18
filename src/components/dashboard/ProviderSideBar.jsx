@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, HelpCircle, MessageCircle, LogOut } from "lucide-react";
+import { HelpCircle, MessageCircle, LogOut } from "lucide-react";
 import {
   FaChartBar,
   FaBook,
@@ -28,19 +28,19 @@ const links = [
   },
   { name: "Settings", path: "/dashboard/provider/settings", icon: <FaCog /> },
   { name: "Help", path: "/dashboard/provider/help", icon: <HelpCircle /> },
+  // { name: "Logout", icon: <LogOut /> },
 ];
 
-export default function ProviderSidebar() {
-  const [open, setOpen] = useState(false);
+export default function ProviderSidebar({ open = false, onClose }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
 
   const onLogout = async () => {
     try {
       await handleLogout();
-      setOpen(false);
-      setShowLogoutConfirm(false)
+      if (onClose) onClose();
       // Add a small delay to ensure stores are cleared before redirect
       setTimeout(() => {
         navigate("/");
@@ -48,22 +48,14 @@ export default function ProviderSidebar() {
     } catch (error) {
       console.error("Logout failed:", error);
       // Still redirect even if logout has errors
-      setOpen(false);
-      navigate("/");
+      if (onClose) onClose();
     }
   };
 
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        className="md:hidden p-3 fixed top-4 left-4 z-50 bg-[#005823] text-white rounded-lg"
-        onClick={() => setOpen(!open)}
-      >
-        {open ? <X size={24} /> : <Menu size={24} />}
-      </button>
 
-      {showLogoutConfirm && (
+     {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
           <div className="bg-white rounded-2xl p-6 w-80 shadow-xl">
             <div className="flex items-center gap-3 mb-2">
@@ -90,12 +82,13 @@ export default function ProviderSidebar() {
           </div>
         </div>
       )}
-
+      
       {/* Sidebar */}
       <aside
-        className={`fixed top-20 left-0 h-[calc(100vh-5rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
-      ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
-      >
+        className={`fixed top-20 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
+        ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      >      
+        <div className="p-6">
         <nav className="space-y-2">
           {links.map((link) => {
             if (link.name === "Logout") {
@@ -115,7 +108,7 @@ export default function ProviderSidebar() {
               <Link
                 key={link.path}
                 to={link.path}
-                onClick={() => setOpen(false)}
+                onClick={() => onClose && onClose()}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-[#005823]/10 ${
                   pathname === link.path
                     ? "bg-[#005823] text-white font-medium"
@@ -128,11 +121,11 @@ export default function ProviderSidebar() {
             );
           })}
         </nav>
-
-        <div>
+        </div>
+         <div>
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+            className="flex w-full m-5 items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
           >
             <span>
               <LogOut />

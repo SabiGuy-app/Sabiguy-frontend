@@ -1,17 +1,33 @@
 import UploadBox from "../uploadBox";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import ReviewSent from "./ReviewSentModal";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { markAsComplete } from "../../api/bookings";
+import { toast } from "react-toastify";
 
 import Button from "../button";
 
-export default function MarkAsCompleted ({ isOpen, onClose, job}) {
+export default function MarkAsCompleted ({ isOpen, onClose, job, onRefresh }) {
     const [showModal, setShowModal] = useState(false);
-    const navigate = useNavigate()
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
+    if (!isOpen) return null;
 
-      if (!isOpen) return null;
+    const handleMarkAsCompleted = async () => {
+        setLoading(true);
+        try {
+            await markAsComplete(job.id);
+            setShowModal(true);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error("Failed to mark job as complete:", error);
+            toast.error(error.response?.data?.message || "Failed to mark job as complete");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div>
@@ -55,9 +71,15 @@ export default function MarkAsCompleted ({ isOpen, onClose, job}) {
             />
           </div>
           <button
-          onClick={() => setShowModal(true)}
-          className="w-full mb-15 rounded-md p-3 bg-[#005823BF] text-white hover:bg-[#005823]">
-Mark as completed
+          onClick={handleMarkAsCompleted}
+          disabled={loading}
+          className="w-full mb-15 rounded-md p-3 bg-[#005823BF] text-white hover:bg-[#005823] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processing...
+              </>
+            ) : "Mark as completed"}
           </button>
          
         </div>

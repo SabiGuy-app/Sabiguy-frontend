@@ -47,7 +47,6 @@ export default function DashboardHome() {
       title: "Package Delivery",
       description: "Your items delivered quickly and safely",
       image: new1,
-      // bgColor: "#6467F24D",
       comingSoon: false,
     },
     {
@@ -210,25 +209,6 @@ export default function DashboardHome() {
           </h2>
           <p className="mb-3 text-sm">What would you like to get done today?</p>
         </div>
-        {/* <div className="flex gap-3 mt-4 md:mt-0">
-          <Button
-            variant="secondary"
-            onClick={() => navigate("/dashboard/categories")}
-          >
-            Browse service
-          </Button>
-          <Button variant="primary">Request service</Button>
-          <button
-            onClick={async () => {
-              await testSelectProvider(
-                "Hello!, THis is a test notification",
-                "Test notification",
-              );
-            }}
-          >
-            Send Test Notification
-          </button>
-        </div> */}
       </div>
 
       <div id="service-cards">

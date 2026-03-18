@@ -363,11 +363,10 @@ export default function TrackDelivery() {
                     <div key={step.id} className="flex gap-3">
                       <div className="flex flex-col items-center">
                         <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                            isCompleted
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isCompleted
                               ? "border-green-500 bg-green-500"
                               : "border-gray-300 bg-white"
-                          }`}
+                            }`}
                         >
                           {isCompleted ? (
                             <svg
@@ -396,16 +395,14 @@ export default function TrackDelivery() {
 
                       <div className="pb-12 last:pb-0">
                         <div
-                          className={`text-[16px] font-medium ${
-                            isCompleted ? "text-[#005823]" : "text-[#231F20BF]"
-                          }`}
+                          className={`text-[16px] font-medium ${isCompleted ? "text-[#005823]" : "text-[#231F20BF]"
+                            }`}
                         >
                           {step.title}
                         </div>
                         <div
-                          className={`text-[12px] ${
-                            isCompleted ? "text-gray-500" : "text-[#231F20BF]"
-                          }`}
+                          className={`text-[12px] ${isCompleted ? "text-gray-500" : "text-[#231F20BF]"
+                            }`}
                         >
                           {step.subtitle}
                         </div>
@@ -425,3 +422,4 @@ export default function TrackDelivery() {
     </>
   );
 }
+
