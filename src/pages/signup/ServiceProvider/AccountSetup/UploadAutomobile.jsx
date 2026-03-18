@@ -7,6 +7,7 @@ export default function UploadAutoMobile({ onNext, onBack }) {
 //   const [videos, setVideos] = useState([]);
   const [pictures, setPictures] = useState([]);
   const [isUploading, setIsUploading] = useState(false); // Track upload state
+  const [saveError, setSaveError] = useState("");
   
   const email = localStorage.getItem("email")
   const google_email =   localStorage.getItem("google-email")
@@ -21,12 +22,13 @@ export default function UploadAutoMobile({ onNext, onBack }) {
 
   const handlePictureUpload = (urls) => {
     setPictures((prev) => [...prev, ...urls]);
+    setSaveError("");
   };
 
   const handleSave = async () => {
     try {
-      if (!pictures.length && !videos.length) {
-        alert("Please upload at least one photo before continuing.");
+      if (pictures.length < 2) {
+        setSaveError("Please upload at least two photos before continuing.");
         return;
       }
 
@@ -131,13 +133,13 @@ export default function UploadAutoMobile({ onNext, onBack }) {
 
         {/* Navigation Buttons */}
         <div className="flex justify-end gap-3 mt-8">
-          <button
+          {/* <button
             className="border border-[#005823BF] text-[#005823BF] px-6 py-2 rounded-lg hover:bg-[#005823BF]/10 transition"
             onClick={onNext}
             disabled={isUploading}
           >
             Skip
-          </button>
+          </button> */}
           <button
             className="border border-[#005823BF] text-[#005823BF] px-6 py-2 rounded-lg hover:bg-[#005823BF]/10 transition"
             onClick={onBack}
@@ -157,6 +159,9 @@ export default function UploadAutoMobile({ onNext, onBack }) {
             {isUploading ? "Uploading..." : "Save & Continue"}
           </button>
         </div>
+        {saveError && (
+          <p className="text-sm text-red-500 mt-3">{saveError}</p>
+        )}
       </div>
     </AccountSetupLayout>
   );

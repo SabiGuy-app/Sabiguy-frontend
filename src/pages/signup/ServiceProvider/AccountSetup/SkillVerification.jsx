@@ -176,7 +176,41 @@ export default function SkillsVerification({ onNext, onBack }) {
             handleBlur,
             handleSubmit,
             setFieldValue,
-          }) => (
+          }) => {
+            const isFormComplete = (() => {
+              if (!values.title || !values.service) return false;
+              if (selectedJobTitle === "transport") {
+                return (
+                  values.driverLicenseNumber &&
+                  values.vehicleColor &&
+                  values.vehicleName &&
+                  values.vehicleRegNo &&
+                  values.vehicleProductionYear
+                );
+              }
+              if (selectedJobTitle === "domestic") {
+                return (
+                  values.fullName &&
+                  values.nationalId &&
+                  values.referenceContact
+                );
+              }
+              if (selectedJobTitle === "emergency") {
+                return values.emergencyServiceId && values.certificationNumber;
+              }
+              if (selectedJobTitle === "home_repair") {
+                return values.licenseNumber && values.yearsOfExperience;
+              }
+              if (selectedJobTitle === "professional") {
+                return values.professionalLicense && values.organizationName;
+              }
+              if (selectedJobTitle === "freelance") {
+                return values.portfolioUrl && values.freelanceExperience;
+              }
+              return false;
+            })();
+
+            return (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-9">
               <InputField
                 select
@@ -282,8 +316,8 @@ export default function SkillsVerification({ onNext, onBack }) {
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#005823BF] text-white px-6 py-2 rounded-lg hover:bg-[#004e1a] transition"
-                  disabled={loading}
+                  className="bg-[#005823BF] text-white px-6 py-2 rounded-lg hover:bg-[#004e1a] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading || !isFormComplete}
                 >
                   {loading ? "Saving..." : "Save & Continue"}
                 </button>
@@ -299,7 +333,8 @@ export default function SkillsVerification({ onNext, onBack }) {
                 editingService={editingService}
               />
             </form>
-          )}
+            );
+          }}
         </Formik>
       </div>
     </AccountSetupLayout>

@@ -12,7 +12,10 @@ export default function Form() {
 
   const handleNext = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
-    setStep((prev) => prev + 1);
+    setStep((prev) => {
+      if (prev === 0 && data?.skipOtp) return prev + 2;
+      return prev + 1;
+    });
   };
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 

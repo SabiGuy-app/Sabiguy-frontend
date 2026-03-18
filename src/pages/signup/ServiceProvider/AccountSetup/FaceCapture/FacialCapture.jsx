@@ -54,12 +54,12 @@ export default function FacialCapture({ onNext, onBack }) {
            {/* {loading ? "Verifying..." : "Verify Email"} */}
          </Button>
 
-          <Button variant="ghost"
+          {/* <Button variant="ghost"
             onClick={onNext}
             
           >
             Proceed on another device
-          </Button>
+          </Button> */}
         </div>
       </div>
     </AccountSetupLayout>

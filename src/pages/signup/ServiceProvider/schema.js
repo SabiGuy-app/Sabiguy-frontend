@@ -8,15 +8,19 @@ export const SignUpSchema = Yup.object().shape({
     .required('Password is required'),
 //   term: Yup.boolean().oneOf([true], 'This field is required'),
  phoneNumber: Yup.string().required('Please enter your phone number'),
-   fullName: Yup.string().required('Please enter your first name and last name'),
+  fullName: Yup.string()
+    .required('Please enter your first name and last name')
+    .test(
+      'first-last-name',
+      'Please enter your first name and last name',
+      (value) => (value ? value.trim().split(/\s+/).length >= 2 : false),
+    ),
 
 
 });
 
 export const PersonalInfoSchema = Yup.object().shape({
-   city: Yup.string().required('Please enter your first name and last name'),
-   address: Yup.string().required('Please enter your first name and last name'),
-
-
-
+   gender: Yup.string().required('Please select your gender'),
+   city: Yup.string().required('Please enter your city'),
+   address: Yup.string().required('Please enter your address')
 });
