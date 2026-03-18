@@ -66,6 +66,16 @@ function App() {
             <Route path="/success" element={<Success />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<DashboardHome />} />
+            <Route path="/dashboard/provider" element={<ProviderDashboard />} />
+            <Route path="/bookings" element={<Bookings />} />
+            <Route path="/dashboard/saved" element={<SavedProfile />} />
+            <Route path="/dashboard/chat" element={<ChatPage />} />
+            <Route path="/dashboard/provider/chat" element={<ProviderChat />} />
+            <Route path="/dashboard/activity" element={<ActivityPage />} />
+            <Route
+              path="/dashboard/provider/activity"
+              element={<ProviderActivity />}
+            />
             <Route
               path="/dashboard/provider/hire-alert"
               element={<HireAlerts />}
@@ -78,18 +88,11 @@ function App() {
               path="/dashboard/provider/track-delivery"
               element={<TrackDelivery />}
             />
-            <Route path="/dashboard/provider" element={<ProviderDashboard />} />
-            <Route path="/bookings" element={<Bookings />} />
-            <Route path="/dashboard/saved" element={<SavedProfile />} />
-            <Route path="/dashboard/chat" element={<ChatPage />} />
-            <Route path="/dashboard/provider/chat" element={<ProviderChat />} />
-            <Route path="/dashboard/activity" element={<ActivityPage />} />
-            <Route
-              path="/dashboard/provider/activity"
-              element={<ProviderActivity />}
-            />
             <Route path="/dashboard/settings" element={<ProfilePage />} />
-            <Route path="/wallet/funding/callback" element={<WalletCallback />} />
+            <Route
+              path="/wallet/funding/callback"
+              element={<WalletCallback />}
+            />
             <Route path="/payment/callback" element={<WalletCallback />} />
             <Route path="/dashboard/help" element={<ContactPage />} />
             <Route path="/dashboard/provider/help" element={<ProviderHelp />} />
@@ -130,22 +133,13 @@ function App() {
               path="/dashboard/provider/summary"
               element={<BookingSummary />}
             />
-            <Route
-              path="/bookings/vehicletype"
-              element={<VehicleType />}
-            />
+            <Route path="/bookings/vehicletype" element={<VehicleType />} />
             <Route
               path="/bookings/availableriders"
               element={<AvailableRiders />}
             />
-            <Route
-              path="/bookings/summary"
-              element={<BookingSummary2 />}
-            />
-            <Route
-              path="/bookings/trackrider"
-              element={<TrackRider />}
-            />
+            <Route path="/bookings/summary" element={<BookingSummary2 />} />
+            <Route path="/bookings/trackrider" element={<TrackRider />} />
           </Routes>
         </div>
       </Router>

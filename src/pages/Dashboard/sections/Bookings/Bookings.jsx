@@ -15,6 +15,7 @@ import {
 } from "../../../../api/bookings";
 import { allowSystem } from "../../../../api/bookings";
 import useBookingStore from "../../../../stores/booking.store";
+import BookingsTour from "../../../../components/tour/BookingsTour";
 
 const vehicleOptions = [
   {
@@ -230,7 +231,7 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-      <div className="grid grid-cols-2 sm:flex gap-2 mb-6">
+      <div className="w-[50%] grid grid-cols-2 sm:flex gap-2 mb-6">
         {filters.map((filter) => (
           <button
             key={filter}
@@ -250,11 +251,11 @@ export default function Bookings() {
 
   const mapBookingToRequest = (booking) => ({
     id: booking._id,
-    title:
-      (booking.subCategory?.replace(/_/g, " ") ||
-        booking.serviceType ||
-        "Booking")
-        .replace(/\b\w/g, (l) => l.toUpperCase()),
+    title: (
+      booking.subCategory?.replace(/_/g, " ") ||
+      booking.serviceType ||
+      "Booking"
+    ).replace(/\b\w/g, (l) => l.toUpperCase()),
     status: (booking.status || "pending")
       .replace(/_/g, " ")
       .replace(/\b\w/g, (l) => l.toUpperCase()),
@@ -263,9 +264,9 @@ export default function Bookings() {
     providerImage:
       booking.providerId?.profilePicture ||
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
-    providerRole:
-      (booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—")
-        .replace(/\b\w/g, (l) => l.toUpperCase()),
+    providerRole: (
+      booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—"
+    ).replace(/\b\w/g, (l) => l.toUpperCase()),
     providerRating: booking.providerId?.rating?.average || null,
     providerReviews: booking.providerId?.rating?.count || 0,
     providerPhone: booking.providerId?.phoneNumber || "—",
@@ -316,7 +317,11 @@ export default function Bookings() {
           status,
         );
       if (statusFilter === "pending")
-        return ["pending_providers", "payment_pending", "awaiting_provider_acceptance"].includes(status);
+        return [
+          "pending_providers",
+          "payment_pending",
+          "awaiting_provider_acceptance",
+        ].includes(status);
       if (statusFilter === "completed")
         return [
           "funds_released",
@@ -341,50 +346,75 @@ export default function Bookings() {
     setSelectedRequest(null);
   };
 
-return (
-  <DashboardLayout>
-    <div className="max-w-7xl mx-0 bg-white min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
-      <ServiceDetailsModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        request={selectedRequest || {}}
-      />
+  return (
+    <DashboardLayout>
+      <BookingsTour />
+      <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+        <ServiceDetailsModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          request={selectedRequest || {}}
+        />
+        <h1 className="text-xl font-semibold p-4">My Bookings</h1>
 
-      <h1 className="text-xl font-semibold p-4">My Bookings</h1>
+        {/* Tabs */}
+        <div className="flex flex-col sm:flex-row border-b">
+          <button
+            onClick={() => setActiveTab("request")}
+            className={`px-6 py-3 font-medium transition-colors relative ${
+              activeTab === "request"
+                ? "text-[#005823] border-b-2 border-[#005823]"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Request a service
+          </button>
+          <button
+            id="booking-my-requests"
+            onClick={() => setActiveTab("requests")}
+            className={`px-6 py-3 font-medium transition-colors relative ${
+              activeTab === "requests"
+                ? "text-[#005823] border-b-2 border-[#005823]"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            My Requests
+          </button>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex flex-col sm:flex-row border-b">
-        <button
-          onClick={() => setActiveTab("request")}
-          className={`px-6 py-3 font-medium transition-colors relative ${
-            activeTab === "request"
-              ? "text-[#005823] border-b-2 border-[#005823]"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Request a service
-        </button>
-
-        <button
-          onClick={() => setActiveTab("requests")}
-          className={`px-6 py-3 font-medium transition-colors relative ${
-            activeTab === "requests"
-              ? "text-[#005823] border-b-2 border-[#005823]"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          My Requests
-        </button>
-      </div>
-
-      {activeTab === "request" ? (
-        <form
-          onSubmit={formik.handleSubmit}
-          className="space-y-5 p-5 max-w-xl lg:max-w-xl xl:max-w-5xl mx-auto"
-        >
-          {errorMessage && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-              {errorMessage}
+        {activeTab === "request" ? (
+          <form onSubmit={formik.handleSubmit} className="space-y-5 p-5">
+            {errorMessage && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                {errorMessage}
+              </div>
+            )}
+            {successMessage && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                {successMessage}
+              </div>
+            )}
+            <input type="hidden" name="jobTitle" value="transport" />
+            <div id="booking-category">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Select work category
+              </label>
+              <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md text-gray-700 flex items-center justify-between">
+                <span>Transport &amp; Logistics</span>
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </div>
           )}
 
@@ -392,6 +422,39 @@ return (
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
               {successMessage}
             </div>
+            <div id="booking-location">
+              <div>
+                <InputField
+                  name="pickupAddress"
+                  label="Pickup location"
+                  placeholder="24 Palm Avenue, Lagos"
+                  value={formik.values.pickupAddress}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+                {formik.touched.pickupAddress &&
+                  formik.errors.pickupAddress && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.pickupAddress}
+                    </p>
+                  )}
+              </div>
+              <div>
+                <InputField
+                  name="dropoffAddress"
+                  label="Dropoff location"
+                  placeholder="24 Palm Avenue, Lagos"
+                  value={formik.values.dropoffAddress}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+                {formik.touched.dropoffAddress &&
+                  formik.errors.dropoffAddress && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.dropoffAddress}
+                    </p>
+                  )}
+              </div>
           )}
 
           <input type="hidden" name="jobTitle" value="transport" />
@@ -476,6 +539,7 @@ return (
                   </p>
                 )}
             </div>
+
             {/* {formik.values.pickupAddress && formik.values.dropoffAddress && (
               <div className="flex items-center gap-2 text-sm text-gray-500 -mt-2">
                 <svg
@@ -514,8 +578,8 @@ return (
               )}
             </div>
             {formik.values.serviceType === "scheduled" && (
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="flex gap-6">
+                <div className="w-full">
                   <InputField
                     name="scheduleDate"
                     label="Select Date"
@@ -533,7 +597,7 @@ return (
                     )}
                 </div>
 
-                <div className="flex-1">
+                <div className="w-full">
                   <InputField
                     name="scheduleTime"
                     label="Select Time"
@@ -612,7 +676,7 @@ return (
             </div>
 
             {/* Auto-accept checkbox */}
-            <div className="flex items-center gap-3">
+            <div id="booking-auto-accept" className="flex items-center gap-3">
               <input
                 type="checkbox"
                 id="auto-accept"
@@ -662,7 +726,7 @@ return (
             </div>
           </form>
         ) : (
-          <div className="mt-5 p-5 max-w-xl mx-auto">
+          <div className="mt-5 p-5">
             <StatusFilter
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
