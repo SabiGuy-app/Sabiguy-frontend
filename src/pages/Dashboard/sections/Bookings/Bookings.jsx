@@ -273,6 +273,7 @@ export default function Bookings() {
 
     orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
     fullOrderId: booking._id || "",
+    providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     fullProviderId: booking.providerId?._id || "",
     price: booking.calculatedPrice || booking.agreedPrice || 0,
     totalAmount: booking.totalAmount || 0,
@@ -313,9 +314,12 @@ export default function Bookings() {
       const status = request.status.toLowerCase();
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
-        return ["in_progress", "paid_escrow", "provider_selected", "completed", "waiting_confirmation"].includes(
-          status,
-        );
+        return [
+          "in_progress",
+          "paid_escrow",
+          "provider_selected",
+          "completed",
+        ].includes(status);
       if (statusFilter === "pending")
         return [
           "pending_providers",
@@ -324,6 +328,7 @@ export default function Bookings() {
         ].includes(status);
       if (statusFilter === "completed")
         return [
+          // "completed",
           "funds_released",
           "user_accepted_completion",
         ].includes(status);
@@ -416,11 +421,26 @@ export default function Bookings() {
                 </svg>
               </div>
             </div>
-          )}
-
-          {successMessage && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-              {successMessage}
+            <div>
+              <InputField
+                label="Subcategory"
+                select
+                options={[
+                  { label: "Select Services", value: "" },
+                  { label: "Package delivery", value: "package delivery" },
+                  { label: "Book a ride", value: "book a ride" },
+                ]}
+                value={formik.values.service}
+                onChange={(option) =>
+                  formik.setFieldValue("service", option.value)
+                }
+                onBlur={() => formik.setFieldTouched("service", true)}
+              />
+              {formik.touched.service && formik.errors.service && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formik.errors.service}
+                </p>
+              )}
             </div>
             <div id="booking-location">
               <div>
@@ -455,89 +475,6 @@ export default function Bookings() {
                     </p>
                   )}
               </div>
-          )}
-
-          <input type="hidden" name="jobTitle" value="transport" />
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Select work category
-            </label>
-
-            <div className="w-full max-w-lg px-4 py-3 bg-gray-50 border border-gray-300 rounded-md text-gray-700 flex items-center justify-between">
-              <span>Transport &amp; Logistics</span>
-
-              <svg
-                className="w-4 h-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <div>
-            <InputField
-              label="Subcategory"
-              select
-              options={[
-                { label: "Select Services", value: "" },
-                { label: "Package delivery", value: "package delivery" },
-                { label: "Book a ride", value: "book a ride" },
-              ]}
-              value={formik.values.service}
-              onChange={(option) =>
-                formik.setFieldValue("service", option.value)
-              }
-              onBlur={() => formik.setFieldTouched("service", true)}
-            />
-
-            {formik.touched.service && formik.errors.service && (
-              <p className="mt-1 text-sm text-red-600">
-                {formik.errors.service}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <InputField
-              name="pickupAddress"
-              label="Pickup location"
-              placeholder="24 Palm Avenue, Lagos"
-              value={formik.values.pickupAddress}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            />
-
-            {formik.touched.pickupAddress &&
-              formik.errors.pickupAddress && (
-                <p className="mt-1 text-sm text-red-600">
-                  {formik.errors.pickupAddress}
-                </p>
-              )}
-            </div>
-            <div>
-              <InputField
-                name="dropoffAddress"
-                label="Dropoff location"
-                placeholder="24 Palm Avenue, Lagos"
-                value={formik.values.dropoffAddress}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.dropoffAddress &&
-                formik.errors.dropoffAddress && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {formik.errors.dropoffAddress}
-                  </p>
-                )}
             </div>
 
             {/* {formik.values.pickupAddress && formik.values.dropoffAddress && (
@@ -732,66 +669,67 @@ export default function Bookings() {
               onFilterChange={setStatusFilter}
             />
 
-          {bookingsLoading && (
-            <div className="text-center py-12 bg-white rounded-lg">
-              <div className="w-8 h-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-gray-500">Loading your bookings...</p>
-            </div>
-          )}
+            {/* ✅ Loading */}
+            {bookingsLoading && (
+              <div className="text-center py-12 bg-white rounded-lg">
+                <div className="w-8 h-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-gray-500">Loading your bookings...</p>
+              </div>
+            )}
 
-          {!bookingsLoading && bookingsError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {bookingsError}
-            </div>
-          )}
+            {/* ✅ Error */}
+            {!bookingsLoading && bookingsError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {bookingsError}
+              </div>
+            )}
 
-          {!bookingsLoading && !bookingsError && (
-            <div className="space-y-4 w-full">
-              {filteredRequests.length > 0 ? (
-                filteredRequests.map((request) => (
-                  <RequestCard
-                    key={request.id}
-                    request={request}
-                    onViewDetails={handleViewDetails}
-                    onTrackProvider={handleTrackProvider}
-                    onBookingCancelled={refreshBookings}
+            {/* ✅ Real bookings list */}
+            {!bookingsLoading && !bookingsError && (
+              <div className="space-y-4 w-full">
+                {filteredRequests.length > 0 ? (
+                  filteredRequests.map((request) => (
+                    <RequestCard
+                      key={request.id}
+                      request={request}
+                      onViewDetails={handleViewDetails}
+                      onTrackProvider={handleTrackProvider}
+                      onBookingCancelled={refreshBookings}
                       onStatusUpdate={refreshBookings}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-12 bg-white rounded-lg">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-12 bg-white rounded-lg">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg
+                        className="w-8 h-8 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No requests found
+                    </h3>
+                    <p className="text-gray-600">
+                      {userBookings.length === 0
+                        ? "You haven't made any bookings yet."
+                        : "No requests match the selected filter."}
+                    </p>
                   </div>
-
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    No requests found
-                  </h3>
-
-                  <p className="text-gray-600">
-                    {userBookings.length === 0
-                      ? "You haven't made any bookings yet."
-                      : "No requests match the selected filter."}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  </DashboardLayout>
-);
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
 }
