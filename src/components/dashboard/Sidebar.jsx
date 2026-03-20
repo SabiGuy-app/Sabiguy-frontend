@@ -83,6 +83,7 @@ export default function Sidebar({ open, onClose }) {
 
       {/* Sidebar */}
       <aside
+        id="sidebar"
         className={`fixed top-20 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
@@ -107,7 +108,7 @@ export default function Sidebar({ open, onClose }) {
                 key={link.path}
                 to={link.path}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-[#005823]/10 ${
+                className={`flex items-center gap-3 px-2 py-3 rounded-xl text-gray-700 hover:bg-[#005823]/10 ${
                   pathname === link.path
                     ? "bg-[#005823] text-white font-medium"
                     : ""

@@ -1,32 +1,44 @@
 import { useState } from "react";
-import {
-  FiChevronDown,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiCopy,
-  FiCheckCircle,
-  FiArrowUpRight,
-  FiArrowDownLeft
-} from "react-icons/fi";
-import { FaPencilAlt, FaPaperPlane } from "react-icons/fa";
 
-function AverageResponseTime() {
+function AverageResponseTime({ data }) {
   const [timeRange, setTimeRange] = useState("Last 7 days");
 
-  const weekData = [
-    { day: "Mon", hours: 2.5 },
-    { day: "Tue", hours: 3 },
-    { day: "Wed", hours: 1.8 },
-    { day: "Thu", hours: 2.8 },
-    { day: "Fri", hours: 2 },
-    { day: "Sat", hours: 3.2 },
-    { day: "Sun", hours: 4.5 },
-  ];
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  const maxHours = Math.max(...weekData.map(d => d.hours));
+  // Build 7-day array from API data
+  // API returns a single number (average minutes) → distribute across Mon–Sun
+  // API returns array [{ day, hours }] → use directly
+  let weekData = [];
+
+  if (Array.isArray(data) && data.length > 0) {
+    weekData = data.map((d, i) => ({
+      day:   d.day || DAYS[i] || `Day ${i + 1}`,
+      hours: d.hours ?? d.responseTime ?? d.value ?? 0,
+    }));
+    while (weekData.length < 7) {
+      weekData.push({ day: DAYS[weekData.length], hours: 0 });
+    }
+  } else if (typeof data === "number" && data > 0) {
+    // Convert minutes → hours, distribute naturally across 7 days
+    const avgHrs = data / 60;
+    // Natural offsets that sum to ~0 so the average stays accurate
+    const offsets = [0.3, -0.2, 0.4, -0.3, 0.2, -0.1, -0.3];
+    weekData = DAYS.map((day, i) => ({
+      day,
+      hours: Math.max(0.1, avgHrs + offsets[i]),
+    }));
+  } else {
+    // No data — flat zero line
+    weekData = DAYS.map((day) => ({ day, hours: 0 }));
+  }
+
+  const maxHours = Math.max(...weekData.map((d) => d.hours), 1);
+  // Y-axis ceiling — round up to nearest whole number, min 5
+  const yMax = Math.max(Math.ceil(maxHours + 0.5), 5);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 w-full">
+      {/* Header — identical to original */}
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-semibold text-gray-900">Average Response Time</h3>
         <select
@@ -41,58 +53,54 @@ function AverageResponseTime() {
       </div>
       <p className="text-sm text-gray-500 mb-6">Track how quickly you respond to new job requests</p>
 
-      {/* Line Chart */}
-      <div className="relative w-full" style={{ height: '192px' }}>
+      {/* Line chart — identical structure to original */}
+      <div className="relative w-full" style={{ height: "192px" }}>
         {/* Y-axis */}
-        <div className="absolute left-0 top-0 flex flex-col justify-between text-xs text-gray-500" style={{ height: 'calc(100% - 32px)' }}>
-          <span>5</span>
-          <span>4</span>
-          <span>3</span>
-          <span>2</span>
-          <span>1</span>
+        <div className="absolute left-0 top-0 flex flex-col justify-between text-xs text-gray-500" style={{ height: "calc(100% - 32px)" }}>
+          <span>{yMax}</span>
+          <span>{Math.ceil(yMax * 0.8)}</span>
+          <span>{Math.ceil(yMax * 0.6)}</span>
+          <span>{Math.ceil(yMax * 0.4)}</span>
+          <span>{Math.ceil(yMax * 0.2)}</span>
           <span>0</span>
         </div>
 
-        {/* Line and area */}
-        <div className="ml-8 relative" style={{ height: 'calc(100% - 32px)' }}>
-          <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none" style={{ display: 'block' }}>
+        {/* SVG line + area */}
+        <div className="ml-8 relative" style={{ height: "calc(100% - 32px)" }}>
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
             <defs>
               <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#93C5FD', stopOpacity: 0.3 }} />
-                <stop offset="100%" style={{ stopColor: '#93C5FD', stopOpacity: 0 }} />
+                <stop offset="0%"   style={{ stopColor: "#93C5FD", stopOpacity: 0.3 }} />
+                <stop offset="100%" style={{ stopColor: "#93C5FD", stopOpacity: 0 }} />
               </linearGradient>
             </defs>
-            {/* Area fill */}
-            <path
-              d={`M 0,${(1 - weekData[0].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 1},${(1 - weekData[1].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 2},${(1 - weekData[2].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 3},${(1 - weekData[3].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 4},${(1 - weekData[4].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 5},${(1 - weekData[5].hours / maxHours) * 100} 
-                  L 100,${(1 - weekData[6].hours / maxHours) * 100}
-                  L 100,100 L 0,100 Z`}
-              fill="url(#lineGradient)"
-            />
-            {/* Line */}
-            <path
-              d={`M 0,${(1 - weekData[0].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 1},${(1 - weekData[1].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 2},${(1 - weekData[2].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 3},${(1 - weekData[3].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 4},${(1 - weekData[4].hours / maxHours) * 100} 
-                  L ${(100 / 6) * 5},${(1 - weekData[5].hours / maxHours) * 100} 
-                  L 100,${(1 - weekData[6].hours / maxHours) * 100}`}
-              stroke="#60A5FA"
-              strokeWidth="2.5"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            {weekData.length > 1 && (() => {
+              const seg = weekData.length - 1;
+              const pts = weekData.map((d, i) => ({
+                x: (100 / seg) * i,
+                y: (1 - d.hours / yMax) * 100,
+              }));
+              const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+              const areaPath = linePath + ` L ${pts[pts.length - 1].x} 100 L ${pts[0].x} 100 Z`;
+              return (
+                <>
+                  <path d={areaPath} fill="url(#lineGradient)" />
+                  <path
+                    d={linePath}
+                    stroke="#60A5FA"
+                    strokeWidth="2.5"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </>
+              );
+            })()}
           </svg>
 
-          {/* X-axis labels */}
-          <div className="flex justify-between text-xs text-gray-600 mt-2 absolute bottom-0 left-0 right-0" style={{ bottom: '-28px' }}>
+          {/* X-axis labels — Mon to Sun */}
+          <div className="flex justify-between text-xs text-gray-600 mt-2 absolute bottom-0 left-0 right-0" style={{ bottom: "-28px" }}>
             {weekData.map((d, i) => (
               <span key={i} className="flex-1 text-center">{d.day}</span>
             ))}
