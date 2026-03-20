@@ -54,7 +54,7 @@ export default function JobsCard({
       arrived_at_dropoff: "bg-green-100 text-green-700 border-green-200",
       waiting_confirmation: "bg-orange-200 text-orange-800 border-orange-200",
       awaiting_confirmation: "bg-orange-200 text-orange-800 border-orange-200",
-      awaiting_job_commencement: "bg-slate-100 text-slate-700 border-slate-200",
+      awaiting_payment: "bg-slate-100 text-slate-700 border-slate-200",
       completed: "bg-green-100 text-green-700 border-green-200",
       cancelled: "bg-red-100 text-red-700 border-red-200",
       pending: "bg-gray-100 text-gray-700 border-gray-200",
@@ -191,7 +191,7 @@ export default function JobsCard({
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
                 <span className="font-medium">
-                  Completed {job?.completedAt || "recently"}
+                   Job Completed On : {formatDateTime(job?.completedAt || job?.originalData?.completedAt)}
                 </span>
               </div>
             )}
@@ -272,7 +272,7 @@ export default function JobsCard({
                 Message
               </button>
             )}
-            {normalizedStatus === "awaiting_job_commencement" && (
+            {normalizedStatus === "awaiting_payment" && (
               <button className="px-3 py-2 mt-3 bg-gray-50 text-[#DC2626] rounded-lg font-medium hover:bg-gray-200 transition-colors">
                 Cancel
               </button>

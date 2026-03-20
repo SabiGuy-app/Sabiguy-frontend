@@ -148,6 +148,13 @@ export default function HireAlerts() {
         dropoffLocation: booking.dropoffLocation || null,
         scheduleType: booking.scheduleType || "N/A",
         createdAt: booking.createdAt || null,
+        completedAt:
+          booking.completedAt ||
+          booking.completed_at ||
+          booking.completedOn ||
+          booking.completed_on ||
+          booking.updatedAt ||
+          null,
         modeOfDelivery: booking.modeOfDelivery || "",
         distance: booking.distance || null,
         // Store original data for modal details
@@ -212,7 +219,7 @@ export default function HireAlerts() {
 
   const mapJobStatus = (apiStatus) => {
     const statusMap = {
-      provider_selected: "Awaiting Job Commencement",
+      provider_selected: "Awaiting Payment",
       in_progress: "Enroute to Pickup",
       arrived_at_dropoff: "Arrived at Dropoff",
       arrived_at_pickup: "Arrived at Pickup",
@@ -313,7 +320,7 @@ export default function HireAlerts() {
 
     if (statusFilter === "pending") {
       return (
-        status === "awaiting job commencement"
+        status === "awaiting payment"
       );
     }
 

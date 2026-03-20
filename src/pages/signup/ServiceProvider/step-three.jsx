@@ -8,7 +8,7 @@ export default function StepThree ({onNext}) {
         <>
         <Navbar/>
         <AuthLayout
-        title="A few clicks away from creating your account"
+        title="A few clicks away from completing your account setup"
         >
         <div className="flex flex-col min-h-screen justify-center items-center">
             <h2 className="font-semibold text-3xl mb-6">Congratulations!</h2>
