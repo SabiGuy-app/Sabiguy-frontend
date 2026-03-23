@@ -66,7 +66,11 @@ export default function RequestCard({
     setSubmitLoading(true);
     setApiError(null);
     try {
-      const response = await acceptCompletion(request.id, { score, review, tipAmount });
+      const payload = { score, review };
+      const tipIsEmpty =
+        tipAmount === undefined || tipAmount === null || tipAmount === "" || tipAmount === 0;
+      if (!tipIsEmpty) payload.tipAmount = tipAmount;
+      const response = await acceptCompletion(request.id, payload);
       const successMsg = response?.message || response?.data?.message || "Job completion accepted successfully";
       toast.success(successMsg);
       setSubmitted(true);

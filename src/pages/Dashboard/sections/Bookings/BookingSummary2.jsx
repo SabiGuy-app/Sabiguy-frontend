@@ -154,12 +154,14 @@ export default function BookingSummary2() {
           return;
         }
 
-        await payWithWallet(bookingId);
+        const pickupNote = notes?.trim() || undefined;
+        await payWithWallet(bookingId, pickupNote);
         await fetchBalance();
         setIsPaid(true);
         setShowSuccessModal(true);
       } else if (selectedPayment === "online") {
-        const response = await initializePayment(bookingId);
+        const pickupNote = notes?.trim() || undefined;
+        const response = await initializePayment(bookingId, pickupNote);
         const authUrl =
           response?.data?.authorizationUrl || response?.authorizationUrl;
 
