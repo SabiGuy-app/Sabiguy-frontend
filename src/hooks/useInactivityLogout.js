@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const DEFAULT_INACTIVITY_MS = 10 * 60 * 1000;
-const DEFAULT_WARNING_GRACE_MS = 60 * 1000;
+const DEFAULT_WARNING_GRACE_MS = 5 * 60 * 1000;
 
 export default function useInactivityLogout({
   enabled = true,
@@ -37,7 +37,7 @@ export default function useInactivityLogout({
 
   const handleActivity = useCallback(() => {
     if (!enabled) return;
-    if (showWarning) setShowWarning(false);
+    if (showWarning) return;
     startTimers();
   }, [enabled, showWarning, startTimers]);
 

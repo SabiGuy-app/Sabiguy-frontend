@@ -7,7 +7,7 @@ export default function ProviderProfileTabs({ activeTab, onTabChange }) {
     { id: "wallet", label: "Wallet", icon: FiCreditCard },
     { id: "password", label: "Password", icon: FiLock },
     { id: "service", label: "Service Profile", icon: FiUserCheck },
-    { id: "preferences", label: "Prefrences", icon: FiSettings },
+    { id: "preferences", label: "Preferences", icon: FiSettings },
     { id: "referrals", label: "Referrals", icon: FiGift },
 
 

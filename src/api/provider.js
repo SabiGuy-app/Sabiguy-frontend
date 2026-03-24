@@ -41,8 +41,8 @@ export const counterOffer = async (bookingId, offerData) => {
     return data;
 };
 
-export const toggleAvailability = async () => {
-    const { data } = await api.put("/provider/availability/toggle");
+export const toggleAvailability = async (isAvailable) => {
+    const { data } = await api.put("/provider/availability/toggle", { isAvailable });
     return data;
 };
 

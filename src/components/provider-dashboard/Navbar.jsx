@@ -272,7 +272,7 @@ export default function ProviderNavbar({ onMenuClick }) {
 
     try {
       // use the axios helper which automatically sends token/handles refresh
-      const data = await apiToggleAvailability();
+      const data = await apiToggleAvailability(newAvailability);
 
       if (data.success) {
         // Update Zustand store
