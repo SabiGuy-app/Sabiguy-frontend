@@ -67,8 +67,9 @@ export default function Login() {
     setSuccessMessage("");
 
     try {
+      const normalizedEmail = values.email.trim().toLowerCase();
       const payload = {
-        email: values.email,
+        email: normalizedEmail,
         password: values.password,
       };
 
@@ -84,7 +85,7 @@ export default function Login() {
 
       // Extract token + email
       const token = res.token;
-      const loginEmail = res.email;
+      const loginEmail = res.email || normalizedEmail;
 
       // Store token
       localStorage.setItem("token", token);
@@ -181,7 +182,7 @@ export default function Login() {
         }
 
         const token = data.token;
-        const loginEmail = data.user.email;
+        const loginEmail = data.user.email || normalizedEmail;
 
         // Store token
         localStorage.setItem("token", token);

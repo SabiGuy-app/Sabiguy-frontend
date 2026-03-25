@@ -151,6 +151,12 @@ export default function Bookings() {
         const res = await bookingPost(payload);
         console.log("Booking created response:", res);
 
+        try {
+          await allowSystem(false);
+        } catch (allowErr) {
+          console.error("Error resetting allowSystem:", allowErr);
+        }
+
         setBooking(res);
         setSuccessMessage(res?.message || "Booking created successfully!");
         formik.resetForm();

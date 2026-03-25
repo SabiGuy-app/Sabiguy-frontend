@@ -66,7 +66,7 @@ export default function UploadAutoMobile({ onNext, onBack }) {
   };
 
   return (
-    <AccountSetupLayout currentStep={2}>
+    <AccountSetupLayout currentStep={4}>
       <div className="mt-4">
         {/* Back Button */}
         <div
