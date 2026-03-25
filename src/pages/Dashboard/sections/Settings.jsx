@@ -48,9 +48,7 @@ export default function ProfilePage() {
 
   return (
     <DashboardLayout>
-      {/* Header */}
-      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Profile Card */}
+      <div className="w-full py-4">
         <div className="bg-white rounded-2xl border border-gray-200 mb-6">
           <div className="border-b border-gray-300 px-4 sm:px-6 lg:px-9 py-4">
             <h1 className="font-bold text-lg sm:text-[20px]">
@@ -58,9 +56,7 @@ export default function ProfilePage() {
             </h1>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6 px-4 sm:px-6 lg:px-9 py-4 sm:py-6">
-            {/* Left Side - Avatar and Info */}
             <div className="flex items-center gap-4">
-              {/* Avatar */}
               <div className="w-16 sm:w-20 h-16 sm:h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                 {user?.data?.profilePicture ? (
                   <img
@@ -73,7 +69,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* User Info */}
               <div>
                 <h2 className="text-base sm:text-xl font-semibold text-gray-900 mb-1">
                   {user?.data?.fullName}
@@ -98,7 +93,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 lg:p-8">
           <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

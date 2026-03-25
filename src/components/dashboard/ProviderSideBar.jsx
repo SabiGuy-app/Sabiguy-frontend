@@ -35,7 +35,6 @@ export default function ProviderSidebar({ open = false, onClose }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  
 
   const onLogout = async () => {
     try {
@@ -54,8 +53,7 @@ export default function ProviderSidebar({ open = false, onClose }) {
 
   return (
     <>
-
-     {showLogoutConfirm && (
+      {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
           <div className="bg-white rounded-2xl p-6 w-80 shadow-xl">
             <div className="flex items-center gap-3 mb-2">
@@ -82,50 +80,50 @@ export default function ProviderSidebar({ open = false, onClose }) {
           </div>
         </div>
       )}
-      
+
       {/* Sidebar */}
       <aside
         className={`fixed top-20 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
-      >      
-        <div className="p-6">
-        <nav className="space-y-2">
-          {links.map((link) => {
-            if (link.name === "Logout") {
+      >
+        <div>
+          <nav className="space-y-2">
+            {links.map((link) => {
+              if (link.name === "Logout") {
+                return (
+                  <button
+                    key={link.name}
+                    onClick={onLogout}
+                    className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+                  >
+                    <span>{link.icon}</span>
+                    <span>{link.name}</span>
+                  </button>
+                );
+              }
+
               return (
-                <button
-                  key={link.name}
-                  onClick={onLogout}
-                  className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => onClose && onClose()}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[#231F20] hover:bg-[#005823]/10 ${
+                    pathname === link.path
+                      ? "bg-[#005823] text-white font-medium"
+                      : ""
+                  }`}
                 >
                   <span>{link.icon}</span>
                   <span>{link.name}</span>
-                </button>
+                </Link>
               );
-            }
-
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => onClose && onClose()}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-[#005823]/10 ${
-                  pathname === link.path
-                    ? "bg-[#005823] text-white font-medium"
-                    : ""
-                }`}
-              >
-                <span>{link.icon}</span>
-                <span>{link.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
+            })}
+          </nav>
         </div>
-         <div>
+        <div>
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex w-full m-5 items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-[#231F20] hover:bg-red-100 hover:text-red-600"
           >
             <span>
               <LogOut />

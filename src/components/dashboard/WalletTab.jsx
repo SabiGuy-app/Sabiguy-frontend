@@ -78,7 +78,6 @@ export default function WalletTab() {
 
   return (
     <div className="w-full max-w-full overflow-x-hidden">
-      {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 mb-1">My Wallet</h2>
         <p className="text-sm text-gray-500 italic">
@@ -86,7 +85,6 @@ export default function WalletTab() {
         </p>
       </div>
 
-      {/* Available Balance Card */}
       <div className="bg-white border border-gray-200 rounded-lg p-4 mb-8 w-full sm:max-w-xs">
         <p className="text-sm text-gray-600 mb-3">Available Balance</p>
         <h3 className="text-3xl font-bold text-gray-900 mb-4">
@@ -100,9 +98,7 @@ export default function WalletTab() {
         </button>
       </div>
 
-      {/* Recent Transaction Section */}
       <div className="mb-8 w-full">
-        {/* Search and Filters */}
         <div className="flex flex-col gap-3 mb-4 w-full max-w-full md:flex-row md:flex-wrap">
           <div className="relative flex-1 min-w-0">
             <FiSearch
@@ -143,9 +139,7 @@ export default function WalletTab() {
           </select>
         </div>
 
-        {/* Transaction Table */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {/* desktop/table view */}
           <div className="hidden sm:block overflow-x-auto w-full max-w-full">
             <table className="w-full min-w-full table-fixed">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -217,7 +211,6 @@ export default function WalletTab() {
             </table>
           </div>
 
-          {/* mobile list view */}
           <div className="sm:hidden">
             {isLoadingTransactions ? (
               <div className="p-6 text-center text-gray-500">
@@ -258,7 +251,6 @@ export default function WalletTab() {
             )}
           </div>
 
-          {/* Pagination */}
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

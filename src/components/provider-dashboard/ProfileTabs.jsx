@@ -15,7 +15,7 @@ export default function ProviderProfileTabs({ activeTab, onTabChange }) {
 
   return (
     <div className="border-b border-gray-200 mb-4">
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-1 md:gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (

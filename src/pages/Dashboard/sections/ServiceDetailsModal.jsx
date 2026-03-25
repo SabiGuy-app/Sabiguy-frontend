@@ -1,180 +1,234 @@
-import { Calendar, MapPin, ChevronLeft, Star } from "lucide-react";
-import Navbar from "../../../components/dashboard/Navbar";
+import {
+  Phone,
+  MessageCircle,
+  Star,
+  MapPin,
+  Navigation,
+  Award,
+  Clock,
+  BadgeCheck,
+} from "lucide-react";
+import { FiChevronLeft } from "react-icons/fi";
+import distance from "/distance.png";
 
 export default function ServiceDetailsModal({ isOpen, onClose, request }) {
   if (!isOpen) return null;
   console.log(request);
 
   return (
-    <div className="fixed inset-0 bg-gray-50  bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-5 rounded-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto">
-        <div className=" top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h2 className="text-xl font-semibold">Service Details</h2>
-            {request.orderId && (
-              <span className="text-xl font-bold text-gray-901">
-                {request.orderId}
-              </span>
-            )}
-          </div>
+    <div className="fixed inset-0 bg-gray-50 bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white p-5 rounded-2xl max-w-6xl w-full h-[95vh] overflow-y-auto">
+        <div className="border-b border-gray-200 px-2 py-4 flex items-center gap-3 mb-6">
+          <button
+            onClick={onClose}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <FiChevronLeft size={24} />
+          </button>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Service Details
+          </h2>
+          {request.orderId && (
+            <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-md border border-[#0058234D] w-fit">
+              {request.orderId}
+            </span>
+          )}
         </div>
 
-        <div className="p-6 space-y-6">
-          <div>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
+        <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
+          <div className="space-y-6">
+            <div className="shadow-sm p-6 rounded-[16px] space-y-6">
+              <div className="flex items-start gap-4">
                 <img
                   src={
-                    request.providerImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
+                    request.providerImage ||
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
                   }
                   alt={request.providerName}
-                  className="w-16 h-16 rounded-full object-cover"
+                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                 />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">
+                <div className="flex-grow">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
                       {request.providerName ?? "Provider"}
+                    </h2>
+                    <span className="text-[#8BC53F]">
+                      <BadgeCheck className="w-[20px] h-[20px]" />
                     </span>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">
-                        {request.providerReviews}
-                      </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1 capitalize">
+                    {request.title?.replace(/_/g, " ") || "—"}
+                  </p>
+                  {request.providerIdDisplay &&
+                    request.providerIdDisplay !== "—" && (
+                      <div className="mb-1">
+                        <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 inline-block">
+                          ID: {request.providerIdDisplay}
+                        </span>
+                      </div>
+                    )}
+                  <div className="flex items-center gap-1 text-[14px] text-gray-600">
+                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                    <span className="font-medium text-gray-900">
+                      {request.providerRating ?? "New"}
+                    </span>
+                    <span className="text-gray-500">
+                      ({request.providerReviews ?? 0} reviews)
+                    </span>
+                  </div>
+                  {request.providerDistance && (
+                    <div className="flex items-center gap-1 text-[14px] text-[#231F20BF] mt-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>{request.providerDistance} miles away</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Stats */}
+                <div className="flex gap-6 flex-shrink-0">
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full">
+                      <Award className="w-[24px] h-[24px] text-[#005823]" />
+                    </div>
+                    <div className="text-[18px] font-semibold text-[#231F20]">
+                      {request.jobsDone ?? 0}
+                    </div>
+                    <div className="text-[12px] text-[#231F2080] text-center">
+                      Jobs Done
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-500 capitalize">{request.title.replace(/_/g, ' ')}</p>
-                    {request.providerIdDisplay && request.providerIdDisplay !== "—" && (
-                      <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
-                        ID: {request.providerIdDisplay}
-                      </span>
-                    )}
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center justify-center w-10 h-10">
+                      <Clock className="w-[24px] h-[24px] text-[#231F20BF]" />
+                    </div>
+                    <div className="text-[18px] font-semibold text-[#231F20]">
+                      {"< 3 Mins"}
+                    </div>
+                    <div className="text-[12px] text-[#231F2080] text-center">
+                      Response Time
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <span className="px-3 py-1 bg-green-100 text-sm font-medium rounded-full border border-green-200">
-                Active Booking
-              </span>
+              <div className="flex gap-3">
+                <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Phone className="w-4 h-4 text-gray-600" />
+                  <span className="font-medium text-gray-700">Call</span>
+                </button>
+                <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <MessageCircle className="w-4 h-4 text-gray-600" />
+                  <span className="font-medium text-gray-700">Message</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors whitespace-nowrap"
+                >
+                  Cancel Request
+                </button>
+              </div>
             </div>
+
+            {request.providerVehicleImage && (
+              <img
+                src={request.providerVehicleImage}
+                alt="Vehicle"
+                className="w-full h-auto object-contain rounded-[16px] bg-gray-50"
+              />
+            )}
           </div>
 
-          <div className="border-t border-gray-200">
-            <h4 className="font-semibold mb-3 mt-2">Booking Information</h4>
-            <div className="space-y-3">
-              {/* Booking ID */}
-              {request.orderId && request.orderId !== "—" && (
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-[#005823] text-[10px] font-bold">#</span>
+          <div>
+            <div className="border border-[#231F201A] px-6 py-6 rounded-[16px] space-y-6">
+              <h3 className="text-[22px] font-bold text-[#231F20]">
+                Job Summary
+              </h3>
+
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-3 h-3 bg-[#005823] rounded-full" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Booking ID</p>
-                    <p className="text-sm text-gray-600 font-mono">{request.orderId}</p>
+                    <div className="font-semibold text-[15px] text-[#231F20]">
+                      Pickup Location
+                    </div>
+                    <div className="text-[15px] text-[#231F20BF]">
+                      {request.pickupAddress || "—"}
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {/* Start Date & Time */}
-              <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-700">
-                    Scheduled Date
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {request.scheduledDate}
-                  </p>
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-[#005823]" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[15px] text-[#231F20]">
+                      Dropoff Location
+                    </div>
+                    <div className="text-[15px] text-[#231F20BF]">
+                      {request.dropoffAddress || "—"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-10 h-10  rounded-full flex items-center justify-center flex-shrink-0">
+                    <img src={distance} alt="" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[15px] text-[#231F20]">
+                      Distance
+                    </div>
+                    <div className="text-[15px] text-[#231F20BF]">
+                      {request.distance || "—"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg
+                      className="w-5 h-5 text-[#005823]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[15px] text-[#231F20]">
+                      Fare
+                    </div>
+                    <div className="text-[15px] text-[#231F20BF]">
+                      ₦{(request.price ?? 0).toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* End Date */}
-              {/* <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-700">End Date</p>
-                  <p className="text-sm text-gray-600">{request.deliveryDate}</p>
-                </div>
-              </div> */}
-
-              {/* Location */}
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                  <div className="w-2 h-2 bg-[#005823] rounded-full" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">
-                    Pickup Location
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {request.pickupAddress}
-                  </p>
-                </div>
+              <div>
+                <h4 className="text-[18px] font-semibold text-[#231F20] mb-3">
+                  Pickup notes{" "}
+                  <span className="text-[14px] text-[#231F20BF]">
+                    (optional)
+                  </span>
+                </h4>
+                <textarea
+                  placeholder="Please arrive 5 minutes early. Call upon arrival."
+                  readOnly
+                  className="w-full p-4 border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none text-sm text-gray-600"
+                  rows="3"
+                  defaultValue="Please park in the driveway. The side door will be unlocked."
+                />
               </div>
-
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-700">
-                    Dropoff Location
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {request.dropoffAddress}
-                  </p>
-                </div>
-              </div>
-
-              {/* Service Cost */}
-              <div className="flex items-start  gap-3 border-b border-gray-200">
-                <svg
-                  className="w-5 h-5 text-[#2D6A3E] mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">
-                    Service Cost
-                  </p>
-                  <p className="text-sm m mb-3 text-gray-600">
-                    ₦{request.price.toLocaleString() ?? "0"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Project Description */}
-          {/* <div>
-            <h4 className="font-semibold mb-3">Project Description</h4>
-            <p className="text-sm text-gray-700 leading-relaxed">
-              Need a licensed electrician to install new wiring for a home office setup. This includes 
-              installation of 4 new outlets, 2 overhead lights, and an ethernet cable run. The office is on 
-              the second floor. All materials will be provided, but please bring standard tools and safety 
-              equipment.
-            </p>
-          </div> */}
-
-          {/* Additional Notes */}
-          <div>
-            <h4 className="font-semibold mb-3">Pickup notes</h4>
-            <div className="bg-blue-50 border border-gray-200 rounded-lg p-4">
-              <p className="text-sm text-gray-600 italic">
-                Please park in the driveway. The side door will be unlocked.
-              </p>
             </div>
           </div>
         </div>

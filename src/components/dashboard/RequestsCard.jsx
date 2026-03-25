@@ -248,9 +248,9 @@ export default function RequestCard({
             </button>
 
             {[
-              "pending_providers",
-              "provider_selected",
-              "payment_pending",
+              "pending providers",
+              "provider selected",
+              "payment pending",
               "awaiting_provider_acceptance"
             ].includes(request.status.toLowerCase()) && (
               <button
@@ -261,7 +261,7 @@ export default function RequestCard({
               </button>
             )}
 
-            {["provider_selected", "in_progress"].includes(
+            {["provider selected", "in progress", "arrived at pickup", "enroute to dropoff", "arrived at dropoff", "completed"].includes(
               request.status.toLowerCase(),
             ) && (
               <button
@@ -273,14 +273,14 @@ export default function RequestCard({
               </button>
             )}
 
-            {["provider_selected", "paid_escrow", "in_progress"].includes(
+            {/* {["provider selected", "paid escrow", "in progress"].includes(
               request.status.toLowerCase(),
             ) && (
               <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                 <MessageCircle className="w-4 h-4" />
                 Message Provider
               </button>
-            )}
+            )} */}
 
             {isCompleted && (
               <>
@@ -311,12 +311,12 @@ export default function RequestCard({
               </>
             )}
 
-            {(request.status.toLowerCase() === "pending" ||
+            {/* {(request.status.toLowerCase() === "pending" ||
               request.status.toLowerCase() === "in progress") && (
               <button className="px-3 py-1 mt-3 bg-white text-red-600 border border-red-300 rounded-lg font-medium hover:bg-red-50 transition-colors">
                 Close Request
               </button>
-            )}
+            )} */}
           </div>
         </div>
       </div>
