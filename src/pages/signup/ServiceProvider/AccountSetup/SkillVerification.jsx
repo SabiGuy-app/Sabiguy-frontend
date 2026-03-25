@@ -129,7 +129,7 @@ export default function SkillsVerification({ onNext, onBack }) {
   };
 
   return (
-    <AccountSetupLayout currentStep={2}>
+    <AccountSetupLayout currentStep={3}>
       <div className="mt-4">
         <div
           onClick={onBack}

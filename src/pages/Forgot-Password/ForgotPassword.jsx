@@ -19,9 +19,10 @@ export default function ForgotPassword({ isOpen, onClose }) {
     setMessage("");
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth/password`, { email: values.email });
+      const normalizedEmail = values.email.trim().toLowerCase();
+      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/auth/password`, { email: normalizedEmail });
 
-      localStorage.setItem("passwordEmail", values.email);
+      localStorage.setItem("passwordEmail", normalizedEmail);
 
       setMessage(res.data?.message || "Check your email for reset instructions.");
       if (res.data) {

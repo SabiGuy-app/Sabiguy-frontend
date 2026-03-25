@@ -198,7 +198,7 @@ export default function BankAccountForm({ onBack, onNext }) {
   };
 
   return (
-    <AccountSetupLayout currentStep={3}>
+    <AccountSetupLayout currentStep={5}>
       <div>
         {/* Back button */}
         <div

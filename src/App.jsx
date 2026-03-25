@@ -48,6 +48,8 @@ import VehicleType from "./pages/Dashboard/sections/Bookings/VehicleType";
 import AvailableRiders from "./pages/Dashboard/sections/Bookings/AvailableRiders";
 import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2";
 import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
+import ProtectedRoute from "./components/routes/ProtectedRoute";
+import Unauthorized from "./pages/Unauthorized";
 function App() {
   return (
     <>
@@ -65,81 +67,93 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/success" element={<Success />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<DashboardHome />} />
-            <Route path="/dashboard/provider" element={<ProviderDashboard />} />
-            <Route path="/bookings" element={<Bookings />} />
-            <Route path="/dashboard/saved" element={<SavedProfile />} />
-            <Route path="/dashboard/chat" element={<ChatPage />} />
-            <Route path="/dashboard/provider/chat" element={<ProviderChat />} />
-            <Route path="/dashboard/activity" element={<ActivityPage />} />
-            <Route
-              path="/dashboard/provider/activity"
-              element={<ProviderActivity />}
-            />
-            <Route
-              path="/dashboard/provider/hire-alert"
-              element={<HireAlerts />}
-            />
-            <Route
-              path="/dashboard/provider/start-navigation"
-              element={<StartNavigation />}
-            />
-            <Route
-              path="/dashboard/provider/track-delivery"
-              element={<TrackDelivery />}
-            />
-            <Route path="/dashboard/settings" element={<ProfilePage />} />
-            <Route
-              path="/wallet/funding/callback"
-              element={<WalletCallback />}
-            />
-            <Route path="/payment/callback" element={<WalletCallback />} />
-            <Route path="/dashboard/help" element={<ContactPage />} />
-            <Route path="/dashboard/provider/help" element={<ProviderHelp />} />
-            <Route path="/dashboard/categories" element={<Categories />} />
-            <Route
-              path="/dashboard/categories/:serviceSlug"
-              element={<DynamicServicePage />}
-            />
-            <Route
-              path="/dashboard/categories/emergency"
-              element={<AmbulanceServices />}
-            />
-            <Route
-              path="/dashboard/provider/:providerId"
-              element={<ProviderDetails />}
-            />
-            <Route
-              path="/dashboard/provider/track"
-              element={<PickupLocation />}
-            />
-            <Route
-              path="/dashboard/provider/settings"
-              element={<ProviderProfilePage />}
-            />
-            <Route
-              path="/dashboard/provider/notification"
-              element={<Notifications />}
-            />
-            <Route
-              path="/dashboard/provider/searching"
-              element={<SearchingLoader />}
-            />
-            <Route
-              path="/dashboard/provider/ava"
-              element={<AvailableProviders />}
-            />
-            <Route
-              path="/dashboard/provider/summary"
-              element={<BookingSummary />}
-            />
-            <Route path="/bookings/vehicletype" element={<VehicleType />} />
-            <Route
-              path="/bookings/availableriders"
-              element={<AvailableRiders />}
-            />
-            <Route path="/bookings/summary" element={<BookingSummary2 />} />
-            <Route path="/bookings/trackrider" element={<TrackRider />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<DashboardHome />} />
+              <Route
+                path="/dashboard/provider"
+                element={<ProviderDashboard />}
+              />
+              <Route path="/bookings" element={<Bookings />} />
+              <Route path="/dashboard/saved" element={<SavedProfile />} />
+              <Route path="/dashboard/chat" element={<ChatPage />} />
+              <Route
+                path="/dashboard/provider/chat"
+                element={<ProviderChat />}
+              />
+              <Route path="/dashboard/activity" element={<ActivityPage />} />
+              <Route
+                path="/dashboard/provider/activity"
+                element={<ProviderActivity />}
+              />
+              <Route
+                path="/dashboard/provider/hire-alert"
+                element={<HireAlerts />}
+              />
+              <Route
+                path="/dashboard/provider/start-navigation"
+                element={<StartNavigation />}
+              />
+              <Route
+                path="/dashboard/provider/track-delivery"
+                element={<TrackDelivery />}
+              />
+              <Route path="/dashboard/settings" element={<ProfilePage />} />
+              <Route
+                path="/wallet/funding/callback"
+                element={<WalletCallback />}
+              />
+              <Route path="/payment/callback" element={<WalletCallback />} />
+              <Route path="/dashboard/help" element={<ContactPage />} />
+              <Route
+                path="/dashboard/provider/help"
+                element={<ProviderHelp />}
+              />
+              <Route path="/dashboard/categories" element={<Categories />} />
+              <Route
+                path="/dashboard/categories/:serviceSlug"
+                element={<DynamicServicePage />}
+              />
+              <Route
+                path="/dashboard/categories/emergency"
+                element={<AmbulanceServices />}
+              />
+              <Route
+                path="/dashboard/provider/:providerId"
+                element={<ProviderDetails />}
+              />
+              <Route
+                path="/dashboard/provider/track"
+                element={<PickupLocation />}
+              />
+              <Route
+                path="/dashboard/provider/settings"
+                element={<ProviderProfilePage />}
+              />
+              <Route
+                path="/dashboard/provider/notification"
+                element={<Notifications />}
+              />
+              <Route
+                path="/dashboard/provider/searching"
+                element={<SearchingLoader />}
+              />
+              <Route
+                path="/dashboard/provider/ava"
+                element={<AvailableProviders />}
+              />
+              <Route
+                path="/dashboard/provider/summary"
+                element={<BookingSummary />}
+              />
+              <Route path="/bookings/vehicletype" element={<VehicleType />} />
+              <Route
+                path="/bookings/availableriders"
+                element={<AvailableRiders />}
+              />
+              <Route path="/bookings/summary" element={<BookingSummary2 />} />
+              <Route path="/bookings/trackrider" element={<TrackRider />} />
+            </Route>
           </Routes>
         </div>
       </Router>
