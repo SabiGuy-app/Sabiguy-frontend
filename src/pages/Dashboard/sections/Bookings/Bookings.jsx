@@ -190,6 +190,15 @@ export default function Bookings() {
     },
   });
 
+  const isFormReady =
+    !!formik.values.service &&
+    !!formik.values.pickupAddress &&
+    !!formik.values.dropoffAddress &&
+    !!formik.values.serviceType &&
+    !!formik.values.modeOfDelivery &&
+    (formik.values.serviceType !== "scheduled" ||
+      (!!formik.values.scheduleDate && !!formik.values.scheduleTime));
+
   const handleTrackProvider = async (requestId) => {
     try {
       const data = await getBookingsDetails(requestId);
@@ -270,6 +279,8 @@ export default function Bookings() {
     providerImage:
       booking.providerId?.profilePicture ||
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
+    providerVehicleImage:
+      booking.providerId?.workVisuals?.[0]?.pictures?.[0] || null,
     providerRole: (
       booking.providerId?.services?.[0]?.title?.replace(/_/g, " ") || "—"
     ).replace(/\b\w/g, (l) => l.toUpperCase()),
@@ -321,21 +332,24 @@ export default function Bookings() {
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
         return [
-          "in_progress",
-          "paid_escrow",
-          "provider_selected",
+          "in progress",
+          "paid escrow",
+          "provider selected",
           "completed",
+          "arrived at pickup",
+          "enroute to dropoff",
+          "arrived at dropoff",
         ].includes(status);
       if (statusFilter === "pending")
         return [
-          "pending_providers",
-          "payment_pending",
-          "awaiting_provider_acceptance",
+          "pending providers",
+          "payment pending",
+          "awaiting provider acceptance",
         ].includes(status);
       if (statusFilter === "completed")
         return [
           // "completed",
-          "funds_released",
+          // "funds_released",
           "user_accepted_completion",
         ].includes(status);
       return false;
@@ -360,7 +374,7 @@ export default function Bookings() {
   return (
     <DashboardLayout>
       <BookingsTour />
-      <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+      <div className=" bg-gray-50 min-h-screen overflow-x-hidden">
         <ServiceDetailsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
@@ -448,7 +462,7 @@ export default function Bookings() {
                 </p>
               )}
             </div>
-            <div id="booking-location">
+            <div id="booking-location" className="space-y-4">
               <div>
                 <InputField
                   name="pickupAddress"
@@ -663,7 +677,11 @@ export default function Bookings() {
               </div>
             )}
             <div className="flex flex-col">
-              <Button variant="secondary" type="submit" disabled={loading}>
+              <Button
+                variant="secondary"
+                type="submit"
+                disabled={loading || !isFormReady}
+              >
                 {loading ? "Creating Booking..." : "Post Request"}
               </Button>
             </div>
