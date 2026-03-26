@@ -62,6 +62,72 @@ export default function Login() {
     }
   };
 
+  const handleProviderKycRedirect = async (rawEmail, password) => {
+    const normalizedEmail = rawEmail.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes("@")) return "none";
+    try {
+      const kycRes = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/provider/kyc-level`,
+        { email: normalizedEmail },
+      );
+
+      const token =
+        kycRes.data?.token ||
+        kycRes.data?.data?.token ||
+        kycRes.data?.accessToken;
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+
+      const kycCompleted =
+        kycRes.data?.kycCompleted ?? kycRes.data?.data?.kycCompleted;
+      const kycVerified =
+        kycRes.data?.kycVerified ?? kycRes.data?.data?.kycVerified;
+      // if (kycCompleted === true && kycVerified === false) {
+      //   navigate("/kyc-not-verified");
+      //   return "not_verified";
+      // }
+      if (kycCompleted === true && kycVerified === false) {
+        if (password) {
+          const res = await login({
+            email: normalizedEmail,
+            password,
+          });
+          if (res?.token) {
+            localStorage.setItem("token", res.token);
+            useAuthStore.getState().setToken(res.token);
+            const fullUser = await getUserByEmail(res.email || normalizedEmail);
+            useAuthStore.getState().setUser(fullUser);
+            await registerFCM();
+          }
+        }
+        navigate("/dashboard/provider");
+        return "verified";
+      }
+
+      if (kycRes.data?.message === "This is a new customer") {
+        localStorage.setItem("kycLevel", "1");
+        localStorage.setItem("email", normalizedEmail);
+        return "incomplete";
+      }
+
+      const level =
+        kycRes.data?.kycLevel ||
+        kycRes.data?.data?.kycLevel ||
+        kycRes.data?.level;
+      const numericLevel = Number(level);
+      if (!Number.isNaN(numericLevel) && numericLevel < 6) {
+        localStorage.setItem("kycLevel", String(numericLevel));
+        localStorage.setItem("email", normalizedEmail);
+        return "incomplete";
+      }
+    } catch {
+      // Ignore KYC lookup errors and proceed with normal login
+    }
+
+    return "none";
+  };
+
   const handleLogin = async (values, { setSubmitting }) => {
     setLoading(true);
     setSuccessMessage("");
@@ -104,6 +170,22 @@ export default function Login() {
       if (res.role === "buyer") {
         navigate("/dashboard");
       } else if (res.role === "provider") {
+        const kycStatus = await handleProviderKycRedirect(
+          normalizedEmail,
+          values.password,
+        );
+        if (kycStatus === "incomplete") {
+          setErrorMessage(
+            "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
+          );
+          setTimeout(() => {
+            navigate("/service-provider/signup");
+          }, 5000);
+          return;
+        }
+        if (kycStatus === "verified" || kycStatus === "not_verified") {
+          return;
+        }
         navigate("/dashboard/provider");
       }
     } catch (error) {
@@ -182,7 +264,8 @@ export default function Login() {
         }
 
         const token = data.token;
-        const loginEmail = data.user.email || normalizedEmail;
+        const loginEmail =
+          data.user?.email || data.email || data.newUser?.email || "";
 
         // Store token
         localStorage.setItem("token", token);
@@ -198,6 +281,21 @@ export default function Login() {
         if (data.user.role === "buyer") {
           navigate("/dashboard");
         } else if (data.user.role === "provider") {
+          const kycStatus = await handleProviderKycRedirect(loginEmail);
+          if (kycStatus === "incomplete") {
+            setErrorMessage(
+              "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
+            );
+            setTimeout(() => {
+              navigate("/service-provider/signup");
+            }, 5000);
+            setGoogleLoading(false);
+            return;
+          }
+          if (kycStatus === "verified" || kycStatus === "not_verified") {
+            setGoogleLoading(false);
+            return;
+          }
           navigate("/dashboard/provider");
         }
 

@@ -60,8 +60,6 @@ try {
   }
 
   let response;
-
-  if (accountType === "Individual") {
   const providerPayload = {
     ninSlip: ninUrl,
     accountType,
@@ -70,23 +68,33 @@ try {
     gender: initialValues.gender,
     coverageRadius: {
        radius: initialValues.radius,
-       allowAnywhere:initialValues.allowAnywhere
-        }
+       allowAnywhere: initialValues.allowAnywhere
+    }
   };
 
-  response = await axios.post(
-    `${import.meta.env.VITE_BASE_URL}/provider`,
-    providerPayload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  )
-};
+  if (accountType === "Individual") {
+    response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/provider`,
+      providerPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  }
 
   // ✅ Step 2: If Business, send business info
   if (accountType === "Business") {
+    await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/provider`,
+      providerPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     const businessPayload = {
       businessName: values.businessName,
       cacNumber: values.cacNumber,

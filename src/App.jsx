@@ -50,6 +50,7 @@ import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2
 import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
+import NotVerified from "./pages/signup/ServiceProvider/kyc-not-verified";
 function App() {
   return (
     <>
@@ -153,6 +154,7 @@ function App() {
               />
               <Route path="/bookings/summary" element={<BookingSummary2 />} />
               <Route path="/bookings/trackrider" element={<TrackRider />} />
+              <Route path="/kyc-not-verified" element={<NotVerified />} />
             </Route>
           </Routes>
         </div>
