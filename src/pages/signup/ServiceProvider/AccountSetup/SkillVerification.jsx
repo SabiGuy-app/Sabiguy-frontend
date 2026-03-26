@@ -216,6 +216,7 @@ export default function SkillsVerification({ onNext, onBack }) {
                 select
                 options={jobTitles}
                 value={values.title}
+                placeholder="Select Category"
                 onChange={(option) => {
                   setFieldValue("title", option.value);
                   setSelectedJobTitle(option.value);
@@ -226,10 +227,8 @@ export default function SkillsVerification({ onNext, onBack }) {
               {/* Dynamic Section       */}
               <InputField
                 select
-                options={[
-                  { label: "Select Services", value: "" },
-                  ...serviceOptions,
-                ]}
+                placeholder="Select Service"
+                options={serviceOptions}
                 value={values.service}
                 onChange={(option) => {
                   setFieldValue("service", option.value);
@@ -244,6 +243,7 @@ export default function SkillsVerification({ onNext, onBack }) {
                   values={values}
                   handleChange={handleChange}
                   handleBlur={handleBlur}
+                  setFieldValue={setFieldValue}
                 />
               )}
 
@@ -308,12 +308,12 @@ export default function SkillsVerification({ onNext, onBack }) {
               )} */}
 
               <div className="flex justify-end gap-3 mt-8">
-                <button
+                {/* <button
                   type="button"
                   className="border border-[#005823BF] text-[#005823BF] px-6 py-2 rounded-lg hover:bg-[#005823BF]/10 transition"
                 >
                   Back
-                </button>
+                </button> */}
                 <button
                   type="submit"
                   className="bg-[#005823BF] text-white px-6 py-2 rounded-lg hover:bg-[#004e1a] transition disabled:opacity-50 disabled:cursor-not-allowed"

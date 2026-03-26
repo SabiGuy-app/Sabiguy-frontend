@@ -2,7 +2,22 @@
 import { IoIosAdd } from "react-icons/io";
 import InputField from "../../../../../components/InputField";
 
-export function DriverInfoSection({ values, handleChange, handleBlur }) {
+export function DriverInfoSection({
+  values,
+  handleChange,
+  handleBlur,
+  setFieldValue,
+}) {
+  const handleYearChange = (e) => {
+    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setFieldValue("vehicleProductionYear", digitsOnly);
+  };
+
+  const handleColorChange = (e) => {
+    const lettersOnly = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+    setFieldValue("vehicleColor", lettersOnly);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold mb-2">Driver Information</h2>
@@ -17,39 +32,41 @@ export function DriverInfoSection({ values, handleChange, handleBlur }) {
         onBlur={handleBlur}
       />
 
-      <h6 className="text-xl font-semibold mt-5">Vehicle Information</h6>
+      <h6 className="text-xl font-semibold mt-5">Automobile Information</h6>
       <InputField
-      label='Vehicle Production Year'
+        label="Automobile Production Year"
         name="vehicleProductionYear"
         value={values?.vehicleProductionYear || ""}
-        onChange={handleChange}
+        onChange={handleYearChange}
         onBlur={handleBlur}
-        placeholder="Vehicle Production Year"
+        placeholder="Automobile Production Year"
+        inputMode="numeric"
+        pattern="[0-9]*"
       />
 
       <InputField
-      label='Vehicle Name'
+        label="Automobile Name"
         name="vehicleName"
         value={values?.vehicleName || ""}
         onChange={handleChange}
         onBlur={handleBlur}
-        placeholder="Vehicle Name"
+        placeholder="Automobile Name"
       />
       <InputField
-      label= 'Vehicle Registration Number'
+        label="Automobile Registration Number"
         name="vehicleRegNo"
         value={values?.vehicleRegNo || ""}
         onChange={handleChange}
         onBlur={handleBlur}
-        placeholder="Vehicle Registration Number"
+        placeholder="Automobile Registration Number"
       />
       <InputField
-      label='Vehicle Color'
+        label="Automobile Color"
         name="vehicleColor"
         value={values?.vehicleColor || ""}
-        onChange={handleChange}
+        onChange={handleColorChange}
         onBlur={handleBlur}
-        placeholder="Vehicle Color"
+        placeholder="Automobile Color"
       />
     </div>
   );

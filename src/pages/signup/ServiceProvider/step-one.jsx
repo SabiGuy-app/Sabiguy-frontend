@@ -13,7 +13,7 @@ import { SignUpSchema } from "./schema";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 import Loader from "../../../components/Loader";
 
-export default function StepOne({ onNext }) {
+export default function StepOne({ onNext, email }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -37,10 +37,11 @@ export default function StepOne({ onNext }) {
     setLoading(true);
     setSuccessMessage("");
     try {
+      const effectiveEmail = (email || values.email || "").trim();
       const payload = {
         fullName: values.fullName,
         phoneNumber: values.phoneNumber,
-        email: values.email,
+        email: effectiveEmail,
         password: values.password,
         term: values.term,
       };
@@ -60,9 +61,9 @@ export default function StepOne({ onNext }) {
         setSuccessMessage(
           "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
         );
-        localStorage.setItem("email", values.email);
+        localStorage.setItem("email", effectiveEmail);
         setTimeout(() => {
-          onNext?.({ email: values.email });
+          onNext?.({ email: effectiveEmail });
         }, 5000);
         return;
       }
@@ -73,8 +74,8 @@ export default function StepOne({ onNext }) {
           localStorage.setItem("token", token);
         }
         setSuccessMessage("Registration successful");
-        onNext?.({ email: values.email });
-        localStorage.setItem("email", values.email);
+        onNext?.({ email: effectiveEmail });
+        localStorage.setItem("email", effectiveEmail);
       } else {
         const data = response.data;
         if (data.debugMessage === "Email already in use") {
@@ -93,9 +94,9 @@ export default function StepOne({ onNext }) {
           setSuccessMessage(
             "Your email is registered but not verified yet, you have however received another otp. You will be redirected to the otp input page in a moment...",
           );
-          localStorage.setItem("email", values.email);
+          localStorage.setItem("email", effectiveEmail);
           setTimeout(() => {
-            onNext?.({ email: values.email });
+            onNext?.({ email: effectiveEmail });
           }, 5000);
         } else {
           setErrorMessage(apiMessage || "An error occurred");
@@ -211,22 +212,20 @@ export default function StepOne({ onNext }) {
           transition={{ duration: 0.3 }}
         >
           <h2 className="text-2xl font-semibold text-center mt-7 mb-1">
-            Let’s get you started
-          </h2>
-          <p className="text-gray-500 text-center mb-6">
-            Please enter your details and let’s get you started
-          </p>
+ Please enter your details          </h2>
+          
 
           <Formik
             initialValues={{
               fullName: "",
-              email: "",
+              email: email || "",
               phoneNumber: "",
               password: "",
               term: false,
             }}
             onSubmit={handleSubmit}
             validationSchema={SignUpSchema}
+            enableReinitialize
           >
             {({ values, handleChange, handleBlur, handleSubmit }) => (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -249,15 +248,11 @@ export default function StepOne({ onNext }) {
                   <InputField
                     name="email"
                     label="Email"
-                    placeholder="Enter your email"
-                    value={values.email}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                  <ErrorMessage
-                    name="email"
-                    component="span"
-                    className="text-[#db3a3a]"
+                    placeholder="Email from KYC"
+                    value={email || ""}
+                    disabled
+                    readOnly
+                    inputClassName="bg-gray-100 text-gray-500 cursor-not-allowed"
                   />
                 </div>
 
@@ -357,7 +352,7 @@ export default function StepOne({ onNext }) {
                                 disabled={
                                    !(
                                   values.fullName.trim() &&
-                                  values.email.trim() &&
+                                  (email || values.email).trim() &&
                                      values.phoneNumber.trim() &&
                                      values.password.trim() &&
                                 termAccepted
