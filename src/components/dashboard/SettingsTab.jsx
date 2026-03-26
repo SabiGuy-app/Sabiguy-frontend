@@ -141,7 +141,7 @@ export default function SettingsTab() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div>
       {error && (
         <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex justify-between items-center">
           {error}
@@ -149,7 +149,6 @@ export default function SettingsTab() {
         </div>
       )}
 
-      {/* Header row for channel labels */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
@@ -164,13 +163,11 @@ export default function SettingsTab() {
         )}
       </div>
 
-      {/* Channel label header */}
       <div className="flex items-center justify-end gap-6 mb-4 pr-1">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-12 text-center">Push</span>
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-12 text-center">Email</span>
       </div>
 
-      {/* Email Notifications Section */}
       <div className="mb-8 sm:mb-12">
         <div className="space-y-1 divide-y divide-gray-100">
           {CATEGORIES.map(({ key, label, description }) => (
@@ -214,7 +211,6 @@ export default function SettingsTab() {
   );
 }
 
-// Utility: debounce helper (no lodash needed)
 function debounce(fn, delay) {
   let timer;
   return (...args) => {

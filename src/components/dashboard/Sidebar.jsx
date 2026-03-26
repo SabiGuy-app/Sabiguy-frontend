@@ -87,45 +87,45 @@ export default function Sidebar({ open, onClose }) {
         className={`fixed top-20 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        <div className="p-6">
-        <nav className="space-y-2">
-          {links.map((link) => {
-            if (link.name === "Logout") {
+        <div>
+          <nav className="space-y-2">
+            {links.map((link) => {
+              if (link.name === "Logout") {
+                return (
+                  <button
+                    key={link.name}
+                    onClick={onLogout}
+                    className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+                  >
+                    <span>{link.icon}</span>
+                    <span>{link.name}</span>
+                  </button>
+                );
+              }
+
               return (
-                <button
-                  key={link.name}
-                  onClick={onLogout}
-                  className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 px-2 py-3 rounded-xl text-[#231F20] hover:bg-[#005823]/10 ${
+                    pathname === link.path
+                      ? "bg-[#005823] text-white font-medium"
+                      : ""
+                  }`}
                 >
                   <span>{link.icon}</span>
                   <span>{link.name}</span>
-                </button>
+                </Link>
               );
-            }
-
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-2 py-3 rounded-xl text-gray-700 hover:bg-[#005823]/10 ${
-                  pathname === link.path
-                    ? "bg-[#005823] text-white font-medium"
-                    : ""
-                }`}
-              >
-                <span>{link.icon}</span>
-                <span>{link.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
+            })}
+          </nav>
         </div>
 
         <div>
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-[#231F20] hover:bg-red-100 hover:text-red-600"
           >
             <span>
               <LogOut />
