@@ -117,9 +117,6 @@ export default function StepOne({ onNext, email }) {
       try {
         setGoogleLoading(true);
 
-        console.log("Token response:", tokenResponse); // Debug log
-        console.log("Access token:", tokenResponse.access_token); // Debug log
-
         // Get Google user info
         const userInfo = await fetch(
           "https://www.googleapis.com/oauth2/v3/userinfo",

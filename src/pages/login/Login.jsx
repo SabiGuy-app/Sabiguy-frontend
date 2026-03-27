@@ -106,7 +106,7 @@ export default function Login() {
       }
 
       if (kycRes.data?.message === "This is a new customer") {
-        localStorage.setItem("kycLevel", "1");
+        localStorage.setItem("kycLevel", "0");
         localStorage.setItem("email", normalizedEmail);
         return "incomplete";
       }

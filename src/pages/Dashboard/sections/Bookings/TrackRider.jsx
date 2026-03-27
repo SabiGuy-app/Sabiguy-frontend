@@ -143,6 +143,11 @@ export default function TrackRider() {
     }
   };
 
+  const handleMessageProvider = () => {
+    if (!bookingId) return;
+    navigate(`/dashboard/chat?bookingId=${bookingId}`);
+  };
+
   return (
     <>
       <Navbar />
@@ -230,17 +235,20 @@ export default function TrackRider() {
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
               </button>
-              <button className="md:flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={handleMessageProvider}
+                className="md:flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <MessageCircle className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">
                   Message
                 </span>
               </button>
-              <button
+              {/* <button
                 onClick={() => setCancelModalOpen(true)}
                 className="text-[#E90000] font-medium w-full md:text-[16px] text-[15px] px-3 hover:bg-[#E90000] hover:text-white rounded-lg hover:text-red-600 transition-colors">
                 Cancel Request
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -248,7 +256,7 @@ export default function TrackRider() {
             Pickup note
           </h3>
           <p className="bg-[#007BFF08] rounded-lg text-[#231F2080] border border-[#231F201A] p-4 mb-4">
-            Lorem ipsum elementum scelerisque nullam quis non nibh.
+            {bookingDetails?.pickupNote || "No note provided."}
           </p>
 
           <div className="mb-4">

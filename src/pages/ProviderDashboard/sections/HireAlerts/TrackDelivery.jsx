@@ -8,7 +8,7 @@ import {
   Star,
   Shield,
 } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import location from "/location.png";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
@@ -43,6 +43,7 @@ const STEPS_COMPLETED_BY_STATUS = {
 
 export default function TrackDelivery() {
   const routeLocation = useLocation();
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const normalizeStatus = (value) =>
     String(value || "")
@@ -91,6 +92,8 @@ export default function TrackDelivery() {
 
   const bookingId =
     alert?.id || alert?.originalData?._id || bookingDetails?._id;
+  const bookingForChat = alert?.originalData || bookingDetails || {};
+  const customerForChat = bookingForChat?.userId || null;
 
   const pickupAddress =
     alert?.originalData?.pickupLocation?.address ||
@@ -214,9 +217,23 @@ export default function TrackDelivery() {
     }
   };
 
+  const handleMessageCustomer = () => {
+    if (!bookingId) return;
+    navigate(`/dashboard/provider/chat?bookingId=${bookingId}`, {
+      state: { booking: bookingForChat, customer: customerForChat },
+    });
+  };
+
   const buttonLabel = BUTTON_LABELS[bookingStatus] || "Arrived at Pickup";
 
   const isFullyComplete = bookingStatus === "completed";
+
+  const estimatedDuration =
+    alert?.originalData?.estimatedDuration || bookingDetails?.estimatedDuration;
+  const arrivalText =
+    estimatedDuration?.value && estimatedDuration?.unit
+      ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
+      : "Tracking delivery";
 
   return (
     <>
@@ -224,7 +241,7 @@ export default function TrackDelivery() {
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
         <div>
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
-            Arrival in 12 mins
+            {arrivalText}
           </h1>
 
           <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
@@ -294,15 +311,16 @@ export default function TrackDelivery() {
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={handleMessageCustomer}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <MessageCircle className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">
                   Message
                 </span>
               </button>
-              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
-                Cancel Request
-              </button>
+             
             </div>
           </div>
 
@@ -310,7 +328,7 @@ export default function TrackDelivery() {
             Pickup note
           </h3>
           <p className="bg-[#007BFF08] rounded-lg text-[#231F2080] border border-[#231F201A] p-4 mb-4">
-            Lorem ipsum elementum scelerisque nullam quis non nibh.
+            {bookingDetails?.pickupNote || "No pickup note provided."}
           </p>
 
           <div className="mb-4">

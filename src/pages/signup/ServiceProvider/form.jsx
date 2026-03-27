@@ -48,9 +48,12 @@ export default function Form() {
         const mappedStep = getStepForKycLevel(data.kycLevel);
         if (mappedStep !== null) return mappedStep;
       }
-      const shouldSkipOtp =
-        data?.skipOtp || !!localStorage.getItem("google-email");
-      if (prev === 0 && shouldSkipOtp) return prev + 2;
+      // const shouldSkipOtp =
+      //   data?.skipOtp || !!localStorage.getItem("google-email");
+      // if (prev === 0 && shouldSkipOtp) return prev + 2;
+      // return prev + 1;
+      if (prev === 0 && data?.skipOtp) return prev + 2;
+      if (prev === 1 && data?.skipOtp) return prev + 2;
       return prev + 1;
     });
   };
@@ -72,6 +75,11 @@ export default function Form() {
   }, []);
 
   const forms = [
+     <AccountTypeForm
+      onNext={handleNext}
+      initialValues={formData}
+      onBack={handleBack}
+    />,
     <ConfirmKyc onNext={handleNext} />,
 
     <StepOne onNext={handleNext} email={formData.email} />, //KYC level 1

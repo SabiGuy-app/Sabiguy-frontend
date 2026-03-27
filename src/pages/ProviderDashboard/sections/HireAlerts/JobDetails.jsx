@@ -176,7 +176,7 @@ export default function JobDetailsModal({
                   <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-700">
-                      Scheduled Date
+                      Created At:
                     </p>
                     <p className="text-sm text-gray-600">
                       {formatDateTime(
@@ -185,6 +185,38 @@ export default function JobDetailsModal({
                     </p>
                   </div>
                 </div>
+                {(job?.scheduleType === "scheduled" ||
+                  job?.originalData?.scheduleType === "scheduled") && (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">
+                          Scheduled Date
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {formatDateTime(
+                            job?.scheduleDate ||
+                              job?.originalData?.scheduleDate,
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">
+                          Scheduled Time
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {job?.scheduleTime ||
+                            job?.originalData?.scheduleTime ||
+                            "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* End Date */}
                 {/* <div className="flex items-start gap-3">
@@ -247,39 +279,27 @@ export default function JobDetailsModal({
                       ₦{job.agreedPrice.toLocaleString()}
                     </p>
                   </div>
+                   <div>
+                   
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Project Description */}
-            {/* <div>
-              <h4 className="font-semibold mb-3">Project Description</h4>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                Need a licensed electrician to install new wiring for a home
-                office setup. This includes installation of 4 new outlets, 2
-                overhead lights, and an ethernet cable run. The office is on the
-                second floor. All materials will be provided, but please bring
-                standard tools and safety equipment.
-              </p>
-            </div> */}
-
-            {/* <div>
-              <h3 className="font-semibold mb-3">Attached photos</h3>
-            </div> */}
 
             {/* Additional Notes */}
             <div>
               <h4 className="font-semibold mb-3">Additional notes</h4>
               <div className="bg-blue-50 border border-gray-200 rounded-lg p-4">
                 <p className="text-sm text-gray-600 italic">
-                  Please park in the driveway. The side door will be unlocked.
+                  {job?.originalData?.pickupNote ||
+                    "No additional notes provided by the customer."}
                 </p>
               </div>
             </div>
 
-            {/* <p className="flex mt-15 items-center  text-sm justify-center">
+            <p className="flex mt-15 items-center  text-sm justify-center">
               Update the job status to keep the customer informed
-            </p> */}
+            </p>
           </div>
         </div>
       </div>
