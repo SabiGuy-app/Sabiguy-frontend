@@ -1,10 +1,39 @@
-import React from "react";
+import React, { useState } from "react";
 import Button from "../../../components/button";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { getUserByEmail } from "../../../api/auth";
+import { useAuthStore } from "../../../stores/auth.store";
 
 
 
-export default function Congrats () {
+export default function Congrats() {
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const handleGoToDashboard = async () => {
+        const token = localStorage.getItem("token");
+        const email =
+            localStorage.getItem("email") ||
+            localStorage.getItem("google-email");
+
+        if (!token || !email) {
+            navigate("/dashboard/provider");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            useAuthStore.getState().setToken(token);
+            const fullUser = await getUserByEmail(email);
+            useAuthStore.getState().setUser(fullUser);
+        } catch (err) {
+            console.error("Failed to load user profile:", err);
+        } finally {
+            setLoading(false);
+            navigate("/dashboard/provider");
+        }
+    };
+
     return (
         <div className="flex flex-col min-h-screen justify-center items-center">
         {/* <div className="  justify-center items-center"> */}
@@ -14,9 +43,9 @@ export default function Congrats () {
                 <p className="text-2xl mb-5 mt-5">We’re reviewing your documents and will notify you once
 you’re verified.</p>
                    <div className="flex gap-10 mt-10">
-                    <Link to="/dashboard/provider"> 
-                    <Button size="md">Go To Dashboard</Button>
-                    </Link>
+                    <Button size="md" onClick={handleGoToDashboard} disabled={loading}>
+                      {loading ? "Loading..." : "Go To Dashboard"}
+                    </Button>
                    </div>
   <p className="text-gray-500 text-sm font-extralight italic mt-8">Tip: You can always update your profile or verification info in settings</p>
 
