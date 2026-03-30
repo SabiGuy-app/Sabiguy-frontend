@@ -58,10 +58,18 @@ export default function BookingSummary2() {
   const estimatedDistance = bookingDetails?.distance
     ? `${bookingDetails.distance.value} ${bookingDetails.distance.unit}`
     : "—";
-  const serviceCost = bookingDetails?.calculatedPrice || 0;
-  const serviceChargeRate = 0.02;
-  const serviceCharge = serviceCost * serviceChargeRate;
-  const totalAmount = serviceCost + serviceCharge;
+  const basePrice = bookingDetails?.agreedPrice ?? bookingDetails?.calculatedPrice ?? bookingDetails?.price ?? 0;
+  
+  // Calculate breakdown based on reverse-engineered logic:
+  // Service Fee: 10%, Platform: 25%, Provider: 15%
+  const serviceCost = basePrice;
+  const calculatedServiceFee = Math.round(basePrice * 0.10);
+  const calculatedTotalAmount = basePrice + calculatedServiceFee;
+  const platformFee = Math.round(basePrice * 0.25);
+  const providerCut = Math.round(basePrice * 0.15);
+
+  const serviceCharge = bookingDetails?.serviceFee ?? bookingDetails?.service_fee ?? bookingDetails?.fee ?? calculatedServiceFee;
+  const totalAmount = bookingDetails?.totalAmount ?? bookingDetails?.total_amount ?? bookingDetails?.amount ?? calculatedTotalAmount;
 
   // Fetch wallet balance on mount
   const fetchBalance = async () => {
@@ -148,15 +156,31 @@ export default function BookingSummary2() {
       }
 
       if (selectedPayment === "wallet") {
-        if (walletBalance < totalAmount) {
+        if (totalAmount != null && walletBalance < totalAmount) {
           toast.error("Insufficient wallet balance. Please fund your wallet.");
           setIsProcessing(false);
           return;
         }
 
         const pickupNote = notes?.trim() || undefined;
-        await payWithWallet(bookingId, pickupNote);
-        await fetchBalance();
+        const payResponse = await payWithWallet(bookingId, pickupNote);
+        
+        // Update booking details with the response from the payment
+        if (payResponse) {
+          setBooking(payResponse);
+        }
+
+        // Update wallet balance from response instead of refetching
+        const newBalance =
+          payResponse?.data?.walletBalance?.available ??
+          payResponse?.walletBalance?.available ??
+          null;
+        if (newBalance != null) {
+          setWalletBalance(newBalance);
+        } else {
+          await fetchBalance();
+        }
+
         setIsPaid(true);
         setShowSuccessModal(true);
       } else if (selectedPayment === "online") {
@@ -189,7 +213,10 @@ export default function BookingSummary2() {
     <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-8 relative animate-fadeIn">
         <button
-          onClick={() => setShowSuccessModal(false)}
+          onClick={() => {
+            setShowSuccessModal(false);
+            navigate("/bookings");
+          }}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
           <X className="w-6 h-6" />
@@ -208,22 +235,31 @@ export default function BookingSummary2() {
             Your booking has been confirmed. The rider will proceed shortly.
           </p>
 
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-gray-600">Amount Paid:</span>
+          <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-3">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Base Price:</span>
+              <span className="font-medium text-gray-900">{formatCurrency(basePrice)}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Service Fee (10%):</span>
+              <span className="font-medium text-gray-900">{formatCurrency(calculatedServiceFee)}</span>
+            </div>
+            <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
+              <span className="text-gray-600 font-semibold">Total Deducted:</span>
               <span className="font-bold text-green-600 text-lg">
-                {formatCurrency(totalAmount)}
+                {formatCurrency(calculatedTotalAmount)}
               </span>
             </div>
+
             {selectedPayment === "wallet" ? (
-              <div className="flex justify-between items-center">
+              <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                 <span className="text-gray-600">New Wallet Balance:</span>
                 <span className="font-semibold text-gray-900">
                   {formatCurrency(walletBalance)}
                 </span>
               </div>
             ) : (
-              <div className="flex justify-between items-center">
+              <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                 <span className="text-gray-600">Payment Status:</span>
                 <span className="font-semibold text-[#005823]">
                   Held in Escrow
@@ -496,6 +532,18 @@ export default function BookingSummary2() {
                 </div>
               </div>
 
+              {/* Description */}
+              {bookingDetails?.description && (
+                <div className="my-6 border-t border-[#231F201A] pt-6">
+                  <h3 className="text-[20px] font-semibold text-gray-900 mb-2">
+                    Description
+                  </h3>
+                  <p className="text-[16px] text-[#231F20BF] leading-relaxed">
+                    {bookingDetails.description}
+                  </p>
+                </div>
+              )}
+
               {/* Cost */}
               <div className="my-6 border-t border-b border-[#231F201A] py-10">
                 <h3 className="text-[20px] font-semibold text-gray-900 mb-4">
@@ -504,11 +552,11 @@ export default function BookingSummary2() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-[16px] font-semibold text-[#231F20BF]">
                     <span>Service Cost</span>
-                    <span>{formatCurrency(serviceCost)}</span>
+                    <span>{serviceCost != null ? formatCurrency(serviceCost) : "—"}</span>
                   </div>
                   <div className="flex justify-between text-[16px] font-semibold text-[#231F20BF]">
-                    <span>Service Charge (2%)</span>
-                    <span>{formatCurrency(serviceCharge)}</span>
+                    <span>Service Charge</span>
+                    <span>{serviceCharge != null ? formatCurrency(serviceCharge) : "—"}</span>
                   </div>
                   <div className="pt-2 mt-2 text-[16px]">
                     <div className="flex justify-between">
@@ -516,7 +564,7 @@ export default function BookingSummary2() {
                         Total Amount
                       </span>
                       <span className="font-semibold text-[#005823]">
-                        {formatCurrency(totalAmount)}
+                        {totalAmount != null ? formatCurrency(totalAmount) : "—"}
                       </span>
                     </div>
                   </div>
@@ -640,7 +688,7 @@ export default function BookingSummary2() {
                     ? "Paid ✓"
                     : isProcessing
                       ? "Processing..."
-                      : `Confirm & Pay ${formatCurrency(totalAmount)}`}
+                      : `Confirm & Pay ${formatCurrency(calculatedTotalAmount)}`}
                 </button>
               </div>
             </div>

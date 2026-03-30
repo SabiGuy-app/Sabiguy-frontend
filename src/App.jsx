@@ -6,7 +6,10 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
+  useNavigate,
 } from "react-router-dom";
+import { useEffect } from "react";
 import Welcome from "./pages/signup/welcome";
 import Congrats from "./pages/signup/ServiceProvider/congrats";
 import ForgotPassword from "./pages/Forgot-Password/ForgotPassword";
@@ -50,12 +53,28 @@ import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2
 import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
+// Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
+function URLNormalizer() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname.includes('//')) {
+      const normalized = location.pathname.replace(/\/+/g, '/');
+      navigate(normalized + location.search, { replace: true });
+    }
+  }, [location.pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <>
       <ToastContainer position="top-right" autoClose={5000} />
 
       <Router>
+        <URLNormalizer />
         <div>
           <Routes>
             <Route path="/" element={<Welcome />} />
@@ -68,6 +87,11 @@ function App() {
             <Route path="/success" element={<Success />} />
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+
+            {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
+            <Route path="/wallet/funding/callback" element={<WalletCallback />} />
+            <Route path="/payment/callback" element={<WalletCallback />} />
+
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<DashboardHome />} />
               <Route
@@ -99,11 +123,7 @@ function App() {
                 element={<TrackDelivery />}
               />
               <Route path="/dashboard/settings" element={<ProfilePage />} />
-              <Route
-                path="/wallet/funding/callback"
-                element={<WalletCallback />}
-              />
-              <Route path="/payment/callback" element={<WalletCallback />} />
+              {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
               <Route path="/dashboard/help" element={<ContactPage />} />
               <Route
                 path="/dashboard/provider/help"
