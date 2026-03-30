@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../dashboard/Sidebar";
 import Navbar from "../dashboard/Navbar";
 import Modal from "../Modal";
@@ -10,10 +10,18 @@ import useInactivityLogout from "../../hooks/useInactivityLogout";
 
 export default function DashboardLayout({ children }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768); // Open on desktop, closed on mobile
   const toggleSidebar = () => setSidebarOpen((v) => !v);
+
+  // Close sidebar on mobile when navigating to a new page
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
   const onTimeoutLogout = useCallback(async () => {
     try {
@@ -43,7 +51,7 @@ export default function DashboardLayout({ children }) {
           />
         )}
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex-1 md:ml-64 flex flex-col w-full">
+        <div className={`flex-1 ${sidebarOpen ? 'md:ml-64' : ''} flex flex-col w-full`}>
           <main className="flex-1 min-h-screen p-3 sm:p-6 w-full">
             <div className="max-w-7xl mx-auto w-full">{children}</div>
           </main>

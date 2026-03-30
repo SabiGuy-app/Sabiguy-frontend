@@ -53,8 +53,8 @@ export default function StartNavigation() {
   return (
     <>
       <ProviderNavbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
-        <div className="">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        <div className="order-2 lg:order-1">
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
             {alert?.subCategory}
           </h1>
@@ -170,8 +170,12 @@ export default function StartNavigation() {
           </button>
         </div>
 
-        <div>
-          <img src={location} alt="" className="w-[700px] h-[660px]" />
+        <div className="order-1 lg:order-2 w-full rounded-lg overflow-hidden shadow-md">
+          <img
+            src={location}
+            alt="Navigation map"
+            className="w-full h-auto min-h-[250px] max-h-[560px] object-cover"
+          />
         </div>
       </div>
     </>

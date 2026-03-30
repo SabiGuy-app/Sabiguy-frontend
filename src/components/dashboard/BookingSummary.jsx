@@ -177,7 +177,7 @@ export default function BookingSummaryScreen({
                 value="card"
                 checked={paymentMethod === "card"}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-4 h-4 accent-[#005823] focus:ring-[#8BC53F]"
+                className="w-4 h-4 accent-[#005823] focus:ring-[#8BC53F]" 
               />
               <div className="flex items-center gap-3 flex-1">
                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">

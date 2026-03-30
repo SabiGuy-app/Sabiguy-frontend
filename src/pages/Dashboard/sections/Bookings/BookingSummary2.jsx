@@ -285,15 +285,17 @@ export default function BookingSummary2() {
       />
 
       <div className=" w-[90%] m-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-6 mt-8">
-          <Link to={"/bookings"} className="flex items-center gap-3">
-            <button className="text-gray-600 hover:text-gray-900">
-              <FiChevronLeft size={24} />
-            </button>
-            <h1 className="text-xl font-semibold text-gray-900">
-              Booking summary
-            </h1>
-          </Link>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6 mt-8">
+          <div className="flex items-center gap-3">
+            <Link to={"/bookings"} className="flex items-center gap-3">
+              <button className="text-gray-600 hover:text-gray-900">
+                <FiChevronLeft size={24} />
+              </button>
+              <h1 className="text-xl font-semibold text-gray-900">
+                Booking summary
+              </h1>
+            </Link>
+          </div>
           {bookingDetails?._id && (
             <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-md border border-[#0058234D] w-fit">
               Booking #{bookingDetails._id.slice(-6).toUpperCase()}
@@ -333,7 +335,7 @@ export default function BookingSummary2() {
         <div className="md:grid md:grid-cols-2 space-y-4 gap-8">
           <div className="space-y-8">
             <div className="shadow-sm p-6 rounded-[16px] space-y-6">
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col md:flex-row md:items-start gap-4">
                 <div className="relative">
                   <img
                     src={providerDetails?.profilePicture}
@@ -342,21 +344,21 @@ export default function BookingSummary2() {
                   />
                 </div>
                 <div className="flex-grow">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
-                      {providerDetails?.fullName || "Provider"}
-                    </h2>
-                    <span className="text-[#8BC53F]">
-                      <BadgeCheck className="w-[20px] h-[20px]" />
-                    </span>
-                  </div>
-                  {providerDetails?._id && (
-                    <div className="mb-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-gray-900 capitalize">
+                        {providerDetails?.fullName || "Provider"}
+                      </h2>
+                      <span className="text-[#8BC53F]">
+                        <BadgeCheck className="w-[20px] h-[20px]" />
+                      </span>
+                    </div>
+                    {providerDetails?._id && (
                       <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 inline-block">
                         ID: {providerDetails._id.slice(-6).toUpperCase()}
                       </span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                   <p className="text-sm text-gray-600 mb-1 capitalize">
                     {providerDetails?.services?.[0]?.title?.replace(
                       /_/g,
@@ -365,27 +367,29 @@ export default function BookingSummary2() {
                       bookingDetails?.subCategory?.replace(/_/g, " ") ||
                       "—"}
                   </p>
-                  <div className="flex items-center gap-1 text-[14px] text-gray-600">
-                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium text-gray-900">
-                      {providerDetails?.rating?.average > 0
-                        ? providerDetails.rating.average.toFixed(1)
-                        : "New"}
-                    </span>
-                    <span className="text-gray-500">
-                      ({providerDetails?.rating?.count ?? 0} reviews)
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[14px] text-[#231F20BF] mt-1">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>
-                      {providerDetails?.distance?.toFixed(1) ?? "—"} miles away
-                    </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex items-center gap-1 text-[14px] text-gray-600">
+                      <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium text-gray-900">
+                        {providerDetails?.rating?.average > 0
+                          ? providerDetails.rating.average.toFixed(1)
+                          : "New"}
+                      </span>
+                      <span className="text-gray-500">
+                        ({providerDetails?.rating?.count ?? 0} reviews)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[14px] text-[#231F20BF]">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>
+                        {providerDetails?.distance?.toFixed(1) ?? "—"} miles away
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div className="flex gap-10">
+                <div className="flex flex-col sm:flex-row gap-6 sm:gap-10">
                   <div className="flex flex-col justify-center items-center">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full">
                       <Award className="w-[24px] h-[24px] text-[#005823]" />
@@ -412,7 +416,7 @@ export default function BookingSummary2() {
               </div>
 
               {/* Action Buttons */}
-              <div className="md:flex gap-5">
+              <div className="flex flex-col md:flex-row gap-2 md:gap-5">
                 <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>

@@ -83,11 +83,10 @@ export default function Sidebar({ open, onClose }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-20 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
-        ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        className={`fixed top-20 left-0 h-[calc(100vh-5rem)] bg-white flex flex-col border-r border-gray-200 z-40 w-64 transform transition-transform duration-300 overflow-y-auto
+        ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="p-6">
-        <nav className="space-y-2">
+        <nav className="flex-1 p-6 space-y-2">
           {links.map((link) => {
             if (link.name === "Logout") {
               return (
@@ -106,7 +105,7 @@ export default function Sidebar({ open, onClose }) {
               <Link
                 key={link.path}
                 to={link.path}
-                onClick={() => setOpen(false)}
+                onClick={onClose}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-[#005823]/10 ${
                   pathname === link.path
                     ? "bg-[#005823] text-white font-medium"
@@ -119,9 +118,8 @@ export default function Sidebar({ open, onClose }) {
             );
           })}
         </nav>
-        </div>
 
-        <div>
+        <div className="p-6 border-t border-gray-100">
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-red-100 hover:text-red-600"

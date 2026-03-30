@@ -95,17 +95,17 @@ export default function JobsCard({
   ].includes(bookingStatus);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-start gap-4">
+    <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-6 hover:shadow-lg transition-shadow">
+      <div className="flex flex-col sm:flex-row items-start gap-4">
         <div className="flex-1">
-          <div className="flex items-start justify-between mb-2">
+          <div className="flex flex-col sm:flex-row items-start sm:justify-between w-full sm:w-auto gap-3 sm:gap-0 mb-2">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
                   {formatTitle(job?.title)}
                 </h3>
               </div>
-              <p className="text-sm text-gray-600 flex items-center gap-2">
+              <p className="text-xs sm:text-sm text-gray-600 flex items-center gap-2">
                 <span>Provider: {job?.providerName || "You"}</span>
                 {job?.orderId && (
                   <div className="flex items-center gap-1.5 ml-2">
@@ -121,25 +121,26 @@ export default function JobsCard({
               </p>
             </div>
 
-            <div className="text-right">
+            <div className="text-left sm:text-right w-full sm:w-auto">
               <span
-                className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(
+                className={`inline-block max-w-[180px] truncate px-3 py-1 text-xs font-medium rounded-full border mb-2 ${getStatusStyles(
                   job?.status,
                 )}`}
+                title={job?.status}
               >
                 {job?.status || "Pending"}
               </span>
-              <div className="text-2xl font-bold text-[#2D6A3E]">
+              <div className="text-lg sm:text-2xl font-bold text-[#2D6A3E] truncate max-w-full">
                 NGN {Number(amount).toLocaleString()}
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Delivery:{" "}
                 {formatTitle(job?.originalData?.scheduleType || "N/A")}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 mb-4 text-sm text-gray-600">
+          <div className="flex flex-col gap-2 mb-4 text-xs sm:text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[#2D6A3E]" />
               <span>
@@ -152,8 +153,8 @@ export default function JobsCard({
                 <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
               </div>
               <div>
-                <span className="text-[#231F2080] text-[16px]">Pickup</span>
-                <p className="text-[#231F20BF] text-[18px]">{pickupAddress}</p>
+                <span className="text-[#231F2080] text-xs sm:text-sm">Pickup</span>
+                <p className="text-[#231F20BF] text-sm sm:text-base break-words">{pickupAddress}</p>
               </div>
             </div>
 
@@ -162,8 +163,8 @@ export default function JobsCard({
                 <MapPin className="w-3 h-3 text-[#005823]" />
               </div>
               <div className="flex-1">
-                <span className="text-[#231F2080] text-[16px]">Dropoff</span>
-                <p className="text-[#231F20BF] text-[18px]">{dropoffAddress}</p>
+                <span className="text-[#231F2080] text-xs sm:text-sm">Dropoff</span>
+                <p className="text-[#231F20BF] text-sm sm:text-base break-words">{dropoffAddress}</p>
               </div>
             </div>
 
@@ -197,18 +198,18 @@ export default function JobsCard({
             )}
           </div>
 
-          <div className="flex gap-3 border-t">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 border-t pt-3">
             {normalizedStatus !== "completed" && (
               <button
                 onClick={() => onViewDetails(job)}
-                className="px-3 py-2 mt-3 bg-[#2D6A3E] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
+                className="w-full sm:w-auto px-3 py-2 bg-[#2D6A3E] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors whitespace-nowrap"
               >
                 View Details
               </button>
             )}
 
             {normalizedStatus === "awaiting_confirmation" && (
-              <button className="px-3 py-2 mt-3 bg-gray-100 text-black rounded-lg font-medium transition-colors">
+              <button className="w-full sm:w-auto px-3 py-2 mt-3 bg-gray-100 text-black rounded-lg font-medium transition-colors whitespace-nowrap">
                 Awaiting Customer's Review
               </button>
             )}
@@ -236,20 +237,20 @@ export default function JobsCard({
             {normalizedStatus === "in_progress" && (
               <button
                 onClick={() => onMarkAsCompleted(job)}
-                className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="w-full sm:w-auto px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 Mark as Completed
               </button>
             )}
 
             {normalizedStatus === "pending" && (
-              <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+              <button className="w-full sm:w-auto px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
                 En route
               </button>
             )}
 
             {normalizedStatus === "waiting_confirmation" && (
-              <button className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+              <button className="w-full sm:w-auto px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
                 Awaiting customer's review
               </button>
             )}
@@ -257,7 +258,7 @@ export default function JobsCard({
             {shouldShowNavigation && (
               <button
                 onClick={() => onShowNavigation?.(job)}
-                className="px-2 py-1 mt-3 bg-white text-[#2D6A3E] border border-[#2D6A3E] rounded-lg font-medium hover:bg-[#E6EFE9] transition-colors flex items-center gap-2"
+                className="w-full sm:w-auto px-2 py-1 mt-3 bg-white text-[#2D6A3E] border border-[#2D6A3E] rounded-lg font-medium hover:bg-[#E6EFE9] transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 Show navigation
               </button>
@@ -266,14 +267,15 @@ export default function JobsCard({
             {shouldShowMessageButton && (
               <button
                 onClick={() => onMessageCustomer?.(job)}
-                className="px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                title="Message customer"
+                className="w-full sm:w-auto px-2 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
-                <MessageCircle className="w-4 h-4" />
-                Message
+                <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Message</span>
               </button>
             )}
             {normalizedStatus === "awaiting_job_commencement" && (
-              <button className="px-3 py-2 mt-3 bg-gray-50 text-[#DC2626] rounded-lg font-medium hover:bg-gray-200 transition-colors">
+              <button className="px-3 py-2 mt-3 bg-gray-50 text-[#DC2626] rounded-lg font-medium hover:bg-gray-200 transition-colors whitespace-nowrap">
                 Cancel
               </button>
             )}

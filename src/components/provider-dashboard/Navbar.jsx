@@ -333,7 +333,7 @@ export default function ProviderNavbar({ onMenuClick }) {
       <header className="flex items-center justify-between bg-white border-b border-gray-200 px-4 sm:px-6 py-4 sticky top-0 z-40 shadow-sm">
 
         {/* Mobile Menu Button (toggles sidebar) */}
-        <button className="md:hidden p-2 text-gray-600 hover:text-gray-800" onClick={onMenuClick}>
+        <button className="p-2 text-gray-600 hover:text-gray-800" onClick={onMenuClick}>
           <Menu size={26} className="text-gray-600" />
         </button>
 
@@ -355,13 +355,13 @@ export default function ProviderNavbar({ onMenuClick }) {
           />
         </div>
 
-        {/* Mobile Search Toggle */}
-        <button
+        {/* Mobile Search Toggle - Hidden on mobile */}
+        {/* <button
           onClick={() => setShowSearch(!showSearch)}
           className="md:hidden text-gray-600 p-2 hover:text-gray-800"
         >
           <Search size={20} />
-        </button>
+        </button> */}
 
         {/* Right Icons */}
         <div className="flex items-center justify-center space-x-2 sm:space-x-4">
@@ -371,7 +371,7 @@ export default function ProviderNavbar({ onMenuClick }) {
                 <MapPin size={10} className="sm:size-3 text-green-500 animate-pulse" />
               )}
               <span
-                className={`text-xs font-medium transition-colors ${isAvailable ? "text-gray-700" : "text-gray-400"
+                className={`hidden sm:inline text-xs font-medium transition-colors ${isAvailable ? "text-gray-700" : "text-gray-400"
                   }`}
               >
                 {isAvailable
@@ -437,18 +437,18 @@ export default function ProviderNavbar({ onMenuClick }) {
               <img
                 src={user.data.profilePicture}
                 alt="Profile"
-                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border"
               />
             ) : (
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-sm sm:text-base">
                 {user?.data?.name?.charAt(0) || 'U'}
               </div>
             )}
           </button>
         </div>
 
-        {/* Mobile Search Dropdown */}
-        {showSearch && (
+        {/* Mobile Search Dropdown - Hidden since search is disabled on mobile */}
+        {/* {showSearch && (
           <div className="absolute top-16 left-0 w-full bg-white border-t border-gray-200 p-4 md:hidden">
             <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2">
               <Search size={18} className="text-gray-500 mr-2" />
@@ -459,7 +459,7 @@ export default function ProviderNavbar({ onMenuClick }) {
               />
             </div>
           </div>
-        )}
+        )} */}
 
 
         <NotificationDrawer

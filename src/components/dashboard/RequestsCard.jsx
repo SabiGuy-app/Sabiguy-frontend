@@ -261,7 +261,7 @@ export default function RequestCard({
         loading={cancelLoading}
       />
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+      <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow w-[100%] mx-auto">
         <div className="flex-1">
           <div className="flex gap-2 border-b pb-3 border-[#231F2080]">
             <img
@@ -275,19 +275,26 @@ export default function RequestCard({
               className="w-10 h-10 rounded-full object-cover"
             />
             <div className="w-full">
-              <div className="flex justify-between mb-2 w-full">
+              <div className="flex flex-col sm:flex-row sm:justify-between mb-2 w-full">
                 <div>
                   <div className="flex items-center gap-3">
                     <h3 className="text-xl font-semibold text-gray-900">
                       {request.title}
                     </h3>
                     <span
-                      className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(request.status)}`}
+                      className={`hidden sm:inline-block px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(request.status)}`}
                     >
                       {request.status}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="sm:hidden flex justify-end mt-1">
+                    <span
+                      className={`px-1 py-0 text-[9px] font-medium rounded-full border text-center ${getStatusStyles(request.status)} inline-block`}
+                    >
+                      {request.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
                     <p className="text-[16px] text-[#231F20BF]">
                       {request.providerName}
                     </p>
@@ -311,7 +318,7 @@ export default function RequestCard({
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col items-end">
+                <div className="flex flex-col items-end mt-2 sm:mt-0">
                   <div className="text-2xl font-bold text-[#2D6A3E]">
                     ₦{request.price.toLocaleString()}
                   </div>
@@ -366,7 +373,7 @@ export default function RequestCard({
               </div>
             </div>
 
-            <div className="flex items-end gap-8">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-8">
               <div className="flex items-start gap-3">
                 <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-3 h-3 text-[#005823]" />
@@ -389,7 +396,7 @@ export default function RequestCard({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => onViewDetails(request)}
               className="px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"

@@ -664,7 +664,7 @@ return (
             </div>
           </form>
         ) : (
-          <div className="mt-5 p-5 max-w-xl mx-auto">
+          <div className="mt-5 p-5 max-w-5xl mx-auto">
             <StatusFilter
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}

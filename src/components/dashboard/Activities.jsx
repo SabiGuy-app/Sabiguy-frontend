@@ -111,7 +111,7 @@ export default function Activities({ notification, onDelete, onViewDetails }) {
       className={`bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-200 ${isDeleting ? "opacity-50 scale-[0.98]" : ""
         }`}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex flex-col sm:flex-row items-start gap-4">
         {/* Icon */}
         <div
           className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center flex-shrink-0`}
@@ -121,7 +121,7 @@ export default function Activities({ notification, onDelete, onViewDetails }) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-gray-900 mb-1 text-sm">
                 {notification.title}
@@ -133,20 +133,21 @@ export default function Activities({ notification, onDelete, onViewDetails }) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0 w-full sm:w-auto">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onViewDetails && onViewDetails(notification);
                 }}
-                className="px-3 py-1.5 text-xs font-medium text-[#005823] border border-gray-300 rounded-lg hover:bg-[#8BC53F1A] transition-colors"
+                className="w-full sm:w-auto px-3 py-1.5 text-xs font-medium text-[#005823] border border-gray-300 rounded-lg hover:bg-[#8BC53F1A] transition-colors flex items-center justify-center gap-2"
               >
+                <Eye size={14} />
                 View Details
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 disabled:opacity-50 flex-shrink-0"
+                className="w-full sm:w-auto px-3 py-1.5 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
                 title="Delete activity"
                 aria-label={`Delete ${notification.title}`}
               >
@@ -155,6 +156,7 @@ export default function Activities({ notification, onDelete, onViewDetails }) {
                 ) : (
                   <Trash2 size={16} />
                 )}
+                <span className="ml-1 text-xs sm:hidden">Delete</span>
               </button>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
+ import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import JobsCard from "../../../../components/provider-dashboard/JobsCard";
@@ -225,7 +225,6 @@ export default function HireAlerts() {
       funds_released: "Funds Released",
       paid_escrow: 'Paid Escrow',
       payment_pending: 'Payment Pending',
-      user_accepted_completion: 'Completed',
 
     };
     const normalizedStatus = String(apiStatus || "").trim().toLowerCase();
@@ -279,12 +278,12 @@ export default function HireAlerts() {
     const filters = ["All", "Active", "Pending", "Completed"];
 
     return (
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${activeFilter === filter.toLowerCase()
+            className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg font-medium transition-colors ${activeFilter === filter.toLowerCase()
               ? "bg-[#2D6A3E] text-white"
               : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
               }`}
@@ -478,10 +477,10 @@ export default function HireAlerts() {
         onRefresh={handleRefresh}
       />
 
-      <div className="flex border-b mb-3">
+      <div className="flex flex-col sm:flex-row flex-wrap border-b mb-3">
         <button
           onClick={() => setActiveTab("alert")}
-          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "alert"
+          className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 font-medium transition-colors relative ${activeTab === "alert"
               ? "text-[#005823] border-b-2 border-[#005823]"
               : "text-gray-500 hover:text-gray-700"
             }`}
@@ -496,7 +495,7 @@ export default function HireAlerts() {
 
         <button
           onClick={() => setActiveTab("jobs")}
-          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "jobs"
+          className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 font-medium transition-colors relative ${activeTab === "jobs"
               ? "text-[#005823] border-b-2 border-[#005823]"
               : "text-gray-500 hover:text-gray-700"
             }`}

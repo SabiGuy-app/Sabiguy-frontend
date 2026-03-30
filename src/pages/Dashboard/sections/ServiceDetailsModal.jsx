@@ -27,7 +27,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
 
         <div className="p-6 space-y-6">
           <div>
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0">
               <div className="flex items-center gap-3">
                 <img
                   src={
@@ -59,7 +59,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
               </div>
 
-              <span className="px-3 py-1 bg-green-100 text-sm font-medium rounded-full border border-green-200">
+              <span className="px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm bg-green-100 font-medium rounded-full border border-green-200 self-start">
                 Active Booking
               </span>
             </div>

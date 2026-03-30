@@ -226,13 +226,13 @@ export default function TrackRider() {
             </div>
 
             <div className="md:grid md:grid-cols-3 gap-6">
-              <button className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <Phone className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Call</span>
+              <button className="md:flex-1 flex items-center w-full justify-center gap-1 sm:gap-2 py-1.5 sm:py-2.5 px-2 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700">Call</span>
               </button>
-              <button className="md:flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <MessageCircle className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">
+              <button className="md:flex-1 w-full flex items-center justify-center gap-1 sm:gap-2 py-1.5 sm:py-2.5 px-2 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700">
                   Message
                 </span>
               </button>

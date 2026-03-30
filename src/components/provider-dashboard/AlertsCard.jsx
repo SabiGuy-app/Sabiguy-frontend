@@ -55,10 +55,10 @@ export default function AlertsCard({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-start gap-4">
+      <div className="flex flex-col sm:flex-row items-start gap-4">
         {/* Main Content */}
         <div className="flex-1">
-          <div className="flex  items-start justify-between mb-2">
+          <div className="flex flex-col sm:flex-row items-start sm:justify-between mb-2">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">
                 {alert?.subCategory
@@ -90,7 +90,7 @@ export default function AlertsCard({
                   </div>
                   <div>
                     <span className="text-[#231F2080] text-[16px]">Pickup</span>
-                    <p className="text-[#231F20BF] text-[18px]">
+                    <p className="text-[#231F20BF] text-[18px] break-words">
                       {alert?.originalData?.pickupLocation.address}
                     </p>
                   </div>
@@ -104,7 +104,7 @@ export default function AlertsCard({
                     <span className="text-[#231F2080] text-[16px]">
                       Dropoff
                     </span>
-                    <p className="text-[#231F20BF] text-[18px]">
+                    <p className="text-[#231F20BF] text-[18px] break-words">
                       {alert?.originalData?.dropoffLocation?.address}
                     </p>
                   </div>
@@ -135,15 +135,15 @@ export default function AlertsCard({
                 )}
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right mt-3 sm:mt-0 w-full sm:w-auto">
               <span
-                className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(
+                className={`inline-block px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(
                   alert.status,
                 )}`}
               >
                 {alert.status}
               </span>
-              <div className="text-2xl mt-3 font-bold text-[#2D6A3E]">
+              <div className="text-2xl mt-3 font-bold text-[#2D6A3E] truncate max-w-full">
                 ₦{alert.price.toLocaleString()}
               </div>
               <p className="text-sm text-gray-600">
@@ -154,16 +154,16 @@ export default function AlertsCard({
 
           {/* Date and Time Info */}
 
-          <div className="flex gap-3 border-t">
+          <div className="flex flex-col sm:flex-row gap-3 border-t pt-3">
             <button
               onClick={() => onAcceptBooking?.(alert)}
               disabled={accepting}
-              className="px-4 py-2 mt-3 bg-[#2D6A3E] text-white cursor-pointer rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-[#2D6A3E] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors"
             >
               {accepting ? "Accepting..." : "Accept Booking"}
             </button>
             {alert.status.toLowerCase() === "awaiting response" && (
-              <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+              <button className="w-full sm:w-auto px-3 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                 Awaiting Customer's response
               </button>
             )}
