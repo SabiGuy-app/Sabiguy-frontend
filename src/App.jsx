@@ -29,7 +29,6 @@ import AmbulanceServices from "./pages/Dashboard/Services/pages/AmbulanceService
 import ProviderDetails from "./pages/Dashboard/sections/ProviderDetails";
 import ProviderDashboard from "./pages/ProviderDashboard/sections/Homepage";
 import HireAlerts from "./pages/ProviderDashboard/sections/HireAlerts/HireAlerts";
-import LiveTrackingPage from "./pages/ProviderDashboard/sections/HireAlerts/TrackProvider";
 import StartNavigation from "./pages/ProviderDashboard/sections/HireAlerts/StartNavigation";
 import TrackDelivery from "./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery";
 import ProviderProfilePage from "./pages/ProviderDashboard/sections/Settings";
@@ -68,6 +67,11 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/success" element={<Success />} />
             <Route path="/login" element={<Login />} />
+            <Route
+                path="/wallet/funding/callback"
+                element={<WalletCallback />}
+              />
+              <Route path="/payment/callback" element={<WalletCallback />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<DashboardHome />} />
