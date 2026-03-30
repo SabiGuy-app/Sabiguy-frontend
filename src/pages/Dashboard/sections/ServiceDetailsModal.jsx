@@ -120,12 +120,12 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   <MessageCircle className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Message</span>
                 </button>
-                <button
+                {/* <button
                   onClick={onClose}
                   className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors whitespace-nowrap"
                 >
                   Cancel Request
-                </button>
+                </button> */}
               </div>
             </div>
 

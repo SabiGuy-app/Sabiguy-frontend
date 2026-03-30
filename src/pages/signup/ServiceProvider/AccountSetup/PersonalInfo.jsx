@@ -67,8 +67,8 @@ console.log('Initial values:', initialValues);
                     name="gender"
                     label="Gender"
                     select
+                    placeholder="Select gender"
                     options={[
-                      { label: "Select gender", value: "" },
                       { label: "Prefer not to say", value: "null" },
                       { label: "Male", value: "male" },
                       { label: "Female", value: "female" },

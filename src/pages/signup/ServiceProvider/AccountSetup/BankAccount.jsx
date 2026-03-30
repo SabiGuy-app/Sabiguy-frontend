@@ -315,7 +315,7 @@ export default function BankAccountForm({ onBack, onNext }) {
               className={`px-6 py-2 rounded-md text-white bg-[#005823BF] hover:bg-[#004e1a] transition ${(loading || verifyingAccount || !formik.values.accountName) && "opacity-70 cursor-not-allowed"
                 }`}
             >
-              {loading ? "Saving..." : "Save & Continue"}
+              {loading ? "Saving..." : "Save"}
             </button>
           </div>
         </form>

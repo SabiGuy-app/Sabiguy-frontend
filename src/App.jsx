@@ -32,7 +32,6 @@ import AmbulanceServices from "./pages/Dashboard/Services/pages/AmbulanceService
 import ProviderDetails from "./pages/Dashboard/sections/ProviderDetails";
 import ProviderDashboard from "./pages/ProviderDashboard/sections/Homepage";
 import HireAlerts from "./pages/ProviderDashboard/sections/HireAlerts/HireAlerts";
-import LiveTrackingPage from "./pages/ProviderDashboard/sections/HireAlerts/TrackProvider";
 import StartNavigation from "./pages/ProviderDashboard/sections/HireAlerts/StartNavigation";
 import TrackDelivery from "./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery";
 import ProviderProfilePage from "./pages/ProviderDashboard/sections/Settings";
@@ -53,6 +52,7 @@ import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2
 import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
+<<<<<<< HEAD
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
 function URLNormalizer() {
   const location = useLocation();
@@ -68,6 +68,9 @@ function URLNormalizer() {
   return null;
 }
 
+=======
+import NotVerified from "./pages/signup/ServiceProvider/kyc-not-verified";
+>>>>>>> 2afa9a3c1e1ccaffb8e21b6ef62c10ca865af6d3
 function App() {
   return (
     <>
@@ -86,6 +89,11 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/success" element={<Success />} />
             <Route path="/login" element={<Login />} />
+            <Route
+                path="/wallet/funding/callback"
+                element={<WalletCallback />}
+              />
+              <Route path="/payment/callback" element={<WalletCallback />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
@@ -173,6 +181,7 @@ function App() {
               />
               <Route path="/bookings/summary" element={<BookingSummary2 />} />
               <Route path="/bookings/trackrider" element={<TrackRider />} />
+              <Route path="/kyc-not-verified" element={<NotVerified />} />
             </Route>
           </Routes>
         </div>

@@ -155,6 +155,8 @@ export default function HireAlerts() {
           booking.completed_on ||
           booking.updatedAt ||
           null,
+        pickupNote: booking.pickupNote || "",
+        totalAmount: booking.totalAmount || 0,
         modeOfDelivery: booking.modeOfDelivery || "",
         distance: booking.distance || null,
         // Store original data for modal details
@@ -224,7 +226,6 @@ export default function HireAlerts() {
       arrived_at_dropoff: "Arrived at Dropoff",
       arrived_at_pickup: "Arrived at Pickup",
       enroute_to_dropoff: "Enroute to Dropoff",
-      waiting_confirmation: "Waiting confirmation",
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
       pending_customer: "Awaiting Response",
@@ -310,11 +311,12 @@ export default function HireAlerts() {
 
     if (statusFilter === "active") {
       return (
-        status === "in progress" ||
+        status === "enroute to pickup" ||
+        status === "arrived at pickup" ||
+        status === "enroute to dropoff" ||
+        status === "arrived at dropoff" ||
         status === "paid escrow" ||
-        status === "waiting confirmation" ||
-        status === "awaiting confirmation" ||
-        status === "job confirmed"
+        status === "awaiting confirmation" 
       );
     }
 

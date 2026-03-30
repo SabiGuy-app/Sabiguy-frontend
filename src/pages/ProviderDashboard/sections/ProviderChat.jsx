@@ -50,7 +50,7 @@ const ProviderChat = () => {
     newSocket.on("new_message", (data) => {
       console.log("📬 New message received:", data);
 
-      if (selectedChat && data.bookingId === selectedChat.bookingId._id) {
+      if (selectedChat?.bookingId?._id && data.bookingId === selectedChat.bookingId._id) {
         setMessages((prev) => [...prev, data.message]);
         scrollToBottom();
       }
@@ -140,7 +140,7 @@ const ProviderChat = () => {
 
     if ((bookingId || chatId) && chats.length > 0) {
       const chat = chats.find(
-        (c) => c.bookingId._id === bookingId || c._id === chatId,
+        (c) => c.bookingId?._id === bookingId || c._id === chatId,
       );
       if (chat) {
         setSelectedChat(chat);
@@ -149,7 +149,7 @@ const ProviderChat = () => {
     }
 
     if (bookingId && chats.length > 0) {
-      const bookingChat = chats.find((c) => c.bookingId._id === bookingId);
+      const bookingChat = chats.find((c) => c.bookingId?._id === bookingId);
       if (bookingChat) {
         setSelectedChat(bookingChat);
         return;
@@ -163,6 +163,7 @@ const ProviderChat = () => {
 
   useEffect(() => {
     if (selectedChat) {
+      if (!selectedChat.bookingId?._id) return;
       loadMessages(selectedChat.bookingId._id);
 
       if (socket) {
@@ -172,7 +173,7 @@ const ProviderChat = () => {
     }
 
     return () => {
-      if (selectedChat && socket) {
+      if (selectedChat?.bookingId?._id && socket) {
         socket.emit("leave_chat", { bookingId: selectedChat.bookingId._id });
       }
     };
@@ -218,7 +219,7 @@ const ProviderChat = () => {
 
       setChats((prev) =>
         prev.map((chat) =>
-          chat.bookingId._id === bookingId ? { ...chat, unreadCount: 0 } : chat,
+          chat.bookingId?._id === bookingId ? { ...chat, unreadCount: 0 } : chat,
         ),
       );
     } catch (error) {
@@ -230,7 +231,7 @@ const ProviderChat = () => {
   const updateChatLastMessage = (bookingId, newMessage) => {
     setChats((prev) =>
       prev.map((chat) => {
-        if (chat.bookingId._id === bookingId) {
+        if (chat.bookingId?._id === bookingId) {
           return {
             ...chat,
             lastMessage: {
@@ -239,7 +240,7 @@ const ProviderChat = () => {
             },
             lastMessageTime: newMessage.createdAt,
             unreadCount:
-              selectedChat?.bookingId._id !== bookingId
+              selectedChat?.bookingId?._id !== bookingId
                 ? (chat.unreadCount || 0) + 1
                 : 0,
           };
