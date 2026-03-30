@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Phone,
   MessageCircle,
@@ -9,7 +9,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import location from "/location.png";
+import DeliveryMap from "../../../../components/dashboard/Map";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { updateBookingStatus, markAsComplete } from "../../../../api/bookings";
@@ -45,6 +45,7 @@ export default function TrackDelivery() {
   const routeLocation = useLocation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const wsRef = useRef(null);
   const normalizeStatus = (value) =>
     String(value || "")
       .trim()
@@ -59,6 +60,7 @@ export default function TrackDelivery() {
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
     useState(true);
   const [updating, setUpdating] = useState(false);
+  const [riderLocation, setRiderLocation] = useState(null);
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
@@ -94,6 +96,22 @@ export default function TrackDelivery() {
     alert?.id || alert?.originalData?._id || bookingDetails?._id;
   const bookingForChat = alert?.originalData || bookingDetails || {};
   const customerForChat = bookingForChat?.userId || null;
+
+  const getLocationCoords = (location) => {
+    const coords = location?.coordinates?.coordinates || location?.coordinates;
+    if (Array.isArray(coords) && coords.length >= 2) {
+      return { longitude: coords[0], latitude: coords[1] };
+    }
+    return { longitude: undefined, latitude: undefined };
+  };
+
+  const pickupCoords = getLocationCoords(
+    alert?.originalData?.pickupLocation || bookingDetails?.pickupLocation,
+  );
+  const dropoffCoords = getLocationCoords(
+    alert?.originalData?.dropoffLocation || bookingDetails?.dropoffLocation,
+  );
+  const providerCoords = getLocationCoords(user?.data?.currentLocation);
 
   const pickupAddress =
     alert?.originalData?.pickupLocation?.address ||
@@ -234,6 +252,56 @@ export default function TrackDelivery() {
     estimatedDuration?.value && estimatedDuration?.unit
       ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
       : "Tracking delivery";
+
+  useEffect(() => {
+    if (
+      providerCoords?.latitude !== undefined &&
+      providerCoords?.longitude !== undefined
+    ) {
+      setRiderLocation((prev) => prev || providerCoords);
+    }
+  }, [providerCoords?.latitude, providerCoords?.longitude]);
+
+  useEffect(() => {
+    if (!bookingId) return;
+
+    const wsUrl = `${import.meta.env.VITE_WS_URL}/tracking/${bookingId}`;
+    wsRef.current = new WebSocket(wsUrl);
+
+    wsRef.current.onopen = () => {
+      console.log("WebSocket connected for provider tracking");
+    };
+
+    wsRef.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.location) {
+          setRiderLocation({
+            latitude: data.location.coordinates[1],
+            longitude: data.location.coordinates[0],
+            bearing: data.bearing || 0,
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
+
+    wsRef.current.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    wsRef.current.onclose = () => {
+      console.log("WebSocket disconnected");
+    };
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [bookingId]);
 
   return (
     <>
@@ -433,8 +501,12 @@ export default function TrackDelivery() {
           </div>
         </div>
 
-        <div>
-          <img src={location} alt="" className="w-[700px] h-[660px]" />
+        <div className="h-[660px]">
+          <DeliveryMap
+            pickup={pickupCoords}
+            dropoff={dropoffCoords}
+            riderLocation={riderLocation}
+          />
         </div>
       </div>
     </>
