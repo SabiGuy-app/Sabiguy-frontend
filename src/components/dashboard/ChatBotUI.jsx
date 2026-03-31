@@ -121,25 +121,24 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
       : "How may I help you today? (Please select an option)";
 
   return (
-    <div className="flex flex-col h-[600px] w-full bg-white relative">
-      {/* Header Context Pills */}
-      <div className="flex flex-col gap-1 p-2 absolute top-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-sm">
-        {isLoadingContext && (
-          <div className="text-[10px] text-gray-500 italic px-2">
-            Loading context...
-          </div>
-        )}
-        {bookingId && bookingId.trim() !== "" && (
-          <div className="self-center">
-            <span className="bg-blue-50 text-blue-600 text-[10px] font-medium px-2 py-0.5 rounded-full border border-blue-100">
-              Discussing Booking #{bookingId.slice(-6)}
-            </span>
-          </div>
-        )}
-      </div>
-
+    <div className="flex flex-col h-full w-full bg-white relative overflow-hidden">
       {/* Chat messages */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-6 pt-12">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-6">
+        {/* Header Context Pills (Inline) */}
+        {(isLoadingContext || (bookingId && bookingId.trim() !== "")) && (
+          <div className="flex flex-col items-center gap-1 mb-4">
+            {isLoadingContext && (
+              <div className="text-[10px] text-gray-500 italic">
+                Loading context...
+              </div>
+            )}
+            {bookingId && bookingId.trim() !== "" && (
+              <span className="bg-blue-50 text-blue-600 text-[10px] font-medium px-2 py-1 rounded-full border border-blue-100 uppercase tracking-wider">
+                Booking #{bookingId.slice(-6)}
+              </span>
+            )}
+          </div>
+        )}
         {/* Bot Greeting (only shown if history is empty) */}
         {conversationHistory.length === 0 && (
           <div className="flex items-start gap-3">
@@ -156,7 +155,7 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
                   <button
                     key={index}
                     onClick={() => handleSendMessage(faq.question || faq)}
-                    className="bg-[#d8eecf] hover:bg-[#c5e4b8] text-[#066c39] text-xs px-3 py-2 rounded-full transition-colors text-left"
+                    className="bg-white border border-[#066c39]/30 hover:bg-[#d8eecf] text-[#066c39] text-xs sm:text-sm font-medium px-4 py-2.5 rounded-xl transition-all text-left shadow-sm active:scale-95"
                     disabled={isTyping}
                   >
                     {faq.question || faq}
@@ -202,12 +201,12 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
              idx === conversationHistory.length - 1 && 
              msg.role === "assistant" && 
              actualFaqArray.length > 0 && (
-              <div className="ml-11 flex flex-wrap gap-2">
+               <div className="ml-11 flex flex-wrap gap-2">
                 {displayFAQs.map((faq, index) => (
                   <button
                     key={index}
                     onClick={() => handleSendMessage(faq.question || faq)}
-                    className="bg-[#d8eecf] hover:bg-[#c5e4b8] text-[#066c39] text-xs px-3 py-2 rounded-full transition-colors text-left"
+                    className="bg-white border border-[#066c39]/30 hover:bg-[#d8eecf] text-[#066c39] text-xs sm:text-sm font-medium px-4 py-2.5 rounded-xl transition-all text-left shadow-sm active:scale-95"
                   >
                     {faq.question || faq}
                   </button>
@@ -235,30 +234,32 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSendMessage();
-        }}
-        className="border-t p-3 flex items-center gap-3"
-      >
-        <input
-          type="text"
-          value={currentMessage}
-          onChange={(e) => setCurrentMessage(e.target.value)}
-          placeholder="Type your message"
-          className="flex-1 border rounded-xl px-4 py-2 outline-none focus:border-[#066c39] transition-colors"
-          disabled={isTyping}
-        />
-        <button
-          type="submit"
-          disabled={!currentMessage.trim() || isTyping}
-          className="p-3 bg-[#066c39] text-white rounded-xl hover:bg-[#055a30] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+       {/* Input Area */}
+      <div className="bg-white border-t p-3 sm:p-4 mt-auto">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="flex items-center gap-2 sm:gap-3"
         >
-          <Send size={20} />
-        </button>
-      </form>
+          <input
+            type="text"
+            value={currentMessage}
+            onChange={(e) => setCurrentMessage(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 border border-gray-200 rounded-2xl px-4 py-3 sm:py-4 outline-none focus:border-[#066c39] transition-all text-sm sm:text-base placeholder:text-gray-400"
+            disabled={isTyping}
+          />
+          <button
+            type="submit"
+            disabled={!currentMessage.trim() || isTyping}
+            className="p-3.5 sm:p-4 bg-[#066c39] text-white rounded-2xl hover:bg-[#055a30] transition-all disabled:bg-gray-200 disabled:cursor-not-allowed shadow-md active:scale-95"
+          >
+            <Send size={20} className={currentMessage.trim() ? "animate-in fade-in" : ""} />
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

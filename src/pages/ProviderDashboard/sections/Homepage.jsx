@@ -89,12 +89,12 @@ export default function ProviderDashboard() {
   if (!hydrated) {
     return (
       <ProviderDashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
+        <main className="flex-1 min-h-screen p-3 sm:p-6 pt-4 sm:pt-20 w-full">
           <div className="text-center">
             <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mx-auto mb-4"></div>
             <div className="h-4 w-96 bg-gray-200 rounded animate-pulse mx-auto"></div>
           </div>
-        </div>
+        </main>
       </ProviderDashboardLayout>
     );
   }
@@ -106,11 +106,11 @@ export default function ProviderDashboard() {
 
   return (
     <ProviderDashboardLayout>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold mb-3">  {" "}
+          <h2 className="text-lg font-semibold mb-1">
             Welcome Back, {user?.data?.fullName?.split(" ")[0]} 👋</h2>
-          <p className="mb-3 text-sm">
+          <p className="mb-2 text-sm">
             Here's a quick look at your business performance today.
           </p>
           {/* <button 
