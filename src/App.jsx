@@ -52,25 +52,23 @@ import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2
 import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
-<<<<<<< HEAD
+import NotVerified from "./pages/signup/ServiceProvider/kyc-not-verified";
+
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
 function URLNormalizer() {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (location.pathname.includes('//')) {
-      const normalized = location.pathname.replace(/\/+/g, '/');
+    if (location.pathname.includes("//")) {
+      const normalized = location.pathname.replace(/\/+/g, "/");
       navigate(normalized + location.search, { replace: true });
     }
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   return null;
 }
 
-=======
-import NotVerified from "./pages/signup/ServiceProvider/kyc-not-verified";
->>>>>>> 2afa9a3c1e1ccaffb8e21b6ef62c10ca865af6d3
 function App() {
   return (
     <>
@@ -89,15 +87,14 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/success" element={<Success />} />
             <Route path="/login" element={<Login />} />
-            <Route
-                path="/wallet/funding/callback"
-                element={<WalletCallback />}
-              />
-              <Route path="/payment/callback" element={<WalletCallback />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/kyc-not-verified" element={<NotVerified />} />
 
             {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
-            <Route path="/wallet/funding/callback" element={<WalletCallback />} />
+            <Route
+              path="/wallet/funding/callback"
+              element={<WalletCallback />}
+            />
             <Route path="/payment/callback" element={<WalletCallback />} />
 
             <Route element={<ProtectedRoute />}>
