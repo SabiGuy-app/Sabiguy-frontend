@@ -49,8 +49,8 @@ export default function ConfirmKyc({ onNext }) {
           return;
         }
         const level =
-          response.data?.kycLevel ||
-          response.data?.data?.kycLevel ||
+          response.data?.kycLevel ??
+          response.data?.data?.kycLevel ??
           response.data?.level;
         setKycLevel(level ?? null);
         setSuccessMessage("KYC level retrieved successfully!");

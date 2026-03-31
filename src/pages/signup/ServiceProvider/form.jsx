@@ -48,10 +48,6 @@ export default function Form() {
         const mappedStep = getStepForKycLevel(data.kycLevel);
         if (mappedStep !== null) return mappedStep;
       }
-      // const shouldSkipOtp =
-      //   data?.skipOtp || !!localStorage.getItem("google-email");
-      // if (prev === 0 && shouldSkipOtp) return prev + 2;
-      // return prev + 1;
       if (prev === 0 && data?.skipOtp) return prev + 2;
       if (prev === 1 && data?.skipOtp) return prev + 2;
       return prev + 1;
