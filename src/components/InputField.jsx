@@ -19,20 +19,30 @@ export default function InputField({
   onBlur,
   name,
   size = "full",
+  inputClassName = "",
   ...props
 }) {
   const getSelected = () => {
-    if (!value) return options[0];
-    return options.find((opt) => opt.value === value) || options[0];
+    if (!options || options.length === 0) return null;
+    if (!value) return placeholder ? null : options[0];
+    return options.find((opt) => opt.value === value) || (placeholder ? null : options[0]);
   };
   const [selected, setSelected] = useState(getSelected);
 
   useEffect(() => {
-    if (value !== undefined) {
-      const match = options.find((opt) => opt.value === value);
-      if (match) setSelected(match);
+    if (!options || options.length === 0) {
+      if (selected !== null) setSelected(null);
+      return;
     }
-  }, [value]);
+
+    if (value !== undefined && value !== null && value !== "") {
+      const match = options.find((opt) => opt.value === value);
+      setSelected(match || (placeholder ? null : options[0]));
+      return;
+    }
+
+    setSelected(placeholder ? null : options[0]);
+  }, [value, options, placeholder]);
 
   const widthClasses = {
     full: "w-full",
@@ -78,8 +88,12 @@ export default function InputField({
           }}
         >
           <div className="relative">
-            <Listbox.Button className="w-full px-5 py-4 bg-gray-50 border border-gray-400 rounded-md text-left focus:outline-none focus:ring-1 focus:ring-[#8BC53FBF] focus:border-[#8BC53FBF]">
-              <span>{selected.label}</span>
+            <Listbox.Button
+              className={`w-full px-5 py-4 bg-gray-50 border border-gray-400 rounded-md text-left focus:outline-none focus:ring-1 focus:ring-[#8BC53FBF] focus:border-[#8BC53FBF] ${inputClassName}`}
+            >
+              <span className={`${selected ? "text-gray-900" : "text-gray-400"}`}>
+                {selected?.label || placeholder || "Select"}
+              </span>
               <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <ChevronUpDownIcon className="w-5 h-5 text-gray-400" />
               </span>
@@ -126,7 +140,7 @@ export default function InputField({
           value={value}
           onChange={onChange}
           onBlur={onBlur}
-          className={`w-full px-5 py-4 bg-gray-50 border border-gray-400 rounded-md focus:border-[#8BC53FBF] focus:ring-1 focus:ring-[#8BC53FBF] focus:outline-none ${
+          className={`w-full px-5 py-4 bg-gray-50 border border-gray-400 rounded-md focus:border-[#8BC53FBF] focus:ring-1 focus:ring-[#8BC53FBF] focus:outline-none ${inputClassName} ${
             italicPlaceholder ? "placeholder:italic" : ""
           }`}
           placeholder={placeholder}

@@ -145,71 +145,78 @@ export default function NotificationDrawer({
     return (
       <div
         onClick={() => !isProcessing && handleNotificationClick(notification)}
-        className={`flex items-start gap-4 p-4 rounded-lg transition-all cursor-pointer relative group ${isProcessing
-          ? "opacity-50 bg-gray-100"
-          : "hover:bg-gray-50 bg-blue-50"
-          }`}
+        className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl transition-all cursor-pointer relative group ${
+          isProcessing
+            ? "opacity-50 bg-gray-100"
+            : "hover:bg-gray-50 bg-blue-50/70 border border-blue-100/50"
+        }`}
       >
-        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
           {getIcon(notification.type)}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h4 className="font-semibold text-gray-900 text-sm">
+            <h4 className="font-bold text-gray-900 text-sm leading-tight">
               {notification.title}
             </h4>
-            <span className="text-xs text-gray-500 whitespace-nowrap">
+            <span className="text-[10px] sm:text-xs font-medium text-gray-400 whitespace-nowrap pt-0.5">
               {formatDistanceToNow(new Date(notification.createdAt), {
                 addSuffix: true,
               })}
             </span>
           </div>
-          <p className="text-sm text-gray-600 line-clamp-2">
+          <p className="text-sm text-gray-600 line-clamp-2 leading-snug">
             {notification.message}
           </p>
 
           {/* Loading/Action states */}
           {isMarkingAsRead && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-blue-600">
+            <div className="flex items-center gap-2 mt-3 text-xs text-blue-600 font-semibold bg-white/50 px-2 py-1 rounded-md w-fit">
               <Loader2 size={14} className="animate-spin" />
               Marking as read...
             </div>
           )}
           {isDeleting && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-red-600">
+            <div className="flex items-center gap-2 mt-3 text-xs text-red-600 font-semibold bg-white/50 px-2 py-1 rounded-md w-fit">
               <Loader2 size={14} className="animate-spin" />
               Deleting...
             </div>
           )}
 
-          {/* Action buttons - only show when not processing */}
+          {/* Action buttons - larger touch targets on mobile */}
           {!isProcessing && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center flex-wrap gap-2 sm:gap-4 mt-4">
               <button
                 onClick={(e) => handleViewDetails(e, notification)}
-                className="text-xs text-[#005823] hover:underline flex items-center gap-1 font-medium"
+                className="text-xs text-[#005823] hover:underline flex items-center gap-1.5 font-bold py-1.5"
               >
-                <Eye size={14} />
+                <div className="w-6 h-6 bg-green-50 rounded-full flex items-center justify-center">
+                  <Eye size={12} />
+                </div>
                 View Details
               </button>
               <button
                 onClick={(e) => handleMarkAsRead(e, notification._id)}
-                className="text-xs text-[#005823] hover:underline flex items-center gap-1"
+                className="text-xs text-[#005823] hover:underline flex items-center gap-1.5 font-bold py-1.5"
               >
-                <Check size={14} />
+                <div className="w-6 h-6 bg-green-50 rounded-full flex items-center justify-center">
+                  <Check size={12} />
+                </div>
                 Mark as read
               </button>
               <button
                 onClick={(e) => handleDelete(e, notification._id)}
-                className="text-xs text-red-500 hover:underline flex items-center gap-1"
+                className="text-xs text-red-500 hover:underline flex items-center gap-1.5 font-bold py-1.5"
               >
-                <Trash2 size={14} />
+                <div className="w-6 h-6 bg-red-50 rounded-full flex items-center justify-center">
+                  <Trash2 size={12} />
+                </div>
                 Delete
               </button>
             </div>
           )}
         </div>
-        <div className="absolute top-4 right-4 w-2 h-2 bg-blue-500 rounded-full"></div>
+        <div className="absolute top-4 right-3 w-2 h-2 bg-blue-500 rounded-full ring-4 ring-blue-50"></div>
       </div>
     );
   };
@@ -230,29 +237,32 @@ export default function NotificationDrawer({
           ${isOpen ? "translate-x-0" : "translate-x-full"}
         `}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-          <div>
-            <h2 className="text-lg font-semibold">Notifications</h2>
+        <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100 bg-white sticky top-0 z-10 rounded-tl-3xl">
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-gray-900 truncate">Notifications</h2>
             {unreadCount > 0 && (
-              <p className="text-xs text-gray-500">{unreadCount} unread</p>
+              <p className="text-xs font-semibold text-gray-400 mt-0.5">{unreadCount} unread</p>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {unreadCount > 0 && (
               <button
                 onClick={onMarkAllAsRead}
-                className="text-xs text-[#005823] hover:underline"
+                className="text-xs sm:text-sm font-bold text-[#005823] hover:text-[#1f4a2a] whitespace-nowrap bg-green-50 px-3 py-1.5 rounded-full"
               >
-                Mark all read
+                Mark all as read
               </button>
             )}
-            <button onClick={onClose}>
-              <X size={22} />
+            <button 
+              onClick={onClose}
+              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-black"
+            >
+              <X size={24} />
             </button>
           </div>
         </div>
 
-        <div className="h-[calc(100%-60px)] overflow-y-auto">
+        <div className="h-[calc(100%-80px)] overflow-y-auto no-scrollbar pb-10">
           {loading ? (
             <div className="flex items-center justify-center h-40">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#005823]" />
@@ -274,8 +284,8 @@ export default function NotificationDrawer({
             <>
               {/* Today's Notifications */}
               {todayNotifications.length > 0 && (
-                <div className="p-6">
-                  <h3 className="text-sm font-semibold text-gray-600 mb-4">
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-4 px-1">
                     Today
                   </h3>
                   <div className="space-y-4">
@@ -291,8 +301,8 @@ export default function NotificationDrawer({
 
               {/* Yesterday's Notifications */}
               {yesterdayNotifications.length > 0 && (
-                <div className="p-6">
-                  <h3 className="text-sm font-semibold text-gray-600 mb-4">
+                <div className="p-4 sm:p-6 pb-2">
+                  <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-4 px-1">
                     Yesterday
                   </h3>
                   <div className="space-y-4">
@@ -308,8 +318,8 @@ export default function NotificationDrawer({
 
               {/* Older Notifications */}
               {olderNotifications.length > 0 && (
-                <div className="p-6">
-                  <h3 className="text-sm font-semibold text-gray-600 mb-4">
+                <div className="p-4 sm:p-6 pb-2">
+                  <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-4 px-1">
                     Older
                   </h3>
                   <div className="space-y-4">

@@ -21,33 +21,60 @@ export default function ProviderDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Don't render until store is hydrated
-  if (!hydrated) {
-    return (
-      <ProviderDashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mx-auto mb-4"></div>
-            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse mx-auto"></div>
-          </div>
-        </div>
-      </ProviderDashboardLayout>
-    );
-  }
-  const Job = user?.data?.job
+  // ── Fetch dashboard stats ──────────────────────────────────────────────
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
         setIsLoading(true);
         setError(null);
         const response = await getDashboardStats();
-        setDashboardData(response.data || response);
+
+        // Confirmed API shape (flat object inside data):
+        // {
+        //   totalEarnings, activeBookings, completedBookings,
+        //   revenueOverview: { total, last7Days, last30Days },
+        //   averageResponseTimeMinutes: <number>,
+        //   bookingsByDayOfWeek: [{ day, dayIndex, count }],
+        //   peakHourAnalysis: { peakHour, peakHourCount, buckets: [{ hour, count }] }
+        // }
+        const raw = response?.data || response;
+
+        setDashboardData({
+          // Stat cards
+          totalEarnings:     raw?.totalEarnings     ?? 0,
+          activeBookings:    raw?.activeBookings     ?? 0,
+          completedBookings: raw?.completedBookings  ?? 0,
+
+          // Revenue Overview — pass object { last7Days, last30Days, total }
+          revenueData: raw?.revenueOverview
+            ? {
+                last7Days:  raw.revenueOverview.last7Days  || 0,
+                last30Days: raw.revenueOverview.last30Days || 0,
+                total:      raw.revenueOverview.total      || 0,
+              }
+            : null,
+
+          // Average Response Time — raw number in minutes
+          responseTimeData: raw?.averageResponseTimeMinutes ?? null,
+
+          // Bookings by Day — normalise to { day, bookings }
+          bookingsByDay: (raw?.bookingsByDayOfWeek || []).map((d) => ({
+            day:      (d.day || "").slice(0, 3),
+            bookings: d.count ?? d.bookings ?? 0,
+          })),
+
+          // Peak Hour Analysis — pass buckets [{ hour, count }]
+          peakHoursData: (raw?.peakHourAnalysis?.buckets || []).map((b) => ({
+            hour:     b.hour,
+            bookings: b.count ?? b.bookings ?? 0,
+          })),
+
+          // Revenue by Service — not in API yet, shows empty state
+          revenueByService: raw?.revenueByService || [],
+        });
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
-        setError(
-          err.response?.data?.message || "Failed to load dashboard data",
-        );
-        // Set default data on error so dashboard still renders
+        setError(err.response?.data?.message || "Failed to load dashboard data");
         setDashboardData({});
       } finally {
         setIsLoading(false);
@@ -57,16 +84,33 @@ export default function ProviderDashboard() {
     fetchDashboardStats();
   }, []);
 
-  const totalRevenue = dashboardData?.totalEarnings || 0;
-  const activeJobs = dashboardData?.activeBookings || 0;
-  const completedJobs = dashboardData?.completedBookings || 0;
+  // ── Guard: wait for zustand hydration ─────────────────────────────────
+  // NOTE: this must come AFTER all hooks (useEffect above)
+  if (!hydrated) {
+    return (
+      <ProviderDashboardLayout>
+        <main className="flex-1 min-h-screen p-3 sm:p-6 pt-4 sm:pt-20 w-full">
+          <div className="text-center">
+            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mx-auto mb-4"></div>
+            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse mx-auto"></div>
+          </div>
+        </main>
+      </ProviderDashboardLayout>
+    );
+  }
+
+  const Job = user?.data?.job;
+  const totalRevenue  = dashboardData?.totalEarnings     || 0;
+  const activeJobs    = dashboardData?.activeBookings     || 0;
+  const completedJobs = dashboardData?.completedBookings  || 0;
+
   return (
     <ProviderDashboardLayout>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold mb-3">  {" "}
+          <h2 className="text-lg font-semibold mb-1">
             Welcome Back, {user?.data?.fullName?.split(" ")[0]} 👋</h2>
-          <p className="mb-3 text-sm">
+          <p className="mb-2 text-sm">
             Here's a quick look at your business performance today.
           </p>
           {/* <button 

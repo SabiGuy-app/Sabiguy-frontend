@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Phone,
   MessageCircle,
@@ -7,13 +7,51 @@ import {
   MapPin,
   Star,
   Shield,
+  ArrowLeft,
 } from "lucide-react";
-import { useLocation } from "react-router-dom";
-import location from "/location.png";
+import { useLocation, useNavigate } from "react-router-dom";
+import DeliveryMap from "../../../../components/dashboard/Map";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { updateBookingStatus, markAsComplete } from "../../../../api/bookings";
-import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
+import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
+
+// Error Boundary for Map Component
+class MapErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Map Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full bg-gray-100 rounded-lg flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-gray-200">
+          <MapPin size={48} className="text-gray-300 mb-4" />
+          <h3 className="text-gray-600 font-semibold mb-2">Map unavailable</h3>
+          <p className="text-gray-400 text-sm max-w-xs">
+            We're having trouble loading the live map. Tracking updates will still show in the status timeline.
+          </p>
+          <button 
+            onClick={() => this.setState({ hasError: false })}
+            className="mt-4 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Retry Loading Map
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const STATUS_FLOW = {
   // current booking status -> what clicking the button SENDS to the API
@@ -43,7 +81,9 @@ const STEPS_COMPLETED_BY_STATUS = {
 
 export default function TrackDelivery() {
   const routeLocation = useLocation();
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const wsRef = useRef(null);
   const normalizeStatus = (value) =>
     String(value || "")
       .trim()
@@ -58,6 +98,7 @@ export default function TrackDelivery() {
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
     useState(true);
   const [updating, setUpdating] = useState(false);
+  const [riderLocation, setRiderLocation] = useState(null);
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
@@ -91,6 +132,24 @@ export default function TrackDelivery() {
 
   const bookingId =
     alert?.id || alert?.originalData?._id || bookingDetails?._id;
+  const bookingForChat = alert?.originalData || bookingDetails || {};
+  const customerForChat = bookingForChat?.userId || null;
+
+  const getLocationCoords = (location) => {
+    const coords = location?.coordinates?.coordinates || location?.coordinates;
+    if (Array.isArray(coords) && coords.length >= 2) {
+      return { longitude: coords[0], latitude: coords[1] };
+    }
+    return { longitude: undefined, latitude: undefined };
+  };
+
+  const pickupCoords = getLocationCoords(
+    alert?.originalData?.pickupLocation || bookingDetails?.pickupLocation,
+  );
+  const dropoffCoords = getLocationCoords(
+    alert?.originalData?.dropoffLocation || bookingDetails?.dropoffLocation,
+  );
+  const providerCoords = getLocationCoords(user?.data?.currentLocation);
 
   const pickupAddress =
     alert?.originalData?.pickupLocation?.address ||
@@ -214,18 +273,138 @@ export default function TrackDelivery() {
     }
   };
 
+  const handleMessageCustomer = () => {
+    if (!bookingId) return;
+    navigate(`/dashboard/provider/chat?bookingId=${bookingId}`, {
+      state: { booking: bookingForChat, customer: customerForChat },
+    });
+  };
+
   const buttonLabel = BUTTON_LABELS[bookingStatus] || "Arrived at Pickup";
 
   const isFullyComplete = bookingStatus === "completed";
 
+  const estimatedDuration =
+    alert?.originalData?.estimatedDuration || bookingDetails?.estimatedDuration;
+  const arrivalText =
+    estimatedDuration?.value && estimatedDuration?.unit
+      ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
+      : "Tracking delivery";
+
+  useEffect(() => {
+    if (
+      providerCoords?.latitude !== undefined &&
+      providerCoords?.longitude !== undefined
+    ) {
+      setRiderLocation((prev) => prev || providerCoords);
+    }
+  }, [providerCoords?.latitude, providerCoords?.longitude]);
+
+   useEffect(() => {
+    // Correctly prioritize and validate bookingId
+    const finalBookingId = 
+      routeLocation.state?.alert?._id || 
+      routeLocation.state?.alert?.id || 
+      alert?.id || 
+      alert?.originalData?._id || 
+      bookingDetails?._id;
+
+    if (!finalBookingId) {
+      console.warn("Tracking cannot start: No valid booking ID found.");
+      return;
+    }
+
+    // Guard against malformed WS URL (avoid 'undefined/tracking/...')
+    const wsBaseUrl = import.meta.env.VITE_WS_URL;
+    if (!wsBaseUrl || wsBaseUrl === "undefined") {
+      console.error("WebSocket Error: VITE_WS_URL is not defined in environment variables.");
+      return;
+    }
+
+    const wsUrl = `${wsBaseUrl}/tracking/${finalBookingId}`;
+    console.log("Connecting to WebSocket:", wsUrl);
+    
+    try {
+      wsRef.current = new WebSocket(wsUrl);
+
+      wsRef.current.onopen = () => {
+        console.log("WebSocket connected for provider tracking:", finalBookingId);
+      };
+
+      wsRef.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.location) {
+            setRiderLocation({
+              latitude: data.location.coordinates[1],
+              longitude: data.location.coordinates[0],
+              bearing: data.bearing || 0,
+            });
+          }
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
+      };
+
+      wsRef.current.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      wsRef.current.onclose = () => {
+        console.log("WebSocket disconnected");
+      };
+    } catch (wsInitError) {
+      console.error("Failed to initialize WebSocket:", wsInitError);
+    }
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [bookingId, routeLocation.state]);
+
   return (
-    <>
-      <ProviderNavbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
-        <div>
-          <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
-            Arrival in 12 mins
-          </h1>
+    <ProviderDashboardLayout>
+      <div className="pb-20 lg:pb-0">
+        {/* Navigation Header for Mobile */}
+        <div className="lg:hidden mb-4 sm:mb-6">
+          <button
+            onClick={() => navigate("/dashboard/provider/hire-alert")}
+            className="flex items-center gap-2 text-[#231F2080] hover:text-[#005823] transition-colors font-medium group"
+          >
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center group-hover:bg-[#E6EFE9] transition-colors border">
+              <ArrowLeft className="w-4 h-4" />
+            </div>
+            <span className="text-sm sm:text-base">Back to Alerts</span>
+          </button>
+        </div>
+
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-6 lg:gap-10">
+          <div>
+            <div className="hidden lg:block mb-4 sm:mb-6">
+              <button
+                onClick={() => navigate("/dashboard/provider/hire-alert")}
+                className="flex items-center gap-2 text-[#231F2080] hover:text-[#005823] transition-colors font-medium group"
+              >
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center group-hover:bg-[#E6EFE9] transition-colors border">
+                  <ArrowLeft className="w-4 h-4" />
+                </div>
+                <span className="text-sm sm:text-base">Back to Alerts</span>
+              </button>
+            </div>
+
+            <div className="hidden lg:block mb-6">
+              <h1 className="text-[28px] font-semibold text-[#231F20]">
+                {arrivalText}
+              </h1>
+            </div>
+
+            <div className="lg:hidden mb-2">
+              <h2 className="text-2xl font-bold text-[#231F20] leading-tight">
+                {arrivalText}
+              </h2>
+            </div>
 
           <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
             <div className="flex items-start gap-3">
@@ -269,11 +448,11 @@ export default function TrackDelivery() {
                   </span>
                 </div>
                 <div className="text-[#231F20BF] text-[16px] mb-1">
-                  <p>
+                  <div>
                     {user?.data?.services?.[0]?.title?.replace(/_/g, " ") ||
                       bookingDetails?.subCategory?.replace(/_/g, " ") ||
                       "N/A"}
-                  </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
@@ -289,19 +468,17 @@ export default function TrackDelivery() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-6">
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <Phone className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Call</span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
+              <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95">
+                <Phone className="w-5 h-5 text-gray-600" />
+                <span className="text-sm">Call</span>
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <MessageCircle className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">
-                  Message
-                </span>
-              </button>
-              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
-                Cancel Request
+              <button
+                onClick={handleMessageCustomer}
+                className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95"
+              >
+                <MessageCircle className="w-5 h-5 text-gray-600" />
+                <span className="text-sm">Message</span>
               </button>
             </div>
           </div>
@@ -310,7 +487,7 @@ export default function TrackDelivery() {
             Pickup note
           </h3>
           <p className="bg-[#007BFF08] rounded-lg text-[#231F2080] border border-[#231F201A] p-4 mb-4">
-            Lorem ipsum elementum scelerisque nullam quis non nibh.
+            {bookingDetails?.pickupNote || "No pickup note provided."}
           </p>
 
           <div className="mb-4">
@@ -415,11 +592,18 @@ export default function TrackDelivery() {
           </div>
         </div>
 
-        <div>
-          <img src={location} alt="" className="w-[700px] h-[660px]" />
+        <div className="h-[400px] sm:h-[500px] lg:h-[660px] rounded-2xl overflow-hidden shadow-inner lg:shadow-lg lg:sticky lg:top-24">
+          <MapErrorBoundary>
+            <DeliveryMap
+              pickup={pickupCoords}
+              dropoff={dropoffCoords}
+              riderLocation={riderLocation}
+            />
+          </MapErrorBoundary>
         </div>
       </div>
-    </>
-  );
+    </div>
+  </ProviderDashboardLayout>
+);
 }
 

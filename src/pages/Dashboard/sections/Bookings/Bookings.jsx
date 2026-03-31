@@ -151,6 +151,12 @@ export default function Bookings() {
         const res = await bookingPost(payload);
         console.log("Booking created response:", res);
 
+        try {
+          await allowSystem(false);
+        } catch (allowErr) {
+          console.error("Error resetting allowSystem:", allowErr);
+        }
+
         setBooking(res);
         setSuccessMessage(res?.message || "Booking created successfully!");
         formik.resetForm();
@@ -265,9 +271,12 @@ export default function Bookings() {
       booking.serviceType ||
       "Booking"
     ).replace(/\b\w/g, (l) => l.toUpperCase()),
-    status: (booking.status || "pending")
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase()),
+    status:
+      booking.status === "in_progress"
+        ? "Enroute to Pickup"
+        : (booking.status || "pending")
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase()),
     providerName: booking.providerId?.fullName || "—",
     providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     providerImage:
@@ -317,6 +326,7 @@ export default function Bookings() {
 
     startsIn: null,
     ratings: booking.rating?.score || null,
+    originalData: booking,
   });
 
   const filteredRequests = userBookings
@@ -326,7 +336,7 @@ export default function Bookings() {
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
         return [
-          "in progress",
+          "enroute to pickup",
           "paid escrow",
           "provider selected",
           "completed",
@@ -352,6 +362,12 @@ export default function Bookings() {
   const handleViewDetails = (request) => {
     setSelectedRequest(request);
     setIsModalOpen(true);
+  };
+
+  const handleMessageProvider = (request) => {
+    const bookingId = request?.fullOrderId || request?.id;
+    if (!bookingId) return;
+    navigate(`/dashboard/chat?bookingId=${bookingId}`);
   };
 
   const refreshBookings = async () => {
@@ -712,6 +728,7 @@ export default function Bookings() {
                       request={request}
                       onViewDetails={handleViewDetails}
                       onTrackProvider={handleTrackProvider}
+                      onMessageProvider={handleMessageProvider}
                       onBookingCancelled={refreshBookings}
                       onStatusUpdate={refreshBookings}
                     />

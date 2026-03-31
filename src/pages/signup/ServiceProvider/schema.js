@@ -7,7 +7,10 @@ export const SignUpSchema = Yup.object().shape({
     .max(20, 'Must not exceed 20 characters')
     .required('Password is required'),
 //   term: Yup.boolean().oneOf([true], 'This field is required'),
- phoneNumber: Yup.string().required('Please enter your phone number'),
+  phoneNumber: Yup.string()
+    .matches(/^\d+$/, "Phone number must contain digits only")
+    .length(11, "Phone number must be 11 digits")
+    .required("Please enter your phone number"),
   fullName: Yup.string()
     .required('Please enter your first name and last name')
     .test(

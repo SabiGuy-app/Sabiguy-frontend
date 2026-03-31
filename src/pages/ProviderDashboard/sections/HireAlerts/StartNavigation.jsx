@@ -7,13 +7,14 @@ import {
   MapPin,
   Star,
   Shield,
+  ArrowLeft,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import location from "/location.png";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { startJob } from "../../../../api/bookings";
-import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
+import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 
 export default function StartNavigation() {
   const navigate = useNavigate();
@@ -51,11 +52,22 @@ export default function StartNavigation() {
   };
 
   return (
-    <>
-      <ProviderNavbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
-        <div className="">
-          <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
+    <ProviderDashboardLayout>
+      <div className="mb-4 sm:mb-6">
+        <button
+          onClick={() => navigate("/dashboard/provider/hire-alert")}
+          className="flex items-center gap-2 text-[#231F2080] hover:text-[#005823] transition-colors font-medium group"
+        >
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#E6EFE9] transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+          </div>
+          <span className="text-sm sm:text-base">Back to Alerts</span>
+        </button>
+      </div>
+
+      <div className="flex flex-col-reverse md:grid md:grid-cols-2 gap-6 md:gap-10">
+        <div className="w-full">
+          <h1 className="text-2xl md:text-[28px] font-semibold text-[#231F20] mb-4">
             {alert?.subCategory}
           </h1>
 
@@ -65,8 +77,8 @@ export default function StartNavigation() {
                 <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
               </div>
               <div>
-                <span className="text-[#231F2080] text-[16px]">Pickup</span>
-                <p className="text-[#231F20BF] text-[20px]">
+                <span className="text-[#231F2080] text-sm sm:text-[16px]">Pickup</span>
+                <p className="text-[#231F20BF] text-lg sm:text-[20px]">
                   {alert?.originalData?.pickupLocation?.address}
                 </p>
               </div>
@@ -77,8 +89,8 @@ export default function StartNavigation() {
                 <MapPin className="w-3 h-3 text-[#005823]" />
               </div>
               <div>
-                <span className="text-[#231F2080] text-[16px]">Dropoff</span>
-                <p className="text-[#231F20BF] text-[20px]">
+                <span className="text-[#231F2080] text-sm sm:text-[16px]">Dropoff</span>
+                <p className="text-[#231F20BF] text-lg sm:text-[20px]">
                   {alert?.originalData?.dropoffLocation?.address}
                 </p>
               </div>
@@ -128,18 +140,18 @@ export default function StartNavigation() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-6">
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6">
+              <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <MessageCircle className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">
                   Message
                 </span>
               </button>
-              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
+              <button className="col-span-2 sm:col-span-1 text-[#E90000] font-semibold text-sm sm:text-[16px] py-2 px-3 hover:text-red-700 transition-colors text-center">
                 Cancel Request
               </button>
             </div>
@@ -152,10 +164,10 @@ export default function StartNavigation() {
             Lorem ipsum elementum scelerisque nullam quis non nibh.
           </p>
 
-          <div className="mb-4">
-            <h3 className="text-[16px] font-semibold text-[#231F20]">Fare</h3>
+          <div className="mb-6">
+            <h3 className="text-sm sm:text-[16px] font-semibold text-[#231F20]">Fare</h3>
             <div className="flex items-center gap-2">
-              <span className="text-[20px] font-bold text-[#231F20]">
+              <span className="text-xl sm:text-[20px] font-bold text-[#2D6A3E]">
                 ₦{Number(alert?.price || 0).toLocaleString()}
               </span>
             </div>
@@ -164,16 +176,20 @@ export default function StartNavigation() {
           <button
             onClick={handleStartNavigation}
             disabled={starting}
-            className="px-4 py-2 rounded-md bg-[#005823] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-10 py-3.5 rounded-xl bg-[#005823] text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-800 transition-all active:scale-[0.98]"
           >
             {starting ? "Starting..." : "Start Navigation"}
           </button>
         </div>
 
-        <div>
-          <img src={location} alt="" className="w-[700px] h-[660px]" />
+        <div className="w-full">
+          <img 
+            src={location} 
+            alt="Map View" 
+            className="w-full h-[250px] md:h-[660px] object-cover rounded-2xl shadow-md" 
+          />
         </div>
       </div>
-    </>
+    </ProviderDashboardLayout>
   );
 }

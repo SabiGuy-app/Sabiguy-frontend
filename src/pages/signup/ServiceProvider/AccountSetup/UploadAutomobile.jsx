@@ -13,7 +13,7 @@ export default function UploadAutoMobile({ onNext, onBack }) {
   const google_email =   localStorage.getItem("google-email")
 
 
-  const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/work_visuals`;
+  const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/automobile`;
   const workVisualsEndpoint = `${import.meta.env.VITE_BASE_URL}/provider/work-visuals`;
 
   const handleVideoUpload = (urls) => {
@@ -66,7 +66,7 @@ export default function UploadAutoMobile({ onNext, onBack }) {
   };
 
   return (
-    <AccountSetupLayout currentStep={2}>
+    <AccountSetupLayout currentStep={4}>
       <div className="mt-4">
         {/* Back Button */}
         <div
@@ -149,16 +149,21 @@ export default function UploadAutoMobile({ onNext, onBack }) {
           </button>
           <button
             className={`px-6 py-2 rounded-lg transition ${
-              isUploading
+              isUploading || pictures.length < 2
                 ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                 : "bg-[#005823BF] text-white hover:bg-[#004e1a]"
             }`}
             onClick={handleSave}
-            disabled={isUploading}
+            disabled={isUploading || pictures.length < 2}
           >
             {isUploading ? "Uploading..." : "Save & Continue"}
           </button>
         </div>
+        {/* {!isUploading && pictures.length < 2 && (
+          <p className="text-sm text-gray-500 mt-2">
+            Upload at least 2 photos to continue.
+          </p>
+        )} */}
         {saveError && (
           <p className="text-sm text-red-500 mt-3">{saveError}</p>
         )}

@@ -120,12 +120,12 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   <MessageCircle className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Message</span>
                 </button>
-                <button
+                {/* <button
                   onClick={onClose}
                   className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors whitespace-nowrap"
                 >
                   Cancel Request
-                </button>
+                </button> */}
               </div>
             </div>
 
@@ -208,11 +208,50 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                       Fare
                     </div>
                     <div className="text-[15px] text-[#231F20BF]">
-                      ₦{(request.price ?? 0).toLocaleString()}
+                      {(request.totalAmount ?? request.total_amount ?? request.amount ?? request.total ?? request.finalPrice)
+                        ? `₦${(request.totalAmount ?? request.total_amount ?? request.amount ?? request.total ?? request.finalPrice).toLocaleString()}`
+                        : request.price != null
+                          ? `₦${request.price.toLocaleString()}`
+                          : "—"}
                     </div>
                   </div>
                 </div>
+
+                {/* Service Fee */}
+                {(() => {
+                  const baseFare = request.agreedPrice ?? request.calculatedPrice ?? request.price ?? 0;
+                  const fee = request.serviceFee ?? request.service_fee ?? request.fee ?? request.serviceCharge ?? Math.round(baseFare * 0.10);
+                  
+                  if (fee > 0) {
+                    return (
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" />
+                        <div>
+                          <div className="font-semibold text-[15px] text-[#231F20]">
+                            Service Charge (10%)
+                          </div>
+                          <div className="text-[15px] text-[#231F20BF]">
+                            ₦{fee.toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
+
+              {/* Description */}
+              {request.description && (
+                <div className="mt-4">
+                  <h4 className="text-[18px] font-semibold text-[#231F20] mb-2">
+                    Description
+                  </h4>
+                  <p className="text-[15px] text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    {request.description}
+                  </p>
+                </div>
+              )}
 
               <div>
                 <h4 className="text-[18px] font-semibold text-[#231F20] mb-3">

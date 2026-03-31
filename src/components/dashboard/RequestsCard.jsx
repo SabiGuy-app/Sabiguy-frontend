@@ -19,6 +19,7 @@ export default function RequestCard({
   request,
   onViewDetails,
   onTrackProvider,
+  onMessageProvider,
   onBookingCancelled,
   onStatusUpdate,
 }) {
@@ -41,7 +42,10 @@ export default function RequestCard({
       pending: "bg-yellow-100 text-[#FFC107] border-yellow-200",
       paid_escrow: "bg-[#007BFF1A] text-[#007BFF] border-[#007BFF]",
       active: "bg-blue-100 text-blue-600 border-blue-200",
-      "in progress": "bg-blue-100 text-blue-800 border-blue-200",
+      "enroute to pickup": "bg-blue-100 text-blue-800 border-blue-200",
+      "arrived at pickup": "bg-blue-100 text-blue-800 border-blue-200",
+      "enroute to dropoff": "bg-blue-100 text-blue-800 border-blue-200",
+      "arrived at dropoff": "bg-blue-100 text-blue-800 border-blue-200",
       "waiting confirmation": "bg-orange-200 text-orange-800 border-orange-200",
       completed: "bg-green-100 text-green-700 border-green-200",
       user_accepted_completion: "bg-green-100 text-green-700 border-green-200",
@@ -66,7 +70,11 @@ export default function RequestCard({
     setSubmitLoading(true);
     setApiError(null);
     try {
-      const response = await acceptCompletion(request.id, { score, review, tipAmount });
+      const payload = { score, review };
+      const tipIsEmpty =
+        tipAmount === undefined || tipAmount === null || tipAmount === "" || tipAmount === 0;
+      if (!tipIsEmpty) payload.tipAmount = tipAmount;
+      const response = await acceptCompletion(request.id, payload);
       const successMsg = response?.message || response?.data?.message || "Job completion accepted successfully";
       toast.success(successMsg);
       setSubmitted(true);
@@ -273,14 +281,17 @@ export default function RequestCard({
               </button>
             )}
 
-            {/* {["provider selected", "paid escrow", "in progress"].includes(
+            {["provider selected", "paid escrow", "enroute to pickup", "arrived at pickup", "enroute to dropoff", "arrived at dropoff"].includes(
               request.status.toLowerCase(),
             ) && (
-              <button className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+              <button
+                onClick={() => onMessageProvider?.(request)}
+                className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
                 <MessageCircle className="w-4 h-4" />
                 Message Provider
               </button>
-            )} */}
+            )}
 
             {isCompleted && (
               <>

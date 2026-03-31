@@ -60,8 +60,6 @@ try {
   }
 
   let response;
-
-  if (accountType === "Individual") {
   const providerPayload = {
     ninSlip: ninUrl,
     accountType,
@@ -70,23 +68,33 @@ try {
     gender: initialValues.gender,
     coverageRadius: {
        radius: initialValues.radius,
-       allowAnywhere:initialValues.allowAnywhere
-        }
+       allowAnywhere: initialValues.allowAnywhere
+    }
   };
 
-  response = await axios.post(
-    `${import.meta.env.VITE_BASE_URL}/provider`,
-    providerPayload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  )
-};
+  if (accountType === "Individual") {
+    response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/provider`,
+      providerPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  }
 
   // ✅ Step 2: If Business, send business info
   if (accountType === "Business") {
+    await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/provider`,
+      providerPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     const businessPayload = {
       businessName: values.businessName,
       cacNumber: values.cacNumber,
@@ -130,33 +138,27 @@ try {
 
   const AccountTypeSchema = Yup.object().shape({
     accountType: Yup.string().required("Please select an account type"),
-    ninSlip: Yup.mixed().nullable().when("accountType", {
-      is: "Individual",
-      then: (schema) => schema.required("NIN slip is required"),
-      otherwise: (schema) =>
-        schema.when("accountType", {
-          is: "Business",
-          then: (s) => s.required("NIN slip is required"),
-          otherwise: (s) => s.nullable(),
-        }),
-    }),
-    businessName: Yup.string().when("accountType", {
-      is: "Business",
-      then: (schema) => schema.required("Business name is required"),
-    }),
-    cacNumber: Yup.string().when("accountType", {
-      is: "Business",
-      then: (schema) => schema.required("CAC registration number is required"),
-    }),
-    businessAddress: Yup.string().when("accountType", {
-      is: "Business",
-      then: (schema) => schema.required("Business address is required"),
-    }),
-    cacFile: Yup.mixed().nullable().when("accountType", {
-      is: "Business",
-      then: (schema) => schema.required("CAC certificate is required"),
-      otherwise: (schema) => schema.nullable(),
-    }),
+    ninSlip: Yup.mixed()
+      .nullable()
+      .test(
+        "fileType",
+        "Only PDF, JPEG, or PNG files are allowed",
+        (value) =>
+          !value ||
+          ["application/pdf", "image/jpeg", "image/png"].includes(value.type),
+      ),
+    businessName: Yup.string(),
+    cacNumber: Yup.string(),
+    businessAddress: Yup.string(),
+    cacFile: Yup.mixed()
+      .nullable()
+      .test(
+        "fileType",
+        "Only PDF, JPEG, or PNG files are allowed",
+        (value) =>
+          !value ||
+          ["application/pdf", "image/jpeg", "image/png"].includes(value.type),
+      ),
   });
 
   return (
@@ -194,40 +196,52 @@ onSubmit={(values, { setSubmitting }) => {
               values,
               setFieldValue,
               setFieldTouched,
+              handleChange,
+              handleBlur,
               handleSubmit,
               validateForm,
               errors,
               touched,
-            }) => (
+            }) => {
+              const accountType = values.accountType;
+              const ninOk = !!values.ninSlip;
+              const businessOk =
+                !!values.businessName &&
+                !!values.cacNumber &&
+                !!values.businessAddress &&
+                !!values.cacFile;
 
+              const isFormComplete =
+                accountType === "Individual"
+                  ? ninOk
+                  : accountType === "Business"
+                    ? ninOk && businessOk
+                    : false;
+
+              return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <InputField 
            asRadio
-           name ="individual"
+           name="accountType"
   placeholder="Individual"
-  value={values.individual}
-
   isSelected={values.accountType === "Individual"}
   onClick={() => {
-    setFieldValue("accountType", "Individual");
-    setFieldTouched("accountType", true, true);
+    setFieldValue("accountType", "Individual", true);
+    setFieldTouched("accountType", true, false);
   }} />
           <InputField  
           asRadio
-          name= "business"
+          name="accountType"
   placeholder="Business"
-  value={values.business}
   isSelected={values.accountType === "Business"}
   onClick={() => {
-    setFieldValue("accountType", "Business");
-    setFieldTouched("accountType", true, true);
+    setFieldValue("accountType", "Business", true);
+    setFieldTouched("accountType", true, false);
   }} />
-  <ErrorMessage
-    name="accountType"
-    component="span"
-    className="text-red-500 text-sm"
-  />
+  {touched.accountType && errors.accountType && (
+    <span className="text-red-500 text-sm">{errors.accountType}</span>
+  )}
 
                     {values.accountType === "Individual" && (
                         <div className="flex flex-col gap-4 mt-4">
@@ -242,14 +256,14 @@ onSubmit={(values, { setSubmitting }) => {
                             <div>
   <p className="font-medium text-gray-700 mb-2">NIN Slip</p>
   <p className="text-sm text-gray-500 mb-3">
-    Kindly upload a picture of your CAC certificate (make sure all details are readable)
+    Kindly upload a picture of your NIN slip (make sure all details are readable). Accepted formats are PDF, JPEG & PNG
   </p>
 
   {/* Hidden file input */}
   <input
     id="ninSlip"
     type="file"
-    accept="image/*"
+    accept=".pdf,.jpeg,.jpg,.png"
     onChange={(e) => {
       setFieldValue("ninSlip", e.target.files[0]);
       setFieldTouched("ninSlip", true, true);
@@ -284,9 +298,9 @@ onSubmit={(values, { setSubmitting }) => {
                                 name="businessName"
                                 label="Registered Business Name"
                                 placeholder="Enter the exact name on your CAC certificate"
-                                onChange={(e) =>
-                      setFieldValue("businessName", e.target.value)
-                    }
+                                value={values.businessName}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
                             />
                             <ErrorMessage
                               name="businessName"
@@ -299,9 +313,9 @@ onSubmit={(values, { setSubmitting }) => {
                                 label="CAC Registration Number"
                                 placeholder="e.g BN1234567"
                                 italicPlaceholder
-                                onChange={(e) =>
-                      setFieldValue("cacNumber", e.target.value)
-                    }
+                                value={values.cacNumber}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
                             />
                             <ErrorMessage
                               name="cacNumber"
@@ -313,9 +327,9 @@ onSubmit={(values, { setSubmitting }) => {
                                 name= "businessAddress"
                                 label="Business Address"
                                 placeholder="Address"
-                                onChange={(e) =>
-                      setFieldValue("businessAddress", e.target.value)
-                    }
+                                value={values.businessAddress}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
                             />
                             <ErrorMessage
                               name="businessAddress"
@@ -326,14 +340,14 @@ onSubmit={(values, { setSubmitting }) => {
                           <div>
   <p className="font-medium text-gray-700 mb-2">CAC Certificate</p>
   <p className="text-sm text-gray-500 mb-3">
-    Kindly upload a picture of your CAC certificate (make sure all details are readable)
+    Kindly upload a picture of your CAC certificate (make sure all details are readable). Accepted formats are PDF, JPEG & PNG
   </p>
 
   {/* Hidden file input */}
   <input
     id="cacFile"
     type="file"
-    accept="image/*"
+    accept=".pdf,.jpeg,.jpg,.png"
     onChange={(e) => {
       setFieldValue("cacFile", e.target.files[0]);
       setFieldTouched("cacFile", true, true);
@@ -360,13 +374,13 @@ onSubmit={(values, { setSubmitting }) => {
                             <div>
   <p className="font-medium text-gray-700 mb-2">NIN Slip</p>
   <p className="text-sm text-gray-500 mb-3">
-    Kindly upload a picture of your NIN Slip (make sure all details are readable)
+    Kindly upload a picture of your NIN slip (make sure all details are readable). Accepted formats are PDF, JPEG & PNG
   </p>
 
   <input
     id="ninSlip"
     type="file"
-    accept="image/*"
+    accept=".pdf,.jpeg,.jpg,.png"
     onChange={(e) => {
       setFieldValue("ninSlip", e.target.files[0]);
       setFieldTouched("ninSlip", true, true);
@@ -396,7 +410,7 @@ onSubmit={(values, { setSubmitting }) => {
         <div className="flex justify-end mt-4">
   <button
     type="submit"
-    disabled={loading}
+    disabled={loading || !isFormComplete}
     onClick={async () => {
       const validationErrors = await validateForm();
       console.log("AccountType validation:", {
@@ -419,7 +433,8 @@ onSubmit={(values, { setSubmitting }) => {
               )}
             
         </form>
-            )}
+              );
+            }}
         </Formik>
       </div>
     </AccountSetupLayout>

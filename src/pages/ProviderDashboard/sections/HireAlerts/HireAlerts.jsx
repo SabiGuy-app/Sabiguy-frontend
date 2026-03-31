@@ -148,6 +148,15 @@ export default function HireAlerts() {
         dropoffLocation: booking.dropoffLocation || null,
         scheduleType: booking.scheduleType || "N/A",
         createdAt: booking.createdAt || null,
+        completedAt:
+          booking.completedAt ||
+          booking.completed_at ||
+          booking.completedOn ||
+          booking.completed_on ||
+          booking.updatedAt ||
+          null,
+        pickupNote: booking.pickupNote || "",
+        totalAmount: booking.totalAmount || 0,
         modeOfDelivery: booking.modeOfDelivery || "",
         distance: booking.distance || null,
         // Store original data for modal details
@@ -212,12 +221,11 @@ export default function HireAlerts() {
 
   const mapJobStatus = (apiStatus) => {
     const statusMap = {
-      provider_selected: "Awaiting Job Commencement",
+      provider_selected: "Awaiting Payment",
       in_progress: "Enroute to Pickup",
       arrived_at_dropoff: "Arrived at Dropoff",
       arrived_at_pickup: "Arrived at Pickup",
       enroute_to_dropoff: "Enroute to Dropoff",
-      waiting_confirmation: "Waiting confirmation",
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
       pending_customer: "Awaiting Response",
@@ -279,15 +287,16 @@ export default function HireAlerts() {
     const filters = ["All", "Active", "Pending", "Completed"];
 
     return (
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${activeFilter === filter.toLowerCase()
-              ? "bg-[#2D6A3E] text-white"
-              : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
-              }`}
+            className={`px-5 sm:px-6 py-2.5 rounded-xl font-semibold transition-all text-sm whitespace-nowrap ${
+              activeFilter === filter.toLowerCase()
+                ? "bg-[#2D6A3E] text-white shadow-md shadow-green-900/10 active:scale-95"
+                : "bg-white text-gray-500 border border-gray-200 hover:border-[#2D6A3E] hover:text-[#2D6A3E] active:scale-95"
+            }`}
           >
             {filter}
           </button>
@@ -303,17 +312,18 @@ export default function HireAlerts() {
 
     if (statusFilter === "active") {
       return (
-        status === "in progress" ||
+        status === "enroute to pickup" ||
+        status === "arrived at pickup" ||
+        status === "enroute to dropoff" ||
+        status === "arrived at dropoff" ||
         status === "paid escrow" ||
-        status === "waiting confirmation" ||
-        status === "awaiting confirmation" ||
-        status === "job confirmed"
+        status === "awaiting confirmation" 
       );
     }
 
     if (statusFilter === "pending") {
       return (
-        status === "awaiting job commencement"
+        status === "awaiting payment"
       );
     }
 
@@ -478,40 +488,52 @@ export default function HireAlerts() {
         onRefresh={handleRefresh}
       />
 
-      <div className="flex border-b mb-3">
+      <div className="flex border-b mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           onClick={() => setActiveTab("alert")}
-          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "alert"
-            ? "text-[#005823] border-b-2 border-[#005823]"
-            : "text-gray-500 hover:text-gray-700"
-            }`}
+          className={`flex-1 sm:flex-none px-4 sm:px-8 py-3.5 font-bold transition-all relative text-center text-sm sm:text-base ${
+            activeTab === "alert"
+              ? "text-[#005823]"
+              : "text-gray-400 hover:text-gray-600"
+          }`}
         >
-          Hire Alerts
-          {alerts.length > 0 && (
-            <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
-              {alerts.length}
-            </span>
+          <span className="flex items-center justify-center gap-2">
+            Hire Alerts
+            {alerts.length > 0 && (
+              <span className="px-2 py-0.5 text-[10px] bg-[#E90000] text-white rounded-full">
+                {alerts.length}
+              </span>
+            )}
+          </span>
+          {activeTab === "alert" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
           )}
         </button>
 
         <button
           onClick={() => setActiveTab("jobs")}
-          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === "jobs"
-            ? "text-[#005823] border-b-2 border-[#005823]"
-            : "text-gray-500 hover:text-gray-700"
-            }`}
+          className={`flex-1 sm:flex-none px-4 sm:px-8 py-3.5 font-bold transition-all relative text-center text-sm sm:text-base ${
+            activeTab === "jobs"
+              ? "text-[#005823]"
+              : "text-gray-400 hover:text-gray-600"
+          }`}
         >
-          Jobs
-          {jobs.length > 0 && (
-            <span className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded-full">
-              {jobs.length}
-            </span>
+          <span className="flex items-center justify-center gap-2">
+            Jobs
+            {jobs.length > 0 && (
+              <span className="px-2 py-0.5 text-[10px] bg-[#007BFF] text-white rounded-full">
+                {jobs.length}
+              </span>
+            )}
+          </span>
+          {activeTab === "jobs" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
           )}
         </button>
       </div>
 
       {activeTab === "alert" ? (
-        <div className="space-y-4 mt-3">
+        <div className="space-y-4 mt-1">
           {alerts.length > 0 ? (
             alerts.map((alert) => (
               <AlertsCard
