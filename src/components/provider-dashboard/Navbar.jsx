@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Search, MapPin, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
@@ -330,7 +330,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   return (
     <>
       <Toaster position="top-right" />
-      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-4 sm:px-6 py-4 sticky top-0 z-40 shadow-sm">
+      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-40 shadow-sm h-16 sm:h-20">
 
         {/* Mobile Menu Button (toggles sidebar) */}
         <button className="md:hidden p-2 text-gray-600 hover:text-gray-800" onClick={onMenuClick}>
@@ -364,21 +364,21 @@ export default function ProviderNavbar({ onMenuClick }) {
         </button>
 
         {/* Right Icons */}
-        <div className="flex items-center justify-center space-x-2 sm:space-x-4">
-          <div className="lg:flex items-center justify-center gap-1 px-2 py-1 sm:gap-2 sm:px-3 sm:py-2 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="flex items-center justify-end space-x-1.5 sm:space-x-4 flex-1">
+          <div className="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center justify-center gap-1 sm:gap-2">
               {locationEnabled && (
                 <MapPin size={10} className="sm:size-3 text-green-500 animate-pulse" />
               )}
               <span
-                className={`text-xs font-medium transition-colors ${isAvailable ? "text-gray-700" : "text-gray-400"
+                className={`text-[10px] sm:text-xs font-semibold transition-colors ${isAvailable ? "text-gray-700" : "text-gray-400"
                   }`}
               >
                 {isAvailable
                   ? locationEnabled
-                    ? "Available • Location On"
+                    ? "Available" 
                     : "Available"
-                  : "Not Available"}
+                  : "Offline"}
               </span>
             </div>
 
