@@ -58,7 +58,7 @@ export default function StepOne({ onNext, email }) {
           "Email not verified. OTP sent to email",
         )
       ) {
-        setSuccessMessage(
+        setErrorMessage(
           "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
         );
         localStorage.setItem("email", effectiveEmail);
