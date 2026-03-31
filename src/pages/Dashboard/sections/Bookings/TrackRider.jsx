@@ -533,7 +533,12 @@ export default function TrackRider() {
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
-  const serviceCost = bookingDetails?.calculatedPrice || 0;
+  const serviceCost = bookingDetails?.agreedPrice ?? bookingDetails?.calculatedPrice ?? bookingDetails?.price ?? 0;
+  const calculatedServiceFee = Math.round(serviceCost * 0.10);
+  const calculatedTotalAmount = serviceCost + calculatedServiceFee;
+  
+  const totalAmount = bookingDetails?.totalAmount ?? bookingDetails?.total_amount ?? bookingDetails?.amount ?? calculatedTotalAmount;
+  const fareDisplay = totalAmount ?? serviceCost;
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-NG", {
@@ -681,9 +686,19 @@ export default function TrackRider() {
           <div className="mb-4">
             <h3 className="text-[16px] font-semibold text-[#231F20]">Fare</h3>
             <span className="text-[20px] font-bold text-[#231F20]">
-              {formatCurrency(serviceCost)}
+              {fareDisplay != null ? formatCurrency(fareDisplay) : "—"}
             </span>
           </div>
+
+          {/* Description */}
+          {bookingDetails?.description && (
+            <div className="mb-4">
+              <h3 className="text-[16px] font-semibold text-[#231F20] mb-1">Description</h3>
+              <p className="bg-[#007BFF08] rounded-lg text-[#231F20BF] border border-[#231F201A] p-4">
+                {bookingDetails.description}
+              </p>
+            </div>
+          )}
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <button

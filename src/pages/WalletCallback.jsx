@@ -2,23 +2,25 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PaymentConfirmationModal from "../components/dashboard/PaymentConfirmationModal";
 import { verifyPayment } from "../api/payment";
+import { verifyWalletFunding } from "../api/provider";
 import { toast } from "react-hot-toast";
 
 export default function WalletCallback() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
-    // Safety check for nulls
+
     const reference = searchParams.get("reference") || "";
     const urlBookingId = searchParams.get("bookingId");
 
-    // Initialize state lazily to avoid hydration mismatch
     const [bookingId, setBookingId] = useState(null);
     const [isBookingPayment, setIsBookingPayment] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    // Detect if this is a wallet funding reference (starts with "FUND_")
+    const isWalletFunding = reference.startsWith("FUND_");
+
     useEffect(() => {
-        // Safe localStorage access
         let storedBookingId = null;
         try {
             storedBookingId = localStorage.getItem("pendingBookingPaymentId");
@@ -29,15 +31,15 @@ export default function WalletCallback() {
         const finalBookingId = urlBookingId || storedBookingId;
 
         if (reference) {
-            if (finalBookingId) {
+            if (finalBookingId && !isWalletFunding) {
+                // Booking payment callback
                 setBookingId(finalBookingId);
                 setIsBookingPayment(true);
                 handleBookingVerification(finalBookingId, reference);
             } else {
+                // Wallet funding callback — show verification modal
                 setShowModal(true);
             }
-        } else {
-            // navigate("/dashboard/settings");
         }
     }, [reference, urlBookingId]);
 
@@ -62,14 +64,12 @@ export default function WalletCallback() {
             const isDoubleVerify = error?.response?.status === 404 || error?.response?.status === 409;
 
             if (isDoubleVerify) {
-                // Already verified (double-redirect) — treat as success
                 toast.success("Payment already verified!", { id: "verify-booking" });
                 localStorage.removeItem("pendingBookingPaymentId");
                 setTimeout(() => {
                     navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_success=true&reference=${ref}`);
                 }, 1000);
             } else {
-                // Real failure — do NOT show success
                 toast.error("Payment verification failed. Please contact support.", { id: "verify-booking" });
                 setTimeout(() => {
                     navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_failed=true`);
@@ -81,7 +81,6 @@ export default function WalletCallback() {
     };
 
     const handleWalletSuccess = () => {
-
         navigate("/dashboard/settings?payment_success=true");
     };
 
@@ -90,8 +89,7 @@ export default function WalletCallback() {
         navigate("/dashboard/settings");
     };
 
-
-    // SIMPLE RENDER TO MATCH MODAL STYLE
+    // Booking payment — show spinner while verifying
     if (isBookingPayment) {
         return (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -111,12 +109,14 @@ export default function WalletCallback() {
         );
     }
 
+    // Wallet funding — show PaymentConfirmationModal with correct verify function
     return (
         <PaymentConfirmationModal
             isOpen={showModal}
             reference={reference}
             onClose={handleClose}
             onSuccess={handleWalletSuccess}
+            verifyFn={isWalletFunding ? verifyWalletFunding : verifyPayment}
         />
     );
 }
