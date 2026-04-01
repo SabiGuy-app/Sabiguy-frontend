@@ -6,21 +6,59 @@ import { motion } from "framer-motion";
 import { Formik, ErrorMessage } from "formik";
 import { PersonalInfoSchema } from "../schema";
 import CoverageRadius from "../../../../components/Coverage";
+import axios from "axios";
 
 export default function PersonalInfoForm({ onNext }) {
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   const handleSubmit = async (values) => {
-    onNext(values);
+    setLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/provider`,
+        {
+          gender: values.gender,
+          city: values.city,
+          address: values.address,
+        },
+        token
+          ? {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          : undefined
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        setSuccessMessage("Personal information saved successfully!");
+        onNext(values);
+      } else {
+        setErrorMessage("Failed to save your details. Please try again.");
+      }
+    } catch (error) {
+      console.error("PersonalInfo submit error:", error);
+      if (error.response) {
+        setErrorMessage(
+          error.response.data?.message ||
+            "Unable to save your details. Please try again."
+        );
+      } else if (error.request) {
+        setErrorMessage("No response from the server. Please try again later.");
+      } else {
+        setErrorMessage("An unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const initialValues = {
-  gender: "",
-  city: "",
-  address: "",
-  radius: 5,
-  allowAnywhere: true
-};
-
-console.log('Initial values:', initialValues);
 
 
   return (
@@ -43,8 +81,6 @@ console.log('Initial values:', initialValues);
               gender: "",
               city: "",
               address: "",
-             radius: 5,
-          allowAnywhere: true
             }}
             validationSchema={PersonalInfoSchema}
             
@@ -125,12 +161,20 @@ console.log('Initial values:', initialValues);
                 <div className="flex justify-end mt-4">
                   <button
                     type="submit"
-                    disabled={!isValid || !dirty}
+                    disabled={loading || !isValid || !dirty}
                     className="p-3 rounded-md text-white bg-[#005823BF] hover:bg-[#005823] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Save & Continue
+                    {loading ? "Saving..." : "Save & Continue"}
                   </button>
                 </div>
+                {errorMessage && (
+                  <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+                )}
+                {successMessage && (
+                  <p className="text-green-600 text-sm mt-2">
+                    {successMessage}
+                  </p>
+                )}
               </form>
         )}
         </Formik>

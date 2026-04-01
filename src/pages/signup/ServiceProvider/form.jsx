@@ -31,10 +31,11 @@ export default function Form() {
     const kycMap = {
       0: 1,  // Register
       1: 4,  // PersonalInfoForm
-      2: 6,  // FacialCapture
-      3: 8,  // SkillsVerification
-      4: 9,  // UploadAutoMobile
-      5: 10, // BankAccountForm
+      2: 5,  // AccountTypeForm
+      3: 6,  // FacialCapture
+      4: 8,  // SkillsVerification
+      5: 9, // UploadAutoMobile
+      6: 10, // BankAccountForm
     };
     
 
@@ -78,13 +79,12 @@ export default function Form() {
     <PersonalInfoForm onNext={handleNext} onBack={handleBack} />, //KYC level 2
     <AccountTypeForm
       onNext={handleNext}
-      initialValues={formData}
       onBack={handleBack}
-    />,
-    <FacialCapture onNext={handleNext} onBack={handleBack} />, //KYC level 3
+    />, //KYC level 3
+    <FacialCapture onNext={handleNext} onBack={handleBack} />, //KYC level 4
     <FaceCapture onNext={handleNext} onBack={handleBack} />,
-    <SkillsVerification onNext={handleNext} onBack={handleBack} />, //KYC level 4
-    <UploadAutoMobile onNext={handleNext} onBack={handleBack} />, //KYC level 5
+    <SkillsVerification onNext={handleNext} onBack={handleBack} />, //KYC level 5
+    <UploadAutoMobile onNext={handleNext} onBack={handleBack} />, //KYC level 6
     <BankAccountForm onNext={handleNext} onBack={handleBack} />, //KYC level completed
     <Congrats onNext={handleNext} onBack={handleBack} />,
   ];
