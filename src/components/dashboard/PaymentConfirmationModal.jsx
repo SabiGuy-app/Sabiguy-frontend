@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { X, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { verifyPayment as verifyPaymentAPI } from "../../api/payment";
 
-const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess }) => {
+const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess, verifyFn }) => {
     const [status, setStatus] = useState("verifying");
     const [message, setMessage] = useState("Verifying your payment...");
+
+    // Use custom verify function if provided, otherwise fall back to default
+    const verify = verifyFn || verifyPaymentAPI;
 
     useEffect(() => {
         if (isOpen && reference) {
@@ -17,7 +20,7 @@ const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess }) => 
             setStatus("verifying");
             setMessage("Verifying your payment...");
 
-            const data = await verifyPaymentAPI(reference);
+            const data = await verify(reference);
 
             if (data.success) {
                 setStatus("success");
@@ -32,8 +35,20 @@ const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess }) => 
                 setMessage(data.message || "Payment verification failed");
             }
         } catch (error) {
-            setStatus("error");
-            setMessage(error?.response?.data?.message || "Failed to verify payment. Please contact support.");
+            // Handle already-verified (double redirect) as success
+            const statusCode = error?.response?.status;
+            if (statusCode === 404 || statusCode === 409) {
+                setStatus("success");
+                setMessage("Payment already verified!");
+                if (onSuccess) {
+                    setTimeout(() => {
+                        onSuccess();
+                    }, 2000);
+                }
+            } else {
+                setStatus("error");
+                setMessage(error?.response?.data?.message || "Failed to verify payment. Please contact support.");
+            }
         }
     };
 
