@@ -205,7 +205,7 @@ export default function AvailableRiders() {
           <DeliveryMap
             pickup={pickupCoords}
             dropoff={dropoffCoords}
-            // riderLocation={riderLocation}
+            // riderLocation={rideocation}
           />
         </div>
       </div>
