@@ -5,6 +5,7 @@ import location from "/location.png";
 import { useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
 import { selectProvider } from "../../../../api/bookings";
+import DeliveryMap from "../../../../components/dashboard/Map";
 
 export default function AvailableRiders() {
   const navigate = useNavigate();
@@ -15,6 +16,16 @@ export default function AvailableRiders() {
   const bookingDetails = booking?.data?.booking || {};
   const bookingId = bookingDetails._id;
   const bookingAmount = bookingDetails.calculatedPrice;
+
+  const pickupCoords = {
+    latitude: bookingDetails?.pickupLocation?.coordinates?.coordinates?.[1],
+    longitude: bookingDetails?.pickupLocation?.coordinates?.coordinates?.[0],
+  };
+
+  const dropoffCoords = {
+    latitude: bookingDetails?.dropoffLocation?.coordinates?.coordinates?.[1],
+    longitude: bookingDetails?.dropoffLocation?.coordinates?.coordinates?.[0],
+  };
 
   // Helper: extract provider ID from whichever field the API uses
   const getProviderId = (provider) =>
@@ -187,8 +198,15 @@ export default function AvailableRiders() {
         </div>
 
         {/* Map */}
-        <div>
+        {/* <div>
           <img src={location} alt="" className="w-[700px] h-[660px]" />
+        </div> */}
+       <div className="h-[660px]">
+          <DeliveryMap
+            pickup={pickupCoords}
+            dropoff={dropoffCoords}
+            // riderLocation={riderLocation}
+          />
         </div>
       </div>
     </>

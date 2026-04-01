@@ -1,6 +1,5 @@
 import AccountSetupLayout from "./layout";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import InputField from "../../../../components/InputField";
 import { ErrorMessage, Formik } from 'formik';
 import * as Yup from "yup";
@@ -8,119 +7,81 @@ import { IoIosArrowBack, IoIosAdd } from "react-icons/io";
 import axios from "axios";
 
 
-export default function AccountTypeForm({onNext, initialValues, onBack}) {
+export default function AccountTypeForm({onNext, onBack}) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (values) => {
     setLoading(true);
-    setErrorMessage('');
+    setErrorMessage("");
     console.log("AccountType submit values:", values);
-    
-   const email = localStorage.getItem("email");
-       const google_email =   localStorage.getItem("google-email")
 
-const token = localStorage.getItem("token");
+    const email = localStorage.getItem("email");
+    const google_email = localStorage.getItem("google-email");
+    const token = localStorage.getItem("token");
 
-try {
-  const accountType = values.accountType;
-  const uploadEndpoint =`${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/certificates`;
-  let ninUrl = "";
-  let cacUrl = "";
+    try {
+      const accountType = values.accountType;
+      const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/certificates`;
+      let ninUrl = "";
+      let cacUrl = "";
 
-  // ✅ Upload NIN Slip (if provided)
-  if (values.ninSlip) {
-    const ninForm = new FormData();
-    ninForm.append("file", values.ninSlip);
+      // ? Upload NIN Slip (if provided)
+      if (values.ninSlip) {
+        const ninForm = new FormData();
+        ninForm.append("file", values.ninSlip);
 
-    const ninUpload = await axios.post(uploadEndpoint, ninForm, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+        const ninUpload = await axios.post(uploadEndpoint, ninForm, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    ninUrl = ninUpload.data.file?.url || "";
-  }
-
-  // ✅ Upload CAC Certificate (if provided)
-  if (values.cacFile) {
-    const cacForm = new FormData();
-    cacForm.append("file", values.cacFile);
-
-    const cacUpload = await axios.post(uploadEndpoint, cacForm, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`, // include token here too
-      },
-    });
-
-    cacUrl = cacUpload.data.file?.url || "";
-  }
-
-  let response;
-  const providerPayload = {
-    ninSlip: ninUrl,
-    accountType,
-    address: initialValues.address,
-    city: initialValues.city,
-    gender: initialValues.gender,
-    coverageRadius: {
-       radius: initialValues.radius,
-       allowAnywhere: initialValues.allowAnywhere
-    }
-  };
-
-  if (accountType === "Individual") {
-    response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/provider`,
-      providerPayload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        ninUrl = ninUpload.data.file?.url || "";
       }
-    );
-  }
 
-  // ✅ Step 2: If Business, send business info
-  if (accountType === "Business") {
-    await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/provider`,
-      providerPayload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      // ? Upload CAC Certificate (if provided)
+      if (values.cacFile) {
+        const cacForm = new FormData();
+        cacForm.append("file", values.cacFile);
+
+        const cacUpload = await axios.post(uploadEndpoint, cacForm, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // include token here too
+          },
+        });
+
+        cacUrl = cacUpload.data.file?.url || "";
       }
-    );
-    const businessPayload = {
-      businessName: values.businessName,
-      cacNumber: values.cacNumber,
-      businessAddress: values.businessAddress,
-      cacFile: cacUrl,
-    };
 
-    response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/provider/business`,
-      businessPayload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-  }
+      const businessPayload = {
+        accountType,
+        ninSlip: ninUrl,
+        businessName: values.businessName,
+        cacNumber: values.cacNumber,
+        businessAddress: values.businessAddress,
+        cacFile: cacUrl,
+      };
 
-       if (response.status === 200 || response.status === 201) {
-      
-        setSuccessMessage("");
-        onNext()
-      } else {
-          setErrorMessage(data.message || "Something went wrong");
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/provider/business`,
+        businessPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        setSuccessMessage("");
+        onNext();
+      } else {
+        setErrorMessage(response.data?.message || "Something went wrong");
+      }
     } catch (error) {
       console.error("An error occurred:", error);
       if (error.response) {
@@ -133,8 +94,7 @@ try {
     } finally {
       setLoading(false);
     }
-    };
-
+  };
 
   const AccountTypeSchema = Yup.object().shape({
     accountType: Yup.string().required("Please select an account type"),
@@ -440,3 +400,5 @@ onSubmit={(values, { setSubmitting }) => {
     </AccountSetupLayout>
   );
 }
+
+
