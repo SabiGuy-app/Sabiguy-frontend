@@ -50,6 +50,7 @@ import VehicleType from "./pages/Dashboard/sections/Bookings/VehicleType";
 import AvailableRiders from "./pages/Dashboard/sections/Bookings/AvailableRiders";
 import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2";
 import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
+import LandingPage from "./pages/LandingPage";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
 import NotVerified from "./pages/signup/ServiceProvider/kyc-not-verified";
@@ -78,7 +79,8 @@ function App() {
         <URLNormalizer />
         <div>
           <Routes>
-            <Route path="/" element={<Welcome />} />
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/service-provider/signup" element={<SignupForm />} />
             <Route path="/congrats" element={<Congrats />} />

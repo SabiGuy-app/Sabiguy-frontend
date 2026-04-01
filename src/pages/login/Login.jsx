@@ -469,7 +469,7 @@ export default function Login() {
                 <p className="text-center mb-5 text-sm mt-4">
                   Don't have an account yet?
                   <Link
-                    to="/"
+                    to="/welcome"
                     className="text-[#005823] font-medium hover:text-black transition-all duration-200 inline-flex items-center group ml-1"
                   >
                     Sign Up
