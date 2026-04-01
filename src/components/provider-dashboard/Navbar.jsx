@@ -346,6 +346,7 @@ export default function ProviderNavbar({ onMenuClick }) {
         </button>
 
         {/* Desktop Search */}
+        {/* 
         <div className="hidden md:flex flex-1 items-center ml-10 max-w-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2">
           <Search size={18} className="text-gray-500 mr-2" />
           <input
@@ -353,15 +354,18 @@ export default function ProviderNavbar({ onMenuClick }) {
             placeholder="Search providers or services..."
             className="bg-transparent w-full outline-none text-sm"
           />
-        </div>
+        </div> 
+        */}
 
         {/* Mobile Search Toggle */}
+        {/* 
         <button
           onClick={() => setShowSearch(!showSearch)}
           className="md:hidden text-gray-600 p-2 hover:text-gray-800"
         >
           <Search size={20} />
-        </button>
+        </button> 
+        */}
 
         {/* Right Icons */}
         <div className="flex items-center justify-end space-x-1.5 sm:space-x-4 flex-1">
@@ -448,6 +452,7 @@ export default function ProviderNavbar({ onMenuClick }) {
         </div>
 
         {/* Mobile Search Dropdown */}
+        {/* 
         {showSearch && (
           <div className="absolute top-16 left-0 w-full bg-white border-t border-gray-200 p-4 md:hidden">
             <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2">
@@ -459,7 +464,8 @@ export default function ProviderNavbar({ onMenuClick }) {
               />
             </div>
           </div>
-        )}
+        )} 
+        */}
 
 
         <NotificationDrawer
