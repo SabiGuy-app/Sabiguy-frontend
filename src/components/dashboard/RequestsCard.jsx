@@ -259,7 +259,7 @@ export default function RequestCard({
               "pending providers",
               "provider selected",
               "payment pending",
-              "awaiting_provider_acceptance"
+              "awaiting provider acceptance"
             ].includes(request.status.toLowerCase()) && (
               <button
                 onClick={() => setCancelModalOpen(true)}
@@ -269,7 +269,7 @@ export default function RequestCard({
               </button>
             )}
 
-            {["provider selected", "in progress", "arrived at pickup", "enroute to dropoff", "arrived at dropoff", "completed"].includes(
+            {["provider selected", "in progress", "enroute to pickup", "arrived at pickup", "enroute to dropoff", "arrived at dropoff", "completed"].includes(
               request.status.toLowerCase(),
             ) && (
               <button
