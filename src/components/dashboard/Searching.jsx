@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getBookingsDetails } from "../../../src/api/bookings";
 import useBookingStore from "../../../src/stores/booking.store";
 
-const POLL_INTERVAL_MS = 3000; // check every 3 seconds
+const POLL_INTERVAL_MS = 3000;
 const TIMEOUT_MS = 60000;
 
 export default function SearchingLoader() {
@@ -11,16 +11,14 @@ export default function SearchingLoader() {
   const booking = useBookingStore((state) => state.booking);
   const setBooking = useBookingStore((state) => state.setBooking);
 
-  const [elapsed, setElapsed] = useState(0); // seconds shown in UI
+  const [elapsed, setElapsed] = useState(0);
   const [timedOut, setTimedOut] = useState(false);
   const [error, setError] = useState("");
 
   const pollRef = useRef(null);
   const timerRef = useRef(null);
   const startTimeRef = useRef(Date.now());
-  console.log("nnnn");
 
-  // Pull booking ID from wherever your store puts it
   const bookingId =
     booking?.data?.booking?._id ||
     booking?.booking?._id ||
@@ -38,13 +36,11 @@ export default function SearchingLoader() {
       return;
     }
 
-    // Tick the elapsed counter every second for the UI
     timerRef.current = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
 
     const poll = async () => {
-      // Hard timeout check
       if (Date.now() - startTimeRef.current >= TIMEOUT_MS) {
         stopPolling();
         setTimedOut(true);
@@ -61,14 +57,11 @@ export default function SearchingLoader() {
           setBooking(data);
           navigate("/bookings/summary");
         }
-        // else: no providers yet — keep polling
       } catch (err) {
         console.error("Polling error:", err);
-        // Don't stop polling on a transient network error — just log it
       }
     };
 
-    // Run once immediately, then on interval
     poll();
     pollRef.current = setInterval(poll, POLL_INTERVAL_MS);
 
@@ -108,7 +101,6 @@ export default function SearchingLoader() {
     pollRef.current = setInterval(poll, POLL_INTERVAL_MS);
   };
 
-  // ── Timed-out state ──────────────────────────────────────────────────────
   if (timedOut) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
@@ -154,7 +146,6 @@ export default function SearchingLoader() {
     );
   }
 
-  // ── Error state ──────────────────────────────────────────────────────────
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
@@ -169,13 +160,11 @@ export default function SearchingLoader() {
     );
   }
 
-  // ── Searching state ──────────────────────────────────────────────────────
   const progress = Math.min((elapsed / 60) * 100, 100);
   const remaining = Math.max(60 - elapsed, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-      {/* Pulsing ring animation */}
       <div className="relative w-32 h-32 mb-8">
         <div className="absolute inset-0 rounded-full border-4 border-[#005823] opacity-20 animate-ping" />
         <div className="absolute inset-2 rounded-full border-4 border-[#005823] opacity-30 animate-ping [animation-delay:0.4s]" />
@@ -204,7 +193,6 @@ export default function SearchingLoader() {
         takes less than a minute.
       </p>
 
-      {/* Progress bar */}
       <div className="w-full max-w-xs mb-2">
         <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
           <div
