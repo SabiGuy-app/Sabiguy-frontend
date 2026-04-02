@@ -1,8 +1,6 @@
 import api from "./axios";
 
-
 export const notificationService = {
-
   fetchUnreadCount: async () => {
     const token = localStorage.getItem("token");
 
@@ -28,22 +26,30 @@ export const notificationService = {
   markAsRead: async (id) => {
     const token = localStorage.getItem("token");
 
-    const { data } = await api.patch(`/notifications/${id}/read`, {}, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const { data } = await api.patch(
+      `/notifications/${id}/read`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
     return data;
   },
 
   markAllAsRead: async () => {
     const token = localStorage.getItem("token");
 
-    const { data } = await api.patch("/notifications/read-all", {}, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const { data } = await api.patch(
+      "/notifications/read-all",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
     return data;
   },
 
@@ -58,8 +64,13 @@ export const notificationService = {
     return data;
   },
 
-getNotificationPreferences: () => api.get("/notifications/preferences"),
-updateNotificationPreferences: (body) => api.patch("/notifications/preferences", body),
-
-}
-
+  getNotificationPreferences: async () => {
+    const { data } = await api.get("/notifications/preferences");
+    return data;
+  },
+  
+  updateNotificationPreferences: async (body) => {
+    const { data } = await api.patch("/notifications/preferences", body);
+    return data;
+  },
+};

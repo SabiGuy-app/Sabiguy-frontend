@@ -282,7 +282,10 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section className="bg-white">
+      <section
+        style={{ backgroundImage: `url("/home/works.png")` }}
+        className="bg-white py-20"
+      >
         <div className="w-[90%] mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-[42px] font-bold text-[#231F20]">
@@ -298,7 +301,7 @@ const LandingPage = () => {
               return (
                 <div
                   key={index}
-                  className="p-8 border-2 border-[#2A334933]/20 rounded-[12px]"
+                  className="p-8 border-2 border-[#2A334933]/20 rounded-[12px] hover:bg-[#F0FDF4]"
                 >
                   <div className="w-8 h-8 bg-[#31784D] rounded-[5px] flex items-center justify-center mb-5">
                     <img src={step.image} className="w-5 h-5 text-white" />
@@ -423,15 +426,20 @@ const LandingPage = () => {
             </div>
           </div>
 
-          <div className="bg-[#005823CC] rounded-[32px] px-10 py-20 text-center text-white">
-            <div className="lg:w-[60%] m-auto">
+          <div
+            className="relative overflow-hidden rounded-[32px] px-10 py-20 text-center text-white bg-cover bg-center"
+            style={{
+              backgroundImage: `url('/home/providers.png')`,
+            }}
+          >
+            <div className="relative z-10 lg:w-[60%] m-auto">
               <h3 className="text-[60px] font-bold mb-3">{content.heading}</h3>
               <p className="text-green-100 text-[20px] leading-relaxed mb-8">
                 {content.subheading}
               </p>
             </div>
 
-            <div className="lg:w-[40%] m-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-2 mb-8">
+            <div className="relative z-10 lg:w-[40%] m-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-2 mb-8">
               {content.perks.map((perk, i) => (
                 <span
                   key={i}
@@ -459,7 +467,7 @@ const LandingPage = () => {
 
             <Link
               to={"/welcome"}
-              className="bg-white text-[#231F20CC] font-bold text-[20px] px-8 py-3 rounded-lg hover:bg-green-50 transition-colors"
+              className="relative z-10 inline-block bg-white text-[#231F20CC] font-bold text-[20px] px-8 py-3 rounded-lg hover:bg-green-50 transition-colors"
             >
               {content.cta}
             </Link>
@@ -531,35 +539,39 @@ const LandingPage = () => {
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <Link
-                to={"/"}
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-white text-black px-6 py-3 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-all"
               >
                 <img
-                  src="/home/playstore.png"
-                  alt="Apple logo"
-                  className="w-7 h-7"
+                  src="/home/apple.png"
+                  alt="Apple Store logo"
+                  className="w-6 h-6"
                 />
                 <div className="text-left leading-tight">
                   <div className="text-[10px] uppercase">Download on the</div>
                   <div className="text-xl font-bold">App Store</div>
                 </div>
-              </Link>
+              </a>
 
-              <Link
-                to={"/"}
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-white text-black px-6 py-3 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-all"
               >
                 <img
-                  src="/home/apple.png"
+                  src="/home/playstore.png"
                   alt="Play Store logo"
-                  className="w-7 h-7"
+                  className="w-6 h-6"
                 />
                 <div className="text-left leading-tight">
                   <div className="text-[10px] uppercase">GET IT ON</div>
                   <div className="text-xl font-bold">Google Play</div>
                 </div>
-              </Link>
+              </a>
             </div>
           </div>
 
@@ -611,18 +623,12 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section className="relative h-[400px] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/path-to-network-bg.jpg"
-            alt="Network Background"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-[#dbe6e0]/80"></div>
-        </div>
-
+      <section
+        style={{ backgroundImage: `url("/home/network.png")` }}
+        className="relative h-[500px] flex items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat"
+      >
         <div className="relative z-10 text-center px-6 max-w-4xl">
-          <h2 className="text-xl md:text-[42px] font-bold text-black mb-8 leading-snug">
+          <h2 className="text-xl md:text-[42px] font-bold text-white mb-8 leading-snug">
             Join the growing network of people and businesses using SabiGuy to
             get things done every day.
           </h2>
