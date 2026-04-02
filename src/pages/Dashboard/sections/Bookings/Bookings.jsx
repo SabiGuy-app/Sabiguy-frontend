@@ -161,15 +161,13 @@ export default function Bookings() {
         setSuccessMessage(res?.message || "Booking created successfully!");
         formik.resetForm();
         console.log("Navigating to searching page...");
-        navigate("/dashboard/provider/searching");
+        // navigate("/dashboard/provider/searching");
 
-        setTimeout(() => {
-          if (values.autoAcceptNearest) {
-            navigate("/bookings/summary");
-          } else {
-            navigate("/bookings/availableriders");
-          }
-        }, 2500);
+        if (values.autoAcceptNearest) {
+          navigate("/dashboard/provider/searching");
+        } else {
+          navigate("/bookings/availableriders");
+        }
       } catch (error) {
         console.error("Booking creation error:", error);
         if (error.response) {
