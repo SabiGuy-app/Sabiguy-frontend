@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Search, Menu } from "lucide-react";
+import { Bell, Search, Menu, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
@@ -9,6 +9,7 @@ import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
 import { handleLogout } from "../../api/auth";
 import { io } from "socket.io-client";
+import userLocationService from "../../services/userLocationService";
 
 export default function Navbar({ onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
@@ -17,6 +18,7 @@ export default function Navbar({ onMenuClick }) {
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [locationEnabled, setLocationEnabled] = useState(false);
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
@@ -183,6 +185,7 @@ export default function Navbar({ onMenuClick }) {
 
     // Cleanup: disconnect socket on unmount to prevent duplicates
     return () => {
+      userLocationService.stopTracking();
       newSocket.disconnect();
     };
   }, []);
@@ -204,6 +207,65 @@ export default function Navbar({ onMenuClick }) {
     setShowNotifications(true);
     fetchNotifications();
   };
+
+  const startLocationTracking = async () => {
+    if (!navigator.geolocation) {
+      alert("Your browser does not support location tracking");
+      return false;
+    }
+
+    try {
+      // Request permission first
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+        });
+      });
+
+      console.log("✅ User location permission granted");
+
+      // Send an immediate update on login
+      if (position?.coords) {
+        userLocationService.sendLocation(
+          position.coords.latitude,
+          position.coords.longitude,
+          position.coords.accuracy,
+        );
+      }
+
+      // Start continuous tracking
+      userLocationService.startTracking(socket);
+      setLocationEnabled(true);
+
+      return true;
+    } catch (error) {
+      console.error("❌ User location permission denied:", error);
+
+      // Show user-friendly error
+      const errorMessages = {
+        1: "Location permission denied. Please enable location access in your browser settings.",
+        2: "Location unavailable. Please check your device settings.",
+        3: "Location request timed out. Please try again.",
+      };
+
+      alert(errorMessages[error.code] || "Failed to enable location tracking");
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    startLocationTracking();
+
+    return () => {
+      userLocationService.stopTracking();
+      setLocationEnabled(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    userLocationService.setSocket(socket);
+  }, [socket]);
 
   // Test notification (remove after debugging)
   const testNotification = () => {
@@ -256,6 +318,25 @@ export default function Navbar({ onMenuClick }) {
 
         {/* Right Icons */}
         <div className="flex items-center space-x-4">
+          {/* Location Indicator (user) */}
+          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+            {locationEnabled ? (
+              <>
+                <MapPin size={12} className="text-green-500 animate-pulse" />
+                <span className="text-[11px] font-semibold text-gray-700">
+                  Location On
+                </span>
+              </>
+            ) : (
+              <>
+                <MapPin size={12} className="text-gray-400" />
+                <span className="text-[11px] font-semibold text-gray-400">
+                  Location Off
+                </span>
+              </>
+            )}
+          </div>
+
           {/* Test Button (remove after debugging) */}
           {/* <button
             onClick={testNotification}
