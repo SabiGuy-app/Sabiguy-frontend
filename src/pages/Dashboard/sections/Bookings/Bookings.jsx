@@ -16,6 +16,7 @@ import {
 import { allowSystem } from "../../../../api/bookings";
 import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
+import { useAuthStore } from "../../../../stores/auth.store";
 
 const vehicleOptions = [
   {
@@ -57,12 +58,14 @@ export default function Bookings() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [pickupMode, setPickupMode] = useState("manual");
 
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
 
   const setBooking = useBookingStore((state) => state.setBooking);
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -88,6 +91,13 @@ export default function Bookings() {
   const location = useLocation();
   const preselectedService =
     new URLSearchParams(location.search).get("service") ?? "";
+  const currentLocationValue =
+    user?.data?.currentLocation?.address ||
+    user?.data?.currentLocation?.formattedAddress ||
+    user?.currentLocation?.address ||
+    user?.currentLocation?.formattedAddress ||
+    "";
+  const hasCurrentLocation = !!currentLocationValue;
 
   const formik = useFormik({
     initialValues: {
@@ -379,6 +389,18 @@ export default function Bookings() {
     setSelectedRequest(null);
   };
 
+  const handlePickupModeChange = (mode) => {
+    if (mode === "current" && !hasCurrentLocation) {
+      setErrorMessage("Current location is not available yet.");
+      return;
+    }
+
+    setPickupMode(mode);
+    if (mode === "current") {
+      formik.setFieldValue("pickupAddress", currentLocationValue);
+    }
+  };
+
   return (
     <DashboardLayout>
       <BookingsTour />
@@ -472,13 +494,39 @@ export default function Bookings() {
             </div>
             <div id="booking-location" className="space-y-4">
               <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handlePickupModeChange("current")}
+                    disabled={!hasCurrentLocation}
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                      pickupMode === "current"
+                        ? "border-[#005823] bg-[#f0f9f4] text-[#005823]"
+                        : "border-gray-200 bg-white text-gray-600 hover:border-[#005823] hover:text-[#005823]"
+                    } ${!hasCurrentLocation ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    Use current location
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePickupModeChange("manual")}
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                      pickupMode === "manual"
+                        ? "border-[#005823] bg-[#f0f9f4] text-[#005823]"
+                        : "border-gray-200 bg-white text-gray-600 hover:border-[#005823] hover:text-[#005823]"
+                    }`}
+                  >
+                    Enter manually
+                  </button>
+                </div>
                 <InputField
                   name="pickupAddress"
                   label="Pickup location"
                   placeholder="24 Palm Avenue, Lagos"
                   value={formik.values.pickupAddress}
-                  onChange={formik.handleChange}
+                  onChange={pickupMode === "manual" ? formik.handleChange : undefined}
                   onBlur={formik.handleBlur}
+                  readOnly={pickupMode === "current"}
                 />
                 {formik.touched.pickupAddress &&
                   formik.errors.pickupAddress && (
