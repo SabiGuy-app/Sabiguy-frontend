@@ -161,7 +161,7 @@ export default function StartNavigation() {
             Pickup note
           </h3>
           <p className="bg-[#007BFF08] rounded-lg text-[#231F2080] border border-[#231F201A] p-4 mb-4">
-            Lorem ipsum elementum scelerisque nullam quis non nibh.
+{alert?.originalData?.pickupNote || "No pickup note provided."}
           </p>
 
           <div className="mb-6">
