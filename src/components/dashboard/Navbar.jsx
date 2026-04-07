@@ -237,22 +237,22 @@ export default function Navbar({ onMenuClick }) {
         </button>
 
         {/* Desktop Search */}
-        <div className="hidden md:flex flex-1 items-center ml-10 max-w-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2">
+        {/* <div className="hidden md:flex flex-1 items-center ml-10 max-w-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2">
           <Search size={18} className="text-gray-500 mr-2" />
           <input
             type="text"
             placeholder="Search providers or services..."
             className="bg-transparent w-full outline-none text-sm"
           />
-        </div>
+        </div> */}
 
         {/* Mobile Search Toggle */}
-        <button
+        {/* <button
           onClick={() => setShowSearch(!showSearch)}
           className="md:hidden text-gray-600"
         >
           <Search size={22} />
-        </button>
+        </button> */}
 
         {/* Right Icons */}
         <div className="flex items-center space-x-4">
