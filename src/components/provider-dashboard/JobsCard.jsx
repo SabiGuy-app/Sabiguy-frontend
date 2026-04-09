@@ -280,7 +280,7 @@ export default function JobsCard({
                 className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
               >
                 <MessageCircle className="w-4 h-4" />
-                Message
+                Message Customer
               </button>
             )}
             {normalizedStatus === "awaiting_payment" && (

@@ -39,6 +39,7 @@ export default function RequestCard({
     const styles = {
       pending: "bg-yellow-100 text-[#FFC107] border-yellow-200",
       paid_escrow: "bg-[#007BFF1A] text-[#007BFF] border-[#007BFF]",
+      cancelled: "bg-red-100 text-red-700 border-red-200",
       active: "bg-blue-100 text-blue-600 border-blue-200",
       "enroute to pickup": "bg-blue-100 text-blue-800 border-blue-200",
       "arrived at pickup": "bg-blue-100 text-blue-800 border-blue-200",

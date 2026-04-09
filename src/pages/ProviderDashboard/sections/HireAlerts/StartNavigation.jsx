@@ -7,14 +7,51 @@ import {
   MapPin,
   Star,
   Shield,
-  ArrowLeft,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import location from "/location.png";
+import DeliveryMap from "../../../../components/dashboard/Map";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { startJob } from "../../../../api/bookings";
-import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
+import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
+
+// Error Boundary for Map Component
+class MapErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Map Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full bg-gray-100 rounded-lg flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-gray-200">
+          <MapPin size={48} className="text-gray-300 mb-4" />
+          <h3 className="text-gray-600 font-semibold mb-2">Map unavailable</h3>
+          <p className="text-gray-400 text-sm max-w-xs">
+            We're having trouble loading the live map. Try refreshing the page
+            to try again.
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            className="mt-4 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Retry Loading Map
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function StartNavigation() {
   const navigate = useNavigate();
@@ -23,6 +60,7 @@ export default function StartNavigation() {
   const user = useAuthStore((state) => state.user);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
+  const [riderLocation, setRiderLocation] = useState(null);
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
@@ -33,6 +71,21 @@ export default function StartNavigation() {
     booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
     booking?.data?.providers?.[0] ||
     {};
+
+  const getLocationCoords = (location) => {
+    const coords = location?.coordinates?.coordinates || location?.coordinates;
+    if (Array.isArray(coords) && coords.length >= 2) {
+      return { longitude: coords[0], latitude: coords[1] };
+    }
+    return { longitude: undefined, latitude: undefined };
+  };
+
+  const pickupCoords = getLocationCoords(
+    alert?.originalData?.pickupLocation || bookingDetails?.pickupLocation,
+  );
+  const dropoffCoords = getLocationCoords(
+    alert?.originalData?.dropoffLocation || bookingDetails?.dropoffLocation,
+  );
 
   const handleStartNavigation = async () => {
     if (!alert?.id) return;
@@ -52,22 +105,11 @@ export default function StartNavigation() {
   };
 
   return (
-    <ProviderDashboardLayout>
-      <div className="mb-4 sm:mb-6">
-        <button
-          onClick={() => navigate("/dashboard/provider/hire-alert")}
-          className="flex items-center gap-2 text-[#231F2080] hover:text-[#005823] transition-colors font-medium group"
-        >
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#E6EFE9] transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </div>
-          <span className="text-sm sm:text-base">Back to Alerts</span>
-        </button>
-      </div>
-
-      <div className="flex flex-col-reverse md:grid md:grid-cols-2 gap-6 md:gap-10">
-        <div className="w-full">
-          <h1 className="text-2xl md:text-[28px] font-semibold text-[#231F20] mb-4">
+    <>
+      <ProviderNavbar />
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
+        <div className="">
+          <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
             {alert?.subCategory}
           </h1>
 
@@ -77,8 +119,8 @@ export default function StartNavigation() {
                 <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
               </div>
               <div>
-                <span className="text-[#231F2080] text-sm sm:text-[16px]">Pickup</span>
-                <p className="text-[#231F20BF] text-lg sm:text-[20px]">
+                <span className="text-[#231F2080] text-[16px]">Pickup</span>
+                <p className="text-[#231F20BF] text-[20px]">
                   {alert?.originalData?.pickupLocation?.address}
                 </p>
               </div>
@@ -89,8 +131,8 @@ export default function StartNavigation() {
                 <MapPin className="w-3 h-3 text-[#005823]" />
               </div>
               <div>
-                <span className="text-[#231F2080] text-sm sm:text-[16px]">Dropoff</span>
-                <p className="text-[#231F20BF] text-lg sm:text-[20px]">
+                <span className="text-[#231F2080] text-[16px]">Dropoff</span>
+                <p className="text-[#231F20BF] text-[20px]">
                   {alert?.originalData?.dropoffLocation?.address}
                 </p>
               </div>
@@ -140,18 +182,18 @@ export default function StartNavigation() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6">
-              <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="grid grid-cols-3 gap-6">
+              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
               </button>
-              <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <MessageCircle className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">
                   Message
                 </span>
               </button>
-              <button className="col-span-2 sm:col-span-1 text-[#E90000] font-semibold text-sm sm:text-[16px] py-2 px-3 hover:text-red-700 transition-colors text-center">
+              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
                 Cancel Request
               </button>
             </div>
@@ -164,10 +206,10 @@ export default function StartNavigation() {
 {alert?.originalData?.pickupNote || "No pickup note provided."}
           </p>
 
-          <div className="mb-6">
-            <h3 className="text-sm sm:text-[16px] font-semibold text-[#231F20]">Fare</h3>
+          <div className="mb-4">
+            <h3 className="text-[16px] font-semibold text-[#231F20]">Fare</h3>
             <div className="flex items-center gap-2">
-              <span className="text-xl sm:text-[20px] font-bold text-[#2D6A3E]">
+              <span className="text-[20px] font-bold text-[#231F20]">
                 ₦{Number(alert?.price || 0).toLocaleString()}
               </span>
             </div>
@@ -176,20 +218,22 @@ export default function StartNavigation() {
           <button
             onClick={handleStartNavigation}
             disabled={starting}
-            className="w-full sm:w-auto px-10 py-3.5 rounded-xl bg-[#005823] text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-800 transition-all active:scale-[0.98]"
+            className="px-4 py-2 rounded-md bg-[#005823] text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {starting ? "Starting..." : "Start Navigation"}
           </button>
         </div>
 
-        <div className="w-full">
-          <img 
-            src={location} 
-            alt="Map View" 
-            className="w-full h-[250px] md:h-[660px] object-cover rounded-2xl shadow-md" 
-          />
+        <div className="h-[400px] sm:h-[500px] lg:h-[660px] rounded-2xl overflow-hidden shadow-inner lg:shadow-lg lg:sticky lg:top-24">
+          <MapErrorBoundary>
+            <DeliveryMap
+              pickup={pickupCoords}
+              dropoff={dropoffCoords}
+              riderLocation={riderLocation}
+            />
+          </MapErrorBoundary>
         </div>
       </div>
-    </ProviderDashboardLayout>
+    </>
   );
 }

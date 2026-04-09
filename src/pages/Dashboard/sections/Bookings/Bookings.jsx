@@ -373,9 +373,15 @@ export default function Bookings() {
   };
 
   const handleMessageProvider = (request) => {
-    const bookingId = request?.fullOrderId || request?.id;
+    const booking = request?.originalData || {};
+    const bookingId = booking?._id || request?.fullOrderId || request?.id;
+    const provider = booking?.providerId || null;
+
     if (!bookingId) return;
-    navigate(`/dashboard/chat?bookingId=${bookingId}`);
+
+    navigate(`/dashboard/chat?bookingId=${bookingId}`, {
+      state: { booking, provider },
+    });
   };
 
   const refreshBookings = async () => {
@@ -524,7 +530,9 @@ export default function Bookings() {
                   label="Pickup location"
                   placeholder="24 Palm Avenue, Lagos"
                   value={formik.values.pickupAddress}
-                  onChange={pickupMode === "manual" ? formik.handleChange : undefined}
+                  onChange={
+                    pickupMode === "manual" ? formik.handleChange : undefined
+                  }
                   onBlur={formik.handleBlur}
                   readOnly={pickupMode === "current"}
                 />

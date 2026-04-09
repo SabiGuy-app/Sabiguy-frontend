@@ -24,7 +24,7 @@ export default function WithdrawStep1({
       setError("Please enter a valid amount");
       return;
     }
-    if (numAmount < 1000) {
+    if (numAmount < 10) {
       setError("Minimum withdrawal: ₦1,000");
       return;
     }
