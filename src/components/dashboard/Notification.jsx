@@ -87,7 +87,7 @@ export default function NotificationDrawer({
     onClose();
 
     // Route to hire alert page for new_booking_request type
-    if (notification.type === "new_booking_request") {
+    if (notification.type === "new_booking_request" || notification.type === "booking_selected") {
       navigate("/dashboard/provider/hire-alert", {
         state: {
           bookingData: notification.data,

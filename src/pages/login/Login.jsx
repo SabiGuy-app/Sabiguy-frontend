@@ -151,11 +151,14 @@ export default function Login() {
 
       // Extract token + email
       const token = res.token;
+      const refreshToken = res.refreshToken;
       const loginEmail = res.email || normalizedEmail;
 
       // Store token
       localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refreshToken);
       useAuthStore.getState().setToken(token);
+      // useAuthStore.getState().setRefreshToken(refreshToken);
 
       // 2. GET FULL USER DETAILS
       const fullUser = await getUserByEmail(loginEmail);
