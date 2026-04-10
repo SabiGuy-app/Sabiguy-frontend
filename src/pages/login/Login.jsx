@@ -439,11 +439,11 @@ export default function Login() {
                     {successMessage}
                   </div>
                 )}
-                <div className="flex justify-start mb-5">
+                <div className="flex justify-end mb-5">
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="font-semibold text-lg hover:text-[#005823BF]"
+                    className="font-semibold text-[14px] hover:text-[#005823BF] hover:underline cursor-pointer"
                   >
                     Forgot Password?
                   </button>
