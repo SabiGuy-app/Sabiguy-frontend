@@ -440,7 +440,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="font-semibold text-lg hover:text-[#005823BF]"
+                    className="font-semibold text-lg hover:text-[#005823BF] hover:underline cursor-pointer"
                   >
                     Forgot Password?
                   </button>
