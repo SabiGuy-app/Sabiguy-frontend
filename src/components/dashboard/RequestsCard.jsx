@@ -1,3 +1,4 @@
+// RequestCard.jsx
 import {
   Calendar,
   MapPin,
@@ -7,13 +8,16 @@ import {
   MessageCircle,
   Copy,
   Check,
+  CreditCard, // ← new
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // ← new
 import { toast } from "react-toastify";
 import distance from "/distance.png";
-import { acceptCompletion, cancelBooking } from "../../api/bookings";
+import { acceptCompletion } from "../../api/bookings";
 import ReviewModal from "./ReviewModal";
 import CancelRequestButton from "../CancelRequestButton";
+import useBookingStore from "../../stores/booking.store";
 
 export default function RequestCard({
   request,
@@ -28,6 +32,16 @@ export default function RequestCard({
   const [apiError, setApiError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+
+  const navigate = useNavigate();
+  const setBooking = useBookingStore((s) => s.setBooking);
+
+  const handleMakePayment = () => {
+    if (request.rawBooking) {
+      setBooking(request.rawBooking);
+    }
+    navigate(`/bookings/summary?bookingId=${request.id}`);
+  };
 
   const handleCopy = (text, idType) => {
     navigator.clipboard.writeText(text);
@@ -52,7 +66,6 @@ export default function RequestCard({
     };
     return styles[status.toLowerCase()] || styles.pending;
   };
-
 
   const handleReviewSubmit = async ({ score, review, tipAmount }) => {
     setSubmitLoading(true);
@@ -109,7 +122,6 @@ export default function RequestCard({
         loading={submitLoading}
         apiError={apiError}
       />
-
 
       <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
         <div className="flex-1">
@@ -204,6 +216,7 @@ export default function RequestCard({
             )}
           </div>
 
+          {/* ── locations ────────────────────────────────────────────────── */}
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
@@ -240,13 +253,26 @@ export default function RequestCard({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          {/* ── action buttons ───────────────────────────────────────────── */}
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => onViewDetails(request)}
               className="px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"
             >
               View Details
             </button>
+
+            {["provider selected", "payment pending"].includes(
+              request.status.toLowerCase(),
+            ) && (
+              <button
+                onClick={handleMakePayment}
+                className="px-4 py-2 mt-3 bg-[#005823] text-white rounded-[4px] font-medium hover:bg-[#004018] transition-colors flex items-center gap-2"
+              >
+                <CreditCard className="w-4 h-4" />
+                Make Payment
+              </button>
+            )}
 
             {[
               "pending providers",
@@ -278,23 +304,6 @@ export default function RequestCard({
               </button>
             )}
 
-            {[
-              "provider selected",
-              "paid escrow",
-              "enroute to pickup",
-              "arrived at pickup",
-              "enroute to dropoff",
-              "arrived at dropoff",
-            ].includes(request.status.toLowerCase()) && (
-              <button
-                onClick={() => onMessageProvider?.(request)}
-                className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Message Provider
-              </button>
-            )}
-
             {isCompleted && (
               <>
                 {request.ratings || submitted ? (
@@ -323,13 +332,6 @@ export default function RequestCard({
                 )}
               </>
             )}
-
-            {/* {(request.status.toLowerCase() === "pending" ||
-              request.status.toLowerCase() === "in progress") && (
-              <button className="px-3 py-1 mt-3 bg-white text-red-600 border border-red-300 rounded-lg font-medium hover:bg-red-50 transition-colors">
-                Close Request
-              </button>
-            )} */}
           </div>
         </div>
       </div>
