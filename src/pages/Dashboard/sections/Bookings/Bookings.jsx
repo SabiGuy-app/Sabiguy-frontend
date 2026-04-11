@@ -92,11 +92,7 @@ export default function Bookings() {
   const preselectedService =
     new URLSearchParams(location.search).get("service") ?? "";
   const currentLocationValue =
-    user?.data?.currentLocation?.address ||
-    user?.data?.currentLocation?.formattedAddress ||
-    user?.currentLocation?.address ||
-    user?.currentLocation?.formattedAddress ||
-    "";
+    localStorage.getItem("currentLocationAddress") || "";
   const hasCurrentLocation = !!currentLocationValue;
 
   const formik = useFormik({
@@ -356,7 +352,7 @@ export default function Bookings() {
         return [
           "pending providers",
           "payment pending",
-          "awaiting provider acceptance",
+          // "awaiting provider acceptance",
         ].includes(status);
       if (statusFilter === "completed")
         return [

@@ -110,15 +110,21 @@ const LandingPage = () => {
               Support
             </a>
             <a
-              href="#"
+              href="/login"
               className="font-medium text-[#1A1A1A]"
               onClick={() => setIsOpen(false)}
             >
               Login
             </a>
-            <button className="bg-[#4F8461] text-white px-10 py-2.5 rounded-full font-medium">
-              Sign up
-            </button>
+            <a
+              href="/welcome"
+              className="font-medium text-[#1A1A1A]"
+              onClick={() => setIsOpen(false)}
+            >
+              <button className="bg-[#4F8461] text-white px-10 py-2.5 rounded-full font-medium">
+                Sign up
+              </button>
+            </a>
           </div>
         </div>
       </nav>
@@ -157,13 +163,13 @@ const LandingPage = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link
-                to={"/service-provider/signup"}
+                to={"/signup"}
                 className="bg-[#31784D] text-[20px] text-white px-10 py-4 rounded-xl font-bold hover:bg-[#255d3b] transition-all shadow-lg shadow-green-900/10"
               >
                 Request a SabiGuy
               </Link>
               <Link
-                to={"/signup"}
+                to={"/service-provider/signup"}
                 className="bg-white text-[20px] text-[#2A3349] border-2 border-gray-100 px-10 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all"
               >
                 Become a SabiGuy
