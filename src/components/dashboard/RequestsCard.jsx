@@ -62,6 +62,7 @@ export default function RequestCard({
       "waiting confirmation": "bg-orange-200 text-orange-800 border-orange-200",
       completed: "bg-green-100 text-green-700 border-green-200",
       user_accepted_completion: "bg-green-100 text-green-700 border-green-200",
+      "funds released": "bg-green-100 text-green-700 border-green-200",
     };
     return styles[status.toLowerCase()] || styles.pending;
   };
