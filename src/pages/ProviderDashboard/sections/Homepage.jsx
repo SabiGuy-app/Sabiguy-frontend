@@ -11,7 +11,6 @@ import RevenueByServiceType from "../../../components/provider-dashboard/Revenue
 import RecentTransactions from "../../../components/provider-dashboard/RecentTransactions";
 import { getDashboardStats, formatCurrency } from "../../../api/provider";
 import { useAuthStore } from "../../../stores/auth.store";
-import { runLocationDiagnostics } from "../../../services/location";
 
 
 export default function ProviderDashboard() {
@@ -113,12 +112,7 @@ export default function ProviderDashboard() {
           <p className="mb-2 text-sm">
             Here's a quick look at your business performance today.
           </p>
-          <button 
-  onClick={runLocationDiagnostics}
-  className="px-4 py-2 bg-blue-500 text-white rounded"
->
-  🔍 Test Location
-</button> 
+         
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
