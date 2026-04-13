@@ -7,7 +7,7 @@ export default function ProfileTabs({ activeTab, onTabChange }) {
     { id: "wallet", label: "Wallet", icon: FiCreditCard },
     { id: "password", label: "Password", icon: FiLock },
     { id: "settings", label: "Settings & preferences", icon: FiSettings },
-    { id: "referrals", label: "Referrals", icon: FiGift },
+    // { id: "referrals", label: "Referrals", icon: FiGift },
 
   ];
 

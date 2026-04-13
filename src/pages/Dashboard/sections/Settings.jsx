@@ -118,7 +118,7 @@ export default function ProfilePage() {
               <PasswordTab />
             ))}
           {activeTab === "settings" && <SettingsTab />}
-          {activeTab === "referrals" && <ReferralsTab profile={profile} />}
+          {/* {activeTab === "referrals" && <ReferralsTab profile={profile} />} */}
         </div>
       </div>
     </DashboardLayout>

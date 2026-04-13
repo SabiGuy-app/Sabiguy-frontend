@@ -46,9 +46,9 @@ export default function BookingSummary2() {
   // Zustand store
   const booking = useBookingStore((state) => state.booking);
   const setBooking = useBookingStore((state) => state.setBooking);
-  const selectedProviderId = useBookingStore(
-    (state) => state.selectedProviderId,
-  );
+  // const selectedProviderId = useBookingStore(
+  //   (state) => state.selectedProviderId,
+  // );
 
   const bookingDetails = booking?.data?.booking || {};
   const providerDetails = bookingDetails?.providerId || {};
@@ -210,7 +210,7 @@ export default function BookingSummary2() {
   };
 
   const SuccessModal = () => (
-    <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-8 relative animate-fadeIn">
         <button
           onClick={() => {
@@ -472,6 +472,7 @@ export default function BookingSummary2() {
             {/* Vehicle Image */}
             <img
               src={providerDetails?.workVisuals?.[0]?.pictures?.[0]}
+              alt="Provider's Car"
               className="w-full h-auto object-contain"
             />
           </div>
@@ -686,7 +687,7 @@ className="px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hove
                     ? "Paid ✓"
                     : isProcessing
                       ? "Processing..."
-                      : `Confirm & Pay ${formatCurrency(calculatedTotalAmount)}`}
+                      : `Confirm & Pay ${formatCurrency(totalAmount)}`}
                 </button>
               </div>
             </div>

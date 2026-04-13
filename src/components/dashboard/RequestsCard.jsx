@@ -12,8 +12,8 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import distance from "/distance.png";
 import { acceptCompletion, cancelBooking } from "../../api/bookings";
-import CancelModal from "../CancelModal";
 import ReviewModal from "./ReviewModal";
+import CancelRequestButton from "../CancelRequestButton";
 
 export default function RequestCard({
   request,
@@ -27,8 +27,6 @@ export default function RequestCard({
   const [submitLoading, setSubmitLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
-  const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
   const handleCopy = (text, idType) => {
@@ -53,18 +51,6 @@ export default function RequestCard({
     return styles[status.toLowerCase()] || styles.pending;
   };
 
-  const handleCancel = async (reason) => {
-    setCancelLoading(true);
-    try {
-      await cancelBooking(request.id, reason);
-      setCancelModalOpen(false);
-      if (onBookingCancelled) onBookingCancelled();
-    } catch (err) {
-      console.error("Failed to cancel booking:", err);
-    } finally {
-      setCancelLoading(false);
-    }
-  };
 
   const handleReviewSubmit = async ({ score, review, tipAmount }) => {
     setSubmitLoading(true);
@@ -72,10 +58,16 @@ export default function RequestCard({
     try {
       const payload = { score, review };
       const tipIsEmpty =
-        tipAmount === undefined || tipAmount === null || tipAmount === "" || tipAmount === 0;
+        tipAmount === undefined ||
+        tipAmount === null ||
+        tipAmount === "" ||
+        tipAmount === 0;
       if (!tipIsEmpty) payload.tipAmount = tipAmount;
       const response = await acceptCompletion(request.id, payload);
-      const successMsg = response?.message || response?.data?.message || "Job completion accepted successfully";
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion accepted successfully";
       toast.success(successMsg);
       setSubmitted(true);
       setModalOpen(false);
@@ -84,9 +76,13 @@ export default function RequestCard({
       console.error("Failed to submit review:", err);
       const status = err.response?.status;
       let message = "Something went wrong. Please try again later.";
-      if (status === 400) message = "Invalid rating score or tip amount. Please check your inputs.";
+      if (status === 400)
+        message =
+          "Invalid rating score or tip amount. Please check your inputs.";
       else if (status === 401) message = "Unauthorized. Please log in again.";
-      else if (status === 409) message = "This booking has not been marked as completed by the provider yet.";
+      else if (status === 409)
+        message =
+          "This booking has not been marked as completed by the provider yet.";
       setApiError(message);
       toast.error(message);
     } finally {
@@ -112,12 +108,6 @@ export default function RequestCard({
         apiError={apiError}
       />
 
-      <CancelModal
-        isOpen={cancelModalOpen}
-        onClose={() => setCancelModalOpen(false)}
-        onConfirm={handleCancel}
-        loading={cancelLoading}
-      />
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
         <div className="flex-1">
@@ -149,24 +139,27 @@ export default function RequestCard({
                     <p className="text-[16px] text-[#231F20BF]">
                       {request.providerName}
                     </p>
-                    {request.providerIdDisplay && request.providerIdDisplay !== "—" && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
-                          ID: {request.providerIdDisplay}
-                        </span>
-                        <button
-                          onClick={() => handleCopy(request.fullProviderId, "provider")}
-                          className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
-                          title="Copy Full Provider ID"
-                        >
-                          {copiedId === "provider" ? (
-                            <Check size={10} className="text-green-500" />
-                          ) : (
-                            <Copy size={10} />
-                          )}
-                        </button>
-                      </div>
-                    )}
+                    {request.providerIdDisplay &&
+                      request.providerIdDisplay !== "—" && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
+                            ID: {request.providerIdDisplay}
+                          </span>
+                          <button
+                            onClick={() =>
+                              handleCopy(request.fullProviderId, "provider")
+                            }
+                            className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
+                            title="Copy Full Provider ID"
+                          >
+                            {copiedId === "provider" ? (
+                              <Check size={10} className="text-green-500" />
+                            ) : (
+                              <Copy size={10} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                   </div>
                 </div>
                 <div className="flex flex-col sm:items-end items-start">
@@ -218,9 +211,7 @@ export default function RequestCard({
                 <p className="text-sm font-medium text-gray-700">
                   Pickup Location
                 </p>
-                <p className="text-sm text-gray-600">
-                  {request.pickupAddress}
-                </p>
+                <p className="text-sm text-gray-600">{request.pickupAddress}</p>
               </div>
             </div>
 
@@ -259,18 +250,23 @@ export default function RequestCard({
               "pending providers",
               "provider selected",
               "payment pending",
-              "awaiting_provider_acceptance"
+              "awaiting provider acceptance",
             ].includes(request.status.toLowerCase()) && (
-              <button
-                onClick={() => setCancelModalOpen(true)}
-             className="w-fit mx-auto sm:mx-0 px-3 py-1 mt-3 bg-white text-red-600 border border-red-300 rounded-lg font-medium hover:bg-red-50 transition-colors"              >
-                Cancel Request
-              </button>
+              <CancelRequestButton
+                bookingId={request.id}
+                onSuccess={onBookingCancelled}
+              />
             )}
 
-            {["provider selected", "in progress", "arrived at pickup", "enroute to dropoff", "arrived at dropoff", "completed"].includes(
-              request.status.toLowerCase(),
-            ) && (
+            {[
+              "provider selected",
+              "in progress",
+              "enroute to pickup",
+              "arrived at pickup",
+              "enroute to dropoff",
+              "arrived at dropoff",
+              "completed",
+            ].includes(request.status.toLowerCase()) && (
               <button
                 onClick={() => onTrackProvider(request.id)}
                 className="w-fit mx-auto sm:mx-0 px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
@@ -280,9 +276,14 @@ export default function RequestCard({
               </button>
             )}
 
-            {["provider selected", "paid escrow", "enroute to pickup", "arrived at pickup", "enroute to dropoff", "arrived at dropoff"].includes(
-              request.status.toLowerCase(),
-            ) && (
+            {[
+              "provider selected",
+              "paid escrow",
+              "enroute to pickup",
+              "arrived at pickup",
+              "enroute to dropoff",
+              "arrived at dropoff",
+            ].includes(request.status.toLowerCase()) && (
               <button
                 onClick={() => onMessageProvider?.(request)}
                 className="w-fit mx-auto sm:mx-0 px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
