@@ -98,7 +98,7 @@ export default function JobsCard({
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
       <div className="flex flex-col sm:flex-row items-start gap-4">
         <div className="flex-1 w-full">
-          <div className="flex flex-col sm:flex-row items-start justify-between mb-3 gap-2">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h3 className="text-xl font-semibold text-gray-900">
@@ -106,7 +106,7 @@ export default function JobsCard({
                 </h3>
               </div>
               <div className="text-sm text-gray-600 flex items-center gap-2">
-                <span>Provider: {job?.providerName || "You"}</span>
+                <span>User: {job?.originalData?.userId?.fullName || "Customer"}</span>
                 {job?.orderId && (
                   <div className="flex items-center gap-1.5 ml-2">
                     <span className="text-xs font-bold text-gray-500">#{job.orderId}</span>
