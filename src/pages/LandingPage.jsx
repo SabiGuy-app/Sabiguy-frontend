@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import LandingFooter from "../components/LandingFooter";
 
 const LandingPage = () => {
   const [active, setActive] = useState("providers");
@@ -38,8 +39,6 @@ const LandingPage = () => {
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
-
-  const currentYear = new Date().getFullYear();
 
   return (
     <div>
@@ -96,7 +95,7 @@ const LandingPage = () => {
         >
           <div className="flex flex-col items-center gap-6">
             <a
-              href="#"
+              href="/welcome"
               className="font-medium text-[#1A1A1A]"
               onClick={() => setIsOpen(false)}
             >
@@ -110,15 +109,18 @@ const LandingPage = () => {
               Support
             </a>
             <a
-              href="#"
+              href="/login"
               className="font-medium text-[#1A1A1A]"
               onClick={() => setIsOpen(false)}
             >
               Login
             </a>
-            <button className="bg-[#4F8461] text-white px-10 py-2.5 rounded-full font-medium">
+            <a
+              href="/welcome"
+              className="bg-[#4F8461] text-white px-10 py-2.5 rounded-full font-medium"
+            >
               Sign up
-            </button>
+            </a>
           </div>
         </div>
       </nav>
@@ -127,7 +129,7 @@ const LandingPage = () => {
       <section className="relative w-full bg-[#fafffc] pt-12 md:pt-20 pb-0 overflow-hidden">
         <div className="w-[90%] mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
           <div className="w-full md:w-[40%] z-10 text-center md:text-left mb-12 md:mb-0">
-            <h1 className="text-5xl md:text-[65px] font-bold tracking-tight text-[#1A1A1A] leading-[1.1] mb-6">
+            <h1 className="text-3xl md:text-[65px] font-bold tracking-tight text-[#1A1A1A] leading-[1.1] mb-6">
               Need Something <br />
               Done Quickly? <br />
               <span className="text-[#005823]">Get a SabiGuy.</span>
@@ -157,13 +159,13 @@ const LandingPage = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link
-                to={"/service-provider/signup"}
+                to={"/welcome"}
                 className="bg-[#31784D] text-[20px] text-white px-10 py-4 rounded-xl font-bold hover:bg-[#255d3b] transition-all shadow-lg shadow-green-900/10"
               >
                 Request a SabiGuy
               </Link>
               <Link
-                to={"/signup"}
+                to={"/service-provider/signup"}
                 className="bg-white text-[20px] text-[#2A3349] border-2 border-gray-100 px-10 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all"
               >
                 Become a SabiGuy
@@ -301,7 +303,7 @@ const LandingPage = () => {
               return (
                 <div
                   key={index}
-                  className="p-8 border-2 border-[#2A334933]/20 rounded-[12px] hover:bg-[#F0FDF4]"
+                  className="p-8 border-3 border-[#2A334933]/20 rounded-[12px] hover:bg-[#F0FDF4]"
                 >
                   <div className="w-8 h-8 bg-[#31784D] rounded-[5px] flex items-center justify-center mb-5">
                     <img src={step.image} className="w-5 h-5 text-white" />
@@ -478,7 +480,7 @@ const LandingPage = () => {
       {/* trusted  */}
       <section className="py-16 bg-white">
         <div className="w-[90%] mx-auto">
-          <h2 className="text-[42px] font-bold text-gray-900 text-center mb-10">
+          <h2 className="text-[28px] lg:text-[42px] font-bold text-gray-900 text-center mb-10">
             Trusted by individuals and businesses.
           </h2>
 
@@ -527,10 +529,10 @@ const LandingPage = () => {
 
       {/* App  */}
       <section className="bg-[#23703a] overflow-hidden my-10 ">
-        <div className="w-[90%] m-auto flex flex-col md:flex-row items-center">
-          <div className="md:w-3/5 text-white z-10 py-20">
-            <h2 className="text-4xl md:text-[42px] font-bold mb-2 leading-tight">
-              Get Things Done Faster <br /> with the SabiGuy App
+        <div className="w-[90%] m-auto flex flex-col justify-between md:flex-row">
+          <div className="lg:w-[40%] text-white z-10 py-16">
+            <h2 className="text-[30px] md:text-[42px] font-bold mb-2 leading-tight">
+              Get Things Done Faster with the SabiGuy App
             </h2>
             <p className="text-[16px] opacity-90 max-w-xl mb-20 leading-relaxed">
               From dispatch deliveries to everyday errands, SabiGuy connects you
@@ -538,12 +540,12 @@ const LandingPage = () => {
               anytime, anywhere.
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <a
                 href="#"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white text-black px-6 py-3 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-all"
+                className="bg-white text-black p-3 lg:px-6 lg:py-3 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-all"
               >
                 <img
                   src="/home/apple.png"
@@ -560,7 +562,7 @@ const LandingPage = () => {
                 href="#"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white text-black px-6 py-3 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-all"
+                className="bg-white text-black p-3 lg:px-6 lg:py-3 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-all"
               >
                 <img
                   src="/home/playstore.png"
@@ -587,7 +589,7 @@ const LandingPage = () => {
 
       {/* faq  */}
       <section className="w-[90%] m-auto lg:flex justify-between my-20">
-        <h2 className="text-[35px] text-[#231F20] font-bold w-[30%]">
+        <h2 className=" text-[28px] lg:text-[35px] text-[#231F20] font-bold w-[70%] lg:w-[30%]">
           Frequently Asked Questions
         </h2>
         <div className="md:w-[60%]">
@@ -633,16 +635,16 @@ const LandingPage = () => {
             get things done every day.
           </h2>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="grid grid-cols-2 justify-center gap-4">
             <Link
               to={"/service-provider/signup"}
-              className="bg-[#23703a] text-white px-8 py-4 rounded-lg font-semibold hover:bg-[#1b562d] transition-all text-[20px]"
+              className="bg-[#23703a] text-[14px] lg:text-[20px] text-white py-4 lg:px-8 lg:py-4 rounded-lg font-semibold hover:bg-[#1b562d] transition-all"
             >
               Request a SabiGuy
             </Link>
             <Link
               to={"/signup"}
-              className="bg-white text-gray-800 border border-gray-200 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-all text-[20px] shadow-sm"
+              className="bg-white text-[14px] lg:text-[20px] text-gray-800 border border-gray-200 py-4 lg:px-8 lg:py-4 rounded-lg font-semibold hover:bg-gray-50 transition-all shadow-sm"
             >
               Become a SabiGuy
             </Link>
@@ -650,134 +652,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <footer className="bg-white pt-16 pb-8 border-t border-gray-100">
-        <div className="w-[90%] mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-12 mb-4">
-            <div className="flex flex-col gap-6 lg:w-[40%]">
-              <img src="/logo.jpg" alt="SabiGuy Logo" className="h-10 w-fit" />
-              <p className="text-[#231F20] text[16px] leading-relaxed">
-                Connecting you with trusted local service providers.
-              </p>
-              <div className="flex gap-4 items-center text-[#1A1A1A]">
-                <a
-                  href="https://www.facebook.com/profile.php?id=61582188390597"
-                  className="hover:text-[#31784D] transition-colors"
-                >
-                  <img
-                    src="/home/facebook.png"
-                    alt=""
-                    className="w-[25px] h-[25px]"
-                  />
-                </a>
-                <a
-                  href="https://www.instagram.com/sabiguyapp/"
-                  className="hover:text-[#31784D] transition-colors"
-                >
-                  <img
-                    src="/home/instagram.png"
-                    alt=""
-                    className="w-[25px] h-[25px]"
-                  />
-                </a>
-                <a
-                  href="https://www.linkedin.com/showcase/sabiguy/"
-                  className="hover:text-[#31784D] transition-colors"
-                >
-                  <img
-                    src="/home/linkedin.png"
-                    alt=""
-                    className="w-[25px] h-[25px]"
-                  />
-                </a>
-                <a
-                  href="https://x.com/sabiguyapp"
-                  className="hover:text-[#31784D] transition-colors font-bold text-lg"
-                >
-                  <img src="/home/X.png" alt="" className="w-[25px] h-[25px]" />
-                </a>
-              </div>
-            </div>
-
-            <div className="lg:flex justify-between space-y-5">
-              <div>
-                <h4 className="font-semibold text-[20px] text-[#231F20] mb-3">
-                  Company
-                </h4>
-                <ul className="flex flex-col gap-4 text-[#231F20]">
-                  <li>
-                    <a href="#" className="hover:text-[#31784D]">
-                      About us
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-[#31784D]">
-                      Careers
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-[#31784D]">
-                      Blog
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-[20px] text-[#231F20] mb-3">
-                  Services
-                </h4>
-                <ul className="flex flex-col gap-4 text-[#231F20]">
-                  <li>
-                    <a href="#" className="hover:text-[#31784D]">
-                      Dispatch
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-[#31784D]">
-                      Errands
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-[#31784D]">
-                      Home Services
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-[20px] text-[#231F20] mb-3">
-                  Support
-                </h4>
-                <ul className="flex flex-col gap-4 text-[#231F20]">
-                  <li>
-                    <a href="#" className="hover:text-[#31784D]">
-                      Help Center
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-[#31784D]">
-                      Contact
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-8 pb-2 border-b border-[#231F2080]/50 flex flex-col md:flex-row justify-between items-center gap-4 text-[13px] lg:text-[16px] text-[#231F20]">
-            <p>© {currentYear} SabiGuy. All rights reserved.</p>
-            <div className="flex gap-8">
-              <a href="#" className="hover:text-[#31784D]">
-                Terms & Conditions
-              </a>
-              <a href="#" className="hover:text-[#31784D]">
-                Privacy Policy
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 };

@@ -495,19 +495,19 @@ const ProviderChat = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button className="text-gray-600 hover:text-gray-800">
+                    {/* <button className="text-gray-600 hover:text-gray-800">
                       <span className="text-sm p-2 bg-[#005823]/10 rounded">
                         View Profile
                       </span>
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-800">
+                    </button> */}
+                    {/* <button className="text-gray-600 hover:text-gray-800">
                       <span className="text-sm text-[#005823] border border-gray-300 p-2 rounded">
                         {selectedChat.bookingId?.status || "Active Booking"}
                       </span>
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-800">
+                    </button> */}
+                    {/* <button className="text-gray-600 hover:text-gray-800">
                       <FiPhone size={20} />
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </div>

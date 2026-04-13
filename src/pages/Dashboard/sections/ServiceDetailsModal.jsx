@@ -257,16 +257,12 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 <h4 className="text-[18px] font-semibold text-[#231F20] mb-3">
                   Pickup notes{" "}
                   <span className="text-[14px] text-[#231F20BF]">
-                    (optional)
                   </span>
                 </h4>
-                <textarea
-                  placeholder="Please arrive 5 minutes early. Call upon arrival."
-                  readOnly
-                  className="w-full p-4 border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none text-sm text-gray-600"
-                  rows="3"
-                  defaultValue="Please park in the driveway. The side door will be unlocked."
-                />
+                  <p className="text-[15px] text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    {request.pickupNotes || "No pickup notes provided."}
+                  </p>
+                
               </div>
             </div>
           </div>

@@ -92,11 +92,7 @@ export default function Bookings() {
   const preselectedService =
     new URLSearchParams(location.search).get("service") ?? "";
   const currentLocationValue =
-    user?.data?.currentLocation?.address ||
-    user?.data?.currentLocation?.formattedAddress ||
-    user?.currentLocation?.address ||
-    user?.currentLocation?.formattedAddress ||
-    "";
+    localStorage.getItem("currentLocationAddress") || "";
   const hasCurrentLocation = !!currentLocationValue;
 
   const formik = useFormik({
@@ -358,7 +354,7 @@ export default function Bookings() {
         return [
           "pending providers",
           "payment pending",
-          "awaiting provider acceptance",
+          // "awaiting provider acceptance",
         ].includes(status);
       if (statusFilter === "completed")
         return [
@@ -375,9 +371,15 @@ export default function Bookings() {
   };
 
   const handleMessageProvider = (request) => {
-    const bookingId = request?.fullOrderId || request?.id;
+    const booking = request?.originalData || {};
+    const bookingId = booking?._id || request?.fullOrderId || request?.id;
+    const provider = booking?.providerId || null;
+
     if (!bookingId) return;
-    navigate(`/dashboard/chat?bookingId=${bookingId}`);
+
+    navigate(`/dashboard/chat?bookingId=${bookingId}`, {
+      state: { booking, provider },
+    });
   };
 
   const refreshBookings = async () => {
@@ -536,7 +538,9 @@ export default function Bookings() {
                   label="Pickup location"
                   placeholder="24 Palm Avenue, Lagos"
                   value={formik.values.pickupAddress}
-                  onChange={pickupMode === "manual" ? formik.handleChange : undefined}
+                  onChange={
+                    pickupMode === "manual" ? formik.handleChange : undefined
+                  }
                   onBlur={formik.handleBlur}
                   readOnly={pickupMode === "current"}
                 />

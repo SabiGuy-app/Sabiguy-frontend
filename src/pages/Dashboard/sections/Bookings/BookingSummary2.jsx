@@ -461,7 +461,7 @@ export default function BookingSummary2() {
                 {!isPaid && (
                   <button
                     onClick={() => setCancelModalOpen(true)}
-                    className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors"
+                    className="text-red-500 hover:bg-red-200 rounded-lg font-medium px-4 hover:text-red-600 transition-colors"
                   >
                     Cancel Request
                   </button>
