@@ -78,23 +78,27 @@ export default function JobDetailsModal({
                 <div className="flex items-center gap-3">
                   <img
                     src={
-                      job?.originalData?.providerId?.profilePicture ||
-                      "/avatar.png"
+                      job?.originalData?.userId?.profilePicture || "/avatar.png"
                     }
-                    alt={job.providerName}
+                    alt="Customer"
                     className="w-18 h-18 rounded-full object-cover"
                   />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-xs">
-                        {job.providerName}
+                      <span className="font-semibold text-[18px]">
+                        {job?.originalData?.userId?.fullName || "Customer"}
                       </span>
                       <Verified className="w-4 h-4 text-[#2D6A3E]" />
                     </div>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">4.6</span>
+                    <div>
+                      {job.ratings && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">{job.ratings}</span>
+                        </div>
+                      )}
                     </div>
+
                     <div className="flex items-center gap-1 text-sm">
                       <MapPin className="w-4 h-4" />
                       <span className="font-medium">{job.location}</span>
@@ -276,12 +280,10 @@ export default function JobDetailsModal({
                       Service Cost
                     </p>
                     <p className="text-sm m mb-3 text-gray-600">
-                      ₦{job.agreedPrice.toLocaleString()}
+                      ₦{(job.agreedPrice || 0).toLocaleString()}
                     </p>
                   </div>
-                   <div>
-                   
-                  </div>
+                  <div></div>
                 </div>
               </div>
             </div>
