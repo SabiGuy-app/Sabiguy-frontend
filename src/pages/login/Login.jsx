@@ -241,6 +241,11 @@ export default function Login() {
     }
   };
 
+  const handleFieldChange = (handleChange) => (e) => {
+    if (errorMessage) setErrorMessage("");
+    handleChange(e);
+  };
+
   const GoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -392,7 +397,7 @@ export default function Login() {
                     label="Email"
                     placeholder="Enter your email"
                     value={values.email}
-                    onChange={handleChange}
+                    onChange={handleFieldChange(handleChange)}
                     onBlur={handleBlur}
                   />
                   <ErrorMessage
@@ -408,7 +413,7 @@ export default function Login() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={values.password}
-                    onChange={handleChange}
+                    onChange={handleFieldChange(handleChange)}
                     onBlur={handleBlur}
                   />
                   <ErrorMessage

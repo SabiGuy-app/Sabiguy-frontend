@@ -145,7 +145,12 @@ export default function SettingsTab() {
       {error && (
         <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex justify-between items-center">
           {error}
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-400 hover:text-red-600 ml-4"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -164,8 +169,12 @@ export default function SettingsTab() {
       </div>
 
       <div className="flex items-center justify-end gap-6 mb-4 pr-1">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-12 text-center">Push</span>
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-12 text-center">Email</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-12 text-center">
+          Push
+        </span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-12 text-center">
+          Email
+        </span>
       </div>
 
       <div className="mb-8 sm:mb-12">
