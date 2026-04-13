@@ -10,6 +10,7 @@ import {
   Check,
 } from "lucide-react";
 import { FaBicycle } from "react-icons/fa";
+import distance from '/distance.png'
 import { useState } from "react";
 
 // Reusable Request Card Component
@@ -124,10 +125,12 @@ export default function AlertsCard({
                   <div className="flex items-center gap-3">
                     <Clock className="w-4 h-4 text-yellow-500" />
                     <span className="font-medium">Posted: {alert.posted}</span>
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <FaBicycle className="w-7 h-7 text-[#2D6A3E]" />
-                      <span>{alert.distance}</span>
-                    </div>
+                     <div className="flex items-center gap-2">
+                                    <img src={distance} alt="" />
+                                    <p className="text-[#231F20BF]">
+                                      Distance: <span>{alert.distance}</span>
+                                    </p>
+                                  </div>
                   </div>
                 )}
 

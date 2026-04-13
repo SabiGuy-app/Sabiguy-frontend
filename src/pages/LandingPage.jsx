@@ -165,7 +165,7 @@ const LandingPage = () => {
                 Request a SabiGuy
               </Link>
               <Link
-                to={"/signup"}
+                to={"/service-provider/signup"}
                 className="bg-white text-[20px] text-[#2A3349] border-2 border-gray-100 px-10 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all"
               >
                 Become a SabiGuy
