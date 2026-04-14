@@ -10,10 +10,19 @@ import {
 } from "lucide-react";
 import { FiChevronLeft } from "react-icons/fi";
 import distance from "/distance.png";
+import { useNavigate } from "react-router-dom";
 
 export default function ServiceDetailsModal({ isOpen, onClose, request }) {
+  const navigate = useNavigate();
   if (!isOpen) return null;
   console.log(request);
+  const bookingId = request?.id;
+  console.log(bookingId);
+
+  const handleMessageProvider = () => {
+    if (!bookingId) return;
+    navigate(`/dashboard/chat?bookingId=${bookingId}`);
+  };
 
   return (
     <div className="fixed inset-0 bg-gray-50 bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -38,7 +47,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
         <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
           <div className="space-y-6">
             <div className="shadow-sm p-6 rounded-[16px] space-y-6">
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
                 <img
                   src={
                     request.providerImage ||
@@ -49,7 +58,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 />
                 <div className="flex-grow">
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
+                    <h2 className="text-[15px] sm:text-lg font-semibold text-gray-900 capitalize">
                       {request.providerName ?? "Provider"}
                     </h2>
                     <span className="text-[#8BC53F]">
@@ -85,7 +94,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
 
                 {/* Stats */}
-                <div className="flex gap-6 flex-shrink-0">
+                <div className="flex justify-between sm:justify-start gap-6 w-full sm:w-auto mt-3 sm:mt-0">
                   <div className="flex flex-col items-center">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full">
                       <Award className="w-[24px] h-[24px] text-[#005823]" />
@@ -111,12 +120,15 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
                 </button>
-                <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <button
+                  onClick={handleMessageProvider}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   <MessageCircle className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Message</span>
                 </button>
@@ -208,7 +220,11 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                       Fare
                     </div>
                     <div className="text-[15px] text-[#231F20BF]">
-                      {(request.totalAmount ?? request.total_amount ?? request.amount ?? request.total ?? request.finalPrice)
+                      {(request.totalAmount ??
+                      request.total_amount ??
+                      request.amount ??
+                      request.total ??
+                      request.finalPrice)
                         ? `₦${(request.totalAmount ?? request.total_amount ?? request.amount ?? request.total ?? request.finalPrice).toLocaleString()}`
                         : request.price != null
                           ? `₦${request.price.toLocaleString()}`
@@ -219,9 +235,18 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
 
                 {/* Service Fee */}
                 {(() => {
-                  const baseFare = request.agreedPrice ?? request.calculatedPrice ?? request.price ?? 0;
-                  const fee = request.serviceFee ?? request.service_fee ?? request.fee ?? request.serviceCharge ?? Math.round(baseFare * 0.10);
-                  
+                  const baseFare =
+                    request.agreedPrice ??
+                    request.calculatedPrice ??
+                    request.price ??
+                    0;
+                  const fee =
+                    request.serviceFee ??
+                    request.service_fee ??
+                    request.fee ??
+                    request.serviceCharge ??
+                    Math.round(baseFare * 0.1);
+
                   if (fee > 0) {
                     return (
                       <div className="flex gap-3">
@@ -256,13 +281,11 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               <div>
                 <h4 className="text-[18px] font-semibold text-[#231F20] mb-3">
                   Pickup notes{" "}
-                  <span className="text-[14px] text-[#231F20BF]">
-                  </span>
+                  <span className="text-[14px] text-[#231F20BF]"></span>
                 </h4>
-                  <p className="text-[15px] text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
-                    {request.pickupNotes || "No pickup notes provided."}
-                  </p>
-                
+                <p className="text-[15px] text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  {request.pickupNotes || "No pickup notes provided."}
+                </p>
               </div>
             </div>
           </div>

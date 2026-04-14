@@ -28,7 +28,7 @@ export default function CancelRequestButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className={`px-3 py-1 mt-3 bg-white text-red-600 border border-red-300 rounded-lg font-medium hover:bg-red-50 transition-colors ${className}`}
+        className={`px-4 py-2 mt-3 flex-1 sm:flex-none text-sm bg-white text-red-600 border border-red-300 rounded-lg font-medium hover:bg-red-50 transition-colors ${className}`}
       >
         {buttonText}
       </button>

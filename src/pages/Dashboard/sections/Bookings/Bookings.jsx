@@ -250,7 +250,7 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-      <div className="w-[50%] grid grid-cols-2 sm:flex gap-2 mb-6">
+      <div className="lg:w-[50%] grid grid-cols-2 sm:flex gap-2 mb-6">
         {filters.map((filter) => (
           <button
             key={filter}

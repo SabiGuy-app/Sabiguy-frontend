@@ -123,7 +123,7 @@ export default function RequestCard({
         apiError={apiError}
       />
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+      <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
         <div className="flex-1">
           <div className="flex gap-2 border-b pb-3 border-[#231F2080]">
             <img
@@ -139,12 +139,12 @@ export default function RequestCard({
             <div className="w-full">
               <div className="flex justify-between mb-2 w-full">
                 <div>
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-semibold text-gray-900">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-base sm:text-xl font-semibold text-gray-900">
                       {request.title}
                     </h3>
                     <span
-                      className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyles(request.status)}`}
+                      className={`px-2 py-0.5 text-xs font-medium rounded-full border ${getStatusStyles(request.status)}`}
                     >
                       {request.status}
                     </span>
@@ -230,7 +230,7 @@ export default function RequestCard({
               </div>
             </div>
 
-            <div className="flex items-end gap-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:gap-8 gap-2">
               <div className="flex items-start gap-3">
                 <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-3 h-3 text-[#005823]" />
@@ -244,9 +244,9 @@ export default function RequestCard({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-8 sm:ml-0">
                 <img src={distance} alt="" />
-                <p className="text-[#231F20BF]">
+                <p className="text-[#231F20BF] text-sm">
                   Distance: <span>{request.distance}</span>
                 </p>
               </div>
@@ -254,10 +254,10 @@ export default function RequestCard({
           </div>
 
           {/* ── action buttons ───────────────────────────────────────────── */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 mt-3">
             <button
               onClick={() => onViewDetails(request)}
-              className="px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"
+              className="px-5 py-2 mt-3 flex-1 sm:flex-none text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"
             >
               View Details
             </button>
@@ -297,7 +297,7 @@ export default function RequestCard({
             ].includes(request.status.toLowerCase()) && (
               <button
                 onClick={() => onTrackProvider(request.id)}
-                className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="px-1 lg:px-4 py-2 mt-3 flex-1 sm:flex-none text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 Track provider

@@ -104,12 +104,14 @@ export default function StartNavigation() {
     }
   };
 
+  const customer = alert?.originalData?.userId || {};
+
   return (
     <>
       <ProviderNavbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-2 gap-10">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
         <div className="">
-          <h1 className="text-[28px] font-semibold text-[#231F20] mb-4">
+          <h1 className="text-[22px] sm:text-[26px] lg:text-[28px] font-semibold text-[#231F20] mb-4">
             {alert?.subCategory}
           </h1>
 
@@ -120,7 +122,7 @@ export default function StartNavigation() {
               </div>
               <div>
                 <span className="text-[#231F2080] text-[16px]">Pickup</span>
-                <p className="text-[#231F20BF] text-[20px]">
+                <p className="text-[#231F20BF] text-[15px] sm:text-[17px] lg:text-[20px] leading-snug">
                   {alert?.originalData?.pickupLocation?.address}
                 </p>
               </div>
@@ -132,7 +134,7 @@ export default function StartNavigation() {
               </div>
               <div>
                 <span className="text-[#231F2080] text-[16px]">Dropoff</span>
-                <p className="text-[#231F20BF] text-[20px]">
+                <p className="text-[#231F20BF] text-[15px] sm:text-[17px] lg:text-[20px] leading-snug">
                   {alert?.originalData?.dropoffLocation?.address}
                 </p>
               </div>
@@ -142,17 +144,14 @@ export default function StartNavigation() {
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-4">
               <img
-                src={
-                  user?.data?.profilePicture ||
-                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
-                }
-                alt={user?.data?.fullName || "Provider"}
+                src={customer?.profilePicture || "/avatar.png"}
+                 alt={customer?.fullName || "Customer"}
                 className="w-14 h-14 rounded-full object-cover"
               />
               <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="font-semibold text-[20px] text-[#231F20]">
-                    {user?.data?.fullName || "Provider"}
+                    {customer?.fullName || "Customer"}
                   </span>
                   <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-[#8BC53F] text-xs font-medium rounded">
                     <Shield className="w-3 h-3" /> Verified
@@ -182,7 +181,7 @@ export default function StartNavigation() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
@@ -203,7 +202,7 @@ export default function StartNavigation() {
             Pickup note
           </h3>
           <p className="bg-[#007BFF08] rounded-lg text-[#231F2080] border border-[#231F201A] p-4 mb-4">
-{alert?.originalData?.pickupNote || "No pickup note provided."}
+            {alert?.originalData?.pickupNote || "No pickup note provided."}
           </p>
 
           <div className="mb-4">
