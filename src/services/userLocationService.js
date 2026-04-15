@@ -56,21 +56,21 @@ class UserLocationService {
     let sourceEmoji;
 
     if (accuracy < 20) {
-      locationSource = 'GPS (Satellite)';
-      sourceEmoji = '🛰️';
+      locationSource = "GPS (Satellite)";
+      sourceEmoji = "🛰️";
     } else if (accuracy < 100) {
-      locationSource = 'Wi-Fi Positioning';
-      sourceEmoji = '📶';
+      locationSource = "Wi-Fi Positioning";
+      sourceEmoji = "📶";
     } else if (accuracy < 1000) {
-      locationSource = 'Cell Tower Triangulation';
-      sourceEmoji = '📡';
+      locationSource = "Cell Tower Triangulation";
+      sourceEmoji = "📡";
     } else {
-      locationSource = 'IP Geolocation (ISP Server)';
-      sourceEmoji = '🌐';
+      locationSource = "IP Geolocation (ISP Server)";
+      sourceEmoji = "🌐";
     }
 
     console.log(`${sourceEmoji} Location Source: ${locationSource}`);
-    console.log('📍 Coordinates:', {
+    console.log("📍 Coordinates:", {
       latitude,
       longitude,
       accuracy: `${Math.round(accuracy)}m`,
@@ -78,7 +78,7 @@ class UserLocationService {
     });
 
     if (accuracy > 1000) {
-      console.warn('⚠️ Very poor accuracy — likely IP-based, not GPS');
+      console.warn("⚠️ Very poor accuracy — likely IP-based, not GPS");
     }
 
     // Resolve address on device (free, no API key)
@@ -108,47 +108,42 @@ class UserLocationService {
         );
 
         if (distance < this.geocodeThresholdKm) {
-          console.log(`📌 Using cached address (moved ${distance.toFixed(3)}km)`);
+          console.log(
+            `📌 Using cached address (moved ${distance.toFixed(3)}km)`,
+          );
           return this.lastGeocodedCoords.address;
         }
       }
 
-      console.log('🔄 Resolving address via Nominatim...');
+      console.log("🔄 Resolving address via Nominatim...");
 
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
         {
           headers: {
             // Nominatim requires a User-Agent — use your app name
-            'User-Agent': 'SabiguyApp/1.0',
-            'Accept-Language': 'en',
+            "User-Agent": "SabiguyApp/1.0",
+            "Accept-Language": "en",
           },
         },
       );
 
-      if (!response.ok) throw new Error('Nominatim request failed');
+      if (!response.ok) throw new Error("Nominatim request failed");
 
       const data = await response.json();
 
-      if (data && data.address) {
-        const addr = data.address;
+      if (data && data.display_name) {
+        // Use display_name and remove postal code
+        const addr = data.address || {};
+        let resolvedAddress = data.display_name;
 
-        // Build detailed address from components — most specific first
-        const parts = [];
-
-        if (addr.house_number) parts.push(addr.house_number);
-        if (addr.road) parts.push(addr.road);
-        if (addr.neighbourhood) parts.push(addr.neighbourhood);
-        if (addr.suburb) parts.push(addr.suburb);
-        if (addr.city || addr.town || addr.village) {
-          parts.push(addr.city || addr.town || addr.village);
+        // Remove postal code from display_name if present
+        if (addr.postcode) {
+          resolvedAddress = resolvedAddress
+            .replace(`, ${addr.postcode},`, ",")
+            .replace(`, ${addr.postcode}`, "")
+            .trim();
         }
-        if (addr.state) parts.push(addr.state);
-        if (addr.country) parts.push(addr.country);
-
-        const resolvedAddress = parts.length >= 2
-          ? parts.join(', ')
-          : data.display_name; // fallback to full display name
 
         console.log(`✅ Address resolved: ${resolvedAddress}`);
 
@@ -162,9 +157,9 @@ class UserLocationService {
         return resolvedAddress;
       }
 
-      throw new Error('No address data returned');
+      throw new Error("No address data returned");
     } catch (error) {
-      console.warn('⚠️ Address resolution failed:', error.message);
+      console.warn("⚠️ Address resolution failed:", error.message);
       // Return null — backend will handle fallback
       return null;
     }
@@ -189,8 +184,8 @@ class UserLocationService {
         // Save address to localStorage (client-resolved takes priority)
         const addressToSave = address || data.data?.currentLocation?.address;
         if (addressToSave) {
-          localStorage.setItem('currentLocationAddress', addressToSave);
-          console.log('📍 Address saved to localStorage:', addressToSave);
+          localStorage.setItem("currentLocationAddress", addressToSave);
+          console.log("📍 Address saved to localStorage:", addressToSave);
         }
       })
       .catch((error) => console.error("Error updating location:", error));
