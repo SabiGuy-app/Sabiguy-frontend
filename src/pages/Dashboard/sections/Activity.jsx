@@ -137,18 +137,18 @@ export default function ActivityPage() {
   );
 
   // Compute stat counts from real data
-  const bookingTypes = TAB_TYPE_MAP.Bookings;
-  const activeBookings = notifications.filter(
-    (n) =>
-      bookingTypes.includes(n.type) &&
-      !["booking_cancelled", "booking_completed", "job_completed_confirmed"].includes(n.type)
-  ).length;
-  const completedTasks = notifications.filter(
-    (n) => n.type === "booking_completed" || n.type === "job_completed_confirmed"
-  ).length;
-  const paymentCount = notifications.filter(
-    (n) => n.type === "payment_received"
-  ).length;
+  // const bookingTypes = TAB_TYPE_MAP.Bookings;
+  // const activeBookings = notifications.filter(
+  //   (n) =>
+  //     bookingTypes.includes(n.type) &&
+  //     !["booking_cancelled", "booking_completed", "job_completed_confirmed"].includes(n.type)
+  // ).length;
+  // const completedTasks = notifications.filter(
+  //   (n) => n.type === "booking_completed" || n.type === "job_completed_confirmed"
+  // ).length;
+  // const paymentCount = notifications.filter(
+  //   (n) => n.type === "payment_received"
+  // ).length;
 
   // Empty state config for current tab
   const emptyConfig = EMPTY_STATE_CONFIG[activeTab];
@@ -162,7 +162,7 @@ export default function ActivityPage() {
         <h1 className="font-bold text-2xl">Activity</h1>
       </div>
 
-      {/* Stat Cards — commented out for now
+      {/*
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ActivityCard
           title="Active orders"

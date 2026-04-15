@@ -111,7 +111,7 @@ export default function Activities({ notification, onDelete, onViewDetails }) {
       className={`bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-200 ${isDeleting ? "opacity-50 scale-[0.98]" : ""
         }`}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         {/* Icon */}
         <div
           className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center flex-shrink-0`}

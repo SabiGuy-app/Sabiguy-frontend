@@ -17,3 +17,4 @@ export default function ActivityCard({ title, figure, icon }) {
     </div>
   );
 }
+ 

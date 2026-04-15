@@ -123,6 +123,7 @@ export default function RequestCard({
         apiError={apiError}
       />
 
+
       <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
         <div className="flex-1">
           <div className="flex gap-2 border-b pb-3 border-[#231F2080]">
@@ -137,19 +138,19 @@ export default function RequestCard({
               className="w-10 h-10 rounded-full object-cover"
             />
             <div className="w-full">
-              <div className="flex justify-between mb-2 w-full">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2 w-full">
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h3 className="text-base sm:text-xl font-semibold text-gray-900">
+                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                    <h3 className="text-xl font-semibold text-gray-900">
                       {request.title}
                     </h3>
-                    <span
-                      className={`px-2 py-0.5 text-xs font-medium rounded-full border ${getStatusStyles(request.status)}`}
-                    >
-                      {request.status}
-                    </span>
+                   <span
+  className={`inline-flex items-center justify-center text-center px-1 py-1 text-xs font-medium rounded-full border max-w-full sm:max-w-none break-words ${getStatusStyles(request.status)}`}
+>
+  {request.status}
+</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                 <div className="flex flex-wrap items-center gap-2">
                     <p className="text-[16px] text-[#231F20BF]">
                       {request.providerName}
                     </p>
@@ -176,7 +177,7 @@ export default function RequestCard({
                       )}
                   </div>
                 </div>
-                <div className="flex flex-col items-end">
+                <div className="flex flex-col sm:items-end items-start">
                   <div className="text-2xl font-bold text-[#2D6A3E]">
                     ₦{request.price.toLocaleString()}
                   </div>
@@ -253,12 +254,11 @@ export default function RequestCard({
             </div>
           </div>
 
-          {/* ── action buttons ───────────────────────────────────────────── */}
-          <div className="flex flex-wrap gap-3 mt-3">
+         <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={() => onViewDetails(request)}
-              className="px-5 py-2 mt-3 flex-1 sm:flex-none text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"
-            >
+              className="w-fit mx-auto sm:mx-0 px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"
+>
               View Details
             </button>
 
@@ -297,10 +297,27 @@ export default function RequestCard({
             ].includes(request.status.toLowerCase()) && (
               <button
                 onClick={() => onTrackProvider(request.id)}
-                className="px-1 lg:px-4 py-2 mt-3 flex-1 sm:flex-none text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="w-fit mx-auto sm:mx-0 px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 Track provider
+              </button>
+            )}
+
+            {[
+              "provider selected",
+              "paid escrow",
+              "enroute to pickup",
+              "arrived at pickup",
+              "enroute to dropoff",
+              "arrived at dropoff",
+            ].includes(request.status.toLowerCase()) && (
+              <button
+                onClick={() => onMessageProvider?.(request)}
+                className="w-fit mx-auto sm:mx-0 px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Message Provider
               </button>
             )}
 
@@ -325,7 +342,7 @@ export default function RequestCard({
                 ) : (
                   <button
                     onClick={() => setModalOpen(true)}
-                    className="px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                    className="w-full sm:w-auto px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   >
                     Accept Job Completion
                   </button>

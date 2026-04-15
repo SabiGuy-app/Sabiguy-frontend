@@ -47,18 +47,18 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
         <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
           <div className="space-y-6">
             <div className="shadow-sm p-6 rounded-[16px] space-y-6">
-              <div className="flex flex-col sm:flex-row items-start gap-4">
+             <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
                 <img
                   src={
                     request.providerImage ||
                     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
                   }
                   alt={request.providerName}
-                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-                />
-                <div className="flex-grow">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-[15px] sm:text-lg font-semibold text-gray-900 capitalize">
+                  className="w-16 h-16 rounded-full object-cover flex-shrink-0 self-center lg:self-start"
+              />
+               <div className="flex-grow w-full text-center lg:text-left">
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-1">
+                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
                       {request.providerName ?? "Provider"}
                     </h2>
                     <span className="text-[#8BC53F]">
@@ -76,12 +76,12 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                         </span>
                       </div>
                     )}
-                  <div className="flex items-center gap-1 text-[14px] text-gray-600">
+                  <div className="flex justify-center lg:justify-start items-center gap-1 text-[14px] text-gray-600">
                     <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium text-gray-900">
                       {request.providerRating ?? "New"}
                     </span>
-                    <span className="text-gray-500">
+                    <span className="text-gray-500 ">
                       ({request.providerReviews ?? 0} reviews)
                     </span>
                   </div>
@@ -94,8 +94,8 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
 
                 {/* Stats */}
-                <div className="flex justify-between sm:justify-start gap-6 w-full sm:w-auto mt-3 sm:mt-0">
-                  <div className="flex flex-col items-center">
+               <div className="flex justify-between lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto mt-3 lg:mt-0">
+                  <div className="flex flex-col items-center flex-1 md:flex-none">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full">
                       <Award className="w-[24px] h-[24px] text-[#005823]" />
                     </div>
