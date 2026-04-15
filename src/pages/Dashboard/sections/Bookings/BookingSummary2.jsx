@@ -450,14 +450,14 @@ export default function BookingSummary2() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <button className="w-full sm:flex-1 flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base">
+                {/* <button className="w-full sm:flex-1 flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base">
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
                 </button>
                 <button className="w-full sm:flex-1 flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base">
                   <MessageCircle className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Message</span>
-                </button>
+                </button> */}
                 {!isPaid && (
                   <button
                     onClick={() => setCancelModalOpen(true)}
