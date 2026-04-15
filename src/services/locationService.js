@@ -2,11 +2,11 @@ class LocationService {
   constructor() {
     this.watchId = null;
     this.socket = null;
+    this.lastGeocodedCoords = null;
+    this.geocodeThresholdKm = 0.5; // only re-geocode if moved 500m
   }
 
-  /**
-   * Start tracking provider's location
-   */
+  // ── Start tracking ────────────────────────────────────────────────────────
   startTracking(socket) {
     if (!navigator.geolocation) {
       console.error('Geolocation not supported');
@@ -15,92 +15,175 @@ class LocationService {
 
     this.socket = socket;
 
-    // Options for high accuracy
     const options = {
       enableHighAccuracy: true,
       timeout: 5000,
-      maximumAge: 0
+      maximumAge: 0,
     };
 
-    // Start watching position
     this.watchId = navigator.geolocation.watchPosition(
       (position) => this.onLocationUpdate(position),
       (error) => this.onLocationError(error),
-      options
+      options,
     );
 
     console.log('📍 Location tracking started');
   }
 
-  /**
-   * Handle location updates
-   */
-  onLocationUpdate(position) {
+  // ── Handle location updates ───────────────────────────────────────────────
+  async onLocationUpdate(position) {
     const { latitude, longitude, accuracy } = position.coords;
-// Determine location source based on accuracy
-  let locationSource;
-  let sourceEmoji;
-  
-  if (accuracy < 20) {
-    locationSource = 'GPS (Satellite)';
-    sourceEmoji = '🛰️';
-  } else if (accuracy < 100) {
-    locationSource = 'Wi-Fi Positioning';
-    sourceEmoji = '📶';
-  } else if (accuracy < 1000) {
-    locationSource = 'Cell Tower Triangulation';
-    sourceEmoji = '📡';
-  } else {
-    locationSource = 'IP Geolocation (ISP Server)';
-    sourceEmoji = '🌐';
-  }
 
-  console.log(`${sourceEmoji} Location Source: ${locationSource}`);
-  console.log('📍 Coordinates:', { 
-    latitude, 
-    longitude, 
-    accuracy: `${Math.round(accuracy)}m`,
-    timestamp: new Date(position.timestamp).toLocaleTimeString()
-  });
+    // Accuracy logging
+    let locationSource;
+    let sourceEmoji;
 
-  // ✅ ADDED: Check if this is your actual location
-  if (accuracy > 1000) {
-    console.warn('⚠️ WARNING: Very poor accuracy! This is likely IP-based (ISP location, not GPS)');
-    console.warn('⚠️ Expected accuracy for GPS: < 20m');
-    console.warn('⚠️ Current accuracy:', Math.round(accuracy), 'm');
-  }
-    console.log('📍 Location updated:', { latitude, longitude, accuracy });
+    if (accuracy < 20) {
+      locationSource = 'GPS (Satellite)';
+      sourceEmoji = '🛰️';
+    } else if (accuracy < 100) {
+      locationSource = 'Wi-Fi Positioning';
+      sourceEmoji = '📶';
+    } else if (accuracy < 1000) {
+      locationSource = 'Cell Tower Triangulation';
+      sourceEmoji = '📡';
+    } else {
+      locationSource = 'IP Geolocation (ISP Server)';
+      sourceEmoji = '🌐';
+    }
+
+    console.log(`${sourceEmoji} Location Source: ${locationSource}`);
+    console.log('📍 Coordinates:', {
+      latitude,
+      longitude,
+      accuracy: `${Math.round(accuracy)}m`,
+      timestamp: new Date(position.timestamp).toLocaleTimeString(),
+    });
+
+    if (accuracy > 1000) {
+      console.warn('⚠️ Very poor accuracy — likely IP-based, not GPS');
+    }
+
+    // Resolve address on device (free, no API key)
+    const address = await this.resolveAddress(latitude, longitude);
 
     // Send to backend via Socket.IO (real-time)
     if (this.socket && this.socket.connected) {
       this.socket.emit('update_location', {
         latitude,
         longitude,
-        accuracy
+        accuracy,
+        address, // ✅ send resolved address with coords
       });
     }
 
-    // Also update via HTTP every 30 seconds (backup)
-    this.throttledHTTPUpdate(latitude, longitude);
+    // HTTP backup every 30 seconds
+    this.throttledHTTPUpdate(latitude, longitude, address);
   }
 
-  /**
-   * Throttled HTTP update (backup)
-   */
-  throttledHTTPUpdate = this.throttle((latitude, longitude) => {
+  // ── Resolve address using Nominatim (OpenStreetMap) ───────────────────────
+  // Free, no API key, decent Nigerian street data
+  async resolveAddress(latitude, longitude) {
+    try {
+      // Skip geocoding if we haven't moved significantly
+      if (this.lastGeocodedCoords) {
+        const distance = this.calculateDistance(
+          this.lastGeocodedCoords.lat,
+          this.lastGeocodedCoords.lng,
+          latitude,
+          longitude,
+        );
+
+        if (distance < this.geocodeThresholdKm) {
+          console.log(`📌 Using cached address (moved ${distance.toFixed(3)}km)`);
+          return this.lastGeocodedCoords.address;
+        }
+      }
+
+      console.log('🔄 Resolving address via Nominatim...');
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+        {
+          headers: {
+            // Nominatim requires a User-Agent — use your app name
+            'User-Agent': 'SabiguyApp/1.0',
+            'Accept-Language': 'en',
+          },
+        },
+      );
+
+      if (!response.ok) throw new Error('Nominatim request failed');
+
+      const data = await response.json();
+
+      if (data && data.address) {
+        const addr = data.address;
+
+        // Build detailed address from components — most specific first
+        const parts = [];
+
+        if (addr.house_number) parts.push(addr.house_number);
+        if (addr.road) parts.push(addr.road);
+        if (addr.neighbourhood) parts.push(addr.neighbourhood);
+        if (addr.suburb) parts.push(addr.suburb);
+        if (addr.city || addr.town || addr.village) {
+          parts.push(addr.city || addr.town || addr.village);
+        }
+        if (addr.state) parts.push(addr.state);
+        if (addr.country) parts.push(addr.country);
+
+        const resolvedAddress = parts.length >= 2
+          ? parts.join(', ')
+          : data.display_name; // fallback to full display name
+
+        console.log(`✅ Address resolved: ${resolvedAddress}`);
+
+        // Cache it
+        this.lastGeocodedCoords = {
+          lat: latitude,
+          lng: longitude,
+          address: resolvedAddress,
+        };
+
+        return resolvedAddress;
+      }
+
+      throw new Error('No address data returned');
+    } catch (error) {
+      console.warn('⚠️ Address resolution failed:', error.message);
+      // Return null — backend will handle fallback
+      return null;
+    }
+  }
+
+  // ── Throttled HTTP update ─────────────────────────────────────────────────
+  throttledHTTPUpdate = this.throttle((latitude, longitude, address) => {
     fetch(`${import.meta.env.VITE_BASE_URL}/provider/location`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
-      body: JSON.stringify({ latitude, longitude })
-    });
-  }, 30000); // Update via HTTP every 30 seconds
+      body: JSON.stringify({ latitude, longitude, address }), // ✅ include address
+    }).catch((err) => console.warn('HTTP location update failed:', err.message));
+  }, 30000);
 
-  /**
-   * Throttle helper
-   */
+  // ── Haversine distance (km) ───────────────────────────────────────────────
+  calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // ── Throttle helper ───────────────────────────────────────────────────────
   throttle(func, delay) {
     let lastCall = 0;
     return (...args) => {
@@ -116,9 +199,6 @@ class LocationService {
     console.error('Location error:', error.message);
   }
 
-  /**
-   * Stop tracking
-   */
   stopTracking() {
     if (this.watchId) {
       navigator.geolocation.clearWatch(this.watchId);
@@ -129,174 +209,3 @@ class LocationService {
 }
 
 export default new LocationService();
-
-// class LocationService {
-//   constructor() {
-//     this.watchId = null;
-//     this.socket = null;
-//     this.previousLocations = [];
-//     this.locationCount = 0;
-//     this.lastSentTime = 0;
-//   }
-
-//   /**
-//    * Start tracking provider's location
-//    */
-//   startTracking(socket) {
-//     if (!navigator.geolocation) {
-//       console.error('Geolocation not supported');
-//       return;
-//     }
-
-//     this.socket = socket;
-
-//     const options = {
-//       enableHighAccuracy: true,
-//       timeout: 20000,   // increased
-//       maximumAge: 10000 // allow cached GPS
-//     };
-
-//     this.watchId = navigator.geolocation.watchPosition(
-//       (position) => this.onLocationUpdate(position),
-//       (error) => this.onLocationError(error),
-//       options
-//     );
-
-//     console.log('📍 Location tracking started');
-//   }
-
-//   /**
-//    * Handle location updates
-//    */
-//   onLocationUpdate(position) {
-//     const { latitude, longitude, accuracy, heading, speed } = position.coords;
-
-//     this.locationCount++;
-
-//     if (this.locationCount < 3) {
-//       console.log('⏳ Stabilizing GPS...');
-//       return;
-//     }
-
-//     if (accuracy > 50) {
-//       console.warn('⚠️ Ignoring poor accuracy:', accuracy);
-//       return;
-//     }
-
-//     this.previousLocations.push({ latitude, longitude });
-
-//     if (this.previousLocations.length > 5) {
-//       this.previousLocations.shift();
-//     }
-
-//     const avgLat =
-//       this.previousLocations.reduce((sum, loc) => sum + loc.latitude, 0) /
-//       this.previousLocations.length;
-
-//     const avgLng =
-//       this.previousLocations.reduce((sum, loc) => sum + loc.longitude, 0) /
-//       this.previousLocations.length;
-
-//     let locationSource;
-//     let sourceEmoji;
-
-//     if (accuracy < 20) {
-//       locationSource = 'GPS (Satellite)';
-//       sourceEmoji = '🛰️';
-//     } else if (accuracy < 100) {
-//       locationSource = 'Wi-Fi Positioning';
-//       sourceEmoji = '📶';
-//     } else if (accuracy < 1000) {
-//       locationSource = 'Cell Tower Triangulation';
-//       sourceEmoji = '📡';
-//     } else {
-//       locationSource = 'IP Geolocation';
-//       sourceEmoji = '🌐';
-//     }
-
-//     console.log(`${sourceEmoji} ${locationSource}`);
-//     console.log('📍 Smoothed Location:', {
-//       latitude: avgLat,
-//       longitude: avgLng,
-//       accuracy: Math.round(accuracy),
-//       heading,
-//       speed
-//     });
-
-//     // 🚀 Send via WebSocket (Real-time)
-//     if (this.socket && this.socket.connected) {
-//       this.socket.emit('update_location', {
-//         latitude: avgLat,
-//         longitude: avgLng,
-//         accuracy,
-//         heading,
-//         speed,
-//         timestamp: Date.now()
-//       });
-//     }
-
-//     this.throttledHTTPUpdate(avgLat, avgLng);
-//   }
-
-//   /**
-//    * Throttled HTTP update
-//    */
-//   throttledHTTPUpdate = this.throttle((latitude, longitude) => {
-//     fetch(`${import.meta.env.VITE_BASE_URL}/provider/location`, {
-//       method: 'PUT',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify({
-//         latitude,
-//         longitude,
-//         timestamp: Date.now()
-//       })
-//     });
-//   }, 30000);
-
-//   /**
-//    * Throttle helper
-//    */
-//   throttle(func, delay) {
-//     let lastCall = 0;
-
-//     return (...args) => {
-//       const now = Date.now();
-//       if (now - lastCall >= delay) {
-//         lastCall = now;
-//         func(...args);
-//       }
-//     };
-//   }
-
-//   onLocationError(error) {
-//     console.error('❌ Location error:', error.message);
-
-//     switch (error.code) {
-//       case error.PERMISSION_DENIED:
-//         console.error('User denied location permission');
-//         break;
-//       case error.POSITION_UNAVAILABLE:
-//         console.error('Location unavailable');
-//         break;
-//       case error.TIMEOUT:
-//         console.error('Location timeout');
-//         break;
-//     }
-//   }
-
-//   /**
-//    * Stop tracking
-//    */
-//   stopTracking() {
-//     if (this.watchId) {
-//       navigator.geolocation.clearWatch(this.watchId);
-//       this.watchId = null;
-//       console.log('📍 Location tracking stopped');
-//     }
-//   }
-// }
-
-// export default new LocationService();

@@ -231,7 +231,7 @@ export default function RequestCard({
               </div>
             </div>
 
-            <div className="flex items-end gap-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:gap-8 gap-2">
               <div className="flex items-start gap-3">
                 <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-3 h-3 text-[#005823]" />
@@ -245,9 +245,9 @@ export default function RequestCard({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-8 sm:ml-0">
                 <img src={distance} alt="" />
-                <p className="text-[#231F20BF]">
+                <p className="text-[#231F20BF] text-sm">
                   Distance: <span>{request.distance}</span>
                 </p>
               </div>

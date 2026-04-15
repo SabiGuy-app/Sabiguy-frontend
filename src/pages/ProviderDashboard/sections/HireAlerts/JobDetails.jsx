@@ -51,9 +51,9 @@ export default function JobDetailsModal({
   return (
     <div>
       <div className="fixed inset-0 bg-gray-50  bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white p-5 rounded-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto">
+        <div className="bg-white sm:p-5 rounded-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto">
           {/* Header */}
-          <div className=" top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="top-0 bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
@@ -74,18 +74,18 @@ export default function JobDetailsModal({
               </h3>
 
               {/* Provider Info */}
-              <div className="flex items-start justify-between">
+              <div className="lg:flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <img
                     src={
                       job?.originalData?.userId?.profilePicture || "/avatar.png"
                     }
                     alt="Customer"
-                    className="w-18 h-18 rounded-full object-cover"
+                    className="w-14 h-14 rounded-full object-cover"
                   />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-[18px]">
+                      <span className="font-semibold text-[16px] sm:text-base">
                         {job?.originalData?.userId?.fullName || "Customer"}
                       </span>
                       <Verified className="w-4 h-4 text-[#2D6A3E]" />
@@ -107,25 +107,22 @@ export default function JobDetailsModal({
                 </div>
 
                 {/* Status Badge */}
-                <span className="px-3 py-1 bg-green-100 text-sm font-medium rounded-full border border-green-200">
+                <span className="px-2 py-1 bg-green-100 text-xs font-medium rounded-full border border-green-200 whitespace-nowrap self-start">
                   {job.status}{" "}
                 </span>
               </div>
-              <div className="flex mt-3 gap-8">
-                <button className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+              <div className="flex mt-3 gap-3 w-full">
+                <button className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                   <PhoneCall className="w-4 h-4" />
                   Call
                 </button>
                 <button
-                  className="px-15 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   onClick={() => onMessageCustomer?.(job)}
                 >
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </button>
-                {/* <button className="px-5 py-2 mt-3 bg-white text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center gap-2">
-                  Cancel Request
-                </button> */}
               </div>
             </div>
 
@@ -222,17 +219,6 @@ export default function JobDetailsModal({
                   </>
                 )}
 
-                {/* End Date */}
-                {/* <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">
-                      End Date
-                    </p>
-                    <p className="text-sm text-gray-600">{job.deliveryDate}</p>
-                  </div>
-                </div> */}
-
                 {/* Location */}
                 <div className="flex items-start gap-3">
                   <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
@@ -299,7 +285,7 @@ export default function JobDetailsModal({
               </div>
             </div>
 
-            <p className="flex mt-15 items-center  text-sm justify-center">
+            <p className="flex mt-6 items-center text-sm justify-center">
               Update the job status to keep the customer informed
             </p>
           </div>
