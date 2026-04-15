@@ -38,10 +38,12 @@ export default function CategoryCard({
 
       {/* Text */}
       <div className="absolute p-3 inset-0 flex flex-col items-start justify-center">
-        <p className="text-white text-lg font-bold drop-shadow-md">
+        <p className="text-white text-[16px] font-bold drop-shadow-md w-[50%]">
           {title}
         </p>
-        <p className="text-sm mt-1 text-white md:w-[50%] sm:w-[20%]">{description}</p>
+    <p className="text-sm mt-1 text-white w-[50%] md:hidden lg:block">
+  {description}
+</p>
         {!comingSoon && (
           <div className="flex">
             <button className="bg-gray/5 mt-2 text-white rounded-full px-2 py-0.5 shadow-lg text-[15px] bg-[#FFFFFF4D]/70 flex items-center gap-1 backdrop-blur-md border border-white/10">
@@ -52,7 +54,7 @@ export default function CategoryCard({
         )}
         {comingSoon && (
           <div className="flex">
-            <button className="bg-gray/5 mt-2 text-white rounded-full px-2 py-1 text-[15px] flex items-center gap-1 backdrop-blur-md border border-white/10">
+            <button className="bg-gray/5 mt-2 text-white rounded-full px-2 py-1 text-[15px] md:text-[13px] flex items-center gap-1 backdrop-blur-md border border-white/10">
               <span to={"/bookings"}>Coming Soon</span>
               <ArrowRight size={10} />
             </button>

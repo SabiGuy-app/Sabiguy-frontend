@@ -250,23 +250,22 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-      <div className="flex justify-center mb-6">
-        <div className="grid grid-cols-2 gap-2">
-          {filters.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => onFilterChange(filter.toLowerCase())}
-              className={`w-full text-center px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
-                activeFilter === filter.toLowerCase()
-                  ? "bg-[#2D6A3E] text-white"
-                  : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
+        <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
+        {filters.map((filter) => (
+          <button
+            key={filter}
+            onClick={() => onFilterChange(filter.toLowerCase())}
+            className={`px-5 sm:px-6 py-2.5 rounded-xl font-semibold transition-all text-sm whitespace-nowrap ${
+              activeFilter === filter.toLowerCase()
+                ? "bg-[#2D6A3E] text-white shadow-md shadow-green-900/10 active:scale-95"
+                : "bg-white text-gray-500 border border-gray-200 hover:border-[#2D6A3E] hover:text-[#2D6A3E] active:scale-95"
+            }`}
+          >
+            {filter}
+          </button>
+        ))}
       </div>
+     
     );
   };
 
