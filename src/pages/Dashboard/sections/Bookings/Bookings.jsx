@@ -250,21 +250,22 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-      <div className="w-[50%] grid grid-cols-2 sm:flex gap-2 mb-6">
+        <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`w-full text-center px-3 py-2 rounded-lg font-medium text-sm transition-colors whitespace-normal break-words ${
+            className={`px-5 sm:px-6 py-2.5 rounded-xl font-semibold transition-all text-sm whitespace-nowrap ${
               activeFilter === filter.toLowerCase()
-                ? "bg-[#2D6A3E] text-white"
-                : "bg-white text-gray-600 border border-gray-300 hover:border-[#2D6A3E] hover:text-[#2D6A3E]"
+                ? "bg-[#2D6A3E] text-white shadow-md shadow-green-900/10 active:scale-95"
+                : "bg-white text-gray-500 border border-gray-200 hover:border-[#2D6A3E] hover:text-[#2D6A3E] active:scale-95"
             }`}
           >
             {filter}
           </button>
         ))}
       </div>
+     
     );
   };
 
@@ -415,27 +416,37 @@ export default function Bookings() {
         <h1 className="text-xl font-semibold p-4">My Bookings</h1>
 
         {/* Tabs */}
-        <div className="flex flex-col sm:flex-row border-b">
+        <div className="flex border-b mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
           <button
             onClick={() => setActiveTab("request")}
-            className={`px-6 py-3 font-medium transition-colors relative ${
+            className={`flex-1 sm:flex-none px-4 sm:px-8 py-3.5 font-bold transition-all relative text-center text-sm sm:text-base ${
               activeTab === "request"
-                ? "text-[#005823] border-b-2 border-[#005823]"
-                : "text-gray-500 hover:text-gray-700"
+                ? "text-[#005823]"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            Request a service
+            <span className="flex items-center justify-center gap-2">
+              Request a service
+            </span>
+            {activeTab === "request" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
+            )}
           </button>
           <button
             id="booking-my-requests"
             onClick={() => setActiveTab("requests")}
-            className={`px-6 py-3 font-medium transition-colors relative ${
+            className={`flex-1 sm:flex-none px-4 sm:px-8 py-3.5 font-bold transition-all relative text-center text-sm sm:text-base ${
               activeTab === "requests"
-                ? "text-[#005823] border-b-2 border-[#005823]"
-                : "text-gray-500 hover:text-gray-700"
+                ? "text-[#005823]"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            My Requests
+            <span className="flex items-center justify-center gap-2">
+              My requests
+            </span>
+            {activeTab === "requests" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
+            )}
           </button>
         </div>
 
@@ -747,7 +758,7 @@ export default function Bookings() {
             </div>
           </form>
         ) : (
-          <div className="mt-5 p-5">
+          <div className="mt-5 py-5 px-3">
             <StatusFilter
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
