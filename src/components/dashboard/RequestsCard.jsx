@@ -254,21 +254,19 @@ export default function RequestCard({
             </div>
           </div>
 
-         <div className="flex flex-wrap gap-2 sm:gap-3">
+          <div className="space-y-3 md:space-y-0 md:flex md:items-center md:gap-3 mt-5">
             <button
-              onClick={() => onViewDetails(request)}
-              className="w-fit mx-auto sm:mx-0 px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"
->
-              View Details
-            </button>
-
+  onClick={() => onViewDetails(request)}
+className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base">
+  View Details
+</button>
+<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 w-full md:w-auto md:flex md:items-center md:gap-3">
             {["provider selected", "payment pending"].includes(
               request.status.toLowerCase(),
             ) && (
               <button
                 onClick={handleMakePayment}
-                className="px-4 py-2 mt-3 bg-[#005823] text-white rounded-[4px] font-medium hover:bg-[#004018] transition-colors flex items-center gap-2"
-              >
+className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base">  
                 <CreditCard className="w-4 h-4" />
                 Make Payment
               </button>
@@ -297,9 +295,7 @@ export default function RequestCard({
             ].includes(request.status.toLowerCase()) && (
               <button
                 onClick={() => onTrackProvider(request.id)}
-                className="w-fit mx-auto sm:mx-0 px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <Send className="w-4 h-4" />
+className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base">                <Send className="w-4 h-4" />
                 Track provider
               </button>
             )}
@@ -314,9 +310,7 @@ export default function RequestCard({
             ].includes(request.status.toLowerCase()) && (
               <button
                 onClick={() => onMessageProvider?.(request)}
-                className="w-fit mx-auto sm:mx-0 px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
+className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base">                <MessageCircle className="w-4 h-4" />
                 Message Provider
               </button>
             )}
@@ -349,6 +343,7 @@ export default function RequestCard({
                 )}
               </>
             )}
+          </div>
           </div>
         </div>
       </div>
