@@ -23,7 +23,7 @@ const vehicleOptions = [
     value: "Bike",
     label: "Bike Delivery",
     icon: <Bike color="black" size={30} />,
-    eta: "15 min",
+    // eta: "15 min",
     capacity: 2,
     description: "Best for small packages",
   },
@@ -44,7 +44,7 @@ const vehicleOptions = [
         <circle cx="17" cy="18" r="1.5" fill="currentColor" stroke="none" />
       </svg>
     ),
-    eta: "21 min",
+    // eta: "21 min",
     capacity: 4,
     description: "Medium sized delivery",
   },
@@ -59,11 +59,9 @@ export default function Bookings() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [pickupMode, setPickupMode] = useState("manual");
-
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
-
   const setBooking = useBookingStore((state) => state.setBooking);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
