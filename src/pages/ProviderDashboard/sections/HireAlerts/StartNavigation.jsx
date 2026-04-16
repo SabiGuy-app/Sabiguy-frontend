@@ -233,6 +233,7 @@ export default function StartNavigation() {
               pickup={pickupCoords}
               dropoff={dropoffCoords}
               riderLocation={riderLocation}
+              vehicleType={bookingDetails?.modeOfDelivery || alert?.originalData?.modeOfDelivery}
             />
           </MapErrorBoundary>
         </div>

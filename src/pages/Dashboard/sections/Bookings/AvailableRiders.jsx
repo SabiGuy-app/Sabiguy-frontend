@@ -201,10 +201,11 @@ export default function AvailableRiders() {
         {/* <div>
           <img src={location} alt="" className="w-[700px] h-[660px]" />
         </div> */}
-       <div className="h-[660px]">
+        <div className="h-[660px]">
           <DeliveryMap
             pickup={pickupCoords}
             dropoff={dropoffCoords}
+            vehicleType={bookingDetails?.modeOfDelivery}
             // riderLocation={rideocation}
           />
         </div>
