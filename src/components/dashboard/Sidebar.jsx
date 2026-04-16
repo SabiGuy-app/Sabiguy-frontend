@@ -84,10 +84,10 @@ export default function Sidebar({ open, onClose }) {
       {/* Sidebar */}
       <aside
         id="sidebar"
-        className={`fixed top-20 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col justify-between border-r border-gray-200 z-40 w-64 p-6 transform transition-transform duration-300 
+        className={`fixed top-16 sm:top-20 left-0 h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-white flex flex-col border-r border-gray-200 z-40 w-3/4 md:w-64 p-6 transform transition-transform duration-300 shadow-xl md:shadow-none
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        <div>
+        <div className="flex-1 overflow-y-auto pb-6">
           <nav className="space-y-2">
             {links.map((link) => {
               if (link.name === "Logout") {
@@ -107,8 +107,8 @@ export default function Sidebar({ open, onClose }) {
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3 px-2 py-3 rounded-xl text-[#231F20] hover:bg-[#005823]/10 ${
+                  onClick={() => onClose && onClose()}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[#231F20] hover:bg-[#005823]/10 ${
                     pathname === link.path
                       ? "bg-[#005823] text-white font-medium"
                       : ""
@@ -121,16 +121,15 @@ export default function Sidebar({ open, onClose }) {
             })}
           </nav>
         </div>
-
-        <div>
+        <div className="mt-auto border-t pt-4">
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-[#231F20] hover:bg-red-100 hover:text-red-600"
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
           >
             <span>
-              <LogOut />
+              <LogOut size={20} />
             </span>
-            <span>Logout</span>
+            <span className="font-medium">Logout</span>
           </button>
         </div>
       </aside>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Check, MapPin, Star, Loader2 } from "lucide-react";
-import Navbar from "../../../../components/dashboard/Navbar";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import location from "/location.png";
 import { useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
@@ -52,8 +52,7 @@ export default function AvailableRiders() {
   };
 
   return (
-    <>
-      <Navbar />
+    <DashboardLayout>
       <div className="min-h-screen md:grid md:grid-cols-2 space-y-4 gap-10 bg-gray-50 p-4 sm:p-8">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -202,14 +201,15 @@ export default function AvailableRiders() {
         {/* <div>
           <img src={location} alt="" className="w-[700px] h-[660px]" />
         </div> */}
-       <div className="h-[660px]">
+        <div className="h-[660px]">
           <DeliveryMap
             pickup={pickupCoords}
             dropoff={dropoffCoords}
+            vehicleType={bookingDetails?.modeOfDelivery}
             // riderLocation={rideocation}
           />
         </div>
       </div>
-    </>
+    </DashboardLayout>
   );
 }

@@ -23,7 +23,9 @@ api.interceptors.response.use(
       original._retry = true;
 
       try {
-        const refreshToken = useAuthStore.getState().user?.refreshToken;
+        const refreshToken =
+          localStorage.getItem("refreshToken") ||
+          useAuthStore.getState().user?.refreshToken;
 
         const { data } = await api.post("/auth/refresh", {
           refreshToken,
@@ -39,7 +41,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(err);
-  }
+  },
 );
 
 export default api;

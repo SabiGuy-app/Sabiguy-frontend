@@ -369,7 +369,6 @@ export default function HireAlerts() {
     setSelectedJob(null);
   };
 
-
   const handleRefresh = () => {
     fetchBookings();
   };

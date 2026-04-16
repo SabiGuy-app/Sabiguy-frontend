@@ -11,9 +11,10 @@ import {
 import { chatService } from "../../../api/chat";
 import { io } from "socket.io-client";
 import { useAuthStore } from "../../../stores/auth.store";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const CHAT_STATUS_CATEGORY = "active";
 
 export default function ChatPage() {
   const [chats, setChats] = useState([]);
@@ -30,6 +31,7 @@ export default function ChatPage() {
   const currentUserId = useAuthStore((state) => state.user?.data?._id);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   // Don't setup socket until store is hydrated
   useEffect(() => {
@@ -111,19 +113,75 @@ export default function ChatPage() {
   useEffect(() => {
     const bookingId = searchParams.get("bookingId");
     const chatId = searchParams.get("chatId");
+    const routeBooking = location.state?.booking || null;
+    const routeOtherParticipant =
+      location.state?.customer ||
+      location.state?.provider ||
+      routeBooking?.userId ||
+      routeBooking?.providerId ||
+      null;
+    const routeBookingId = routeBooking?._id || routeBooking?.id || null;
+    const routeChat = routeBookingId
+      ? {
+          _id: `route-${routeBookingId}`,
+          bookingId: {
+            _id: routeBookingId,
+            serviceType:
+              routeBooking?.serviceType ||
+              routeBooking?.subCategory ||
+              "Service",
+            status: routeBooking?.status || "Active Booking",
+          },
+          otherParticipant: {
+            _id: routeOtherParticipant?._id || null,
+            name:
+              routeOtherParticipant?.fullName ||
+              routeOtherParticipant?.name ||
+              routeOtherParticipant?.email ||
+              routeOtherParticipant?.phoneNumber ||
+              "Other User",
+            avatar:
+              routeOtherParticipant?.profilePicture ||
+              routeOtherParticipant?.avatar ||
+              null,
+            profilePicture:
+              routeOtherParticipant?.profilePicture ||
+              routeOtherParticipant?.avatar ||
+              null,
+          },
+          unreadCount: 0,
+          lastMessage: null,
+          lastMessageTime:
+            routeBooking?.updatedAt || routeBooking?.createdAt || null,
+        }
+      : null;
 
     if ((bookingId || chatId) && chats.length > 0) {
       const chat = chats.find(
-        (c) => c.bookingId === bookingId || c._id === chatId,
+        (c) => c.bookingId?._id === bookingId || c._id === chatId,
       );
       if (chat) {
         setSelectedChat(chat);
+        return;
       }
     }
-  }, [searchParams, chats]);
+
+    if (bookingId && chats.length > 0) {
+      const bookingChat = chats.find((c) => c.bookingId?._id === bookingId);
+      if (bookingChat) {
+        setSelectedChat(bookingChat);
+        return;
+      }
+    }
+
+    if (routeChat) {
+      setSelectedChat(routeChat);
+    }
+  }, [searchParams, chats, location.state]);
 
   useEffect(() => {
     if (selectedChat) {
+      if (!selectedChat.bookingId?._id) return;
       loadMessages(selectedChat.bookingId._id);
 
       if (socket) {
@@ -133,7 +191,7 @@ export default function ChatPage() {
     }
 
     return () => {
-      if (selectedChat && socket) {
+      if (selectedChat?.bookingId?._id && socket) {
         socket.emit("leave_chat", { bookingId: selectedChat.bookingId._id });
       }
     };
@@ -152,7 +210,7 @@ export default function ChatPage() {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const response = await chatService.getAllChats();
+      const response = await chatService.getAllChats(1, 20, CHAT_STATUS_CATEGORY);
       setChats(response.data || []);
     } catch (error) {
       console.error("Error loading chats:", error);
@@ -343,7 +401,7 @@ export default function ChatPage() {
     <DashboardLayout>
       <div className="flex flex-col md:flex-row h-screen bg-gray-50">
         {/* Sidebar - Chat List */}
-        <div className={`${selectedChat ? 'hidden md:flex' : 'flex'} w-full md:w-80 bg-white border-b md:border-r border-gray-200 flex flex-col`}>
+        <div className="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col md:max-h-screen">
           {/* Chats Header */}
           <div className="px-4 py-3 border-b border-gray-200">
             <h2 className="font-semibold text-gray-800">Chats</h2>
@@ -427,7 +485,7 @@ export default function ChatPage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="w-full md:flex-1 flex flex-col md:max-h-screen">
           {selectedChat ? (
             <>
               {/* Chat Header */}
@@ -455,19 +513,19 @@ export default function ChatPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button className="text-gray-600 hover:text-gray-800">
-                      <span className="text-sm p-2 bg-[#005823]/10 rounded">
-                        View Profile
-                      </span>
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-800">
-                      <span className="text-sm text-[#005823] border border-gray-300 p-2 rounded">
-                        {selectedChat.bookingId?.status || "Active Booking"}
-                      </span>
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-800">
-                      <FiPhone size={20} />
-                    </button>
+                    {/* <button className="text-gray-600 hover:text-gray-800">
+                            <span className="text-sm p-2 bg-[#005823]/10 rounded">
+                              View Profile
+                            </span>
+                          </button> */}
+                    {/* <button className="text-gray-600 hover:text-gray-800">
+                            <span className="text-sm text-[#005823] border border-gray-300 p-2 rounded">
+                              {selectedChat.bookingId?.status || "Active Booking"}
+                            </span>
+                          </button> */}
+                    {/* <button className="text-gray-600 hover:text-gray-800">
+                            <FiPhone size={20} />
+                          </button> */}
                   </div>
                 </div>
               </div>
@@ -614,7 +672,7 @@ export default function ChatPage() {
                 </h2>
                 <p className="text-gray-500 mb-6 max-w-sm">
                   Choose a conversation from the list to start messaging with
-                  your provider or service user.
+                  your clients or service users.
                 </p>
               </div>
             </div>

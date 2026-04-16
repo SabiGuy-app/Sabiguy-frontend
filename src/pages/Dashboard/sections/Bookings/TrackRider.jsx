@@ -9,8 +9,8 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import DeliveryMap from "../../../../components/dashboard/Map";
-import Navbar from "../../../../components/dashboard/Navbar";
 import { useNavigate } from "react-router-dom";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import useBookingStore from "../../../../stores/booking.store";
 import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
 import CancelModal from "../../../../components/CancelModal";
@@ -235,9 +235,7 @@ export default function TrackRider() {
   };
 
   return (
-    <>
-      <Navbar />
-
+    <DashboardLayout>
       <CancelModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
@@ -453,9 +451,10 @@ export default function TrackRider() {
             pickup={pickupCoords}
             dropoff={dropoffCoords}
             riderLocation={riderLocation}
+            vehicleType={bookingDetails?.modeOfDelivery }
           />
         </div>
       </div>
-    </>
+    </DashboardLayout>
   );
 }

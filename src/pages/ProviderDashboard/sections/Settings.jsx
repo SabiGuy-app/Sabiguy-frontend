@@ -239,7 +239,7 @@ export default function ProviderProfilePage() {
             <ProviderServiceProfileTab profile={profile} />
           )}
           {activeTab === "preferences" && <SettingsTab profile={profile} />}
-          {activeTab === "referrals" && <ReferralsTab profile={profile} />}
+          {/* {activeTab === "referrals" && <ReferralsTab profile={profile} />} */}
         </div>
       </div>
 

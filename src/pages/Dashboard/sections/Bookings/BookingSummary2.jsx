@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Phone,
   MessageCircle,
-  User,
   Clock,
   Star,
   MapPin,
@@ -10,10 +9,9 @@ import {
   X,
   CheckCircle,
   Award,
-  Shield,
   BadgeCheck,
 } from "lucide-react";
-import Navbar from "../../../../components/dashboard/Navbar";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import { toast } from "react-hot-toast";
 import { FiChevronLeft } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
@@ -43,12 +41,8 @@ export default function BookingSummary2() {
   const paymentSuccess = searchParams.get("payment_success");
   const reference = searchParams.get("reference");
 
-  // Zustand store
   const booking = useBookingStore((state) => state.booking);
   const setBooking = useBookingStore((state) => state.setBooking);
-  // const selectedProviderId = useBookingStore(
-  //   (state) => state.selectedProviderId,
-  // );
 
   const bookingDetails = booking?.data?.booking || {};
   const providerDetails = bookingDetails?.providerId || {};
@@ -71,7 +65,6 @@ export default function BookingSummary2() {
   );
   const providerETA = providerDistanceInfo?.providerETAMinutes;
 
-  // Fetch wallet balance on mount
   const fetchBalance = async () => {
     try {
       setIsLoadingBalance(true);
@@ -164,13 +157,11 @@ export default function BookingSummary2() {
 
         const pickupNote = notes?.trim() || undefined;
         const payResponse = await payWithWallet(bookingId, pickupNote);
-        
-        // Update booking details with the response from the payment
+
         if (payResponse) {
           setBooking(payResponse);
         }
 
-        // Update wallet balance from response instead of refetching
         const newBalance =
           payResponse?.data?.walletBalance?.available ??
           payResponse?.walletBalance?.available ??
@@ -312,9 +303,7 @@ export default function BookingSummary2() {
   );
 
   return (
-    <>
-      <Navbar />
-
+    <DashboardLayout>
       <CancelModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
@@ -322,26 +311,25 @@ export default function BookingSummary2() {
         loading={cancelLoading}
       />
 
-      <div className=" w-[90%] m-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-6 mt-8">
+      <div className="w-full px-3 sm:px-4 md:px-[5%]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6 mt-4 sm:mt-8">
           <Link to={"/bookings"} className="flex items-center gap-3">
             <button className="text-gray-600 hover:text-gray-900">
               <FiChevronLeft size={24} />
             </button>
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
               Booking summary
             </h1>
           </Link>
           {bookingDetails?._id && (
-            <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-md border border-[#0058234D] w-fit">
+            <span className="text-[10px] sm:text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-md border border-[#0058234D] w-fit">
               Booking #{bookingDetails._id.slice(-6).toUpperCase()}
             </span>
           )}
         </div>
 
-        {/* Error Message */}
         {errorMessage && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
             <svg
               className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0"
               fill="currentColor"
@@ -369,61 +357,59 @@ export default function BookingSummary2() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          <div className="lg:col-span-7 space-y-8">
-            <div className="shadow-sm p-6 rounded-[16px] space-y-6">
-              <div className="flex items-start gap-4">
+          <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+            <div className="shadow-sm w-full max-w-full px-4 sm:px-6 py-4 sm:py-6 rounded-[16px] space-y-4 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4">
                 <div className="relative">
                   <img
                     src={providerDetails?.profilePicture}
                     alt={providerDetails?.fullName || "Provider"}
-                    className="w-16 h-16 rounded-full object-cover"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
                   />
                 </div>
-                <div className="flex-grow">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col items-center sm:items-start gap-1 mb-1">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 capitalize truncate">
                       {providerDetails?.fullName || "Provider"}
                     </h2>
                     <span className="text-[#8BC53F]">
-                      <BadgeCheck className="w-[20px] h-[20px]" />
+                      <BadgeCheck className="w-5 h-5" />
                     </span>
                   </div>
                   {providerDetails?._id && (
-                    <div className="mb-1">
-                      <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 inline-block">
+                    <div className="mb-2">
+                      <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 inline-block">
                         ID: {providerDetails._id.slice(-6).toUpperCase()}
                       </span>
                     </div>
                   )}
-                  <p className="text-sm text-gray-600 mb-1 capitalize">
-                    {providerDetails?.job?.[0]?.title?.replace(
-                      /_/g,
-                      " ",
-                    ) ||
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1 capitalize">
+                    {providerDetails?.services?.[0]?.title?.replace(/_/g, " ") ||
                       bookingDetails?.subCategory?.replace(/_/g, " ") ||
                       "—"}
                   </p>
-                  <div className="flex items-center gap-1 text-[14px] text-gray-600">
-                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium text-gray-900">
-                      {providerDetails?.rating?.average > 0
-                        ? providerDetails.rating.average.toFixed(1)
-                        : "New"}
-                    </span>
-                    <span className="text-gray-500">
-                      ({providerDetails?.rating?.count ?? 0} reviews)
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[14px] text-[#231F20BF] mt-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>
-                      {providerETA ? `${providerETA} mins away` : "— mins away"}
-                    </span>
+                  <div className="flex flex-col items-center sm:items-start gap-1 text-[12px] sm:text-[14px] text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium text-gray-900">
+                        {providerDetails?.rating?.average > 0
+                          ? providerDetails.rating.average.toFixed(1)
+                          : "New"}
+                      </span>
+                      <span className="text-gray-500">
+                        ({providerDetails?.rating?.count ?? 0} reviews)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[#231F20BF] mt-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>
+                        {providerDetails?.distance?.toFixed(1) ?? "—"} miles away
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 sm:gap-8 pt-4 md:pt-0">
+                <div className="grid grid-cols-2 gap-4 sm:gap-8 pt-4 sm:pt-0">
                   <div className="flex flex-col items-center sm:items-start">
                     <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-50 mb-1">
                       <Award className="w-5 h-5 sm:w-6 sm:h-6 text-[#005823]" />
@@ -453,7 +439,6 @@ export default function BookingSummary2() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-100">
                 <button className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 px-6 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 shadow-sm">
                   <Phone className="w-4 h-4" />
@@ -474,68 +459,63 @@ export default function BookingSummary2() {
               </div>
             </div>
 
-            {/* Vehicle Image */}
             <img
               src={providerDetails?.workVisuals?.[0]?.pictures?.[0]}
               alt="Provider's Car"
-              className="w-full h-auto object-contain"
+              className="w-full h-auto object-contain rounded-2xl"
             />
           </div>
 
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-4 sm:space-y-6">
             <div className="bg-[#231F2005] border border-[#231F201A] px-6 py-4 rounded-[16px]">
               <div>
-                <h3 className="text-[24px] font-bold text-[#231F20] mb-4">
+                <h3 className="text-lg sm:text-2xl font-bold text-[#231F20] mb-3 sm:mb-4">
                   Job Summary
                 </h3>
 
-                <div className="space-y-3">
-                  {/* Pickup */}
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <div className="w-3 h-3 bg-[#005823] rounded-full" />
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex gap-3">
+                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-5 h-5 bg-[#005823] rounded-full" />
                     </div>
-                    <div className="flex-1">
+                    <div>
                       <div className="font-semibold text-[16px] text-[#231F20]">
                         Pickup Location
                       </div>
-                      <div className="text-[15px] text-gray-500 leading-tight mt-0.5">
+                      <div className="text-[16px] text-[#231F20BF]">
                         {pickupAddress}
                       </div>
                     </div>
                   </div>
 
-                  {/* Dropoff */}
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="flex gap-3">
+                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
                       <MapPin className="w-5 h-5 text-[#005823]" />
                     </div>
-                    <div className="flex-1">
+                    <div>
                       <div className="font-semibold text-[16px] text-[#231F20]">
                         Dropoff Location
                       </div>
-                      <div className="text-[15px] text-gray-500 leading-tight mt-0.5">
+                      <div className="text-[16px] text-[#231F20BF]">
                         {dropoffAddress}
                       </div>
                     </div>
                   </div>
 
-                  {/* Distance */}
-                  <div className="flex items-center gap-4">
+                  <div className="flex gap-3">
                     <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                      <Navigation className="w-5 h-5 text-[#005823]" />
+                      <Navigation className="w-5 h-5 text-green-600" />
                     </div>
-                    <div className="flex-1">
+                    <div>
                       <div className="font-semibold text-[16px] text-[#231F20]">
                         Estimated Distance
                       </div>
-                      <div className="text-[15px] text-gray-500">
+                      <div className="text-[16px] text-[#231F20BF]">
                         {estimatedDistance}
                       </div>
                     </div>
                   </div>
 
-                  {/* ETA */}
                   {providerETA != null && (
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
@@ -554,33 +534,18 @@ export default function BookingSummary2() {
                 </div>
               </div>
 
-              {/* Description */}
               {bookingDetails?.description && (
-                <div className="my-6 border-t border-[#231F201A] pt-6">
-                  <h3 className="text-[20px] font-semibold text-gray-900 mb-2">
+                <div className="my-4 sm:my-6 border-t border-[#231F201A] pt-4 sm:pt-6">
+                  <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-2">
                     Description
                   </h3>
-                  <p className="text-[16px] text-[#231F20BF] leading-relaxed">
+                  <p className="text-sm sm:text-base text-[#231F20BF] leading-relaxed">
                     {bookingDetails.description}
                   </p>
                 </div>
               )}
 
-              {/* Cost */}
-              <div className="my-4 border-t border-b border-[#231F201A] py-8">
-                <h3 className="text-[20px] font-bold text-gray-900 mb-6">
-                  Payment Summary
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center text-[16px] text-gray-600">
-                    <span className="font-medium">Service Cost</span>
-                    <span className="font-semibold text-gray-900">{serviceCost != null ? formatCurrency(serviceCost) : "—"}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[16px] text-gray-600">
-                    <span className="font-medium">Platform Fee</span>
-                    <span className="font-semibold text-gray-900">{serviceCharge != null ? formatCurrency(serviceCharge) : "—"}</span>
-                  </div>
-                  <div className="pt-2 mt-2 text-[16px]">
+                  <div className="pt-2 mt-2 text-xs sm:text-sm md:text-base">
                     <div className="flex justify-between">
                       <span className="font-semibold text-[#231F20BF]">
                         Total Amount
@@ -594,13 +559,13 @@ export default function BookingSummary2() {
               </div>
 
               {/* Payment Method */}
-              <div className="mb-6">
-                <h3 className="text-[20px] font-semibold text-[#231F20] mb-4">
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-xl font-semibold text-[#231F20] mb-3 sm:mb-4">
                   Payment Method
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   <label
-                    className={`flex items-center gap-3 p-3 border rounded-[8px] transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedPayment === "wallet" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
+                    className={`flex items-center gap-3 p-2 sm:p-3 border rounded-[8px] transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedPayment === "wallet" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
                   >
                     <input
                       type="radio"
@@ -609,12 +574,12 @@ export default function BookingSummary2() {
                       checked={selectedPayment === "wallet"}
                       onChange={(e) => setSelectedPayment(e.target.value)}
                       disabled={isPaid}
-                      className="w-5 h-5 accent-[#005823]"
+                      className="w-4 h-4 sm:w-5 sm:h-5 accent-[#005823]"
                     />
-                    <div className="flex items-center gap-3 flex-grow">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-grow">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center">
                         <svg
-                          className="w-6 h-6 text-gray-600"
+                          className="w-5 sm:w-6 h-5 sm:h-6 text-gray-600"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -628,10 +593,10 @@ export default function BookingSummary2() {
                         </svg>
                       </div>
                       <div>
-                        <div className="font-semibold text-[16px] text-[#231F20]">
+                        <div className="font-semibold text-sm sm:text-base text-[#231F20]">
                           Wallet
                         </div>
-                        <div className="text-[12px] font-semibold text-[#231F20BF]">
+                        <div className="text-[11px] sm:text-xs font-semibold text-[#231F20BF]">
                           Balance: {formatCurrency(walletBalance)}
                         </div>
                       </div>
@@ -639,7 +604,7 @@ export default function BookingSummary2() {
                   </label>
 
                   <label
-                    className={`flex items-center gap-3 p-3 border rounded-[8px] transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
+                    className={`flex items-center gap-3 p-2 sm:p-3 border rounded-[8px] transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
                   >
                     <input
                       type="radio"
@@ -648,12 +613,12 @@ export default function BookingSummary2() {
                       checked={selectedPayment === "online"}
                       onChange={(e) => setSelectedPayment(e.target.value)}
                       disabled={isPaid}
-                      className="w-5 h-5 accent-[#005823]"
+                      className="w-4 h-4 sm:w-5 sm:h-5 accent-[#005823]"
                     />
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center">
                         <svg
-                          className="w-6 h-6 text-gray-600"
+                          className="w-5 sm:w-6 h-5 sm:h-6 text-gray-600"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -666,7 +631,7 @@ export default function BookingSummary2() {
                           />
                         </svg>
                       </div>
-                      <div className="font-medium text-[16px] text-[#231F20]">
+                      <div className="font-medium text-sm sm:text-base text-[#231F20]">
                         Pay Online
                       </div>
                     </div>
@@ -675,10 +640,10 @@ export default function BookingSummary2() {
               </div>
 
               {/* Additional Notes */}
-              <div className="mb-6">
-                <h3 className="text-[20px] font-semibold text-[#231F20] mb-3">
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-xl font-semibold text-[#231F20] mb-2 sm:mb-3">
                   Pickup notes{" "}
-                  <span className="text-[16px] text-[#231F20BF]">
+                  <span className="text-sm sm:text-base text-[#231F20BF]">
                     (optional)
                   </span>
                 </h3>
@@ -687,24 +652,23 @@ export default function BookingSummary2() {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add extra instructions for the service provider.."
                   disabled={isPaid}
-                  className={`w-full p-4 border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isPaid ? "opacity-50 cursor-not-allowed" : ""}`}
-                  rows="4"
+                  className={`w-full p-3 sm:p-4 text-sm sm:text-base border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isPaid ? "opacity-50 cursor-not-allowed" : ""}`}
+                  rows="3"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pb-6">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pb-4 sm:pb-6">
                 <button
                   onClick={() => setCancelModalOpen(true)}
                   disabled={isPaid}
-                  className={`flex-1 py-4 px-6 text-[16px] bg-[#fbfbfb] border border-gray-300 rounded-[4px] text-[#231F20] font-semibold transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
-                >
+                  className="px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"                >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmAndPay}
                   disabled={isProcessing || isPaid}
-                  className="flex-1 py-4 px-6 text-[16px] bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:flex-1 py-3 sm:py-4 px-4 sm:px-6 text-sm sm:text-base bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPaid
                     ? "Paid ✓"
@@ -714,13 +678,13 @@ export default function BookingSummary2() {
                 </button>
               </div>
             </div>
-            <p className="text-center text-[#231F2080]">
+            <p className="text-center  text-xs sm:text-sm text-[#231F2080]">
               Rider will proceed once payment is confirmed
             </p>
           </div>
         </div>
       </div>
       {showSuccessModal && <SuccessModal />}
-    </>
+    </DashboardLayout>
   );
 }

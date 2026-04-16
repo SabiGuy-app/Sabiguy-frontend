@@ -8,6 +8,8 @@ import { useAuthStore } from "../../../stores/auth.store";
 import { useSearchParams, useLocation } from "react-router-dom";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const CHAT_STATUS_CATEGORY = "active";
+
 
 const ProviderChat = () => {
   const [chats, setChats] = useState([]);
@@ -192,7 +194,7 @@ const ProviderChat = () => {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const response = await chatService.getAllChats();
+      const response = await chatService.getAllChats(1, 20, CHAT_STATUS_CATEGORY);
       setChats(response.data || []);
     } catch (error) {
       console.error("Error loading chats:", error);
@@ -495,19 +497,19 @@ const ProviderChat = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button className="text-gray-600 hover:text-gray-800">
+                    {/* <button className="text-gray-600 hover:text-gray-800">
                       <span className="text-sm p-2 bg-[#005823]/10 rounded">
                         View Profile
                       </span>
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-800">
+                    </button> */}
+                    {/* <button className="text-gray-600 hover:text-gray-800">
                       <span className="text-sm text-[#005823] border border-gray-300 p-2 rounded">
                         {selectedChat.bookingId?.status || "Active Booking"}
                       </span>
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-800">
+                    </button> */}
+                    {/* <button className="text-gray-600 hover:text-gray-800">
                       <FiPhone size={20} />
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </div>

@@ -151,11 +151,14 @@ export default function Login() {
 
       // Extract token + email
       const token = res.token;
+      const refreshToken = res.refreshToken;
       const loginEmail = res.email || normalizedEmail;
 
       // Store token
       localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refreshToken);
       useAuthStore.getState().setToken(token);
+      // useAuthStore.getState().setRefreshToken(refreshToken);
 
       // 2. GET FULL USER DETAILS
       const fullUser = await getUserByEmail(loginEmail);
@@ -236,6 +239,11 @@ export default function Login() {
       setLoading(false);
       setSubmitting(false);
     }
+  };
+
+  const handleFieldChange = (handleChange) => (e) => {
+    if (errorMessage) setErrorMessage("");
+    handleChange(e);
   };
 
   const GoogleLogin = useGoogleLogin({
@@ -389,7 +397,7 @@ export default function Login() {
                     label="Email"
                     placeholder="Enter your email"
                     value={values.email}
-                    onChange={handleChange}
+                    onChange={handleFieldChange(handleChange)}
                     onBlur={handleBlur}
                   />
                   <ErrorMessage
@@ -405,7 +413,7 @@ export default function Login() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={values.password}
-                    onChange={handleChange}
+                    onChange={handleFieldChange(handleChange)}
                     onBlur={handleBlur}
                   />
                   <ErrorMessage
@@ -436,11 +444,11 @@ export default function Login() {
                     {successMessage}
                   </div>
                 )}
-                <div className="flex justify-start mb-5">
+                <div className="flex justify-end mb-5">
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="font-semibold text-lg hover:text-[#005823BF]"
+                    className="font-semibold text-[14px] hover:text-[#005823BF] hover:underline cursor-pointer"
                   >
                     Forgot Password?
                   </button>
