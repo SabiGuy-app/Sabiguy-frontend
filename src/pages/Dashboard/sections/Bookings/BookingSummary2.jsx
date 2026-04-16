@@ -58,18 +58,18 @@ export default function BookingSummary2() {
   const estimatedDistance = bookingDetails?.distance
     ? `${bookingDetails.distance.value} ${bookingDetails.distance.unit}`
     : "—";
-  const basePrice = bookingDetails?.agreedPrice ?? bookingDetails?.calculatedPrice ?? bookingDetails?.price ?? 0;
-  
-  // Calculate breakdown based on reverse-engineered logic:
-  // Service Fee: 10%, Platform: 25%, Provider: 15%
-  const serviceCost = basePrice;
-  const calculatedServiceFee = Math.round(basePrice * 0.10);
-  const calculatedTotalAmount = basePrice + calculatedServiceFee;
-  const platformFee = Math.round(basePrice * 0.25);
-  const providerCut = Math.round(basePrice * 0.15);
+  const acceptedProviderId = bookingDetails?.providerId?._id || providerDetails?._id;
+  const targetProvider = booking?.data?.providers?.find(p => (p.id || p._id || p.userId) === acceptedProviderId) || providerDetails;
+  const pricing = targetProvider?.pricing || bookingDetails?.pricing;
 
-  const serviceCharge = bookingDetails?.serviceFee ?? bookingDetails?.service_fee ?? bookingDetails?.fee ?? calculatedServiceFee;
-  const totalAmount = bookingDetails?.totalAmount ?? bookingDetails?.total_amount ?? bookingDetails?.amount ?? calculatedTotalAmount;
+  const serviceCost = pricing?.breakdown?.subtotal ?? bookingDetails?.agreedPrice ?? 0;
+  const serviceCharge = pricing?.breakdown?.platformFee ?? bookingDetails?.platformEarns ?? 0;
+  const totalAmount = pricing?.riderPays ?? bookingDetails?.calculatedPrice ?? 0;
+
+  const providerDistanceInfo = bookingDetails?.providerDistances?.find(
+    (p) => p.providerId === acceptedProviderId
+  );
+  const providerETA = providerDistanceInfo?.providerETAMinutes;
 
   // Fetch wallet balance on mount
   const fetchBalance = async () => {
@@ -237,17 +237,17 @@ export default function BookingSummary2() {
 
           <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-3">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">Base Price:</span>
-              <span className="font-medium text-gray-900">{formatCurrency(basePrice)}</span>
+              <span className="text-gray-600">Service Cost:</span>
+              <span className="font-medium text-gray-900">{formatCurrency(serviceCost)}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">Service Fee (10%):</span>
-              <span className="font-medium text-gray-900">{formatCurrency(calculatedServiceFee)}</span>
+              <span className="text-gray-600">Platform Fee:</span>
+              <span className="font-medium text-gray-900">{formatCurrency(serviceCharge)}</span>
             </div>
             <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
               <span className="text-gray-600 font-semibold">Total Deducted:</span>
               <span className="font-bold text-green-600 text-lg">
-                {formatCurrency(calculatedTotalAmount)}
+                {formatCurrency(totalAmount)}
               </span>
             </div>
 
@@ -368,8 +368,8 @@ export default function BookingSummary2() {
           </div>
         )}
 
-        <div className="md:grid md:grid-cols-2 space-y-4 gap-8">
-          <div className="space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          <div className="lg:col-span-7 space-y-8">
             <div className="shadow-sm p-6 rounded-[16px] space-y-6">
               <div className="flex items-start gap-4">
                 <div className="relative">
@@ -396,7 +396,7 @@ export default function BookingSummary2() {
                     </div>
                   )}
                   <p className="text-sm text-gray-600 mb-1 capitalize">
-                    {providerDetails?.services?.[0]?.title?.replace(
+                    {providerDetails?.job?.[0]?.title?.replace(
                       /_/g,
                       " ",
                     ) ||
@@ -415,54 +415,58 @@ export default function BookingSummary2() {
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-[14px] text-[#231F20BF] mt-1">
-                    <MapPin className="w-3.5 h-3.5" />
+                    <Clock className="w-3.5 h-3.5" />
                     <span>
-                      {providerDetails?.distance?.toFixed(1) ?? "—"} miles away
+                      {providerETA ? `${providerETA} mins away` : "— mins away"}
                     </span>
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div className="flex gap-10">
-                  <div className="flex flex-col justify-center items-center">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full">
-                      <Award className="w-[24px] h-[24px] text-[#005823]" />
+                <div className="grid grid-cols-2 gap-4 sm:gap-8 pt-4 md:pt-0">
+                  <div className="flex flex-col items-center sm:items-start">
+                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-50 mb-1">
+                      <Award className="w-5 h-5 sm:w-6 sm:h-6 text-[#005823]" />
                     </div>
-                    <div className="text-[20px] font-semibold text-[#231F20]">
+                    <div className="text-xl sm:text-[20px] font-bold text-[#231F20]">
                       {providerDetails?.completedJobs ?? 0}
                     </div>
-                    <div className="text-[15px] text-[#231F2080]">
+                    <div className="text-xs sm:text-[14px] text-gray-500 whitespace-nowrap">
                       Jobs Done
                     </div>
                   </div>
-                  <div className="flex flex-col justify-center items-center">
-                    <div className="flex items-center justify-center w-10 h-10">
-                      <Clock className="w-[24px] h-[24px] text-[#231F20BF]" />
+                  <div className="flex flex-col items-center sm:items-start pl-4 border-l border-gray-100">
+                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-full mb-1">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-[#231F20BF]" />
                     </div>
-                    <div className="text-[20px] font-semibold text-[#231F20]">
-                      {"< 3 Mins"}
+                    <div className="text-xl sm:text-[20px] font-bold text-[#231F20]">
+                      {bookingDetails?.bookingDuration?.value 
+                        ? `${bookingDetails.bookingDuration.value} ${bookingDetails.bookingDuration.unit}` 
+                        : bookingDetails?.estimatedDuration?.value
+                        ? `${bookingDetails.estimatedDuration.value} ${bookingDetails.estimatedDuration.unit}`
+                        : "—"}
                     </div>
-                    <div className="text-[15px] text-[#231F2080]">
-                      Response Time
+                    <div className="text-xs sm:text-[14px] text-gray-500 whitespace-nowrap">
+                      Duration
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="md:flex gap-5">
-                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Phone className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-700">Call</span>
+              <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-100">
+                <button className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 px-6 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 shadow-sm">
+                  <Phone className="w-4 h-4" />
+                  <span>Call</span>
                 </button>
-                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <MessageCircle className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-700">Message</span>
+                <button className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 px-6 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 shadow-sm">
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Message</span>
                 </button>
                 {!isPaid && (
                   <button
                     onClick={() => setCancelModalOpen(true)}
-                    className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors"
+                    className="w-full sm:w-auto px-6 py-3 text-red-600 font-semibold hover:bg-red-50 rounded-xl transition-all text-center"
                   >
                     Cancel Request
                   </button>
@@ -478,7 +482,7 @@ export default function BookingSummary2() {
             />
           </div>
 
-          <div className="space-y-4">
+          <div className="lg:col-span-5 space-y-6">
             <div className="bg-[#231F2005] border border-[#231F201A] px-6 py-4 rounded-[16px]">
               <div>
                 <h3 className="text-[24px] font-bold text-[#231F20] mb-4">
@@ -487,49 +491,66 @@ export default function BookingSummary2() {
 
                 <div className="space-y-3">
                   {/* Pickup */}
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                      <div className="w-5 h-5 bg-[#005823] rounded-full" />
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <div className="w-3 h-3 bg-[#005823] rounded-full" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <div className="font-semibold text-[16px] text-[#231F20]">
                         Pickup Location
                       </div>
-                      <div className="text-[16px] text-[#231F20BF]">
+                      <div className="text-[15px] text-gray-500 leading-tight mt-0.5">
                         {pickupAddress}
                       </div>
                     </div>
                   </div>
 
                   {/* Dropoff */}
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                       <MapPin className="w-5 h-5 text-[#005823]" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <div className="font-semibold text-[16px] text-[#231F20]">
                         Dropoff Location
                       </div>
-                      <div className="text-[16px] text-[#231F20BF]">
+                      <div className="text-[15px] text-gray-500 leading-tight mt-0.5">
                         {dropoffAddress}
                       </div>
                     </div>
                   </div>
 
                   {/* Distance */}
-                  <div className="flex gap-3">
+                  <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                      <Navigation className="w-5 h-5 text-green-600" />
+                      <Navigation className="w-5 h-5 text-[#005823]" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <div className="font-semibold text-[16px] text-[#231F20]">
                         Estimated Distance
                       </div>
-                      <div className="text-[16px] text-[#231F20BF]">
+                      <div className="text-[15px] text-gray-500">
                         {estimatedDistance}
                       </div>
                     </div>
                   </div>
+
+                  {/* ETA */}
+                  {providerETA != null && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-5 h-5 text-[#005823]" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-[16px] text-[#231F20]">
+                          Provider ETA
+                        </div>
+                        <div className="text-[15px] text-gray-500">
+                          {providerETA} minutes
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -546,18 +567,18 @@ export default function BookingSummary2() {
               )}
 
               {/* Cost */}
-              <div className="my-6 border-t border-b border-[#231F201A] py-10">
-                <h3 className="text-[20px] font-semibold text-gray-900 mb-4">
-                  Cost
+              <div className="my-4 border-t border-b border-[#231F201A] py-8">
+                <h3 className="text-[20px] font-bold text-gray-900 mb-6">
+                  Payment Summary
                 </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[16px] font-semibold text-[#231F20BF]">
-                    <span>Service Cost</span>
-                    <span>{serviceCost != null ? formatCurrency(serviceCost) : "—"}</span>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-[16px] text-gray-600">
+                    <span className="font-medium">Service Cost</span>
+                    <span className="font-semibold text-gray-900">{serviceCost != null ? formatCurrency(serviceCost) : "—"}</span>
                   </div>
-                  <div className="flex justify-between text-[16px] font-semibold text-[#231F20BF]">
-                    <span>Service Charge</span>
-                    <span>{serviceCharge != null ? formatCurrency(serviceCharge) : "—"}</span>
+                  <div className="flex justify-between items-center text-[16px] text-gray-600">
+                    <span className="font-medium">Platform Fee</span>
+                    <span className="font-semibold text-gray-900">{serviceCharge != null ? formatCurrency(serviceCharge) : "—"}</span>
                   </div>
                   <div className="pt-2 mt-2 text-[16px]">
                     <div className="flex justify-between">

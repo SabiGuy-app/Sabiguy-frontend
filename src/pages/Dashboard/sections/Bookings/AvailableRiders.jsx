@@ -15,7 +15,7 @@ export default function AvailableRiders() {
   const providers = booking?.data?.providers || [];
   const bookingDetails = booking?.data?.booking || {};
   const bookingId = bookingDetails._id;
-  const bookingAmount = bookingDetails.calculatedPrice;
+  const bookingAmount = bookingDetails?.agreedPrice ?? bookingDetails?.calculatedPrice ?? bookingDetails?.price ?? 0;
 
   const pickupCoords = {
     latitude: bookingDetails?.pickupLocation?.coordinates?.coordinates?.[1],
@@ -135,11 +135,12 @@ export default function AvailableRiders() {
                             </span>
                           </div>
 
-                          {/* Distance */}
+                          {/* Distance & ETA */}
                           <div className="flex items-center gap-1 mt-1">
                             <MapPin className="w-4 h-4 text-[#231F20BF]" />
                             <span className="text-[14px] text-[#231F20BF]">
                               {provider.distance?.toFixed(1)} miles away
+                              {provider.eta && ` • ETA: ${provider.eta}`}
                             </span>
                           </div>
 
@@ -154,7 +155,7 @@ export default function AvailableRiders() {
 
                           {/* Price */}
                           <h2 className="text-2xl sm:text-[25px] text-[#005823] font-semibold mt-4">
-                            ₦{bookingAmount}
+                            ₦{Number(provider?.pricing?.riderPays ?? provider?.price ?? provider?.calculatedPrice ?? provider?.agreedPrice ?? provider?.amount ?? provider?.bid ?? bookingAmount).toLocaleString()}
                           </h2>
                         </div>
 
