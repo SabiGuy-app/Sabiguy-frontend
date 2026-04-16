@@ -14,6 +14,7 @@ import { useAuthStore } from "../../../stores/auth.store";
 import { useSearchParams, useLocation } from "react-router-dom";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const CHAT_STATUS_CATEGORY = "active";
 
 export default function ChatPage() {
   const [chats, setChats] = useState([]);
@@ -209,7 +210,7 @@ export default function ChatPage() {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const response = await chatService.getAllChats();
+      const response = await chatService.getAllChats(1, 20, CHAT_STATUS_CATEGORY);
       setChats(response.data || []);
     } catch (error) {
       console.error("Error loading chats:", error);
