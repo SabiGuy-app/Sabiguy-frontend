@@ -32,6 +32,7 @@ export default function AvailableRiders() {
     provider._id || provider.id || provider.userId || provider.providerId;
 
   const [acceptingId, setAcceptingId] = useState(null);
+  const [declinedIds, setDeclinedIds] = useState([]);
   const [error, setError] = useState("");
 
   const handleAccept = async (providerId) => {
@@ -50,6 +51,14 @@ export default function AvailableRiders() {
       setAcceptingId(null);
     }
   };
+
+  const handleDecline = (providerId) => {
+    setDeclinedIds((prev) => [...prev, providerId]);
+  };
+
+  const filteredProviders = providers.filter(
+    (p) => !declinedIds.includes(getProviderId(p))
+  );
 
   return (
     <DashboardLayout>
@@ -72,7 +81,7 @@ export default function AvailableRiders() {
             </div>
           )}
 
-          {providers.length === 0 ? (
+          {filteredProviders.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
               <p className="text-gray-500">
                 No providers available at the moment.
@@ -80,7 +89,7 @@ export default function AvailableRiders() {
             </div>
           ) : (
             <div className="space-y-4">
-              {providers.map((provider) => (
+              {filteredProviders.map((provider) => (
                 <div
                   key={getProviderId(provider)}
                   className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
@@ -181,7 +190,7 @@ export default function AvailableRiders() {
                           </button>
 
                           <button
-                            onClick={() => handleDecline(provider.id)}
+                            onClick={() => handleDecline(getProviderId(provider))}
                             disabled={!!acceptingId}
                             className="w-full py-2.5 px-4 text-[16px] rounded-md font-medium bg-white border border-[#231F2040] text-[#231F20] hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           >

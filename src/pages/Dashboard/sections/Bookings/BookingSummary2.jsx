@@ -65,6 +65,7 @@ export default function BookingSummary2() {
   );
   const providerETA = providerDistanceInfo?.providerETAMinutes;
 
+  // Fetch wallet balance on mount
   const fetchBalance = async () => {
     try {
       setIsLoadingBalance(true);
@@ -356,217 +357,176 @@ export default function BookingSummary2() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          <div className="lg:col-span-7 space-y-6 sm:space-y-8">
-            <div className="shadow-sm w-full max-w-full px-4 sm:px-6 py-4 sm:py-6 rounded-[16px] space-y-4 sm:space-y-6">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-10">
+          {/* Main Content Column */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="bg-white shadow-sm p-6 rounded-[16px] space-y-6 border border-gray-100">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
                 <div className="relative">
                   <img
                     src={providerDetails?.profilePicture}
                     alt={providerDetails?.fullName || "Provider"}
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-[#0058231A]"
                   />
+                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
+                    <BadgeCheck className="w-6 h-6 text-[#8BC53F]" />
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-col items-center sm:items-start gap-1 mb-1">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 capitalize truncate">
+                  <div className="flex flex-col items-center sm:items-start gap-1 mb-2">
+                    <h2 className="text-xl font-bold text-gray-900 capitalize truncate w-full">
                       {providerDetails?.fullName || "Provider"}
                     </h2>
-                    <span className="text-[#8BC53F]">
-                      <BadgeCheck className="w-5 h-5" />
-                    </span>
-                  </div>
-                  {providerDetails?._id && (
-                    <div className="mb-2">
-                      <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 inline-block">
+                    {providerDetails?._id && (
+                      <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
                         ID: {providerDetails._id.slice(-6).toUpperCase()}
                       </span>
-                    </div>
-                  )}
-                  <p className="text-xs sm:text-sm text-gray-600 mb-1 capitalize">
-                    {providerDetails?.services?.[0]?.title?.replace(/_/g, " ") ||
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2 capitalize font-medium">
+                    {providerDetails?.job?.[0]?.title?.replace(/_/g, " ") ||
+                      providerDetails?.services?.[0]?.title?.replace(/_/g, " ") ||
                       bookingDetails?.subCategory?.replace(/_/g, " ") ||
                       "—"}
                   </p>
-                  <div className="flex flex-col items-center sm:items-start gap-1 text-[12px] sm:text-[14px] text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium text-gray-900">
+                  <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-50 rounded-full border border-yellow-100">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-bold text-gray-900">
                         {providerDetails?.rating?.average > 0
                           ? providerDetails.rating.average.toFixed(1)
                           : "New"}
                       </span>
-                      <span className="text-gray-500">
-                        ({providerDetails?.rating?.count ?? 0} reviews)
+                      <span className="text-gray-500 text-xs">
+                        ({providerDetails?.rating?.count ?? 0})
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[#231F20BF] mt-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>
-                        {providerDetails?.distance?.toFixed(1) ?? "—"} miles away
-                      </span>
-                    </div>
+                    {providerETA && (
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 rounded-full border border-green-100">
+                        <Clock className="w-4 h-4 text-[#005823]" />
+                        <span className="font-semibold text-[#005823]">
+                          {providerETA} mins away
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 sm:gap-8 pt-4 sm:pt-0">
-                  <div className="flex flex-col items-center sm:items-start">
-                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-50 mb-1">
-                      <Award className="w-5 h-5 sm:w-6 sm:h-6 text-[#005823]" />
-                    </div>
-                    <div className="text-xl sm:text-[20px] font-bold text-[#231F20]">
+                <div className="flex sm:flex-col gap-4 sm:gap-2 justify-center border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-6">
+                  <div className="text-center sm:text-left">
+                    <div className="text-2xl font-bold text-[#005823]">
                       {providerDetails?.completedJobs ?? 0}
                     </div>
-                    <div className="text-xs sm:text-[14px] text-gray-500 whitespace-nowrap">
+                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                       Jobs Done
                     </div>
                   </div>
-                  <div className="flex flex-col items-center sm:items-start pl-4 border-l border-gray-100">
-                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-full mb-1">
-                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-[#231F20BF]" />
-                    </div>
-                    <div className="text-xl sm:text-[20px] font-bold text-[#231F20]">
+                  <div className="hidden sm:block h-px bg-gray-100 w-full my-1"></div>
+                  <div className="text-center sm:text-left">
+                    <div className="text-base font-bold text-[#231F20]">
                       {bookingDetails?.bookingDuration?.value 
                         ? `${bookingDetails.bookingDuration.value} ${bookingDetails.bookingDuration.unit}` 
                         : bookingDetails?.estimatedDuration?.value
                         ? `${bookingDetails.estimatedDuration.value} ${bookingDetails.estimatedDuration.unit}`
                         : "—"}
                     </div>
-                    <div className="text-xs sm:text-[14px] text-gray-500 whitespace-nowrap">
+                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                       Duration
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-100">
-                <button className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 px-6 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 shadow-sm">
-                  <Phone className="w-4 h-4" />
-                  <span>Call</span>
-                </button>
-                <button className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 px-6 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 shadow-sm">
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Message</span>
-                </button>
-                {!isPaid && (
-                  <button
-                    onClick={() => setCancelModalOpen(true)}
-                    className="w-full sm:w-auto px-6 py-3 text-red-600 font-semibold hover:bg-red-50 rounded-xl transition-all text-center"
-                  >
-                    Cancel Request
-                  </button>
-                )}
-              </div>
+              {providerDetails?.workVisuals?.[0]?.pictures?.[0] && (
+                <div className="mt-6 border-t border-gray-100 pt-6">
+                  <h3 className="text-lg font-semibold text-[#231F20] mb-4">Vehicle / Tool Visuals</h3>
+                  <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
+                    <img
+                      src={providerDetails.workVisuals[0].pictures[0]}
+                      alt="Work Visuals"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-
-            <img
-              src={providerDetails?.workVisuals?.[0]?.pictures?.[0]}
-              alt="Provider's Car"
-              className="w-full h-auto object-contain rounded-2xl"
-            />
           </div>
 
-          <div className="lg:col-span-5 space-y-4 sm:space-y-6">
-            <div className="bg-[#231F2005] border border-[#231F201A] px-6 py-4 rounded-[16px]">
-              <div>
-                <h3 className="text-lg sm:text-2xl font-bold text-[#231F20] mb-3 sm:mb-4">
-                  Job Summary
-                </h3>
-
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                      <div className="w-5 h-5 bg-[#005823] rounded-full" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-[16px] text-[#231F20]">
-                        Pickup Location
-                      </div>
-                      <div className="text-[16px] text-[#231F20BF]">
-                        {pickupAddress}
-                      </div>
+          {/* Sidebar Column */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Job Summary */}
+            <div className="bg-[#231F2005] border border-[#231F201A] p-6 rounded-[16px] space-y-6">
+              <h3 className="text-xl font-bold text-[#231F20]">Job Summary</h3>
+              
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-3 h-3 bg-[#005823] rounded-full" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Pickup Location</div>
+                    <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
+                      {pickupAddress}
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-5 h-5 text-[#005823]" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-[16px] text-[#231F20]">
-                        Dropoff Location
-                      </div>
-                      <div className="text-[16px] text-[#231F20BF]">
-                        {dropoffAddress}
-                      </div>
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <MapPin className="w-5 h-5 text-[#005823]" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Dropoff Location</div>
+                    <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
+                      {dropoffAddress}
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                      <Navigation className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-[16px] text-[#231F20]">
-                        Estimated Distance
-                      </div>
-                      <div className="text-[16px] text-[#231F20BF]">
-                        {estimatedDistance}
-                      </div>
-                    </div>
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <Navigation className="w-5 h-5 text-[#005823]" />
                   </div>
-
-                  {providerETA != null && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-5 h-5 text-[#005823]" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-[16px] text-[#231F20]">
-                          Provider ETA
-                        </div>
-                        <div className="text-[15px] text-gray-500">
-                          {providerETA} minutes
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex-1">
+                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Estimated Distance</div>
+                    <div className="text-[15px] font-medium text-[#231F20] mt-1">{estimatedDistance}</div>
+                  </div>
                 </div>
               </div>
 
               {bookingDetails?.description && (
-                <div className="my-4 sm:my-6 border-t border-[#231F201A] pt-4 sm:pt-6">
-                  <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-2">
-                    Description
-                  </h3>
-                  <p className="text-sm sm:text-base text-[#231F20BF] leading-relaxed">
-                    {bookingDetails.description}
+                <div className="pt-4 border-t border-[#231F201A]">
+                  <h4 className="font-bold text-sm text-[#231F2080] uppercase tracking-wide mb-2">Description</h4>
+                  <p className="text-sm text-[#231F20BF] leading-relaxed italic">
+                    "{bookingDetails.description}"
                   </p>
                 </div>
               )}
+            </div>
 
-                  <div className="pt-2 mt-2 text-xs sm:text-sm md:text-base">
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-[#231F20BF]">
-                        Total Amount
-                      </span>
-                      <span className="font-semibold text-[#005823]">
-                        {totalAmount != null ? formatCurrency(totalAmount) : "—"}
-                      </span>
-                    </div>
-                  </div>
+            {/* Payment Summary & Method */}
+            <div className="bg-white border border-[#231F201A] p-6 rounded-[16px] shadow-sm space-y-6">
+              <h3 className="text-xl font-bold text-[#231F20]">Payment Summary</h3>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Service Cost</span>
+                  <span>{formatCurrency(serviceCost)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Platform Fee</span>
+                  <span>{formatCurrency(serviceCharge)}</span>
+                </div>
+                <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
+                  <span className="font-bold text-gray-900">Total Amount</span>
+                  <span className="text-xl font-black text-[#005823]">{formatCurrency(totalAmount)}</span>
                 </div>
               </div>
 
-              {/* Payment Method */}
-              <div className="mb-4 sm:mb-6">
-                <h3 className="text-base sm:text-xl font-semibold text-[#231F20] mb-3 sm:mb-4">
-                  Payment Method
-                </h3>
-                <div className="space-y-2 sm:space-y-3">
-                  <label
-                    className={`flex items-center gap-3 p-2 sm:p-3 border rounded-[8px] transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedPayment === "wallet" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
-                  >
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                <h4 className="font-bold text-sm text-gray-900 tracking-wide uppercase">Select Payment Method</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === 'wallet' ? 'border-[#005823] bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300'}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -574,38 +534,14 @@ export default function BookingSummary2() {
                       checked={selectedPayment === "wallet"}
                       onChange={(e) => setSelectedPayment(e.target.value)}
                       disabled={isPaid}
-                      className="w-4 h-4 sm:w-5 sm:h-5 accent-[#005823]"
+                      className="w-4 h-4 accent-[#005823]"
                     />
-                    <div className="flex items-center gap-2 sm:gap-3 flex-grow">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-5 sm:w-6 h-5 sm:h-6 text-gray-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-sm sm:text-base text-[#231F20]">
-                          Wallet
-                        </div>
-                        <div className="text-[11px] sm:text-xs font-semibold text-[#231F20BF]">
-                          Balance: {formatCurrency(walletBalance)}
-                        </div>
-                      </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-gray-900">Wallet</div>
+                      <div className="text-xs text-gray-500">Bal: {formatCurrency(walletBalance)}</div>
                     </div>
                   </label>
-
-                  <label
-                    className={`flex items-center gap-3 p-2 sm:p-3 border rounded-[8px] transition-colors ${isPaid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedPayment === "online" ? "border-[#005823] bg-[#00582305]" : "border-[#231F2040] hover:bg-gray-50"}`}
-                  >
+                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === 'online' ? 'border-[#005823] bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300'}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -613,74 +549,43 @@ export default function BookingSummary2() {
                       checked={selectedPayment === "online"}
                       onChange={(e) => setSelectedPayment(e.target.value)}
                       disabled={isPaid}
-                      className="w-4 h-4 sm:w-5 sm:h-5 accent-[#005823]"
+                      className="w-4 h-4 accent-[#005823]"
                     />
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-5 sm:w-6 h-5 sm:h-6 text-gray-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </div>
-                      <div className="font-medium text-sm sm:text-base text-[#231F20]">
-                        Pay Online
-                      </div>
-                    </div>
+                    <div className="flex-1 font-bold text-gray-900">Pay Online</div>
                   </label>
                 </div>
               </div>
 
-              {/* Additional Notes */}
-              <div className="mb-4 sm:mb-6">
-                <h3 className="text-base sm:text-xl font-semibold text-[#231F20] mb-2 sm:mb-3">
-                  Pickup notes{" "}
-                  <span className="text-sm sm:text-base text-[#231F20BF]">
-                    (optional)
-                  </span>
-                </h3>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Pickup Notes (Optional)</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add extra instructions for the service provider.."
+                  placeholder="Need something specific? Tell the provider..."
                   disabled={isPaid}
-                  className={`w-full p-3 sm:p-4 text-sm sm:text-base border-2 border-gray-200 bg-[#fbfbfb] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isPaid ? "opacity-50 cursor-not-allowed" : ""}`}
-                  rows="3"
+                  className="w-full p-3 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#00582333] transition-all resize-none h-20"
                 />
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pb-4 sm:pb-6">
-                <button
-                  onClick={() => setCancelModalOpen(true)}
-                  disabled={isPaid}
-                  className="px-5 py-2 mt-3 bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors"                >
-                  Cancel
-                </button>
+              <div className="space-y-3">
                 <button
                   onClick={handleConfirmAndPay}
                   disabled={isProcessing || isPaid}
-                  className="w-full sm:flex-1 py-3 sm:py-4 px-4 sm:px-6 text-sm sm:text-base bg-[#005823CC] text-white rounded-[4px] font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-[#005823] text-white rounded-xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-900/10 disabled:opacity-50"
                 >
-                  {isPaid
-                    ? "Paid ✓"
-                    : isProcessing
-                      ? "Processing..."
-                      : `Confirm & Pay ${formatCurrency(totalAmount)}`}
+                  {isPaid ? "Payment Successful ✓" : isProcessing ? "Processing..." : `Confirm & Pay ${formatCurrency(totalAmount)}`}
                 </button>
+                {!isPaid && (
+                  <button
+                    onClick={() => setCancelModalOpen(true)}
+                    className="w-full py-2 text-red-600 font-bold hover:bg-red-50 rounded-lg transition-all text-sm"
+                  >
+                    Cancel Request
+                  </button>
+                )}
+                <p className="text-center text-[10px] text-gray-400 font-medium">Rider will proceed once payment is confirmed</p>
               </div>
             </div>
-            <p className="text-center  text-xs sm:text-sm text-[#231F2080]">
-              Rider will proceed once payment is confirmed
-            </p>
           </div>
         </div>
       </div>
