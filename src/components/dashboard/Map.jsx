@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -28,6 +28,41 @@ const isBikeVehicleType = (vehicleType) => {
   return (
     normalizedType.includes("bike") || normalizedType.includes("motorbike")
   );
+};
+
+const extractPointFromCurrentLocation = (currentLocation) => {
+  if (!currentLocation) return null;
+
+  const coords = currentLocation.coordinates;
+  if (Array.isArray(coords) && coords.length >= 2) {
+    return {
+      latitude: coords[1],
+      longitude: coords[0],
+      address: currentLocation.address || "",
+    };
+  }
+
+  if (
+    typeof currentLocation.latitude === "number" &&
+    typeof currentLocation.longitude === "number"
+  ) {
+    return {
+      latitude: currentLocation.latitude,
+      longitude: currentLocation.longitude,
+      address: currentLocation.address || "",
+    };
+  }
+
+  return null;
+};
+
+const getBookingRiderLocation = (bookingDetails) => {
+  const provider = bookingDetails?.providerId;
+  if (provider && typeof provider === "object") {
+    return extractPointFromCurrentLocation(provider.currentLocation);
+  }
+
+  return null;
 };
 
 const loadGoogleMaps = () => {
@@ -182,12 +217,7 @@ const animateMarker = (marker, from, to, duration = 700) => {
   return marker.__raf;
 };
 
-const DeliveryMap = ({
-  pickup,
-  dropoff,
-  riderLocation,
-  vehicleType = "car",
-}) => {
+const DeliveryMap = ({ pickup, dropoff, bookingDetails }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const pickupMarker = useRef(null);
@@ -200,6 +230,14 @@ const DeliveryMap = ({
     GOOGLE_MAPS_API_KEY ? "loading" : "missing",
   );
   const [loadError, setLoadError] = useState("");
+  const riderLocation = useMemo(
+    () => getBookingRiderLocation(bookingDetails),
+    [bookingDetails?.providerId?.currentLocation],
+  );
+  const vehicleType = useMemo(
+    () => bookingDetails?.modeOfDelivery || "car",
+    [bookingDetails?.modeOfDelivery],
+  );
 
   const getCenter = () => {
     if (isValidCoordinate(riderLocation)) {

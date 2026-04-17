@@ -1,6 +1,6 @@
 import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import JobsCard from "../../../../components/provider-dashboard/JobsCard";
 import AlertsCard from "../../../../components/provider-dashboard/AlertsCard";
 import AlertDetailsModal from "./AlertDetails";
@@ -10,9 +10,9 @@ import { getProviderBookings } from "../../../../api/provider";
 import { getAllBookings, acceptBookings } from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
 
-
 export default function HireAlerts() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("alert");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedAlert, setSelectedAlert] = useState(null);
@@ -27,8 +27,6 @@ export default function HireAlerts() {
   const [error, setError] = useState(null);
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
 
-
-
   useEffect(() => {
     fetchBookings();
   }, [user]);
@@ -37,11 +35,21 @@ export default function HireAlerts() {
     try {
       setIsLoading(true);
       setError(null);
+
+      // Check if we have pre-fetched alerts from notification
+      const locationState = location.state;
+      let alertBookings = [];
+
+      if (locationState?.fetchedAlerts) {
+        // Use alerts fetched from the notification
+        alertBookings = Array.isArray(locationState.fetchedAlerts)
+          ? locationState.fetchedAlerts
+          : locationState.fetchedAlerts.bookings || [];
+      }
+
       const providerJobsPromise = getProviderBookings();
       const rawUserJobs = user?.job || user?.data?.job || [];
-      const userJobs = Array.isArray(rawUserJobs)
-        ? rawUserJobs
-        : [rawUserJobs];
+      const userJobs = Array.isArray(rawUserJobs) ? rawUserJobs : [rawUserJobs];
       const resolveModeOfDelivery = (job) => {
         const normalizedTitle = String(job?.title || "")
           .trim()
@@ -55,15 +63,13 @@ export default function HireAlerts() {
         .filter((job) => job?.service && job?.title)
         .map((job) => {
           const modeOfDelivery = resolveModeOfDelivery(job);
-          return (
-            getAllBookings({
-              status: "awaiting_provider_acceptance",
-              serviceType: String(job.service).trim().toLowerCase(),
-              modeOfDelivery,
-              page: 1,
-              limit: 20,
-            })
-          );
+          return getAllBookings({
+            status: "awaiting_provider_acceptance",
+            serviceType: String(job.service).trim().toLowerCase(),
+            modeOfDelivery,
+            page: 1,
+            limit: 20,
+          });
         });
 
       const [providerResponse, ...alertResponses] = await Promise.all([
@@ -78,17 +84,23 @@ export default function HireAlerts() {
       const transformedJobs = transformBookingsData(providerBookings).jobs;
       setJobs(transformedJobs);
 
-      const alertBookings = alertResponses.flatMap((response) => {
-        const data = response.data || response;
-        if (Array.isArray(data)) return data;
-        if (Array.isArray(data.bookings)) return data.bookings;
-        return [];
-      });
+      // If we don't have pre-fetched alerts, fetch them from responses
+      if (!alertBookings || alertBookings.length === 0) {
+        alertBookings = alertResponses.flatMap((response) => {
+          const data = response.data || response;
+          if (Array.isArray(data)) return data;
+          if (Array.isArray(data.bookings)) return data.bookings;
+          return [];
+        });
+      }
 
       const uniqueAlertBookings = Array.from(
-        new Map(alertBookings.map((booking) => [booking._id, booking])).values()
+        new Map(
+          alertBookings.map((booking) => [booking._id, booking]),
+        ).values(),
       );
-      const transformedAlerts = transformBookingsData(uniqueAlertBookings).alerts;
+      const transformedAlerts =
+        transformBookingsData(uniqueAlertBookings).alerts;
       setAlerts(transformedAlerts);
     } catch (err) {
       console.error("Error fetching bookings:", err);
@@ -98,35 +110,41 @@ export default function HireAlerts() {
     }
   };
 
-
   const transformBookingsData = (bookings) => {
     const alerts = [];
     const jobs = [];
 
     bookings.forEach((booking) => {
-      const bookingStatus = String(booking.status || "").trim().toLowerCase();
+      const bookingStatus = String(booking.status || "")
+        .trim()
+        .toLowerCase();
       const formattedSubCategory = booking.subCategory
         ? String(booking.subCategory).replace(/_/g, " ")
         : "";
       const commonData = {
         id: booking._id,
-        title: booking.title || formattedSubCategory || booking.serviceType || "Untitled job",
+        title:
+          booking.title ||
+          formattedSubCategory ||
+          booking.serviceType ||
+          "Untitled job",
         price:
           booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
-        calculatedPrice: booking.calculatedPrice || booking.agreedPrice || booking.budget || 0,
-        agreedPrice: booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
+        calculatedPrice:
+          booking.calculatedPrice || booking.agreedPrice || booking.budget || 0,
+        agreedPrice:
+          booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
         deliveryDate: booking.endDate
           ? new Date(booking.endDate).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
           : booking.scheduleType
             ? String(booking.scheduleType).replace(/_/g, " ")
             : "TBD",
-        scheduledDate:
-          booking.startDate
-            ? new Date(booking.startDate).toLocaleDateString("en-US", {
+        scheduledDate: booking.startDate
+          ? new Date(booking.startDate).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
               year: "numeric",
@@ -137,9 +155,9 @@ export default function HireAlerts() {
               minute: "2-digit",
               hour12: true,
             })
-            : booking.scheduleType
-              ? String(booking.scheduleType).replace(/_/g, " ")
-              : "TBD",
+          : booking.scheduleType
+            ? String(booking.scheduleType).replace(/_/g, " ")
+            : "TBD",
         orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
         fullOrderId: booking._id || "",
         location:
@@ -176,15 +194,13 @@ export default function HireAlerts() {
           scheduleType: booking.scheduleType || "TBD",
           modeOfDelivery: booking.modeOfDelivery || "",
           status:
-            bookingStatus === "pending_customer"
-              ? "Awaiting Response"
-              : "New",
+            bookingStatus === "pending_customer" ? "Awaiting Response" : "New",
           distance: booking.distance
             ? `${booking.distance.value} ${booking.distance.unit} away`
             : "N/A",
           posted:
             bookingStatus === "pending_providers" ||
-              bookingStatus === "awaiting_provider_acceptance"
+            bookingStatus === "awaiting_provider_acceptance"
               ? getTimeAgo(booking.createdAt || booking.updatedAt)
               : null,
           offerSent:
@@ -208,7 +224,7 @@ export default function HireAlerts() {
               : null,
           completed:
             bookingStatus === "completed" ||
-              bookingStatus === "waiting_confirmation"
+            bookingStatus === "waiting_confirmation"
               ? getTimeAgo(booking.updatedAt)
               : null,
           ratings: booking.rating || null,
@@ -231,12 +247,13 @@ export default function HireAlerts() {
       pending_customer: "Awaiting Response",
       user_accepted_completion: "Job Confirmed",
       funds_released: "Funds Released",
-      paid_escrow: 'Paid Escrow',
-      payment_pending: 'Payment Pending',
-      user_accepted_completion: 'Completed',
-
+      paid_escrow: "Paid Escrow",
+      payment_pending: "Payment Pending",
+      user_accepted_completion: "Completed",
     };
-    const normalizedStatus = String(apiStatus || "").trim().toLowerCase();
+    const normalizedStatus = String(apiStatus || "")
+      .trim()
+      .toLowerCase();
     return statusMap[normalizedStatus] || apiStatus;
   };
 
@@ -317,19 +334,16 @@ export default function HireAlerts() {
         status === "enroute to dropoff" ||
         status === "arrived at dropoff" ||
         status === "paid escrow" ||
-        status === "awaiting confirmation" 
+        status === "awaiting confirmation"
       );
     }
 
     if (statusFilter === "pending") {
-      return (
-        status === "awaiting payment"
-      );
+      return status === "awaiting payment";
     }
 
     if (statusFilter === "completed") {
       return (
-
         status === "funds released" ||
         status === "completed" ||
         status === "job confirmed"
@@ -428,7 +442,6 @@ export default function HireAlerts() {
     }
   };
 
-
   // Loading State
   if (isLoading) {
     return (
@@ -477,7 +490,6 @@ export default function HireAlerts() {
         job={selectedJob || {}}
         onRefresh={handleRefresh}
         onMessageCustomer={handleMessageCustomer}
-
       />
 
       <MarkAsCompleted

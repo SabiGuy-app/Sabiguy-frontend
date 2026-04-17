@@ -450,8 +450,7 @@ export default function TrackRider() {
           <DeliveryMap
             pickup={pickupCoords}
             dropoff={dropoffCoords}
-            riderLocation={riderLocation}
-            vehicleType={bookingDetails?.modeOfDelivery }
+            bookingDetails={bookingDetails}
           />
         </div>
       </div>

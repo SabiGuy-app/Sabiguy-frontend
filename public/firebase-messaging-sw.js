@@ -1,46 +1,57 @@
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+importScripts(
+  "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js",
+);
+importScripts(
+  "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js",
+);
 
-firebase.initializeApp({
- apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+let messaging = null;
+let firebaseConfig = null;
+
+// Listen for config from main app
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "INIT_FIREBASE") {
+    firebaseConfig = event.data.config;
+    console.log("[SW] Received Firebase config from main app");
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      messaging = firebase.messaging();
+      console.log("[SW] Firebase messaging initialized successfully");
+    } catch (error) {
+      console.error("[SW] Failed to initialize Firebase:", error);
+    }
+  }
 });
-
-const messaging = firebase.messaging();
 
 // Handle background messages
-messaging.onBackgroundMessage((payload) => {
-  console.log('Background message received:', payload);
-  
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/logo.png',
-    badge: '/badge.png',
-    data: payload.data
-  };
+if (messaging) {
+  messaging.onBackgroundMessage((payload) => {
+    console.log("Background message received:", payload);
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+    const notificationTitle = payload.notification.title;
+    const notificationOptions = {
+      body: payload.notification.body,
+      icon: "/logo.png",
+      badge: "/badge.png",
+      data: payload.data,
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  });
+} else {
+  console.warn("[SW] Firebase messaging not initialized yet");
+}
 
 // Handle notification click
-self.addEventListener('notificationclick', (event) => {
-  console.log('Notification clicked:', event);
-  
+self.addEventListener("notificationclick", (event) => {
+  console.log("Notification clicked:", event);
+
   event.notification.close();
-  
+
   // Open app or navigate to specific page
   const bookingId = event.notification.data?.bookingId;
-  const url = bookingId 
-    ? `/dashboard/bookings/${bookingId}` 
-    : '/dashboard';
-  
-  event.waitUntil(
-    clients.openWindow(url)
-  );
-});
+  const url = bookingId ? `/dashboard/bookings/${bookingId}` : "/dashboard";
 
+  event.waitUntil(clients.openWindow(url));
+});

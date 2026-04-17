@@ -214,8 +214,7 @@ export default function AvailableRiders() {
           <DeliveryMap
             pickup={pickupCoords}
             dropoff={dropoffCoords}
-            vehicleType={bookingDetails?.modeOfDelivery}
-            // riderLocation={rideocation}
+            bookingDetails={bookingDetails}
           />
         </div>
       </div>
