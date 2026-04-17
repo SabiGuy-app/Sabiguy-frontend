@@ -9,8 +9,8 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import DeliveryMap from "../../../../components/dashboard/Map";
-import Navbar from "../../../../components/dashboard/Navbar";
 import { useNavigate } from "react-router-dom";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import useBookingStore from "../../../../stores/booking.store";
 import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
 import CancelModal from "../../../../components/CancelModal";
@@ -54,11 +54,16 @@ export default function TrackRider() {
 
   const bookingId = bookingDetails?._id;
 
-  const estimatedDuration = bookingDetails?.estimatedDuration;
+  const acceptedProviderId = bookingDetails?.providerId?._id || providerDetails?._id || selectedProviderId;
+  const providerDistanceInfo = bookingDetails?.providerDistances?.find(
+    (p) => p.providerId === acceptedProviderId
+  );
+  const providerETA = providerDistanceInfo?.providerETAMinutes;
+
   const arrivalText =
-    estimatedDuration?.value && estimatedDuration?.unit
-      ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
-      : "Tracking your rider";
+    providerETA != null
+      ? `Arrival in ${providerETA} mins`
+      : "Arrival in — mins";
 
   // Extract pickup and dropoff coordinates (GeoJSON -> coordinates array)
   const pickupCoords = {
@@ -183,12 +188,7 @@ export default function TrackRider() {
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
-  const serviceCost = bookingDetails?.agreedPrice ?? bookingDetails?.calculatedPrice ?? bookingDetails?.price ?? 0;
-  const calculatedServiceFee = Math.round(serviceCost * 0.10);
-  const calculatedTotalAmount = serviceCost + calculatedServiceFee;
-  
-  const totalAmount = bookingDetails?.totalAmount ?? bookingDetails?.total_amount ?? bookingDetails?.amount ?? calculatedTotalAmount;
-  const fareDisplay = totalAmount ?? serviceCost;
+  const fareDisplay = providerDetails?.pricing?.riderPays ?? bookingDetails?.calculatedPrice ?? bookingDetails?.agreedPrice ?? 0;
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-NG", {
@@ -235,9 +235,7 @@ export default function TrackRider() {
   };
 
   return (
-    <>
-      <Navbar />
-
+    <DashboardLayout>
       <CancelModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
@@ -292,7 +290,7 @@ export default function TrackRider() {
                 </div>
                 <div className="text-[#231F20BF] text-[16px] mb-1">
                   <p>
-                    {providerDetails?.services?.[0]?.title?.replace(/_/g, " ") ||
+                    {providerDetails?.job?.[0]?.title?.replace(/_/g, " ") ||
                       bookingDetails?.subCategory?.replace(/_/g, " ") ||
                       "—"}
                   </p>
@@ -333,11 +331,29 @@ export default function TrackRider() {
             {bookingDetails?.pickupNote || "No note provided."}
           </p>
 
-          <div className="mb-4">
-            <h3 className="text-[16px] font-semibold text-[#231F20]">Fare</h3>
-            <span className="text-[20px] font-bold text-[#231F20]">
-              {fareDisplay != null ? formatCurrency(fareDisplay) : "—"}
-            </span>
+          <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
+            <div>
+              <h3 className="text-[14px] font-semibold text-[#231F20BF] mb-1">Fare</h3>
+              <span className="text-[18px] font-bold text-[#231F20]">
+                {fareDisplay != null ? formatCurrency(fareDisplay) : "—"}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-[14px] font-semibold text-[#231F20BF] mb-1">Provider ETA</h3>
+              <span className="text-[18px] font-bold text-[#231F20]">
+                {providerETA != null ? `${providerETA} mins` : "—"}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-[14px] font-semibold text-[#231F20BF] mb-1">Duration</h3>
+              <span className="text-[18px] font-bold text-[#231F20]">
+                {bookingDetails?.bookingDuration?.value 
+                  ? `${bookingDetails.bookingDuration.value} ${bookingDetails.bookingDuration.unit}` 
+                  : bookingDetails?.estimatedDuration?.value
+                  ? `${bookingDetails.estimatedDuration.value} ${bookingDetails.estimatedDuration.unit}`
+                  : "—"}
+              </span>
+            </div>
           </div>
 
           {/* Description */}
@@ -439,6 +455,6 @@ export default function TrackRider() {
           />
         </div>
       </div>
-    </>
+    </DashboardLayout>
   );
 }
