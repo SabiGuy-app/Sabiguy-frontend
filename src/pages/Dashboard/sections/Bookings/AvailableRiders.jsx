@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Check, MapPin, Star, Loader2 } from "lucide-react";
-import Navbar from "../../../../components/dashboard/Navbar";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import location from "/location.png";
 import { useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
@@ -15,7 +15,7 @@ export default function AvailableRiders() {
   const providers = booking?.data?.providers || [];
   const bookingDetails = booking?.data?.booking || {};
   const bookingId = bookingDetails._id;
-  const bookingAmount = bookingDetails.calculatedPrice;
+  const bookingAmount = bookingDetails?.agreedPrice ?? bookingDetails?.calculatedPrice ?? bookingDetails?.price ?? 0;
 
   const pickupCoords = {
     latitude: bookingDetails?.pickupLocation?.coordinates?.coordinates?.[1],
@@ -32,6 +32,7 @@ export default function AvailableRiders() {
     provider._id || provider.id || provider.userId || provider.providerId;
 
   const [acceptingId, setAcceptingId] = useState(null);
+  const [declinedIds, setDeclinedIds] = useState([]);
   const [error, setError] = useState("");
 
   const handleAccept = async (providerId) => {
@@ -51,9 +52,16 @@ export default function AvailableRiders() {
     }
   };
 
+  const handleDecline = (providerId) => {
+    setDeclinedIds((prev) => [...prev, providerId]);
+  };
+
+  const filteredProviders = providers.filter(
+    (p) => !declinedIds.includes(getProviderId(p))
+  );
+
   return (
-    <>
-      <Navbar />
+    <DashboardLayout>
       <div className="min-h-screen md:grid md:grid-cols-2 space-y-4 gap-10 bg-gray-50 p-4 sm:p-8">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -73,7 +81,7 @@ export default function AvailableRiders() {
             </div>
           )}
 
-          {providers.length === 0 ? (
+          {filteredProviders.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
               <p className="text-gray-500">
                 No providers available at the moment.
@@ -81,7 +89,7 @@ export default function AvailableRiders() {
             </div>
           ) : (
             <div className="space-y-4">
-              {providers.map((provider) => (
+              {filteredProviders.map((provider) => (
                 <div
                   key={getProviderId(provider)}
                   className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
@@ -135,11 +143,12 @@ export default function AvailableRiders() {
                             </span>
                           </div>
 
-                          {/* Distance */}
+                          {/* Distance & ETA */}
                           <div className="flex items-center gap-1 mt-1">
                             <MapPin className="w-4 h-4 text-[#231F20BF]" />
                             <span className="text-[14px] text-[#231F20BF]">
                               {provider.distance?.toFixed(1)} miles away
+                              {provider.eta && ` • ETA: ${provider.eta}`}
                             </span>
                           </div>
 
@@ -154,7 +163,7 @@ export default function AvailableRiders() {
 
                           {/* Price */}
                           <h2 className="text-2xl sm:text-[25px] text-[#005823] font-semibold mt-4">
-                            ₦{bookingAmount}
+                            ₦{Number(provider?.pricing?.riderPays ?? provider?.price ?? provider?.calculatedPrice ?? provider?.agreedPrice ?? provider?.amount ?? provider?.bid ?? bookingAmount).toLocaleString()}
                           </h2>
                         </div>
 
@@ -181,7 +190,7 @@ export default function AvailableRiders() {
                           </button>
 
                           <button
-                            onClick={() => handleDecline(provider.id)}
+                            onClick={() => handleDecline(getProviderId(provider))}
                             disabled={!!acceptingId}
                             className="w-full py-2.5 px-4 text-[16px] rounded-md font-medium bg-white border border-[#231F2040] text-[#231F20] hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           >
@@ -209,6 +218,6 @@ export default function AvailableRiders() {
           />
         </div>
       </div>
-    </>
+    </DashboardLayout>
   );
 }
