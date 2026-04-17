@@ -72,7 +72,6 @@ export default function Form() {
   }, []);
 
   const forms = [  
-      
     <ConfirmKyc onNext={handleNext} />,
     <StepOne onNext={handleNext} email={formData.email} />, //KYC level 1
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,

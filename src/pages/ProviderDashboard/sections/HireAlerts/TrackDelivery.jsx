@@ -611,8 +611,7 @@ export default function TrackDelivery() {
             <DeliveryMap
               pickup={pickupCoords}
               dropoff={dropoffCoords}
-              riderLocation={riderLocation}
-              vehicleType={bookingDetails?.modeOfDelivery}
+              bookingDetails={bookingDetails}
             />
           </MapErrorBoundary>
         </div>

@@ -10,6 +10,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useEffect } from "react";
+import { useServiceWorker } from "./hooks/useServiceWorker";
 import Welcome from "./pages/signup/welcome";
 import Congrats from "./pages/signup/ServiceProvider/congrats";
 import ForgotPassword from "./pages/Forgot-Password/ForgotPassword";
@@ -71,6 +72,8 @@ function URLNormalizer() {
 }
 
 function App() {
+  useServiceWorker();
+
   return (
     <>
       <ToastContainer position="top-right" autoClose={5000} />
