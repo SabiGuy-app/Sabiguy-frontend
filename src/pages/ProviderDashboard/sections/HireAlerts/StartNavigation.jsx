@@ -137,7 +137,11 @@ export default function StartNavigation() {
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
         <div className="">
           <h1 className="text-[22px] sm:text-[26px] lg:text-[28px] font-semibold text-[#231F20] mb-4">
-            {alert?.subCategory}
+            {alert?.subCategory
+              ? alert.subCategory
+                  .toString()
+                  .replace(/\b\w/g, (char) => char.toUpperCase())
+              : ""}
           </h1>
 
           <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
@@ -217,10 +221,14 @@ export default function StartNavigation() {
                   Message
                 </span>
               </button> */}
+<<<<<<< HEAD
               <button
                 onClick={() => setCancelModalOpen(true)}
                 className="text-[#E90000] font-medium text-[16px] px-3 py-3 rounded-[10px] hover:text-red-600 transition-colors hover:bg-red-200"
               >
+=======
+              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
+>>>>>>> 63e037265fde9f9f515546b6e93dff662dd631a2
                 Cancel Request
               </button>
             </div>
@@ -256,7 +264,7 @@ export default function StartNavigation() {
             <DeliveryMap
               pickup={pickupCoords}
               dropoff={dropoffCoords}
-              riderLocation={riderLocation}
+              bookingDetails={bookingDetails}
             />
           </MapErrorBoundary>
         </div>

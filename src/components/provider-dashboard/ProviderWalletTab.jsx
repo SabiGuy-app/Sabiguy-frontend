@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FiSearch, FiCheckCircle, FiArrowUpRight, FiArrowDownLeft, FiClock } from "react-icons/fi";
 import { ChevronDown } from "lucide-react";
 import WithdrawFundsModal from "./WithdrawFundModal";
@@ -54,8 +54,21 @@ export default function ProviderWalletTab() {
     }
   };
 
+  const dateDropdownRef = useRef(null);
+
   useEffect(() => {
     fetchBalance();
+  }, []);
+
+  // Close date dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dateDropdownRef.current && !dateDropdownRef.current.contains(e.target)) {
+        setShowDateDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Fetch transactions when page or tab changes
@@ -66,12 +79,30 @@ export default function ProviderWalletTab() {
         const mappedType = tabToTypeMap[activeTransactionTab] || "";
         const txResponse = await getWalletTransactions(currentPage, 10, mappedType);
 
-        setTransactions(txResponse?.data || txResponse?.data?.data || []);
+        // Handle all possible API response shapes:
+        // Shape 1: { data: [ ...transactions ] }
+        // Shape 2: { data: { data: [ ...transactions ], pagination: {...} } }
+        const rawData = txResponse?.data;
+        const txList = Array.isArray(rawData)
+          ? rawData
+          : Array.isArray(rawData?.data)
+            ? rawData.data
+            : Array.isArray(rawData?.transactions)
+              ? rawData.transactions
+              : [];
 
-        const pages = txResponse?.pagination?.pages || txResponse?.data?.pagination?.pages || txResponse?.meta?.pages || 1;
+        setTransactions(txList);
+
+        const pages =
+          txResponse?.pagination?.pages ||
+          rawData?.pagination?.pages ||
+          txResponse?.meta?.pages ||
+          rawData?.meta?.pages ||
+          1;
         setTotalPages(pages);
       } catch (err) {
         console.error("Failed to load transactions:", err);
+        setTransactions([]);
       } finally {
         setIsLoading(false);
       }
@@ -83,6 +114,7 @@ export default function ProviderWalletTab() {
   const handleTabChange = (tab) => {
     setActiveTransactionTab(tab.toLowerCase());
     setCurrentPage(1);
+    setSearchQuery("");
   };
 
   const getConfig = (type) => typeConfig[type] || defaultConfig;
@@ -98,11 +130,23 @@ export default function ProviderWalletTab() {
 
   // Filter transactions by search and date
   const filteredTransactions = transactions.filter((tx) => {
-    // Search filter
+    // Search filter — match against description, type, amount, status, and date
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const desc = (tx.description || tx.type || "").toLowerCase();
-      if (!desc.includes(query)) return false;
+      const desc = (tx.description || "").toLowerCase();
+      const type = (tx.type || "").toLowerCase();
+      const status = (tx.status || "").toLowerCase();
+      const amount = String(Math.abs(tx.amount || 0));
+      const dateStr = tx.createdAt ? formatDate(tx.createdAt).toLowerCase() : "";
+
+      const matchesSearch =
+        desc.includes(query) ||
+        type.includes(query) ||
+        status.includes(query) ||
+        amount.includes(query) ||
+        dateStr.includes(query);
+
+      if (!matchesSearch) return false;
     }
 
     // Date filter
@@ -175,7 +219,7 @@ export default function ProviderWalletTab() {
             className=" pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent"
           />
         </div>
-        <div className="relative">
+        <div className="relative" ref={dateDropdownRef}>
           <button
             onClick={() => setShowDateDropdown(!showDateDropdown)}
             className="px-4 py-2.5 border border-gray-300 rounded-lg flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -191,6 +235,7 @@ export default function ProviderWalletTab() {
                   onClick={() => {
                     setDateFilter(option.value);
                     setShowDateDropdown(false);
+                    setCurrentPage(1);
                   }}
                   className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${dateFilter === option.value ? "text-[#005823] font-medium bg-green-50" : "text-gray-700"
                     }`}

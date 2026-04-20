@@ -10,6 +10,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useEffect } from "react";
+import { useServiceWorker } from "./hooks/useServiceWorker";
 import Welcome from "./pages/signup/welcome";
 import Congrats from "./pages/signup/ServiceProvider/congrats";
 import ForgotPassword from "./pages/Forgot-Password/ForgotPassword";
@@ -40,7 +41,7 @@ import SearchingLoader from "./components/dashboard/Searching";
 import AvailableProviders from "./pages/Dashboard/sections/Bookings/AvailableProviders";
 import BookingSummary from "./pages/Dashboard/sections/Bookings/BookingSummary";
 import PickupLocation from "./pages/Dashboard/sections/Bookings/PickupLocation";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ProviderHelp from "./pages/ProviderDashboard/sections/ProviderHelp";
 import ProviderActivity from "./pages/ProviderDashboard/sections/ProviderActivity";
@@ -54,6 +55,10 @@ import LandingPage from "./pages/LandingPage";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
 import NotVerified from "./pages/signup/ServiceProvider/kyc-not-verified";
+import { isMobile } from "./utils/mobileDetection";
+import NotificationSoundService from "./services/notificationSoundService";
+import NotificationTest from "./services/testNotify";
+import { listenForMessages } from "./services/fcmService";
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
 function URLNormalizer() {
@@ -71,9 +76,121 @@ function URLNormalizer() {
 }
 
 function App() {
+  useServiceWorker();
+
+  // Setup persistent notification listener with beautiful toast
+  useEffect(() => {
+    console.log("🔔 Setting up persistent message listener in App...");
+
+    listenForMessages((payload) => {
+      // Display beautiful bold notification toast
+      const title = payload?.notification?.title || "New Notification";
+      const body = payload?.notification?.body || "";
+
+      toast.info(
+        <div className="font-bold text-base">
+          <div className="font-extrabold text-lg mb-2">{title}</div>
+          <div className="font-semibold text-sm text-gray-700">{body}</div>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 6000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          className: "notification-toast-custom",
+          bodyClassName: "notification-toast-body",
+        },
+      );
+
+      console.log("✅ Toast notification displayed:", title);
+    });
+  }, []);
+
+  useEffect(() => {
+    let soundInitialized = false;
+
+    const initSound = async (event) => {
+      if (soundInitialized) return;
+
+      console.log(
+        `👆 User interaction detected (${event.type}), initializing sound...`,
+      );
+
+      try {
+        await NotificationSoundService.init();
+
+        // On mobile, also play a silent sound to unlock audio
+        if (isMobile()) {
+          console.log("📱 Unlocking mobile audio with silent play...");
+          const unlockAudio = new Audio("/notify.mp3");
+          unlockAudio.volume = 0; // Silent
+          try {
+            await unlockAudio.play();
+            unlockAudio.pause();
+            unlockAudio.volume = 1.0;
+            console.log("✅ Mobile audio unlocked");
+          } catch (unlockError) {
+            console.warn("⚠️ Failed to unlock audio:", unlockError);
+          }
+        }
+
+        soundInitialized = true;
+        console.log("✅ Sound service ready");
+
+        // Remove all listeners after successful init
+        removeAllListeners();
+      } catch (error) {
+        console.error("❌ Failed to initialize sound:", error);
+      }
+    };
+
+    const removeAllListeners = () => {
+      document.removeEventListener("click", initSound);
+      document.removeEventListener("touchstart", initSound);
+      document.removeEventListener("touchend", initSound);
+      document.removeEventListener("keydown", initSound);
+      document.removeEventListener("scroll", initSound);
+      window.removeEventListener("focus", initSound);
+    };
+
+    // Listen for MULTIPLE types of user interactions (critical for mobile)
+    document.addEventListener("click", initSound);
+    document.addEventListener("touchstart", initSound);
+    document.addEventListener("touchend", initSound);
+    document.addEventListener("keydown", initSound);
+    document.addEventListener("scroll", initSound, { once: true });
+    window.addEventListener("focus", initSound, { once: true });
+
+    return removeAllListeners;
+  }, []);
+
   return (
     <>
-      <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer
+        position="top-right"
+        autoClose={6000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        style={{
+          zIndex: 99999,
+        }}
+        toastClassName={() =>
+          "relative flex p-4 min-h-20 rounded-lg justify-between overflow-hidden cursor-pointer shadow-lg bg-white border-l-4 border-blue-500"
+        }
+        bodyClassName={() =>
+          "text-gray-800 font-semibold flex-1 flex items-center"
+        }
+        progressClassName="toastProgress"
+      />
 
       <Router>
         <URLNormalizer />
@@ -113,6 +230,8 @@ function App() {
                 element={<ProviderChat />}
               />
               <Route path="/dashboard/activity" element={<ActivityPage />} />
+              <Route path="/dashboard/test" element={<NotificationTest />} />
+
               <Route
                 path="/dashboard/provider/activity"
                 element={<ProviderActivity />}

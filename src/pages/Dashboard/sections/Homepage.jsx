@@ -18,6 +18,7 @@ import new3 from "/new3.png";
 import { sendTestNotification } from "../../../api/fcm";
 import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import DashboardTour from "../../../components/tour/DashboardTour";
+import NotificationTest from "../../../services/testNotify";
 
 export default function DashboardHome() {
   const [loading, setLoading] = useState(false);
@@ -217,12 +218,15 @@ export default function DashboardHome() {
           onCategoryClick={handleCategoryClick}
         />
       </div>
+      {/* <div>
+        <NotificationTest />
+      </div> */}
       <div className="mb-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
           <h3 className="text-[20px] font-semibold mb-4">Explore Categories</h3>
         </div>
         <div id="explore-categories">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((ser, idx) => {
               const isDisabled = ser.title !== "Transport & Logistics";
               return (

@@ -7,7 +7,9 @@ import { chatService } from "../../../api/chat";
 import { useAuthStore } from "../../../stores/auth.store";
 import { useSearchParams, useLocation } from "react-router-dom";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const SOCKET_URL = import.meta.env.VITE_WS_URL;
+const CHAT_STATUS_CATEGORY = "active";
+
 
 const ProviderChat = () => {
   const [chats, setChats] = useState([]);
@@ -192,7 +194,7 @@ const ProviderChat = () => {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const response = await chatService.getAllChats();
+      const response = await chatService.getAllChats(1, 20, CHAT_STATUS_CATEGORY);
       setChats(response.data || []);
     } catch (error) {
       console.error("Error loading chats:", error);

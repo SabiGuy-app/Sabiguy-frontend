@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuthStore } from "../../stores/auth.store";
 import ActivityDetailsModal from "./ActivityDetailsModal";
+import { getAllBookings } from "../../api/bookings";
 
 export default function NotificationDrawer({
   isOpen,
@@ -18,14 +19,12 @@ export default function NotificationDrawer({
 }) {
   const navigate = useNavigate();
   const [markingAsRead, setMarkingAsRead] = useState(null); // Track which notification is being marked as read
-  const [deleting, setDeleting] = useState(null); 
-  const [selectedNotification, setSelectedNotification] = useState(null); 
+  const [deleting, setDeleting] = useState(null);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [fetchingBookings, setFetchingBookings] = useState(false);
   const user = useAuthStore((state) => state.user);
   const isProvider = user?.data?.role === "provider";
   const chatBase = isProvider ? "/dashboard/provider/chat" : "/dashboard/chat";
-
-
-
 
   // Filter to only show UNREAD notifications
   const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -87,13 +86,51 @@ export default function NotificationDrawer({
     onClose();
 
     // Route to hire alert page for new_booking_request type
-    if (notification.type === "new_booking_request" || notification.type === "booking_selected") {
-      navigate("/dashboard/provider/hire-alert", {
-        state: {
-          bookingData: notification.data,
-          tab: "alert",
-        },
-      });
+    if (
+      notification.type === "new_booking_request" ||
+      notification.type === "booking_selected"
+    ) {
+      try {
+        setFetchingBookings(true);
+
+        // Extract service type and mode of delivery from notification data
+        const serviceType = notification.data?.serviceType;
+        const modeOfDelivery = notification.data?.modeOfDelivery;
+
+        // Call getAllBookings to fetch fresh booking data
+        const bookingResponse = await getAllBookings({
+          status: "awaiting_provider_acceptance",
+          serviceType: serviceType
+            ? String(serviceType).trim().toLowerCase()
+            : undefined,
+          modeOfDelivery: modeOfDelivery
+            ? String(modeOfDelivery).trim()
+            : undefined,
+          page: 1,
+          limit: 20,
+        });
+
+        const bookingData = bookingResponse.data || bookingResponse;
+
+        navigate("/dashboard/provider/hire-alert", {
+          state: {
+            bookingData: notification.data,
+            fetchedAlerts: bookingData,
+            tab: "alert",
+          },
+        });
+      } catch (err) {
+        console.error("Error fetching bookings from notification:", err);
+        // Still navigate even if fetch fails, with original notification data
+        navigate("/dashboard/provider/hire-alert", {
+          state: {
+            bookingData: notification.data,
+            tab: "alert",
+          },
+        });
+      } finally {
+        setFetchingBookings(false);
+      }
     }
     // Route to chat page for new_message type
     else if (
@@ -239,9 +276,13 @@ export default function NotificationDrawer({
       >
         <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100 bg-white sticky top-0 z-10 rounded-tl-3xl">
           <div className="min-w-0">
-            <h2 className="text-xl font-bold text-gray-900 truncate">Notifications</h2>
+            <h2 className="text-xl font-bold text-gray-900 truncate">
+              Notifications
+            </h2>
             {unreadCount > 0 && (
-              <p className="text-xs font-semibold text-gray-400 mt-0.5">{unreadCount} unread</p>
+              <p className="text-xs font-semibold text-gray-400 mt-0.5">
+                {unreadCount} unread
+              </p>
             )}
           </div>
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
@@ -253,7 +294,7 @@ export default function NotificationDrawer({
                 Mark all as read
               </button>
             )}
-            <button 
+            <button
               onClick={onClose}
               className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-black"
             >

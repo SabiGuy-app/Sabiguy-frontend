@@ -607,14 +607,14 @@ export default function TrackDelivery() {
           </div>
 
           <div className="h-[400px] sm:h-[500px] lg:h-[660px] rounded-2xl overflow-hidden shadow-inner lg:shadow-lg lg:sticky lg:top-24">
-            <MapErrorBoundary>
-              <DeliveryMap
-                pickup={pickupCoords}
-                dropoff={dropoffCoords}
-                riderLocation={riderLocation}
-              />
-            </MapErrorBoundary>
-          </div>
+          <MapErrorBoundary>
+            <DeliveryMap
+              pickup={pickupCoords}
+              dropoff={dropoffCoords}
+              bookingDetails={bookingDetails}
+            />
+          </MapErrorBoundary>
+        </div>
         </div>
       </div>
     </ProviderDashboardLayout>

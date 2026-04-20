@@ -1,3 +1,82 @@
 /* @import "tailwindcss"; */
 
+/* Beautiful Toast Notification Styling */
+.notification-toast-custom {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+  padding: 16px 20px;
+  font-weight: 700;
+  color: white;
+  border-left: 5px solid #4c63d2;
+  animation: slideIn 0.3s ease-out;
+}
 
+.notification-toast-body {
+  color: white !important;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* Info toast variant */
+.Toastify__toast--info.notification-toast-custom {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-left-color: #4c63d2;
+}
+
+/* Success toast variant */
+.Toastify__toast--success.notification-toast-custom {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  border-left-color: #0d7a6f;
+}
+
+/* Error toast variant */
+.Toastify__toast--error.notification-toast-custom {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  border-left-color: #d92e40;
+}
+
+/* Warning toast variant */
+.Toastify__toast--warning.notification-toast-custom {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  border-left-color: #f58f9e;
+  color: #333;
+}
+
+.Toastify__toast--warning.notification-toast-custom .notification-toast-body {
+  color: #333 !important;
+}
+
+/* Slide in animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Progress bar styling */
+.toastProgress {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Close button styling */
+.Toastify__close-button > svg {
+  color: white;
+  opacity: 0.8;
+}
+
+.Toastify__close-button:hover > svg {
+  opacity: 1;
+}
+
+/* Toast container */
+.Toastify__toast-container {
+  z-index: 99999 !important;
+  padding: 0;
+}
