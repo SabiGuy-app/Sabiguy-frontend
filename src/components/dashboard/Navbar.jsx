@@ -148,7 +148,7 @@ export default function Navbar({ onMenuClick }) {
     const seenNotifications = new Set();
 
     const newSocket = io(
-      import.meta.env.VITE_SOCKET_URL || "http://localhost:3000",
+      import.meta.env.VITE_WS_URL || "http://localhost:3000",
       {
         auth: { token },
         transports: ["websocket", "polling"],
