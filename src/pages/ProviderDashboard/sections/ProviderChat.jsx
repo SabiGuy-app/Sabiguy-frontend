@@ -7,7 +7,7 @@ import { chatService } from "../../../api/chat";
 import { useAuthStore } from "../../../stores/auth.store";
 import { useSearchParams, useLocation } from "react-router-dom";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const SOCKET_URL = import.meta.env.VITE_WS_URL;
 const CHAT_STATUS_CATEGORY = "active";
 
 
