@@ -12,8 +12,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import DeliveryMap from "../../../../components/dashboard/Map";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
-import { startJob } from "../../../../api/bookings";
+import { startJob, cancelBooking } from "../../../../api/bookings";
 import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
+import CancelModal from "../../../../components/CancelModal";
 
 // Error Boundary for Map Component
 class MapErrorBoundary extends React.Component {
@@ -61,6 +62,8 @@ export default function StartNavigation() {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
   const [riderLocation, setRiderLocation] = useState(null);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
@@ -104,11 +107,33 @@ export default function StartNavigation() {
     }
   };
 
+  const handleCancel = async (reason) => {
+    setCancelLoading(true);
+    try {
+      await cancelBooking(bookingDetails._id, reason);
+      setCancelModalOpen(false);
+      toast.success("Booking cancelled successfully.");
+      navigate("/bookings");
+    } catch (err) {
+      console.error("Failed to cancel booking:", err);
+      toast.error(err.response?.data?.message || "Failed to cancel booking.");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
   const customer = alert?.originalData?.userId || {};
 
   return (
     <>
       <ProviderNavbar />
+      <CancelModal
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        onConfirm={handleCancel}
+        loading={cancelLoading}
+      />
+
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
         <div className="">
           <h1 className="text-[22px] sm:text-[26px] lg:text-[28px] font-semibold text-[#231F20] mb-4">
@@ -145,7 +170,7 @@ export default function StartNavigation() {
             <div className="flex items-center gap-3 mb-4">
               <img
                 src={customer?.profilePicture || "/avatar.png"}
-                 alt={customer?.fullName || "Customer"}
+                alt={customer?.fullName || "Customer"}
                 className="w-14 h-14 rounded-full object-cover"
               />
               <div className="flex-grow">
@@ -186,13 +211,16 @@ export default function StartNavigation() {
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
               </button> */}
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              {/* <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <MessageCircle className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">
                   Message
                 </span>
-              </button>
-              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
+              </button> */}
+              <button
+                onClick={() => setCancelModalOpen(true)}
+                className="text-[#E90000] font-medium text-[16px] px-3 py-3 rounded-[10px] hover:text-red-600 transition-colors hover:bg-red-200"
+              >
                 Cancel Request
               </button>
             </div>
