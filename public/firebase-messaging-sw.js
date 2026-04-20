@@ -31,11 +31,16 @@ if (messaging) {
 
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
-      body: payload.notification.body,
-      icon: "/logo.png",
-      badge: "/badge.png",
-      data: payload.data,
-    };
+    body: payload.notification?.body || '',
+    icon: payload.notification?.icon || '/logo.jpg',
+    badge: '/badge.png',
+    tag: payload.data?.bookingId || 'notification',
+    data: payload.data,
+    requireInteraction: false,
+    silent: false, // Browser will play default sound
+    vibrate: [300, 100, 300, 100, 300, 100, 300], // Longer vibration for mobile
+    renotify: true, // Re-alert even if notification with same tag exists
+  };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
   });
@@ -53,5 +58,20 @@ self.addEventListener("notificationclick", (event) => {
   const bookingId = event.notification.data?.bookingId;
   const url = bookingId ? `/dashboard/bookings/${bookingId}` : "/dashboard";
 
-  event.waitUntil(clients.openWindow(url));
+  // event.waitUntil(clients.openWindow(url));
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes(url) && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow(url);
+        }
+      })
+  );
+
 });
