@@ -16,12 +16,8 @@ import ForgotPassword from "../Forgot-Password/ForgotPassword";
 import Loader from "../../components/Loader";
 import { useAuthStore } from "../../stores/auth.store";
 import { login, googleLogin, getUserByEmail } from "../../api/auth";
-import {
-  requestNotificationPermission,
-  listenForMessages,
-} from "../../services/fcmService";
+import { requestNotificationPermission } from "../../services/fcmService";
 import { registerUserFCMToken } from "../../api/fcm";
-import { toast } from "react-toastify";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -36,17 +32,6 @@ export default function Login() {
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
-
-  useEffect(() => {
-    listenForMessages((payload) => {
-      // Handle notification in app
-      console.log("Notification received in foreground:", payload);
-
-      toast.info(payload?.notification?.title || "New notification", {
-        description: payload?.notification?.body,
-      });
-    });
-  }, []);
 
   const registerFCM = async () => {
     try {
