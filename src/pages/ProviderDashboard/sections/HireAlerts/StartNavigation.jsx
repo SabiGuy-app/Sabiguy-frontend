@@ -221,14 +221,10 @@ export default function StartNavigation() {
                   Message
                 </span>
               </button> */}
-<<<<<<< HEAD
               <button
                 onClick={() => setCancelModalOpen(true)}
                 className="text-[#E90000] font-medium text-[16px] px-3 py-3 rounded-[10px] hover:text-red-600 transition-colors hover:bg-red-200"
               >
-=======
-              <button className="text-[#E90000] font-medium text-[16px] px-3 hover:text-red-600 transition-colors">
->>>>>>> 63e037265fde9f9f515546b6e93dff662dd631a2
                 Cancel Request
               </button>
             </div>
