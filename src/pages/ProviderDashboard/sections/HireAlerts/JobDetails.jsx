@@ -112,10 +112,10 @@ export default function JobDetailsModal({
                 </span>
               </div>
               <div className="flex mt-3 gap-3 w-full">
-                <button className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                {/* <button className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                   <PhoneCall className="w-4 h-4" />
                   Call
-                </button>
+                </button> */}
                 <button
                   className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   onClick={() => onMessageCustomer?.(job)}
