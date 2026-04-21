@@ -437,20 +437,26 @@ export default function BookingSummary2() {
                 </div>
               </div>
 
-              {providerDetails?.workVisuals?.[0]?.pictures?.[0] && (
-                <div className="mt-6 border-t border-gray-100 pt-6">
-                  <h3 className="text-lg font-semibold text-[#231F20] mb-4">Vehicle / Tool Visuals</h3>
-                  <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
-                    <img
-                      src={providerDetails.workVisuals[0].pictures[0]}
-                      alt="Work Visuals"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Action Buttons */}
+              <div className="md:flex gap-5">
+                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Phone className="w-4 h-4 text-gray-600" />
+                  <span className="font-medium text-gray-700">Call</span>
+                </button>
+                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <MessageCircle className="w-4 h-4 text-gray-600" />
+                  <span className="font-medium text-gray-700">Message</span>
+                </button>
+                {!isPaid && (
+                  <button
+                    onClick={() => setCancelModalOpen(true)}
+                    className="text-red-500 hover:bg-red-200 rounded-lg font-medium px-4 hover:text-red-600 transition-colors"
+                  >
+                    Cancel Request
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
 
           {/* Sidebar Column */}
           <div className="lg:col-span-5 space-y-6">
@@ -590,6 +596,7 @@ export default function BookingSummary2() {
         </div>
       </div>
       {showSuccessModal && <SuccessModal />}
+      </div>
     </DashboardLayout>
   );
 }

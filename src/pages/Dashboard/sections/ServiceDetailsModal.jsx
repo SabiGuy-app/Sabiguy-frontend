@@ -121,10 +121,10 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                {/* <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
-                </button>
+                </button> */}
                 <button
                   onClick={handleMessageProvider}
                   className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"

@@ -478,10 +478,10 @@ export default function TrackDelivery() {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-                <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95">
+                {/* <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95">
                   <Phone className="w-5 h-5 text-gray-600" />
                   <span className="text-sm">Call</span>
-                </button>
+                </button> */}
                 <button
                   onClick={handleMessageCustomer}
                   className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95"
