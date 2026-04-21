@@ -147,8 +147,8 @@ export default function AvailableRiders() {
                           <div className="flex items-center gap-1 mt-1">
                             <MapPin className="w-4 h-4 text-[#231F20BF]" />
                             <span className="text-[14px] text-[#231F20BF]">
-                              {provider.distance?.toFixed(1)} miles away
-                              {provider.eta && ` • ETA: ${provider.eta}`}
+                              {provider.distanceFromPickup?.toFixed(1)} miles away
+                              {provider.providerETA && ` • ETA: ${provider.providerETA.value} minutes`}
                             </span>
                           </div>
 
