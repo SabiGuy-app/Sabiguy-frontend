@@ -103,6 +103,8 @@ export default function TrackDelivery() {
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
+  console.log(bookingDetails);
+  
   const selectedProviderId = useBookingStore(
     (state) => state.selectedProviderId,
   );
@@ -287,10 +289,25 @@ export default function TrackDelivery() {
 
   const estimatedDuration =
     alert?.originalData?.estimatedDuration || bookingDetails?.estimatedDuration;
-  const arrivalText =
-    estimatedDuration?.value && estimatedDuration?.unit
-      ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
-      : "Tracking delivery";
+  const getArrivalText = () => {
+    switch (bookingStatus) {
+      case "enroute_to_pickup":
+      case "in_progress":
+        return estimatedDuration?.value
+          ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
+          : "On the way to pickup";
+      case "arrived_at_pickup":
+        return "Arrived at pickup location";
+      case "enroute_to_dropoff":
+        return "En route to delivery";
+      case "arrived_at_dropoff":
+        return "Arrived at destination";
+      case "completed":
+        return "Delivery Completed 🎉";
+      default:
+        return "Tracking delivery";
+    }
+  };
 
   useEffect(() => {
     if (
@@ -404,13 +421,13 @@ export default function TrackDelivery() {
 
             <div className="hidden lg:block mb-6">
               <h1 className="text-[28px] font-semibold text-[#231F20]">
-                {arrivalText}
+                {getArrivalText()}
               </h1>
             </div>
 
             <div className="lg:hidden mb-2">
               <h2 className="text-2xl font-bold text-[#231F20] leading-tight">
-                {arrivalText}
+                {getArrivalText()}
               </h2>
             </div>
 
@@ -456,14 +473,14 @@ export default function TrackDelivery() {
                       <Shield className="w-3 h-3" /> Verified
                     </span>
                   </div>
-                  <div className="text-[#231F20BF] text-[16px] mb-1">
+                  {/* <div className="text-[#231F20BF] text-[16px] mb-1">
                     <div>
                       {user?.data?.services?.[0]?.title?.replace(/_/g, " ") ||
                         bookingDetails?.subCategory?.replace(/_/g, " ") ||
                         "N/A"}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
+                  </div> */}
+                  {/* <div className="flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm font-medium text-gray-900">
                       {user?.data?.rating?.average > 0
@@ -473,7 +490,7 @@ export default function TrackDelivery() {
                     <span className="text-xs text-gray-500">
                       ({user?.data?.rating?.count ?? 0} reviews)
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -496,7 +513,7 @@ export default function TrackDelivery() {
               Pickup note
             </h3>
             <p className="bg-[#007BFF08] rounded-lg text-[#231F2080] border border-[#231F201A] p-4 mb-4">
-              {bookingDetails?.pickupNote || "No pickup note provided."}
+              {alert?.pickupNote || "No pickup note provided."}
             </p>
 
             <div className="mb-4">
@@ -607,14 +624,14 @@ export default function TrackDelivery() {
           </div>
 
           <div className="h-[400px] sm:h-[500px] lg:h-[660px] rounded-2xl overflow-hidden shadow-inner lg:shadow-lg lg:sticky lg:top-24">
-          <MapErrorBoundary>
-            <DeliveryMap
-              pickup={pickupCoords}
-              dropoff={dropoffCoords}
-              bookingDetails={bookingDetails}
-            />
-          </MapErrorBoundary>
-        </div>
+            <MapErrorBoundary>
+              <DeliveryMap
+                pickup={pickupCoords}
+                dropoff={dropoffCoords}
+                bookingDetails={bookingDetails}
+              />
+            </MapErrorBoundary>
+          </div>
         </div>
       </div>
     </ProviderDashboardLayout>

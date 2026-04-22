@@ -356,7 +356,7 @@ export default function Bookings() {
         return [
           // "completed",
           // "funds_released",
-          "user_accepted_completion",
+          "user accepted completion",
         ].includes(status);
       return false;
     });
