@@ -74,7 +74,7 @@ export default function JobsCard({
     job?.dropoffLocation?.address ||
     job?.originalData?.dropoffLocation?.address ||
     "N/A";
-  const amount = job?.agreedPrice ?? job?.calculatedPrice ?? job?.price ?? 0;
+  const amount = job?.price || job?.originalData?.price || 0;
   const shouldShowNavigation =
     normalizedStatus === "paid_escrow" ||
     normalizedStatus === "in_progress" ||
