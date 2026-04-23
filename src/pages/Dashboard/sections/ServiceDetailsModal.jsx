@@ -47,54 +47,56 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
         <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
           <div className="space-y-6">
             <div className="shadow-sm p-6 rounded-[16px] space-y-6">
-             <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
-                <img
-                  src={
-                    request.providerImage ||
-                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
-                  }
-                  alt={request.providerName}
-                  className="w-16 h-16 rounded-full object-cover flex-shrink-0 self-center lg:self-start"
-              />
-               <div className="flex-grow w-full text-center lg:text-left">
-                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-1">
-                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
-                      {request.providerName ?? "Provider"}
-                    </h2>
-                    <span className="text-[#8BC53F]">
-                      <BadgeCheck className="w-[20px] h-[20px]" />
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1 capitalize">
-                    {request.title?.replace(/_/g, " ") || "—"}
-                  </p>
-                  {request.providerIdDisplay &&
-                    request.providerIdDisplay !== "—" && (
-                      <div className="mb-1">
-                        <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 inline-block">
-                          ID: {request.providerIdDisplay}
-                        </span>
+              <div className="flex justify-between lg:flex-row lg:items-start gap-4 lg:gap-6">
+                <div className="flex gap-6">
+                  <img
+                    src={
+                      request.providerImage ||
+                      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
+                    }
+                    alt={request.providerName}
+                    className="w-16 h-16 rounded-full object-cover flex-shrink-0 self-center lg:self-start"
+                  />
+                  <div className=" text-center lg:text-left">
+                    <div className="flex items-center justify-center lg:justify-start gap-2 mb-1">
+                      <h2 className="text-lg font-semibold text-gray-900 capitalize">
+                        {request.providerName ?? "Provider"}
+                      </h2>
+                      <span className="text-[#8BC53F]">
+                        <BadgeCheck className="w-[20px] h-[20px]" />
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-1 capitalize">
+                      {request.title?.replace(/_/g, " ") || "—"}
+                    </p>
+                    {request.providerIdDisplay &&
+                      request.providerIdDisplay !== "—" && (
+                        <div className="mb-1">
+                          <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 inline-block">
+                            ID: {request.providerIdDisplay}
+                          </span>
+                        </div>
+                      )}
+                    <div className="flex justify-center lg:justify-start items-center gap-1 text-[14px] text-gray-600">
+                      <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium text-gray-900">
+                        {request.providerRating ?? "New"}
+                      </span>
+                      <span className="text-gray-500 ">
+                        ({request.providerReviews ?? 0} reviews)
+                      </span>
+                    </div>
+                    {request.providerDistance && (
+                      <div className="flex items-center gap-1 text-[14px] text-[#231F20BF] mt-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{request.providerDistance} miles away</span>
                       </div>
                     )}
-                  <div className="flex justify-center lg:justify-start items-center gap-1 text-[14px] text-gray-600">
-                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium text-gray-900">
-                      {request.providerRating ?? "New"}
-                    </span>
-                    <span className="text-gray-500 ">
-                      ({request.providerReviews ?? 0} reviews)
-                    </span>
                   </div>
-                  {request.providerDistance && (
-                    <div className="flex items-center gap-1 text-[14px] text-[#231F20BF] mt-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{request.providerDistance} miles away</span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Stats */}
-               <div className="flex justify-between lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto mt-3 lg:mt-0">
+                <div className="flex justify-between lg:justify-start gap-4 lg:gap-6 mt-3 lg:mt-0">
                   <div className="flex flex-col items-center flex-1 md:flex-none">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full">
                       <Award className="w-[24px] h-[24px] text-[#005823]" />
@@ -283,8 +285,8 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   Pickup notes{" "}
                   <span className="text-[14px] text-[#231F20BF]"></span>
                 </h4>
-                <p className="text-[15px] text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
-                  {request.pickupNotes || "No pickup notes provided."}
+                <p className="text-[15px] text-[#231F20BF] bg-[#007BFF08] leading-relaxed rounded-lg p-4 border border-[#231F201A]">
+                  {request.notes || "No pickup notes provided."}
                 </p>
               </div>
             </div>

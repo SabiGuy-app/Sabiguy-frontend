@@ -275,25 +275,11 @@ export default function RequestCard({
               )}
 
               {[
-                "pending providers",
-                "provider selected",
-                "payment pending",
-                "awaiting provider acceptance",
-              ].includes(request.status.toLowerCase()) && (
-                <CancelRequestButton
-                  bookingId={request.id}
-                  onSuccess={onBookingCancelled}
-                />
-              )}
-
-              {[
-                "provider selected",
                 "in progress",
                 "enroute to pickup",
                 "arrived at pickup",
                 "enroute to dropoff",
                 "arrived at dropoff",
-                "completed",
               ].includes(request.status.toLowerCase()) && (
                 <button
                   onClick={() => onTrackProvider(request.id)}
@@ -321,6 +307,18 @@ export default function RequestCard({
                   <MessageCircle className="w-4 h-4" />
                   Message Provider
                 </button>
+              )}
+
+              {[
+                "pending providers",
+                "provider selected",
+                "payment pending",
+                "awaiting provider acceptance",
+              ].includes(request.status.toLowerCase()) && (
+                <CancelRequestButton
+                  bookingId={request.id}
+                  onSuccess={onBookingCancelled}
+                />
               )}
 
               {isCompleted && (
