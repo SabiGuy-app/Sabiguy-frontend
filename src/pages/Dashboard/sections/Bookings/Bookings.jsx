@@ -296,7 +296,6 @@ export default function Bookings() {
 
     orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
     fullOrderId: booking._id || "",
-    providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     fullProviderId: booking.providerId?._id || "",
     price: booking.calculatedPrice || booking.agreedPrice || 0,
     totalAmount: booking.totalAmount || 0,
@@ -357,7 +356,7 @@ export default function Bookings() {
         return [
           // "completed",
           // "funds_released",
-          "user_accepted_completion",
+          "user accepted completion",
         ].includes(status);
       return false;
     });

@@ -56,9 +56,16 @@ export default function BookingSummary2() {
   const targetProvider = booking?.data?.providers?.find(p => (p.id || p._id || p.userId) === acceptedProviderId) || providerDetails;
   const pricing = targetProvider?.pricing || bookingDetails?.pricing;
 
-  const serviceCost = pricing?.breakdown?.subtotal ?? bookingDetails?.agreedPrice ?? 0;
-  const serviceCharge = pricing?.breakdown?.platformFee ?? bookingDetails?.platformEarns ?? 0;
-  const totalAmount = pricing?.riderPays ?? bookingDetails?.calculatedPrice ?? 0;
+
+  const baseFare = pricing?.breakdown?.baseFare ?? bookingDetails?.pricingBreakdown?.baseFare ?? 0;
+  const timeCost = pricing?.breakdown?.timeCost ?? bookingDetails?.pricingBreakdown?.timeCost ?? 0;
+  const distanceCost = pricing?.breakdown?.distanceCost ?? bookingDetails?.pricingBreakdown?.distanceCost ?? 0;
+  const perMinuteRate = pricing?.meta?.ratesUsed?.perMinuteRate ?? bookingDetails?.pricingMeta?.ratesUsed?.perMinuteRate ?? 0;
+  const perKmRate = pricing?.meta?.ratesUsed?.perKmRate ?? bookingDetails?.pricingMeta?.ratesUsed?.perKmRate ?? 0;
+  const tax = pricing?.breakdown?.tax ?? bookingDetails?.pricingBreakdown?.tax ?? 0;
+  const serviceCost = pricing?.breakdown?.subtotal ?? bookingDetails?.pricingBreakdown?.subtotal ?? 0;
+  const serviceCharge = pricing?.breakdown?.platformFee ?? bookingDetails?.pricingBreakdown?.platformFee ?? 0;
+  const totalAmount = pricing?.riderPays ?? bookingDetails?.pricingBreakdown?.riderPaysFinal ?? 0;
 
   const providerDistanceInfo = bookingDetails?.providerDistances?.find(
     (p) => p.providerId === acceptedProviderId
@@ -231,6 +238,10 @@ export default function BookingSummary2() {
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Service Cost:</span>
               <span className="font-medium text-gray-900">{formatCurrency(serviceCost)}</span>
+            </div>
+             <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Tax:</span>
+              <span className="font-medium text-gray-900">{formatCurrency(tax)}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Platform Fee:</span>
@@ -437,20 +448,26 @@ export default function BookingSummary2() {
                 </div>
               </div>
 
-              {providerDetails?.workVisuals?.[0]?.pictures?.[0] && (
-                <div className="mt-6 border-t border-gray-100 pt-6">
-                  <h3 className="text-lg font-semibold text-[#231F20] mb-4">Vehicle / Tool Visuals</h3>
-                  <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
-                    <img
-                      src={providerDetails.workVisuals[0].pictures[0]}
-                      alt="Work Visuals"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Action Buttons */}
+              <div className="md:flex gap-5">
+                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Phone className="w-4 h-4 text-gray-600" />
+                  <span className="font-medium text-gray-700">Call</span>
+                </button>
+                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <MessageCircle className="w-4 h-4 text-gray-600" />
+                  <span className="font-medium text-gray-700">Message</span>
+                </button>
+                {!isPaid && (
+                  <button
+                    onClick={() => setCancelModalOpen(true)}
+                    className="text-red-500 hover:bg-red-200 rounded-lg font-medium px-4 hover:text-red-600 transition-colors"
+                  >
+                    Cancel Request
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
 
           {/* Sidebar Column */}
           <div className="lg:col-span-5 space-y-6">
@@ -510,8 +527,24 @@ export default function BookingSummary2() {
               
               <div className="space-y-3">
                 <div className="flex justify-between text-sm font-medium text-gray-600">
-                  <span>Service Cost</span>
+                  <span>Base Fare</span>
+                  <span>{formatCurrency(baseFare)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Price per Minute</span>
+                  <span>{formatCurrency(perMinuteRate)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Price per KM</span>
+                  <span>{formatCurrency(perKmRate)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Subtotal</span>
                   <span>{formatCurrency(serviceCost)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Tax </span>
+                  <span>{formatCurrency(tax)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium text-gray-600">
                   <span>Platform Fee</span>
@@ -590,6 +623,7 @@ export default function BookingSummary2() {
         </div>
       </div>
       {showSuccessModal && <SuccessModal />}
+      </div>
     </DashboardLayout>
   );
 }

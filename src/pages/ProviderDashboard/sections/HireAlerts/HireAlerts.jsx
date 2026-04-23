@@ -129,7 +129,7 @@ export default function HireAlerts() {
           booking.serviceType ||
           "Untitled job",
         price:
-          booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
+          booking?.pricingBreakdown?.subtotal ||  0,
         calculatedPrice:
           booking.calculatedPrice || booking.agreedPrice || booking.budget || 0,
         agreedPrice:
@@ -245,7 +245,7 @@ export default function HireAlerts() {
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
       pending_customer: "Awaiting Response",
-      user_accepted_completion: "Job Confirmed",
+      waiting_confirmation: "Job Confirmed",
       funds_released: "Funds Released",
       paid_escrow: "Paid Escrow",
       payment_pending: "Payment Pending",

@@ -35,6 +35,9 @@ export default function ProviderServiceProfileTab({
     vehicleRegNo: profile?.vehicleRegNo || user?.data?.vehicleRegNo || "",
   });
   const [isSavingVehicle, setIsSavingVehicle] = useState(false);
+  console.log(profile);
+  console.log(user?.data);
+  
 
   // Real services from user data (populated during signup via POST /provider/job-service)
   const [services, setServices] = useState(() => {
