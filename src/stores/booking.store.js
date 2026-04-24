@@ -8,26 +8,39 @@ const useBookingStore = create(
       selectedProviderId: null,
 
       setBooking: (newBooking) => {
-        const existingProviders = get().booking?.data?.providers;
-        const incomingProviders = newBooking?.data?.providers;
-
-        set({
-          booking: {
-            ...newBooking,
-            data: {
-              ...newBooking?.data,
-              providers: incomingProviders?.length ? incomingProviders : existingProviders,
-            },
-          },
-        });
+        set({ booking: newBooking });
       },
 
+      appendProviders: (providers) => {
+        set((state) => ({
+          booking: {
+            ...state.booking,
+            data: {
+              ...state.booking?.data,
+              providers,
+            },
+          },
+        }));
+      },
+
+      clearBooking: () => set({ booking: null, selectedProviderId: null }),
+
       setSelectedProviderId: (id) => set({ selectedProviderId: id }),
+      clearProviders: () =>
+        set((state) => ({
+          booking: {
+            ...state.booking,
+            data: {
+              ...state.booking?.data,
+              providers: [],
+            },
+          },
+        })),
     }),
     {
       name: "booking-storage",
-    }
-  )
+    },
+  ),
 );
 
 export default useBookingStore;

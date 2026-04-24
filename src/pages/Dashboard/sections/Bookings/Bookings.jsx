@@ -248,7 +248,7 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-        <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
+      <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (
           <button
             key={filter}
@@ -263,11 +263,11 @@ export default function Bookings() {
           </button>
         ))}
       </div>
-     
     );
   };
 
-  const mapBookingToRequest = (booking) => ({
+
+  const mapBookingToRequest = (booking) => ({    
     id: booking._id,
     title: (
       booking.subCategory?.replace(/_/g, " ") ||
@@ -307,8 +307,8 @@ export default function Bookings() {
       ? `${booking.distance.value} ${booking.distance.unit}`
       : "—",
 
-    description: booking.description || null,
-    notes: null,
+    // description: booking.description || null,
+    notes: booking.pickupNote,
     modeOfDelivery: booking.modeOfDelivery || "—",
 
     scheduledDate: booking.createdAt
@@ -338,24 +338,23 @@ export default function Bookings() {
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
         return [
+          "in progress",
           "enroute to pickup",
-          "paid escrow",
-          "provider selected",
-          "completed",
           "arrived at pickup",
           "enroute to dropoff",
           "arrived at dropoff",
+          "completed",
         ].includes(status);
       if (statusFilter === "pending")
         return [
-          "pending providers",
           "payment pending",
-          // "awaiting provider acceptance",
+          "awaiting provider acceptance",
+          "provider selected",
         ].includes(status);
       if (statusFilter === "completed")
         return [
           // "completed",
-          // "funds_released",
+          "funds released",
           "user accepted completion",
         ].includes(status);
       return false;
@@ -423,7 +422,7 @@ export default function Bookings() {
             }`}
           >
             <span className="flex items-center justify-center gap-2">
-              Request a service
+              Request A Service
             </span>
             {activeTab === "request" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
@@ -439,7 +438,7 @@ export default function Bookings() {
             }`}
           >
             <span className="flex items-center justify-center gap-2">
-              My requests
+              My Requests
             </span>
             {activeTab === "requests" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />

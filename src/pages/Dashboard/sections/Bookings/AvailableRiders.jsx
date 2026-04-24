@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Check, MapPin, Star, Loader2 } from "lucide-react";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import location from "/location.png";
@@ -10,12 +10,25 @@ import DeliveryMap from "../../../../components/dashboard/Map";
 export default function AvailableRiders() {
   const navigate = useNavigate();
   const booking = useBookingStore((state) => state.booking);
-  const setSelectedProviderId = useBookingStore((state) => state.setSelectedProviderId);
+  const setSelectedProviderId = useBookingStore(
+    (state) => state.setSelectedProviderId,
+  );
 
-  const providers = booking?.data?.providers || [];
   const bookingDetails = booking?.data?.booking || {};
   const bookingId = bookingDetails._id;
-  const bookingAmount = bookingDetails?.agreedPrice ?? bookingDetails?.calculatedPrice ?? bookingDetails?.price ?? 0;
+  const bookingAmount =
+    bookingDetails?.agreedPrice ??
+    bookingDetails?.calculatedPrice ??
+    bookingDetails?.price ??
+    0;
+    const getProviderId = (provider) =>
+    provider._id || provider.id || provider.userId || provider.providerId;
+  const notifiedProviderIds = bookingDetails?.notifiedProviders || [];
+
+  const providers = (booking?.data?.providers || []).filter((p) => {
+    const id = getProviderId(p);
+    return notifiedProviderIds.length === 0 || notifiedProviderIds.includes(id);
+  });
 
   const pickupCoords = {
     latitude: bookingDetails?.pickupLocation?.coordinates?.coordinates?.[1],
@@ -27,13 +40,15 @@ export default function AvailableRiders() {
     longitude: bookingDetails?.dropoffLocation?.coordinates?.coordinates?.[0],
   };
 
-  // Helper: extract provider ID from whichever field the API uses
-  const getProviderId = (provider) =>
-    provider._id || provider.id || provider.userId || provider.providerId;
 
   const [acceptingId, setAcceptingId] = useState(null);
   const [declinedIds, setDeclinedIds] = useState([]);
   const [error, setError] = useState("");
+  const clearProviders = useBookingStore((state) => state.clearProviders);
+
+  useEffect(() => {
+    return () => clearProviders();
+  }, []);
 
   const handleAccept = async (providerId) => {
     setAcceptingId(providerId);
@@ -57,7 +72,7 @@ export default function AvailableRiders() {
   };
 
   const filteredProviders = providers.filter(
-    (p) => !declinedIds.includes(getProviderId(p))
+    (p) => !declinedIds.includes(getProviderId(p)),
   );
 
   return (
@@ -69,9 +84,9 @@ export default function AvailableRiders() {
           </h1>
           {bookingId && (
             <div className="mb-6">
-                <span className="text-[12px] font-mono text-gray-500 bg-white px-2 py-1 rounded-md border border-gray-200">
-                    Booking #{bookingId.slice(-6).toUpperCase()}
-                </span>
+              <span className="text-[12px] font-mono text-gray-500 bg-white px-2 py-1 rounded-md border border-gray-200">
+                Booking #{bookingId.slice(-6).toUpperCase()}
+              </span>
             </div>
           )}
 
@@ -124,9 +139,12 @@ export default function AvailableRiders() {
                           </h2>
                           {getProviderId(provider) && (
                             <div className="mt-1 mb-1">
-                                <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200 inline-block">
-                                    ID: {getProviderId(provider).slice(-6).toUpperCase()}
-                                </span>
+                              <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200 inline-block">
+                                ID:{" "}
+                                {getProviderId(provider)
+                                  .slice(-6)
+                                  .toUpperCase()}
+                              </span>
                             </div>
                           )}
 
@@ -147,8 +165,10 @@ export default function AvailableRiders() {
                           <div className="flex items-center gap-1 mt-1">
                             <MapPin className="w-4 h-4 text-[#231F20BF]" />
                             <span className="text-[14px] text-[#231F20BF]">
-                              {provider.distanceFromPickup?.toFixed(1)} miles away
-                              {provider.providerETA && ` • ETA: ${provider.providerETA.value} minutes`}
+                              {provider.distanceFromPickup?.toFixed(1)} miles
+                              away
+                              {provider.providerETA &&
+                                ` • ETA: ${provider.providerETA.value} minutes`}
                             </span>
                           </div>
 
@@ -163,19 +183,30 @@ export default function AvailableRiders() {
 
                           {/* Price */}
                           <h2 className="text-2xl sm:text-[25px] text-[#005823] font-semibold mt-4">
-                            ₦{Number(provider?.pricing?.riderPays ?? provider?.price ?? provider?.calculatedPrice ?? provider?.agreedPrice ?? provider?.amount ?? provider?.bid ?? bookingAmount).toLocaleString()}
+                            ₦
+                            {Number(
+                              provider?.pricing?.riderPays ??
+                                provider?.price ??
+                                provider?.calculatedPrice ??
+                                provider?.agreedPrice ??
+                                provider?.amount ??
+                                provider?.bid ??
+                                bookingAmount,
+                            ).toLocaleString()}
                           </h2>
                         </div>
 
                         {/* Actions */}
                         <div className="space-y-3 sm:flex-row gap-2">
                           <button
-                            onClick={() => handleAccept(getProviderId(provider))}
+                            onClick={() =>
+                              handleAccept(getProviderId(provider))
+                            }
                             disabled={!!acceptingId}
                             className="w-full py-2.5 px-4 rounded-md text-[16px] font-medium transition-colors bg-[#005823CC] hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             <span className="flex items-center justify-center gap-2 text-white">
-                              {acceptingId === provider.id ? (
+                              {acceptingId === getProviderId(provider) ? (
                                 <>
                                   <Loader2 className="w-4 h-4 animate-spin" />
                                   Accepting...
@@ -190,7 +221,9 @@ export default function AvailableRiders() {
                           </button>
 
                           <button
-                            onClick={() => handleDecline(getProviderId(provider))}
+                            onClick={() =>
+                              handleDecline(getProviderId(provider))
+                            }
                             disabled={!!acceptingId}
                             className="w-full py-2.5 px-4 text-[16px] rounded-md font-medium bg-white border border-[#231F2040] text-[#231F20] hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           >
