@@ -38,16 +38,14 @@ export default function ProviderSidebar({ open = false, onClose }) {
 
   const onLogout = async () => {
     try {
-      await handleLogout();
       if (onClose) onClose();
-      // Add a small delay to ensure stores are cleared before redirect
-      setTimeout(() => {
-        navigate("/");
-      }, 100);
+      navigate("/", { replace: true });
+      await handleLogout();
     } catch (error) {
       console.error("Logout failed:", error);
       // Still redirect even if logout has errors
       if (onClose) onClose();
+      navigate("/", { replace: true });
     }
   };
 

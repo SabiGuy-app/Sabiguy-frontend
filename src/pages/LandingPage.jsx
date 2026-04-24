@@ -118,7 +118,7 @@ const LandingPage = () => {
             <div className="flex items-center gap-10">
               <motion.a
                 whileHover={{ color: "#4F8461" }}
-                href="/welcome"
+                href="/"
                 className="text-[#1A1A1A] font-medium text-sm transition-colors"
               >
                 Home
@@ -135,18 +135,19 @@ const LandingPage = () => {
             <div className="flex items-center gap-8 ml-4 border-l border-gray-200 pl-4">
               <motion.a
                 whileHover={{ color: "#4F8461" }}
-                href="/login"
+               href="/login"
                 className="text-[#1A1A1A] font-medium text-sm transition-colors"
               >
                 Login
               </motion.a>
-              <motion.button
+              <motion.a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                href="/welcome"
                 className="bg-[#4F8461] text-white px-6 md:px-8 py-2.5 rounded-full font-medium hover:bg-[#3e694d] transition-all shadow-sm text-sm"
               >
                 Sign up
-              </motion.button>
+              </motion.a>
             </div>
           </div>
 
@@ -168,7 +169,7 @@ const LandingPage = () => {
           className="absolute top-16 left-0 w-full bg-white border-b shadow-md md:hidden overflow-hidden"
         >
           <div className="flex flex-col items-center gap-4 py-6 px-4">
-            <a href="/welcome" className="font-medium text-[#1A1A1A] text-sm">
+            <a href="/" className="font-medium text-[#1A1A1A] text-sm">
               Home
             </a>
             <a href="#" className="font-medium text-[#1A1A1A] text-sm">
@@ -177,12 +178,13 @@ const LandingPage = () => {
             <a href="/login" className="font-medium text-[#1A1A1A] text-sm">
               Login
             </a>
-            <motion.button
+            <motion.a
               whileTap={{ scale: 0.95 }}
-              className="bg-[#4F8461] text-white w-full px-6 py-2.5 rounded-full font-medium text-sm"
+              href="/welcome"
+             className="bg-[#4F8461] text-white w-full px-6 py-2.5 rounded-full font-medium text-sm flex items-center justify-center"
             >
               Sign up
-            </motion.button>
+            </motion.a>
           </div>
         </motion.div>
       </motion.nav>
