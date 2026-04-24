@@ -214,12 +214,6 @@ export async function requestNotificationPermission() {
     console.log("🎵 Initializing audio service during user permission...");
     await NotificationSoundService.init();
 
-    // Test the audio right after init to ensure it's working
-    console.log("🔊 Testing audio playback after permission...");
-    await NotificationSoundService.play().catch((error) => {
-      console.warn("⚠️ Audio test play warning (this is okay):", error);
-    });
-
     // Ensure Service Worker is registered and ready
     await ensureServiceWorkerReady();
 

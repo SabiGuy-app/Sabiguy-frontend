@@ -17,11 +17,11 @@ export default function ProviderDashboardLayout({ children }) {
 
   const onTimeoutLogout = useCallback(async () => {
     try {
+      navigate("/", { replace: true });
       await handleLogout();
-      navigate("/");
     } catch (error) {
       console.error("Auto logout failed:", error);
-      navigate("/");
+      navigate("/", { replace: true });
     }
   }, [navigate]);
 

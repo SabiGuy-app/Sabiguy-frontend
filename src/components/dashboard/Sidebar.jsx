@@ -33,18 +33,15 @@ export default function Sidebar({ open, onClose }) {
 
   const onLogout = async () => {
     try {
-      await handleLogout();
-      setOpen(false);
+      onClose?.();
       setShowLogoutConfirm(false);
-      // Add a small delay to ensure stores are cleared before redirect
-      setTimeout(() => {
-        navigate("/");
-      }, 100);
+      navigate("/", { replace: true });
+      await handleLogout();
     } catch (error) {
       console.error("Logout failed:", error);
       // Still redirect even if logout has errors
-      onClose();
-      navigate("/");
+      onClose?.();
+      navigate("/", { replace: true });
     }
   };
 

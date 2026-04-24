@@ -131,6 +131,7 @@ export default function Login() {
 
       if (!res?.token) {
         setErrorMessage("Login failed. Please try again.");
+        setLoading(false);
         return;
       }
 
@@ -220,8 +221,8 @@ export default function Login() {
       } else {
         setErrorMessage("Unexpected error occurred.");
       }
-    } finally {
       setLoading(false);
+    } finally {
       setSubmitting(false);
     }
   };
@@ -291,8 +292,6 @@ export default function Login() {
           }
           navigate("/dashboard/provider");
         }
-
-        setGoogleLoading(false);
       } catch (err) {
         console.error("Google login failed:", err);
         const raw = err?.response?.data;
