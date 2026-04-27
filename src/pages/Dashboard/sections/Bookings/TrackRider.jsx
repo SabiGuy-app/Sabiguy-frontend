@@ -213,7 +213,7 @@ export default function TrackRider() {
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
   const fareDisplay =
-    bookingDetails?.calculatedPrice ?? bookingDetails?.agreedPrice ?? 0;
+    bookingDetails?.pricingBreakdown?.subtotal ?? 0;
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -221,6 +221,15 @@ export default function TrackRider() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+
+    const formatTitle = (text) =>
+  text
+    ?.replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+   const title = formatTitle(providerDetails?.job?.[0]?.title) ||
+  formatTitle(bookingDetails?.subCategory) ||
+  "—"
 
   const deliverySteps = [
     { id: 1, title: "En route to pickup", subtitle: "On the way to pickup" },
@@ -314,22 +323,9 @@ export default function TrackRider() {
                 </div>
                 <div className="text-[#231F20BF] text-[16px] mb-1">
                   <p>
-                    {providerDetails?.job?.[0]?.title?.replace(/_/g, " ") ||
-                      bookingDetails?.subCategory?.replace(/_/g, " ") ||
-                      "—"}
+                        {title}
                   </p>
                 </div>
-                {/* <div className="flex items-center gap-1">
-                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium text-gray-900">
-                    {providerDetails?.rating?.average > 0
-                      ? providerDetails.rating.average.toFixed(1)
-                      : "New"}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    ({providerDetails?.rating?.count ?? 0} reviews)
-                  </span>
-                </div> */}
               </div>
             </div>
 
