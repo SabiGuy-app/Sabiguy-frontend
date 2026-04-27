@@ -11,6 +11,8 @@ export default function AccountTypeForm({onNext, onBack}) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const NIN_SLIP_MAX_SIZE_MB = 2;
+  const NIN_SLIP_MAX_SIZE_BYTES = NIN_SLIP_MAX_SIZE_MB * 1024 * 1024;
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -102,10 +104,15 @@ export default function AccountTypeForm({onNext, onBack}) {
       .nullable()
       .test(
         "fileType",
-        "Only PDF, JPEG, or PNG files are allowed",
+        `Only PDF, JPEG, or PNG files are allowed`,
         (value) =>
           !value ||
           ["application/pdf", "image/jpeg", "image/png"].includes(value.type),
+      )
+      .test(
+        "fileSize",
+        `NIN slip must be 2MB or smaller`,
+        (value) => !value || value.size <= NIN_SLIP_MAX_SIZE_BYTES,
       ),
     businessName: Yup.string(),
     cacNumber: Yup.string(),
@@ -216,7 +223,7 @@ onSubmit={(values, { setSubmitting }) => {
                             <div>
   <p className="font-medium text-gray-700 mb-2">NIN Slip</p>
   <p className="text-sm text-gray-500 mb-3">
-    Kindly upload a picture of your NIN slip (make sure all details are readable). Accepted formats are PDF, JPEG & PNG
+    Kindly upload a clear NIN slip in PDF, JPEG, or PNG format. Maximum file size is 2MB.
   </p>
 
   {/* Hidden file input */}
