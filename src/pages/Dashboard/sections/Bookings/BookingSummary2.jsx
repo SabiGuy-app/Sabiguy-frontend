@@ -425,7 +425,7 @@ export default function BookingSummary2() {
 
                 <div className="flex sm:flex-col gap-4 sm:gap-2 justify-center border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-6">
                   <div className="text-center sm:text-left">
-                    <div className="text-2xl font-bold text-[#005823]">
+                    <div className="text-[20px] md:text-2xl font-bold text-[#005823]">
                       {providerDetails?.completedJobs ?? 0}
                     </div>
                     <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
@@ -434,7 +434,7 @@ export default function BookingSummary2() {
                   </div>
                   <div className="hidden sm:block h-px bg-gray-100 w-full my-1"></div>
                   <div className="text-center sm:text-left">
-                    <div className="text-base font-bold text-[#231F20]">
+                    <div className="text-[20px] md:text-2xl font-bold text-[#231F20]">
                       {bookingDetails?.bookingDuration?.value 
                         ? `${bookingDetails.bookingDuration.value} ${bookingDetails.bookingDuration.unit}` 
                         : bookingDetails?.estimatedDuration?.value
@@ -449,7 +449,7 @@ export default function BookingSummary2() {
               </div>
 
               {/* Action Buttons */}
-              <div className="md:grid md:grid-cols-2 gap-5">
+              <div className="text-center md:grid md:grid-cols-2 gap-5">
                 {/* <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
@@ -461,7 +461,7 @@ export default function BookingSummary2() {
                 {!isPaid && (
                   <button
                     onClick={() => setCancelModalOpen(true)}
-                    className="text-red-500 hover:bg-red-200 rounded-lg font-medium px-4 hover:text-red-600 transition-colors"
+                    className="text-red-500 hover:bg-red-200 text-center rounded-lg font-medium px-4 hover:text-red-600 transition-colors"
                   >
                     Cancel Request
                   </button>

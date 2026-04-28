@@ -42,7 +42,7 @@ export default function ProviderSidebar({ open = false, onClose }) {
       if (onClose) onClose();
       // Add a small delay to ensure stores are cleared before redirect
       setTimeout(() => {
-        navigate("/");
+        navigate("/login");
       }, 100);
     } catch (error) {
       console.error("Logout failed:", error);
