@@ -86,7 +86,7 @@ export default function SearchingLoader() {
       try {
         const data = await getBookingsDetails(bookingId);
         const bookingData = data?.data?.booking || data?.booking || {};
-        const providerId  = bookingData?.providerId  || [];
+        const providerId  = bookingData?.providerId;
         if (providerId ) {
           stopPolling();
           setBooking(data);
