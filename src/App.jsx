@@ -55,7 +55,6 @@ import LandingPage from "./pages/LandingPage";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
 import NotVerified from "./pages/signup/ServiceProvider/kyc-not-verified";
-import { isMobile } from "./utils/mobileDetection";
 import NotificationSoundService from "./services/notificationSoundService";
 import NotificationTest from "./services/testNotify";
 import { listenForMessages } from "./services/fcmService";
@@ -121,21 +120,6 @@ function App() {
 
       try {
         await NotificationSoundService.init();
-
-        // On mobile, also play a silent sound to unlock audio
-        if (isMobile()) {
-          console.log("📱 Unlocking mobile audio with silent play...");
-          const unlockAudio = new Audio("/notify.mp3");
-          unlockAudio.volume = 0; // Silent
-          try {
-            await unlockAudio.play();
-            unlockAudio.pause();
-            unlockAudio.volume = 1.0;
-            console.log("✅ Mobile audio unlocked");
-          } catch (unlockError) {
-            console.warn("⚠️ Failed to unlock audio:", unlockError);
-          }
-        }
 
         soundInitialized = true;
         console.log("✅ Sound service ready");

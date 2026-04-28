@@ -226,7 +226,7 @@ export default function DashboardHome() {
           <h3 className="text-[20px] font-semibold mb-4">Explore Categories</h3>
         </div>
         <div id="explore-categories">
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((ser, idx) => {
               const isDisabled = ser.title !== "Transport & Logistics";
               return (

@@ -33,8 +33,7 @@ export default function Sidebar({ open, onClose }) {
 
   const onLogout = async () => {
     try {
-      await handleLogout();
-      setOpen(false);
+      onClose?.();
       setShowLogoutConfirm(false);
       // Add a small delay to ensure stores are cleared before redirect
       setTimeout(() => {

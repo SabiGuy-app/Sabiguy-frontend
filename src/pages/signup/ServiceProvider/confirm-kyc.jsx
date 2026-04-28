@@ -32,6 +32,7 @@ export default function ConfirmKyc({ onNext }) {
         `${import.meta.env.VITE_BASE_URL}/provider/kyc-level`,
         { email: email.trim() }
       );
+          localStorage.setItem("email", email.trim());
 
       if (response.status === 200 || response.status === 201) {
         const token =

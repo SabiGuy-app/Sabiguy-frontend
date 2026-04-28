@@ -1,5 +1,6 @@
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
+import LocationAutocomplete from "../../../../components/LocationAutocomplete";
 import { useState, useEffect } from "react";
 import { Bike } from "lucide-react";
 import Button from "../../../../components/button";
@@ -266,8 +267,7 @@ export default function Bookings() {
     );
   };
 
-
-  const mapBookingToRequest = (booking) => ({    
+  const mapBookingToRequest = (booking) => ({
     id: booking._id,
     title: (
       booking.subCategory?.replace(/_/g, " ") ||
@@ -528,17 +528,27 @@ export default function Bookings() {
                     Enter manually
                   </button>
                 </div>
-                <InputField
-                  name="pickupAddress"
-                  label="Pickup location"
-                  placeholder="24 Palm Avenue, Lagos"
-                  value={formik.values.pickupAddress}
-                  onChange={
-                    pickupMode === "manual" ? formik.handleChange : undefined
-                  }
-                  onBlur={formik.handleBlur}
-                  readOnly={pickupMode === "current"}
-                />
+                {pickupMode === "current" ? (
+                  <InputField
+                    name="pickupAddress"
+                    label="Pickup location"
+                    placeholder="24 Palm Avenue, Lagos"
+                    value={formik.values.pickupAddress}
+                    onBlur={formik.handleBlur}
+                    readOnly
+                  />
+                ) : (
+                  <LocationAutocomplete
+                    name="pickupAddress"
+                    label="Pickup location"
+                    placeholder="24 Palm Avenue, Lagos"
+                    value={formik.values.pickupAddress}
+                    onChange={(value) =>
+                      formik.setFieldValue("pickupAddress", value)
+                    }
+                    onBlur={() => formik.setFieldTouched("pickupAddress", true)}
+                  />
+                )}
                 {formik.touched.pickupAddress &&
                   formik.errors.pickupAddress && (
                     <p className="mt-1 text-sm text-red-600">
@@ -547,13 +557,15 @@ export default function Bookings() {
                   )}
               </div>
               <div>
-                <InputField
+                <LocationAutocomplete
                   name="dropoffAddress"
                   label="Dropoff location"
                   placeholder="24 Palm Avenue, Lagos"
                   value={formik.values.dropoffAddress}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+                  onChange={(value) =>
+                    formik.setFieldValue("dropoffAddress", value)
+                  }
+                  onBlur={() => formik.setFieldTouched("dropoffAddress", true)}
                 />
                 {formik.touched.dropoffAddress &&
                   formik.errors.dropoffAddress && (
