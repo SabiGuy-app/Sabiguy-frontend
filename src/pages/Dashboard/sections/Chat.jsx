@@ -1,323 +1,61 @@
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FiSearch,
   FiBell,
-  FiUser,
   FiSend,
   FiPaperclip,
-  FiPhone,
+  FiWifiOff,
+  FiRefreshCw,
 } from "react-icons/fi";
-import { chatService } from "../../../api/chat";
-import { io } from "socket.io-client";
-import { useAuthStore } from "../../../stores/auth.store";
-import { useSearchParams, useLocation } from "react-router-dom";
-
-const SOCKET_URL = import.meta.env.VITE_WS_URL;
-const CHAT_STATUS_CATEGORY = "active";
+import { useChat } from "../../../hooks/useChat";
+import { formatMessageDate, getInitials } from "../../../utils/chat.utils";
 
 export default function ChatPage() {
-  const [chats, setChats] = useState([]);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [sendingMessage, setSendingMessage] = useState(false);
-  const [socket, setSocket] = useState(null);
-  const [typingStatus, setTypingStatus] = useState({});
-  const messagesEndRef = useRef(null);
-  const hydrated = useAuthStore((state) => state.hydrated);
-  const token = useAuthStore((state) => state.token);
-  const currentUserId = useAuthStore((state) => state.user?.data?._id);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
+  const [message, setMessage] = useState("");
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  // Don't setup socket until store is hydrated
-  useEffect(() => {
-    if (!hydrated) return;
-
-    const newSocket = io(SOCKET_URL, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-    });
-
-    newSocket.on("connect", () => {
-      console.log("✅ Connected to chat server");
-    });
-
-    newSocket.on("connected", (data) => {
-      console.log("✅ Server confirmed connection:", data);
-    });
-
-    newSocket.on("new_message", (data) => {
-      console.log("📬 New message received:", data);
-
-      if (selectedChat && data.bookingId === selectedChat.bookingId._id) {
-        setMessages((prev) => [...prev, data.message]);
-        scrollToBottom();
-      }
-
-      updateChatLastMessage(data.bookingId, data.message);
-    });
-
-    newSocket.on("user_typing", (data) => {
-      console.log("⌨️ User typing:", data);
-      setTypingStatus((prev) => ({
-        ...prev,
-        [data.bookingId]: {
-          isTyping: data.isTyping,
-          username: data.username,
-        },
-      }));
-
-      // Clear typing status after 3 seconds
-      if (data.isTyping) {
-        setTimeout(() => {
-          setTypingStatus((prev) => ({
-            ...prev,
-            [data.bookingId]: { isTyping: false },
-          }));
-        }, 3000);
-      }
-    });
-
-    newSocket.on("message_read", (data) => {
-      console.log("✅ Message read:", data);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === data.messageId ? { ...msg, read: true } : msg,
-        ),
-      );
-    });
-
-    newSocket.on("error", (error) => {
-      console.error("❌ Socket error:", error);
-    });
-
-    setSocket(newSocket);
-
-    return () => {
-      newSocket.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    loadChats();
-  }, []);
-
-  // Handle query parameters to auto-select chat
-  useEffect(() => {
-    const bookingId = searchParams.get("bookingId");
-    const chatId = searchParams.get("chatId");
-    const routeBooking = location.state?.booking || null;
-    const routeOtherParticipant =
-      location.state?.customer ||
-      location.state?.provider ||
-      routeBooking?.userId ||
-      routeBooking?.providerId ||
-      null;
-    const routeBookingId = routeBooking?._id || routeBooking?.id || null;
-    const routeChat = routeBookingId
-      ? {
-          _id: `route-${routeBookingId}`,
-          bookingId: {
-            _id: routeBookingId,
-            serviceType:
-              routeBooking?.serviceType ||
-              routeBooking?.subCategory ||
-              "Service",
-            status: routeBooking?.status || "Active Booking",
-          },
-          otherParticipant: {
-            _id: routeOtherParticipant?._id || null,
-            name:
-              routeOtherParticipant?.fullName ||
-              routeOtherParticipant?.name ||
-              routeOtherParticipant?.email ||
-              routeOtherParticipant?.phoneNumber ||
-              "Other User",
-            avatar:
-              routeOtherParticipant?.profilePicture ||
-              routeOtherParticipant?.avatar ||
-              null,
-            profilePicture:
-              routeOtherParticipant?.profilePicture ||
-              routeOtherParticipant?.avatar ||
-              null,
-          },
-          unreadCount: 0,
-          lastMessage: null,
-          lastMessageTime:
-            routeBooking?.updatedAt || routeBooking?.createdAt || null,
-        }
-      : null;
-
-    if ((bookingId || chatId) && chats.length > 0) {
-      const chat = chats.find(
-        (c) => c.bookingId?._id === bookingId || c._id === chatId,
-      );
-      if (chat) {
-        setSelectedChat(chat);
-        return;
-      }
-    }
-
-    if (bookingId && chats.length > 0) {
-      const bookingChat = chats.find((c) => c.bookingId?._id === bookingId);
-      if (bookingChat) {
-        setSelectedChat(bookingChat);
-        return;
-      }
-    }
-
-    if (routeChat) {
-      setSelectedChat(routeChat);
-    }
-  }, [searchParams, chats, location.state]);
-
-  useEffect(() => {
-    if (selectedChat) {
-      if (!selectedChat.bookingId?._id) return;
-      loadMessages(selectedChat.bookingId._id);
-
-      if (socket) {
-        socket.emit("join_chat", { bookingId: selectedChat.bookingId._id });
-        markAsRead(selectedChat.bookingId._id);
-      }
-    }
-
-    return () => {
-      if (selectedChat?.bookingId?._id && socket) {
-        socket.emit("leave_chat", { bookingId: selectedChat.bookingId._id });
-      }
-    };
-  }, [selectedChat, socket]);
+  const {
+    chats,
+    selectedChat,
+    setSelectedChat,
+    messages,
+    loading,
+    sendingMessage,
+    typingStatus,
+    connectionStatus,
+    handleSendMessage,
+    handleTyping,
+    currentUserId,
+  } = useChat();
 
   // Auto-scroll to bottom
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [messages, typingStatus]);
 
-  // Load all chats
-  const loadChats = async () => {
-    try {
-      setLoading(true);
-      const response = await chatService.getAllChats(1, 20, CHAT_STATUS_CATEGORY);
-      setChats(response.data || []);
-    } catch (error) {
-      console.error("Error loading chats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async (bookingId) => {
-    try {
-      const response = await chatService.getMessages(bookingId, 1, 100);
-      const messagesData = response.data.messages || [];
-      setMessages(messagesData.reverse());
-    } catch (error) {
-      console.error("Error loading messages:", error);
-      setMessages([]);
-    }
-  };
-
-  // Mark messages as read
-  const markAsRead = async (bookingId) => {
-    try {
-      await chatService.markAsRead(bookingId);
-
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.bookingId === bookingId ? { ...chat, unreadCount: 0 } : chat,
-        ),
-      );
-    } catch (error) {
-      console.error("Error marking as read:", error);
-    }
-  };
-
-  // Update chat list with new last message
-  const updateChatLastMessage = (bookingId, newMessage) => {
-    setChats((prev) =>
-      prev.map((chat) => {
-        if (chat.bookingId === bookingId) {
-          return {
-            ...chat,
-            lastMessage: {
-              text: newMessage.message,
-              timestamp: newMessage.createdAt,
-            },
-            lastMessageTime: newMessage.createdAt,
-            unreadCount:
-              selectedChat?.bookingId._id !== bookingId
-                ? (chat.unreadCount || 0) + 1
-                : 0,
-          };
-        }
-        return chat;
-      }),
-    );
-  };
-
-  // Send message
-  const handleSendMessage = async () => {
-    if (!message.trim() || !selectedChat) return;
-
-    const messageText = message.trim();
+  const handleSendMessageClick = async () => {
+    if (!message.trim()) return;
+    const text = message.trim();
     setMessage("");
-
-    try {
-      setSendingMessage(true);
-
-      if (socket && socket.connected) {
-        socket.emit("send_message", {
-          bookingId: selectedChat.bookingId._id,
-          message: messageText,
-          messageType: "text",
-        });
-      } else {
-        const response = await chatService.sendMessage(
-          selectedChat.bookingId._id,
-          {
-            message: messageText,
-            messageType: "text",
-          },
-        );
-
-        setMessages((prev) => [...prev, response.data]);
-        updateChatLastMessage(selectedChat.bookingId._id, response.data);
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setMessage(messageText);
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-
-  // Handle typing indicator
-  const handleTyping = (isTyping) => {
-    if (socket && selectedChat) {
-      socket.emit("typing", {
-        bookingId: selectedChat.bookingId._id,
-        isTyping,
-      });
-    }
+    await handleSendMessage(text);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessageClick();
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // For now, we just log it as attachments are not fully implemented in API
+      console.log("File selected:", file.name);
+      // handleSendMessage("", "image", [file]);
     }
   };
 
@@ -354,28 +92,6 @@ export default function ChatPage() {
     return `${diffDays}d ago`;
   };
 
-  // Format message date
-  const formatMessageDate = (timestamp) => {
-    if (!timestamp) return "";
-    const date = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    date.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    yesterday.setHours(0, 0, 0, 0);
-
-    if (date.getTime() === today.getTime()) return "Today";
-    if (date.getTime() === yesterday.getTime()) return "Yesterday";
-
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   // Group messages by date
   const groupedMessages = messages.reduce((acc, msg) => {
     const dateKey = formatMessageDate(msg.createdAt);
@@ -386,22 +102,11 @@ export default function ChatPage() {
     return acc;
   }, {});
 
-  // Get initials
-  const getInitials = (name) => {
-    if (!name) return "?";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <DashboardLayout>
-      <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] bg-gray-50 overflow-hidden">
         {/* Sidebar - Chat List */}
-        <div className="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col md:max-h-screen">
+        <div className="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col h-1/3 md:h-full">
           {/* Chats Header */}
           <div className="px-4 py-3 border-b border-gray-200">
             <h2 className="font-semibold text-gray-800">Chats</h2>
@@ -485,7 +190,26 @@ export default function ChatPage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="w-full md:flex-1 flex flex-col md:max-h-screen">
+        <div className="w-full md:flex-1 flex flex-col h-2/3 md:h-full relative">
+          {/* Connection Status Banner */}
+          {connectionStatus !== "connected" && (
+            <div className={`absolute top-0 left-0 right-0 z-10 px-4 py-1.5 text-center text-xs font-medium flex items-center justify-center gap-2 transition-all duration-300 ${
+              connectionStatus === "reconnecting" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"
+            }`}>
+              {connectionStatus === "reconnecting" ? (
+                <>
+                  <FiRefreshCw className="animate-spin" size={12} />
+                  Connecting to chat server...
+                </>
+              ) : (
+                <>
+                  <FiWifiOff size={12} />
+                  Disconnected. Please check your internet.
+                </>
+              )}
+            </div>
+          )}
+
           {selectedChat ? (
             <>
               {/* Chat Header */}
@@ -493,9 +217,9 @@ export default function ChatPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-[#8BC53F] rounded-full flex items-center justify-center text-white font-semibold">
-                      {selectedChat.otherParticipant?.avatar ? (
+                      {selectedChat.otherParticipant?.avatar || selectedChat.otherParticipant?.profilePicture ? (
                         <img
-                          src={selectedChat.otherParticipant.profilePicture}
+                          src={selectedChat.otherParticipant.profilePicture || selectedChat.otherParticipant.avatar}
                           alt=""
                           className="w-full h-full rounded-full object-cover"
                         />
@@ -511,21 +235,6 @@ export default function ChatPage() {
                         {selectedChat.bookingId?.serviceType || "Service"}
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    {/* <button className="text-gray-600 hover:text-gray-800">
-                            <span className="text-sm p-2 bg-[#005823]/10 rounded">
-                              View Profile
-                            </span>
-                          </button> */}
-                    {/* <button className="text-gray-600 hover:text-gray-800">
-                            <span className="text-sm text-[#005823] border border-gray-300 p-2 rounded">
-                              {selectedChat.bookingId?.status || "Active Booking"}
-                            </span>
-                          </button> */}
-                    {/* <button className="text-gray-600 hover:text-gray-800">
-                            <FiPhone size={20} />
-                          </button> */}
                   </div>
                 </div>
               </div>
@@ -552,6 +261,7 @@ export default function ChatPage() {
                           {msgs.map((msg) => {
                             const isCurrentUser =
                               msg.senderId?.toString() === currentUserId;
+                            const isSending = msg.status === "sending";
 
                             return (
                               <div
@@ -562,7 +272,7 @@ export default function ChatPage() {
                                     : "justify-start"
                                 }`}
                               >
-                                <div className="flex items-end gap-2 max-w-xs">
+                                <div className={`flex items-end gap-2 max-w-xs ${isSending ? "opacity-70" : ""}`}>
                                   {!isCurrentUser && (
                                     <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                                       {getInitials(
@@ -572,7 +282,7 @@ export default function ChatPage() {
                                   )}
                                   <div>
                                     <div
-                                      className={`px-4 py-3 rounded-2xl shadow-sm transition-all ${
+                                      className={`px-4 py-3 rounded-2xl shadow-sm transition-all relative ${
                                         isCurrentUser
                                           ? "bg-[#8BC53F] text-white rounded-br-none"
                                           : "bg-white text-gray-800 rounded-bl-none border border-gray-200"
@@ -581,13 +291,18 @@ export default function ChatPage() {
                                       <p className="text-sm break-words">
                                         {msg.message}
                                       </p>
+                                      {isSending && (
+                                        <div className="absolute -bottom-4 right-0 text-[10px] text-gray-400 italic">
+                                          Sending...
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="flex items-center gap-1 px-2 mt-1">
                                       <span className="text-xs text-gray-500">
                                         {formatTime(msg.createdAt)}
                                       </span>
-                                      {isCurrentUser && msg.read && (
-                                        <span className="text-xs text-blue-500">
+                                      {isCurrentUser && !isSending && (
+                                        <span className={`text-xs ${msg.read ? "text-blue-500" : "text-gray-400"}`}>
                                           ✓✓
                                         </span>
                                       )}
@@ -603,7 +318,7 @@ export default function ChatPage() {
                   )}
 
                   {/* Typing indicator */}
-                  {typingStatus[selectedChat?.bookingId._id]?.isTyping && (
+                  {typingStatus[selectedChat?.bookingId?._id]?.isTyping && (
                     <div className="flex items-end gap-2 justify-start">
                       <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs font-semibold">
                         {getInitials(selectedChat.otherParticipant?.name)}
@@ -631,7 +346,16 @@ export default function ChatPage() {
               {/* Message Input */}
               <div className="bg-white border-t border-gray-200 px-6 py-4 shadow-lg">
                 <div className="flex items-center gap-3">
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
                     <FiPaperclip size={20} />
                   </button>
                   <input
@@ -648,7 +372,7 @@ export default function ChatPage() {
                     className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent disabled:bg-gray-100 transition-all"
                   />
                   <button
-                    onClick={handleSendMessage}
+                    onClick={handleSendMessageClick}
                     disabled={!message.trim() || sendingMessage}
                     className="w-10 h-10 bg-[#8BC53F] rounded-full flex items-center justify-center text-white hover:bg-[#7ab037] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 shadow-md hover:shadow-lg"
                   >
