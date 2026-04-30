@@ -21,7 +21,16 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
 
   const handleMessageProvider = () => {
     if (!bookingId) return;
-    navigate(`/dashboard/chat?bookingId=${bookingId}`);
+    navigate(`/dashboard/chat?bookingId=${bookingId}`, {
+      state: {
+        booking: request,
+        provider: {
+          _id: request?.providerId || request?.provider?._id || null,
+          fullName: request?.providerName,
+          profilePicture: request?.providerImage,
+        },
+      },
+    });
   };
 
   return (

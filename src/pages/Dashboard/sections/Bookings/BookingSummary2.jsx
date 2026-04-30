@@ -454,7 +454,17 @@ export default function BookingSummary2() {
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
                 </button> */}
-                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => {
+                    if (!bookingDetails?._id) return;
+                    navigate(`/dashboard/chat?bookingId=${bookingDetails._id}`, {
+                      state: {
+                        booking: bookingDetails,
+                        provider: providerDetails,
+                      }
+                    });
+                  }}
+                  className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <MessageCircle className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Message</span>
                 </button>

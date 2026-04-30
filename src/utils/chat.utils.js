@@ -3,7 +3,6 @@
  * Both Customer and Provider should see the message button at these stages.
  */
 export const MESSAGING_ALLOWED_STATUSES = [
-  "provider_selected",
   "paid_escrow",
   "in_progress",
   "enroute_to_pickup",
@@ -62,4 +61,34 @@ export const getInitials = (name) => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+};
+
+/**
+ * Format a timestamp to a localized time string (e.g. "2:30 PM")
+ */
+export const formatTime = (timestamp) => {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+/**
+ * Format a timestamp to a relative time string (e.g. "5m ago", "2h ago")
+ */
+export const formatRelativeTime = (timestamp) => {
+  if (!timestamp) return "";
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
 };
