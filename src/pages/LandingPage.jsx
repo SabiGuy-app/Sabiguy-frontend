@@ -22,6 +22,7 @@ import {
   float,
   pulse,
 } from "../utils/animations";
+import { useNavigate } from "react-router-dom";
 
 // Animated Counter Component
 const AnimatedCounter = ({ from = 0, to, duration = 2 }) => {
@@ -70,6 +71,7 @@ const LandingPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const deviceType = useDeviceType();
+  const navigate = useNavigate();
 
   const goTo = (index) => {
     setCurrent(((index % slides.length) + slides.length) % slides.length);
@@ -181,7 +183,7 @@ const LandingPage = () => {
             <motion.a
               whileTap={{ scale: 0.95 }}
               href="/welcome"
-             className="bg-[#4F8461] text-white w-full px-6 py-2.5 rounded-full font-medium text-sm flex items-center justify-center"
+              className="bg-[#4F8461] text-white text-center w-full px-6 py-2.5 rounded-full font-medium text-sm"
             >
               Sign up
             </motion.a>
@@ -328,7 +330,11 @@ const LandingPage = () => {
                 transition={{ duration: 0.5 }}
                 className="text-2xl md:text-3xl lg:text-4xl font-bold text-black mb-1 md:mb-2"
               >
-                <AnimatedCounter from={0} to={parseInt(stat.number)} duration={2} />
+                <AnimatedCounter
+                  from={0}
+                  to={parseInt(stat.number)}
+                  duration={2}
+                />
               </motion.div>
               <div className="text-xs md:text-sm lg:text-base font-semibold tracking-wide text-black uppercase">
                 {stat.label}
@@ -370,7 +376,9 @@ const LandingPage = () => {
                 key={index}
                 variants={fadeInUp}
                 className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center ${
-                  service.imgSide === "left" ? "md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1" : ""
+                  service.imgSide === "left"
+                    ? "md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1"
+                    : ""
                 }`}
               >
                 <motion.div
@@ -425,6 +433,7 @@ const LandingPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate(service.link)}
                     className="bg-[#005823CC] hover:bg-green-700 text-white text-sm md:text-base font-bold px-4 md:px-5 py-2 md:py-3 rounded transition-colors w-full sm:w-auto"
                   >
                     {service.cta}
@@ -506,7 +515,7 @@ const LandingPage = () => {
       {/* Carousel Section - Responsive */}
       <section className="py-12 md:py-16 bg-white">
         <div className="w-full max-w-7xl mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-6">
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -527,7 +536,7 @@ const LandingPage = () => {
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className="flex items-center justify-end gap-2 hidden md:flex"
+              className="hidden md:flex items-center justify-end gap-2"
             >
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -559,7 +568,9 @@ const LandingPage = () => {
                 <motion.div
                   key={i}
                   className="relative flex-shrink-0 w-full"
-                  style={{ minHeight: deviceType === "mobile" ? "300px" : "400px" }}
+                  style={{
+                    minHeight: deviceType === "mobile" ? "220px" : "400px",
+                  }}
                   whileHover={deviceType !== "mobile" ? { scale: 1.02 } : {}}
                 >
                   <img
@@ -577,24 +588,42 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex justify-center gap-2 mt-4 md:mt-5"
+            className="flex items-center justify-center gap-3 mt-4 md:mt-5"
           >
-            {slides.map((_, i) => (
-              <motion.button
-                key={i}
-                whileHover={{ scale: 1.2 }}
-                onClick={() => goTo(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === current ? "w-6 bg-green-600" : "w-1.5 bg-gray-300"
-                }`}
-              />
-            ))}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={prev}
+              className="md:hidden w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors flex-shrink-0"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </motion.button>
+
+            <div className="flex items-center gap-2">
+              {slides.map((_, i) => (
+                <motion.button
+                  key={i}
+                  whileHover={{ scale: 1.2 }}
+                  onClick={() => goTo(i)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === current ? "w-6 bg-green-600" : "w-1.5 bg-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Mobile-only next button */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={next}
+              className="md:hidden w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors flex-shrink-0"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </motion.button>
           </motion.div>
         </div>
       </section>
-
-      {/* Rest of the sections follow similar responsive patterns... */}
-      {/* Keeping the existing FAQ and other sections with responsive updates */}
 
       {/* FAQ Section - Responsive */}
       <section className="w-full max-w-7xl mx-auto px-4 md:px-6 my-12 md:my-20">
@@ -664,7 +693,6 @@ const LandingPage = () => {
 
 export default LandingPage;
 
-// ...existing data arrays...
 const slides = [
   { imgSrc: "/home/slider1.png" },
   { imgSrc: "/home/slider2.png" },
@@ -687,6 +715,7 @@ const services = [
     cta: "Send a Package Now",
     imgSide: "right",
     imgSrc: "/home/logistics.png",
+    link: "/service-provider/signup",
   },
   {
     title: "Quick Errands",
@@ -702,6 +731,7 @@ const services = [
     cta: "Send a SabiGuy on Errand",
     imgSide: "left",
     imgSrc: "/home/errand.png",
+    link: "/signup",
   },
   {
     title: "Home Services",
@@ -717,6 +747,7 @@ const services = [
     cta: "Find a SabiGuy Now",
     imgSide: "right",
     imgSrc: "/home/home.png",
+    link: "/signup",
   },
   {
     title: "Business Deliveries",
@@ -731,6 +762,7 @@ const services = [
     cta: "Get a SabiGuy",
     imgSide: "left",
     imgSrc: "/home/business.png",
+    link: "/signup",
   },
 ];
 

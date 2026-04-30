@@ -35,13 +35,15 @@ export default function Sidebar({ open, onClose }) {
     try {
       onClose?.();
       setShowLogoutConfirm(false);
-      navigate("/", { replace: true });
-      await handleLogout();
+      // Add a small delay to ensure stores are cleared before redirect
+      setTimeout(() => {
+        navigate("/login");
+      }, 100);
     } catch (error) {
       console.error("Logout failed:", error);
       // Still redirect even if logout has errors
-      onClose?.();
-      navigate("/", { replace: true });
+      onClose();
+      navigate("/login");
     }
   };
 

@@ -47,7 +47,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
         <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
           <div className="space-y-6">
             <div className="shadow-sm p-6 rounded-[16px] space-y-6">
-              <div className="flex justify-between lg:flex-row lg:items-start gap-4 lg:gap-6">
+              <div className="md:flex justify-between lg:flex-row lg:items-start gap-4 lg:gap-6">
                 <div className="flex gap-6">
                   <img
                     src={
@@ -122,7 +122,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {/* <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
