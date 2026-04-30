@@ -118,19 +118,19 @@ export default function ProviderDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <DashboardCard
           title="Total Revenue"
-          amount={formatCurrency(totalRevenue)}
+          amount={isLoading ? "Loading..." : formatCurrency(totalRevenue)}
           icon={<Wallet size={20} />}
         />
 
         <DashboardCard
           title="Active Jobs"
-          amount={activeJobs.toString()}
+          amount={isLoading ? "Loading..." : activeJobs.toString()}
           icon={<Bookmark size={20} />}
         />
 
         <DashboardCard
           title="Completed Jobs"
-          amount={completedJobs.toString()}
+          amount={isLoading ? "Loading..." : completedJobs.toString()}
           icon={<CheckCircle size={20} />}
         />
       </div>
