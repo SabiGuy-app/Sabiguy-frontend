@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  FiCopy,
-  FiArrowUpRight,
-} from "react-icons/fi";
+import { FiCopy, FiArrowUpRight } from "react-icons/fi";
 import { getWalletBalance, formatCurrency } from "../../api/provider";
 import WithdrawFundsModal from "./WithdrawFundModal";
 
@@ -50,10 +47,13 @@ export default function WalletCard() {
             <FiCopy size={16} />
           </button>
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">{formatCurrency(balance)}</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          {isLoading ? "Loading..." : formatCurrency(balance)}
+        </h2>
         <button
           onClick={() => setIsWithdrawOpen(true)}
-          className="w-full px-4 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors flex items-center justify-center gap-2"
+          disabled={isLoading}
+          className="w-full px-4 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <FiArrowUpRight size={18} />
           Withdraw
@@ -63,11 +63,19 @@ export default function WalletCard() {
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
         <div>
           <p className="text-xs text-gray-600 mb-1">Total Withdrawn</p>
-          <p className="text-lg font-semibold text-gray-900">{formatCurrency(walletData?.totalWithdrawals || 0)}</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {isLoading
+              ? "Loading..."
+              : formatCurrency(walletData?.totalWithdrawals || 0)}
+          </p>
         </div>
         <div>
           <p className="text-xs text-gray-600 mb-1">Pending Earnings</p>
-          <p className="text-lg font-semibold text-gray-900">{formatCurrency(walletData?.pending || 0)}</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {isLoading
+              ? "Loading..."
+              : formatCurrency(walletData?.pending || 0)}
+          </p>
         </div>
       </div>
 
