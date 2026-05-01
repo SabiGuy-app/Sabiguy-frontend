@@ -28,12 +28,19 @@ export const useChat = () => {
 
   // Fix 2.1 / 2.2: Refs to always access latest values in socket callbacks
   const selectedChatRef = useRef(selectedChat);
+  const messagesRef = useRef(messages);
   const updateChatLastMessageRef = useRef(null);
+  const loadChatsRef = useRef(null);
+  const loadMessagesRef = useRef(null);
 
-  // Keep selectedChatRef in sync
+  // Keep refs in sync
   useEffect(() => {
     selectedChatRef.current = selectedChat;
   }, [selectedChat]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     isMounted.current = true;
@@ -72,46 +79,7 @@ export const useChat = () => {
       if (isMounted.current) setConnectionStatus("failed");
     };
 
-    const onNewMessage = (data) => {
-      console.log("📩 New message received:", data);
-      if (!isMounted.current) return;
-      
-      const incomingMsg = data.message || data;
-      const bookingId = data.bookingId || data.booking_id || incomingMsg.bookingId;
-      const incomingSenderId = incomingMsg.senderId?._id || incomingMsg.senderId;
 
-      setMessages((prev) => {
-        const isDuplicate = prev.some(m => m._id === incomingMsg._id);
-        if (isDuplicate) return prev;
-
-        // Match by text and sender ID (handling both string and object)
-        const sendingIdx = prev.findLastIndex(m => {
-          const mSenderId = m.senderId?._id || m.senderId;
-          return m.status === "sending" && 
-                 m.message === incomingMsg.message && 
-                 String(mSenderId) === String(incomingSenderId);
-        });
-
-        if (sendingIdx !== -1) {
-          const newMsgs = [...prev];
-          newMsgs[sendingIdx] = { ...incomingMsg, status: "sent" };
-          return newMsgs;
-        }
-
-        // Fix 2.1: Read from ref, not stale closure
-        const current = selectedChatRef.current;
-        const currentBookingId = current?.bookingId?._id || current?.bookingId;
-        if (String(currentBookingId) === String(bookingId)) {
-          return [...prev, incomingMsg];
-        }
-        return prev;
-      });
-
-      // Fix 2.2: Call via ref
-      if (bookingId && updateChatLastMessageRef.current) {
-        updateChatLastMessageRef.current(bookingId, incomingMsg);
-      }
-    };
 
     const onUserTyping = (data) => {
       if (!isMounted.current) return;
@@ -156,7 +124,26 @@ export const useChat = () => {
     newSocket.on("disconnect", onDisconnect);
     newSocket.on("connect_error", onConnectError);
     newSocket.on("reconnect_failed", onReconnectFailed);
-    newSocket.on("new_message", onNewMessage);
+    const onNewNotification = (notification) => {
+      if (!isMounted.current) return;
+      if (notification?.type === "new_message" || notification?.type === "message_received") {
+        const notifBookingId = notification.data?.bookingId || notification.bookingId;
+        const current = selectedChatRef.current;
+        const currentBookingId = current?.bookingId?._id || current?.bookingId;
+
+        if (String(currentBookingId) === String(notifBookingId)) {
+          if (typeof loadMessagesRef.current === "function") {
+            loadMessagesRef.current(notifBookingId);
+          }
+        } else {
+          if (typeof loadChatsRef.current === "function") {
+            loadChatsRef.current();
+          }
+        }
+      }
+    };
+
+    newSocket.on("new_notification", onNewNotification);
     newSocket.on("user_typing", onUserTyping);
     newSocket.on("message_read", onMessageRead);
     newSocket.on("error", onSocketError);
@@ -174,7 +161,7 @@ export const useChat = () => {
       newSocket.off("disconnect", onDisconnect);
       newSocket.off("connect_error", onConnectError);
       newSocket.off("reconnect_failed", onReconnectFailed);
-      newSocket.off("new_message", onNewMessage);
+      newSocket.off("new_notification", onNewNotification);
       newSocket.off("user_typing", onUserTyping);
       newSocket.off("message_read", onMessageRead);
       newSocket.off("error", onSocketError);
@@ -246,12 +233,21 @@ export const useChat = () => {
     updateChatLastMessageRef.current = updateChatLastMessage;
   }, [updateChatLastMessage]);
 
+  useEffect(() => {
+    loadChatsRef.current = loadChats;
+  }, [loadChats]);
+
   // 4. Message Loading — Fix 3.1: separate messagesLoading state
   const loadMessages = useCallback(async (bookingId) => {
     if (!bookingId) return;
     try {
       if (isMounted.current) {
-        setMessagesLoading(true);
+        // Only show full-screen loader if we don't already have messages for THIS chat
+        const currentSelectedId = selectedChatRef.current?.bookingId?._id || selectedChatRef.current?.bookingId;
+        
+        if (String(currentSelectedId) !== String(bookingId) || messagesRef.current.length === 0) {
+          setMessagesLoading(true);
+        }
         setMessagesPage(1);
       }
       const response = await chatService.getMessages(bookingId, 1, 50);
@@ -290,6 +286,10 @@ export const useChat = () => {
       if (isMounted.current) setMessagesLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    loadMessagesRef.current = loadMessages;
+  }, [loadMessages]);
 
   // Load More Messages function
   const loadMoreMessages = useCallback(async () => {
@@ -476,42 +476,18 @@ export const useChat = () => {
     try {
       if (isMounted.current) setSendingMessage(true);
 
-      if (socket && socket.connected) {
-        console.log("📤 Sending socket message:", { bookingId, text });
-        socket.emit("send_message", {
-          bookingId,
-          message: text,
-          messageType: type,
-          attachments,
-          senderId: currentUserId, // Include senderId explicitly
-        });
-
-        // Fix 4.4: Timeout — if no acknowledgment within 10s, mark as error
-        setTimeout(() => {
-          if (isMounted.current) {
-            setMessages((prev) =>
-              prev.map(msg =>
-                msg._id === tempId && msg.status === "sending"
-                  ? { ...msg, status: "error" }
-                  : msg
-              )
-            );
-          }
-        }, 10000);
-      } else {
-        const response = await chatService.sendMessage(bookingId, {
-          message: text,
-          messageType: type,
-          attachments,
-        });
-        
-        if (isMounted.current) {
-          const sentMsg = response.data?.data || response.data?.message || response.data || response;
-          setMessages((prev) => 
-            prev.map(msg => msg._id === tempId ? { ...sentMsg, status: "sent" } : msg)
-          );
-          updateChatLastMessage(bookingId, sentMsg);
-        }
+      const response = await chatService.sendMessage(bookingId, {
+        message: text,
+        messageType: type,
+        attachments,
+      });
+      
+      if (isMounted.current) {
+        const sentMsg = response.data?.data || response.data?.message || response.data || response;
+        setMessages((prev) => 
+          prev.map(msg => msg._id === tempId ? { ...sentMsg, status: "sent" } : msg)
+        );
+        updateChatLastMessage(bookingId, sentMsg);
       }
     } catch (err) {
       console.error("Error sending message:", err);

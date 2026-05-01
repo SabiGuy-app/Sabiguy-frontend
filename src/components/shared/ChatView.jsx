@@ -339,7 +339,7 @@ export default function ChatView({ emptyStateText }) {
                                     </span>
                                     {isCurrentUser && !isSending && !isError && (
                                       <span className={`text-xs ${isRead ? "text-blue-500" : "text-gray-400"}`}>
-                                        ✓✓
+                                        {isRead ? "✓✓" : "✓"}
                                       </span>
                                     )}
                                   </div>

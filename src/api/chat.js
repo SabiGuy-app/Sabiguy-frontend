@@ -2,9 +2,9 @@ import api from "./axios";
 
 export const chatService = {
   // Get all chats
-  getAllChats: async (page = 1, limit = 20, statusCategory = "active") => {
+  getAllChats: async (page = 1, limit = 20) => {
     const response = await api.get("/chats", {
-      params: { page, limit, statusCategory },
+      params: { page, limit },
     });
     return response.data;
   },
