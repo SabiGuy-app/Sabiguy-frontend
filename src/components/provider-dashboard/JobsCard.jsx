@@ -1,5 +1,6 @@
 import { Calendar, MapPin, Clock, Star, MessageCircle, Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { canMessage } from "../../utils/chat.utils";
 
 // Reusable Request Card Component
 export default function JobsCard({
@@ -86,13 +87,7 @@ export default function JobsCard({
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_");
-  const shouldShowMessageButton = [
-    "paid_escrow",
-    "in_progress",
-    "arrived_at_pickup",
-    "enroute_to_dropoff",
-    "arrived_at_dropoff",
-  ].includes(bookingStatus);
+  const shouldShowMessageButton = canMessage(bookingStatus);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">

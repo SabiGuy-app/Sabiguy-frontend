@@ -7,7 +7,7 @@ import NotificationToast from "../NotificationToast";
 import { useAuthStore } from "../../stores/auth.store";
 import locationService from "../../services/locationService";
 import notificationSoundService from "../../services/notificationSoundService";
-import { io } from "socket.io-client";
+import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import { notificationService } from "../../api/notifications";
 import { toggleAvailability as apiToggleAvailability } from "../../api/provider";
 
@@ -145,43 +145,48 @@ export default function ProviderNavbar({ onMenuClick }) {
     );
   };
 
-  // Initialize socket connection
+  // Initialize socket connection — Fix 2.4/2.5: use shared socket manager
   useEffect(() => {
     // Initialize sound service
     notificationSoundService.init();
 
-    const token = localStorage.getItem("token");
+    // Fix 2.5: Read token from Zustand store instead of localStorage
+    const token = useAuthStore.getState().token;
     if (!token) return;
 
-    const newSocket = io(
-      import.meta.env.VITE_WS_URL || "http://localhost:3000",
-      {
-        auth: { token },
-        transports: ["websocket", "polling"],
-      },
-    );
+    // Fix 2.4: Use shared socket instead of creating a new one
+    const newSocket = getSharedSocket();
+    if (!newSocket) return;
 
-    newSocket.on("connect", () => {
-      console.log("âœ… Provider socket connected");
-    });
+    const onConnect = () => {
+      console.log("✅ Provider socket connected");
+    };
 
-    newSocket.on("connect_error", (error) => {
-      console.error("âŒ Socket connection error:", error);
-    });
+    const onConnectError = (error) => {
+      console.error("❌ Socket connection error:", error);
+    };
 
     // Listen for new notifications via socket
-    newSocket.on("new_notification", (notification) => {
-      console.log("ðŸ“¬ New notification received:", notification);
+    const onNewNotification = (notification) => {
+      console.log("📬 New notification received:", notification);
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
       showNotificationToast(notification);
-    });
+    };
+
+    newSocket.on("connect", onConnect);
+    newSocket.on("connect_error", onConnectError);
+    newSocket.on("new_notification", onNewNotification);
 
     setSocket(newSocket);
 
+    // Cleanup: remove listeners and release shared socket
     return () => {
       locationService.stopTracking();
-      newSocket.disconnect();
+      newSocket.off("connect", onConnect);
+      newSocket.off("connect_error", onConnectError);
+      newSocket.off("new_notification", onNewNotification);
+      releaseSocket();
     };
   }, []);
 

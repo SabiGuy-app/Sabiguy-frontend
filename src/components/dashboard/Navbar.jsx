@@ -8,7 +8,7 @@ import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
 import { handleLogout } from "../../api/auth";
-import { io } from "socket.io-client";
+import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
 
 export default function Navbar({ onMenuClick }) {
@@ -136,35 +136,32 @@ export default function Navbar({ onMenuClick }) {
       },
     );
   };
-  // Initialize socket connection
+  // Initialize socket connection — Fix 2.4/2.5: use shared socket manager
   useEffect(() => {
     // Initialize sound service
     notificationSoundService.init();
 
-    const token = localStorage.getItem("token");
+    // Fix 2.5: Read token from Zustand store instead of localStorage
+    const token = useAuthStore.getState().token;
     if (!token) return;
 
     // Track seen notification IDs to prevent duplicate toasts
     const seenNotifications = new Set();
 
-    const newSocket = io(
-      import.meta.env.VITE_WS_URL || "http://localhost:3000",
-      {
-        auth: { token },
-        transports: ["websocket", "polling"],
-      },
-    );
+    // Fix 2.4: Use shared socket instead of creating a new one
+    const newSocket = getSharedSocket();
+    if (!newSocket) return;
 
-    newSocket.on("connect", () => {
+    const onConnect = () => {
       console.log("✅ User socket connected");
-    });
+    };
 
-    newSocket.on("connect_error", (error) => {
+    const onConnectError = (error) => {
       console.error("❌ Socket connection error:", error);
-    });
+    };
 
     // Listen for new notifications via socket
-    newSocket.on("new_notification", (notification) => {
+    const onNewNotification = (notification) => {
       const notifId = notification._id || notification.id;
 
       // Skip if we already showed a toast for this notification
@@ -179,14 +176,21 @@ export default function Navbar({ onMenuClick }) {
       setUnreadCount((prev) => prev + 1);
       // Show toast with sound
       showNotificationToast(notification);
-    });
+    };
+
+    newSocket.on("connect", onConnect);
+    newSocket.on("connect_error", onConnectError);
+    newSocket.on("new_notification", onNewNotification);
 
     setSocket(newSocket);
 
-    // Cleanup: disconnect socket on unmount to prevent duplicates
+    // Cleanup: remove listeners and release shared socket
     return () => {
       userLocationService.stopTracking();
-      newSocket.disconnect();
+      newSocket.off("connect", onConnect);
+      newSocket.off("connect_error", onConnectError);
+      newSocket.off("new_notification", onNewNotification);
+      releaseSocket();
     };
   }, []);
 

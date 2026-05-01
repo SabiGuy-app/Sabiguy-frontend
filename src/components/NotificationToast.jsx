@@ -40,7 +40,7 @@ export default function NotificationToast({ notification, onClose, onClick }) {
     <div
       onClick={onClick}
       className={`
-        rounded-2xl shadow-2xl border p-4 max-w-sm w-full cursor-pointer
+        relative overflow-hidden rounded-2xl shadow-2xl border p-4 max-w-sm w-full cursor-pointer
         hover:shadow-3xl transition-all duration-300 
         transform hover:scale-105 animate-slideInDown
         ${getBackgroundColor(notification.type)}

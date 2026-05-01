@@ -264,7 +264,12 @@ export default function TrackRider() {
 
   const handleMessageProvider = () => {
     if (!bookingId) return;
-    navigate(`/dashboard/chat?bookingId=${bookingId}`);
+    navigate(`/dashboard/chat?bookingId=${bookingId}`, {
+      state: {
+        booking: bookingDetails,
+        provider: providerDetails,
+      },
+    });
   };
 
   return (

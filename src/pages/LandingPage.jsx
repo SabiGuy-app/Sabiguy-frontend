@@ -23,6 +23,8 @@ import {
   pulse,
 } from "../utils/animations";
 import { useNavigate } from "react-router-dom";
+import OptimizedImage from "../components/common/OptimizedImage";
+
 
 // Animated Counter Component
 const AnimatedCounter = ({ from = 0, to, duration = 2 }) => {
@@ -112,7 +114,7 @@ const LandingPage = () => {
       >
         <div className="w-full px-4 md:px-6 flex items-center justify-between max-w-7xl mx-auto">
           <motion.div whileHover={{ scale: 1.05 }} className="flex-shrink-0">
-            <img src="/logo.jpg" alt="SabiGuy" className="h-8 md:h-9 w-auto" />
+            <OptimizedImage src="/logo.jpg" alt="SabiGuy" className="h-8 md:h-9 w-auto" priority={true} />
           </motion.div>
 
           {/* Desktop Menu */}
@@ -285,12 +287,13 @@ const LandingPage = () => {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="w-full md:w-[50%] relative flex justify-center"
           >
-            <img
+            <OptimizedImage
               src="/home/hero.png"
               alt="SabiGuy Service Provider"
               className="w-full max-w-md md:max-w-full object-contain"
-              loading="lazy"
+              priority={true}
             />
+
           </motion.div>
         </div>
       </section>
@@ -450,12 +453,12 @@ const LandingPage = () => {
                   viewport={{ once: true }}
                   whileHover={{ y: -10 }}
                 >
-                  <img
+                  <OptimizedImage
                     src={service.imgSrc}
                     alt={service.title}
                     className="w-full h-auto md:h-80 lg:h-96 object-cover rounded-lg md:rounded-2xl"
-                    loading="lazy"
                   />
+
                 </motion.div>
               </motion.div>
             ))}
@@ -496,7 +499,8 @@ const LandingPage = () => {
                 className="p-4 md:p-6 border-2 border-gray-200 rounded-lg md:rounded-xl hover:bg-[#F0FDF4] transition-colors"
               >
                 <div className="w-6 h-6 md:w-8 md:h-8 bg-[#31784D] rounded flex items-center justify-center mb-3 md:mb-5">
-                  <img src={step.image} className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                  <OptimizedImage src={step.image} className="w-3.5 h-3.5 md:w-5 md:h-5" />
+
                 </div>
 
                 <h4 className="text-base md:text-lg font-bold text-[#2A3349] mb-1 md:mb-2 leading-snug">
@@ -573,12 +577,12 @@ const LandingPage = () => {
                   }}
                   whileHover={deviceType !== "mobile" ? { scale: 1.02 } : {}}
                 >
-                  <img
+                  <OptimizedImage
                     src={slide.imgSrc}
                     alt={`Slide ${i}`}
                     className="w-full h-full object-cover"
-                    loading="lazy"
                   />
+
                 </motion.div>
               ))}
             </motion.div>
