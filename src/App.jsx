@@ -9,55 +9,60 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { useServiceWorker } from "./hooks/useServiceWorker";
-import Welcome from "./pages/signup/welcome";
-import Congrats from "./pages/signup/ServiceProvider/congrats";
-import ForgotPassword from "./pages/Forgot-Password/ForgotPassword";
-import OtpInput from "./pages/Forgot-Password/OtpInput";
-import ResetPassword from "./pages/Forgot-Password/ResetPassword";
-import Success from "./pages/Forgot-Password/success";
-import SignupPage from "./pages/signup/ServiceUser";
-import SignupForm from "./pages/signup/ServiceProvider";
-import Login from "./pages/login/Login";
-import DashboardHome from "./pages/Dashboard/sections/Homepage";
-import Bookings from "./pages/Dashboard/sections/Bookings/Bookings";
-import SavedProfile from "./pages/Dashboard/sections/SavedProfile";
-import ChatPage from "./pages/Dashboard/sections/Chat";
-import ActivityPage from "./pages/Dashboard/sections/Activity";
-import ProfilePage from "./pages/Dashboard/sections/Settings";
-import ContactPage from "./pages/Dashboard/sections/Help";
-import Categories from "./pages/Dashboard/sections/Categories";
-import DynamicServicePage from "./pages/Dashboard/Services/pages/ServicePage";
-import AmbulanceServices from "./pages/Dashboard/Services/pages/AmbulanceServices";
-import ProviderDetails from "./pages/Dashboard/sections/ProviderDetails";
-import ProviderDashboard from "./pages/ProviderDashboard/sections/Homepage";
-import HireAlerts from "./pages/ProviderDashboard/sections/HireAlerts/HireAlerts";
-import StartNavigation from "./pages/ProviderDashboard/sections/HireAlerts/StartNavigation";
-import TrackDelivery from "./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery";
-import ProviderProfilePage from "./pages/ProviderDashboard/sections/Settings";
-import Notifications from "./pages/ProviderDashboard/sections/Notification";
-import SearchingLoader from "./components/dashboard/Searching";
-import AvailableProviders from "./pages/Dashboard/sections/Bookings/AvailableProviders";
-import BookingSummary from "./pages/Dashboard/sections/Bookings/BookingSummary";
-import PickupLocation from "./pages/Dashboard/sections/Bookings/PickupLocation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ProviderHelp from "./pages/ProviderDashboard/sections/ProviderHelp";
-import ProviderActivity from "./pages/ProviderDashboard/sections/ProviderActivity";
-import ProviderChat from "./pages/ProviderDashboard/sections/ProviderChat";
-import WalletCallback from "./pages/WalletCallback";
-import VehicleType from "./pages/Dashboard/sections/Bookings/VehicleType";
-import AvailableRiders from "./pages/Dashboard/sections/Bookings/AvailableRiders";
-import BookingSummary2 from "./pages/Dashboard/sections/Bookings/BookingSummary2";
-import TrackRider from "./pages/Dashboard/sections/Bookings/TrackRider";
-import LandingPage from "./pages/LandingPage";
-import ProtectedRoute from "./components/routes/ProtectedRoute";
-import Unauthorized from "./pages/Unauthorized";
-import NotVerified from "./pages/signup/ServiceProvider/kyc-not-verified";
+
 import NotificationSoundService from "./services/notificationSoundService";
-import NotificationTest from "./services/testNotify";
 import { listenForMessages } from "./services/fcmService";
+import Loader from "./components/Loader";
+
+// Lazy-loaded components
+const Welcome = lazy(() => import("./pages/signup/welcome"));
+const Congrats = lazy(() => import("./pages/signup/ServiceProvider/congrats"));
+const ForgotPassword = lazy(() => import("./pages/Forgot-Password/ForgotPassword"));
+const OtpInput = lazy(() => import("./pages/Forgot-Password/OtpInput"));
+const ResetPassword = lazy(() => import("./pages/Forgot-Password/ResetPassword"));
+const Success = lazy(() => import("./pages/Forgot-Password/success"));
+const SignupPage = lazy(() => import("./pages/signup/ServiceUser"));
+const SignupForm = lazy(() => import("./pages/signup/ServiceProvider"));
+const Login = lazy(() => import("./pages/login/Login"));
+const DashboardHome = lazy(() => import("./pages/Dashboard/sections/Homepage"));
+const Bookings = lazy(() => import("./pages/Dashboard/sections/Bookings/Bookings"));
+const SavedProfile = lazy(() => import("./pages/Dashboard/sections/SavedProfile"));
+const ChatPage = lazy(() => import("./pages/Dashboard/sections/Chat"));
+const ActivityPage = lazy(() => import("./pages/Dashboard/sections/Activity"));
+const ProfilePage = lazy(() => import("./pages/Dashboard/sections/Settings"));
+const ContactPage = lazy(() => import("./pages/Dashboard/sections/Help"));
+const Categories = lazy(() => import("./pages/Dashboard/sections/Categories"));
+const DynamicServicePage = lazy(() => import("./pages/Dashboard/Services/pages/ServicePage"));
+const AmbulanceServices = lazy(() => import("./pages/Dashboard/Services/pages/AmbulanceServices"));
+const ProviderDetails = lazy(() => import("./pages/Dashboard/sections/ProviderDetails"));
+const ProviderDashboard = lazy(() => import("./pages/ProviderDashboard/sections/Homepage"));
+const HireAlerts = lazy(() => import("./pages/ProviderDashboard/sections/HireAlerts/HireAlerts"));
+const StartNavigation = lazy(() => import("./pages/ProviderDashboard/sections/HireAlerts/StartNavigation"));
+const TrackDelivery = lazy(() => import("./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery"));
+const ProviderProfilePage = lazy(() => import("./pages/ProviderDashboard/sections/Settings"));
+const Notifications = lazy(() => import("./pages/ProviderDashboard/sections/Notification"));
+const SearchingLoader = lazy(() => import("./components/dashboard/Searching"));
+const AvailableProviders = lazy(() => import("./pages/Dashboard/sections/Bookings/AvailableProviders"));
+const BookingSummary = lazy(() => import("./pages/Dashboard/sections/Bookings/BookingSummary"));
+const PickupLocation = lazy(() => import("./pages/Dashboard/sections/Bookings/PickupLocation"));
+const ProviderHelp = lazy(() => import("./pages/ProviderDashboard/sections/ProviderHelp"));
+const ProviderActivity = lazy(() => import("./pages/ProviderDashboard/sections/ProviderActivity"));
+const ProviderChat = lazy(() => import("./pages/ProviderDashboard/sections/ProviderChat"));
+const WalletCallback = lazy(() => import("./pages/WalletCallback"));
+const VehicleType = lazy(() => import("./pages/Dashboard/sections/Bookings/VehicleType"));
+const AvailableRiders = lazy(() => import("./pages/Dashboard/sections/Bookings/AvailableRiders"));
+const BookingSummary2 = lazy(() => import("./pages/Dashboard/sections/Bookings/BookingSummary2"));
+const TrackRider = lazy(() => import("./pages/Dashboard/sections/Bookings/TrackRider"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const ProtectedRoute = lazy(() => import("./components/routes/ProtectedRoute"));
+const Unauthorized = lazy(() => import("./pages/Unauthorized"));
+const NotVerified = lazy(() => import("./pages/signup/ServiceProvider/kyc-not-verified"));
+const NotificationTest = lazy(() => import("./services/testNotify"));
+
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
 function URLNormalizer() {
@@ -179,113 +184,115 @@ function App() {
       <Router>
         <URLNormalizer />
         <div>
-          <Routes>
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/service-provider/signup" element={<SignupForm />} />
-            <Route path="/congrats" element={<Congrats />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/otp-input" element={<OtpInput />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/success" element={<Success />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
-            <Route path="/kyc-not-verified" element={<NotVerified />} />
-
-            {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
-            <Route
-              path="/wallet/funding/callback"
-              element={<WalletCallback />}
-            />
-            <Route path="/payment/callback" element={<WalletCallback />} />
-
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<DashboardHome />} />
-              <Route
-                path="/dashboard/provider"
-                element={<ProviderDashboard />}
-              />
-              <Route path="/bookings" element={<Bookings />} />
-              <Route path="/dashboard/saved" element={<SavedProfile />} />
-              <Route path="/dashboard/chat" element={<ChatPage />} />
-              <Route
-                path="/dashboard/provider/chat"
-                element={<ProviderChat />}
-              />
-              <Route path="/dashboard/activity" element={<ActivityPage />} />
-              <Route path="/dashboard/test" element={<NotificationTest />} />
-
-              <Route
-                path="/dashboard/provider/activity"
-                element={<ProviderActivity />}
-              />
-              <Route
-                path="/dashboard/provider/hire-alert"
-                element={<HireAlerts />}
-              />
-              <Route
-                path="/dashboard/provider/start-navigation"
-                element={<StartNavigation />}
-              />
-              <Route
-                path="/dashboard/provider/track-delivery"
-                element={<TrackDelivery />}
-              />
-              <Route path="/dashboard/settings" element={<ProfilePage />} />
-              {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
-              <Route path="/dashboard/help" element={<ContactPage />} />
-              <Route
-                path="/dashboard/provider/help"
-                element={<ProviderHelp />}
-              />
-              <Route path="/dashboard/categories" element={<Categories />} />
-              <Route
-                path="/dashboard/categories/:serviceSlug"
-                element={<DynamicServicePage />}
-              />
-              <Route
-                path="/dashboard/categories/emergency"
-                element={<AmbulanceServices />}
-              />
-              <Route
-                path="/dashboard/provider/:providerId"
-                element={<ProviderDetails />}
-              />
-              <Route
-                path="/dashboard/provider/track"
-                element={<PickupLocation />}
-              />
-              <Route
-                path="/dashboard/provider/settings"
-                element={<ProviderProfilePage />}
-              />
-              <Route
-                path="/dashboard/provider/notification"
-                element={<Notifications />}
-              />
-              <Route
-                path="/dashboard/provider/searching"
-                element={<SearchingLoader />}
-              />
-              <Route
-                path="/dashboard/provider/ava"
-                element={<AvailableProviders />}
-              />
-              <Route
-                path="/dashboard/provider/summary"
-                element={<BookingSummary />}
-              />
-              <Route path="/bookings/vehicletype" element={<VehicleType />} />
-              <Route
-                path="/bookings/availableriders"
-                element={<AvailableRiders />}
-              />
-              <Route path="/bookings/summary" element={<BookingSummary2 />} />
-              <Route path="/bookings/trackrider" element={<TrackRider />} />
+          <Suspense fallback={<Loader />}>
+            <Routes>
+              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/service-provider/signup" element={<SignupForm />} />
+              <Route path="/congrats" element={<Congrats />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/otp-input" element={<OtpInput />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/success" element={<Success />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/kyc-not-verified" element={<NotVerified />} />
-            </Route>
-          </Routes>
+
+              {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
+              <Route
+                path="/wallet/funding/callback"
+                element={<WalletCallback />}
+              />
+              <Route path="/payment/callback" element={<WalletCallback />} />
+
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<DashboardHome />} />
+                <Route
+                  path="/dashboard/provider"
+                  element={<ProviderDashboard />}
+                />
+                <Route path="/bookings" element={<Bookings />} />
+                <Route path="/dashboard/saved" element={<SavedProfile />} />
+                <Route path="/dashboard/chat" element={<ChatPage />} />
+                <Route
+                  path="/dashboard/provider/chat"
+                  element={<ProviderChat />}
+                />
+                <Route path="/dashboard/activity" element={<ActivityPage />} />
+                <Route path="/dashboard/test" element={<NotificationTest />} />
+
+                <Route
+                  path="/dashboard/provider/activity"
+                  element={<ProviderActivity />}
+                />
+                <Route
+                  path="/dashboard/provider/hire-alert"
+                  element={<HireAlerts />}
+                />
+                <Route
+                  path="/dashboard/provider/start-navigation"
+                  element={<StartNavigation />}
+                />
+                <Route
+                  path="/dashboard/provider/track-delivery"
+                  element={<TrackDelivery />}
+                />
+                <Route path="/dashboard/settings" element={<ProfilePage />} />
+                {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
+                <Route path="/dashboard/help" element={<ContactPage />} />
+                <Route
+                  path="/dashboard/provider/help"
+                  element={<ProviderHelp />}
+                />
+                <Route path="/dashboard/categories" element={<Categories />} />
+                <Route
+                  path="/dashboard/categories/:serviceSlug"
+                  element={<DynamicServicePage />}
+                />
+                <Route
+                  path="/dashboard/categories/emergency"
+                  element={<AmbulanceServices />}
+                />
+                <Route
+                  path="/dashboard/provider/:providerId"
+                  element={<ProviderDetails />}
+                />
+                <Route
+                  path="/dashboard/provider/track"
+                  element={<PickupLocation />}
+                />
+                <Route
+                  path="/dashboard/provider/settings"
+                  element={<ProviderProfilePage />}
+                />
+                <Route
+                  path="/dashboard/provider/notification"
+                  element={<Notifications />}
+                />
+                <Route
+                  path="/dashboard/provider/searching"
+                  element={<SearchingLoader />}
+                />
+                <Route
+                  path="/dashboard/provider/ava"
+                  element={<AvailableProviders />}
+                />
+                <Route
+                  path="/dashboard/provider/summary"
+                  element={<BookingSummary />}
+                />
+                <Route path="/bookings/vehicletype" element={<VehicleType />} />
+                <Route
+                  path="/bookings/availableriders"
+                  element={<AvailableRiders />}
+                />
+                <Route path="/bookings/summary" element={<BookingSummary2 />} />
+                <Route path="/bookings/trackrider" element={<TrackRider />} />
+                <Route path="/kyc-not-verified" element={<NotVerified />} />
+              </Route>
+            </Routes>
+          </Suspense>
         </div>
       </Router>
     </>

@@ -3,12 +3,15 @@ import { Bell, Search, Menu, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
+import NotificationCompletionModal from "../NotificationCompletionModal";
+import ReviewModal from "./ReviewModal";
 import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
+import { acceptCompletion } from "../../api/bookings";
 import { handleLogout } from "../../api/auth";
-import { io } from "socket.io-client";
+import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
 
 export default function Navbar({ onMenuClick }) {
@@ -19,6 +22,11 @@ export default function Navbar({ onMenuClick }) {
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completionNotification, setCompletionNotification] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewApiError, setReviewApiError] = useState(null);
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
@@ -113,6 +121,12 @@ export default function Navbar({ onMenuClick }) {
 
   // Show toast notification
   const showNotificationToast = (notification) => {
+    if (notification?.type === "booking_completed") {
+      setCompletionNotification(notification);
+      setShowCompletionModal(true);
+      return;
+    }
+
     // Play sound
     notificationSoundService.play();
 
@@ -136,35 +150,32 @@ export default function Navbar({ onMenuClick }) {
       },
     );
   };
-  // Initialize socket connection
+  // Initialize socket connection — Fix 2.4/2.5: use shared socket manager
   useEffect(() => {
     // Initialize sound service
     notificationSoundService.init();
 
-    const token = localStorage.getItem("token");
+    // Fix 2.5: Read token from Zustand store instead of localStorage
+    const token = useAuthStore.getState().token;
     if (!token) return;
 
     // Track seen notification IDs to prevent duplicate toasts
     const seenNotifications = new Set();
 
-    const newSocket = io(
-      import.meta.env.VITE_WS_URL || "http://localhost:3000",
-      {
-        auth: { token },
-        transports: ["websocket", "polling"],
-      },
-    );
+    // Fix 2.4: Use shared socket instead of creating a new one
+    const newSocket = getSharedSocket();
+    if (!newSocket) return;
 
-    newSocket.on("connect", () => {
+    const onConnect = () => {
       console.log("✅ User socket connected");
-    });
+    };
 
-    newSocket.on("connect_error", (error) => {
+    const onConnectError = (error) => {
       console.error("❌ Socket connection error:", error);
-    });
+    };
 
     // Listen for new notifications via socket
-    newSocket.on("new_notification", (notification) => {
+    const onNewNotification = (notification) => {
       const notifId = notification._id || notification.id;
 
       // Skip if we already showed a toast for this notification
@@ -179,14 +190,21 @@ export default function Navbar({ onMenuClick }) {
       setUnreadCount((prev) => prev + 1);
       // Show toast with sound
       showNotificationToast(notification);
-    });
+    };
+
+    newSocket.on("connect", onConnect);
+    newSocket.on("connect_error", onConnectError);
+    newSocket.on("new_notification", onNewNotification);
 
     setSocket(newSocket);
 
-    // Cleanup: disconnect socket on unmount to prevent duplicates
+    // Cleanup: remove listeners and release shared socket
     return () => {
       userLocationService.stopTracking();
-      newSocket.disconnect();
+      newSocket.off("connect", onConnect);
+      newSocket.off("connect_error", onConnectError);
+      newSocket.off("new_notification", onNewNotification);
+      releaseSocket();
     };
   }, []);
 
@@ -206,6 +224,79 @@ export default function Navbar({ onMenuClick }) {
   const handleNotificationClick = () => {
     setShowNotifications(true);
     fetchNotifications();
+  };
+
+  const handleBookingCompletedNotification = (notification) => {
+    setCompletionNotification(notification);
+    setShowCompletionModal(true);
+  };
+
+  const completionBookingId =
+    completionNotification?.data?.bookingId ||
+    completionNotification?.data?.booking?._id ||
+    completionNotification?.bookingId ||
+    completionNotification?.data?._id ||
+    null;
+
+  const completionProviderName =
+    completionNotification?.data?.providerName ||
+    completionNotification?.data?.provider?.fullName ||
+    null;
+
+  const handleAcceptCompletion = () => {
+    if (!completionBookingId) {
+      toast.error("Booking details are unavailable for this notification.");
+      return;
+    }
+
+    setShowCompletionModal(false);
+    setReviewApiError(null);
+    setShowReviewModal(true);
+  };
+
+  const handleReviewSubmit = async ({ score, review, tipAmount }) => {
+    if (!completionBookingId) {
+      setReviewApiError("Booking details are unavailable.");
+      return;
+    }
+
+    setReviewLoading(true);
+    setReviewApiError(null);
+
+    try {
+      const payload = { score, review };
+      const tipIsEmpty =
+        tipAmount === undefined ||
+        tipAmount === null ||
+        tipAmount === "" ||
+        tipAmount === 0;
+      if (!tipIsEmpty) payload.tipAmount = tipAmount;
+
+      const response = await acceptCompletion(completionBookingId, payload);
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion accepted successfully";
+      toast.success(successMsg);
+      setShowReviewModal(false);
+      setCompletionNotification(null);
+    } catch (err) {
+      console.error("Failed to submit completion review:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+      if (status === 400)
+        message =
+          "Invalid rating score or tip amount. Please check your inputs.";
+      else if (status === 401) message = "Unauthorized. Please log in again.";
+      else if (status === 409)
+        message =
+          "Job completion already accepted.";
+
+      setReviewApiError(message);
+      toast.error(message);
+    } finally {
+      setReviewLoading(false);
+    }
   };
 
   const startLocationTracking = async () => {
@@ -398,6 +489,28 @@ export default function Navbar({ onMenuClick }) {
           onMarkAsRead={markAsRead}
           onMarkAllAsRead={markAllAsRead}
           onDelete={deleteNotification}
+          onBookingCompleted={handleBookingCompletedNotification}
+        />
+        <NotificationCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => {
+            setShowCompletionModal(false);
+            setCompletionNotification(null);
+          }}
+          onAcceptCompletion={handleAcceptCompletion}
+          providerName={completionProviderName}
+          notification={completionNotification}
+        />
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => {
+            setShowReviewModal(false);
+            setReviewApiError(null);
+          }}
+          onSubmit={handleReviewSubmit}
+          loading={reviewLoading}
+          apiError={reviewApiError}
+          providerName={completionProviderName}
         />
       </header>
     </>

@@ -18,6 +18,7 @@ import { acceptCompletion } from "../../api/bookings";
 import ReviewModal from "./ReviewModal";
 import CancelRequestButton from "../CancelRequestButton";
 import useBookingStore from "../../stores/booking.store";
+import { canMessage } from "../../utils/chat.utils";
 
 export default function RequestCard({
   request,
@@ -97,7 +98,7 @@ export default function RequestCard({
       else if (status === 401) message = "Unauthorized. Please log in again.";
       else if (status === 409)
         message =
-          "This booking has not been marked as completed by the provider yet.";
+          "Job completion already accepted.";
       setApiError(message);
       toast.error(message);
     } finally {
@@ -291,14 +292,7 @@ export default function RequestCard({
                 </button>
               )}
 
-              {[
-                "provider selected",
-                "paid escrow",
-                "enroute to pickup",
-                "arrived at pickup",
-                "enroute to dropoff",
-                "arrived at dropoff",
-              ].includes(request.status.toLowerCase()) && (
+              {canMessage(request.status) && (
                 <button
                   onClick={() => onMessageProvider?.(request)}
                   className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base"
