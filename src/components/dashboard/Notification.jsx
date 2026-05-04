@@ -154,9 +154,55 @@ export default function NotificationDrawer({
 
   const handleViewDetails = async (e, notification) => {
     e.stopPropagation();
-    // Close the drawer first so modal is fully visible
+
+    // If it's a booking request, route to hire alert page instead of opening modal
+    if (
+      notification.type === "new_booking_request" ||
+      notification.type === "booking_selected"
+    ) {
+      onClose();
+      try {
+        setFetchingBookings(true);
+        const serviceType = notification.data?.serviceType;
+        const modeOfDelivery = notification.data?.modeOfDelivery;
+
+        const bookingResponse = await getAllBookings({
+          status: "awaiting_provider_acceptance",
+          serviceType: serviceType
+            ? String(serviceType).trim().toLowerCase()
+            : undefined,
+          modeOfDelivery: modeOfDelivery
+            ? String(modeOfDelivery).trim()
+            : undefined,
+          page: 1,
+          limit: 20,
+        });
+
+        const bookingData = bookingResponse.data || bookingResponse;
+
+        navigate("/dashboard/provider/hire-alert", {
+          state: {
+            bookingData: notification.data,
+            fetchedAlerts: bookingData,
+            tab: "alert",
+          },
+        });
+      } catch (err) {
+        console.error("Error fetching bookings from notification:", err);
+        navigate("/dashboard/provider/hire-alert", {
+          state: {
+            bookingData: notification.data,
+            tab: "alert",
+          },
+        });
+      } finally {
+        setFetchingBookings(false);
+      }
+      return;
+    }
+
+    // For other types, close drawer and open the details modal
     onClose();
-    // Open the details modal (do NOT mark as read — let user do that explicitly)
     setSelectedNotification(notification);
   };
 

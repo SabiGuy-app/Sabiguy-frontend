@@ -170,11 +170,11 @@ export const useChat = () => {
   }, [hydrated, token]);
 
   // 2. Chat List Loading — Fix 1.1: guard on hydrated + token
-  const loadChats = useCallback(async () => {
+  const loadChats = useCallback(async (statusCategory = "active") => {
     if (!hydrated || !token) return;
     try {
       if (isMounted.current) setLoading(true);
-      const response = await chatService.getAllChats(1, 50);
+      const response = await chatService.getAllChats(1, 50, statusCategory);
       
       let chatList = [];
       if (Array.isArray(response)) {
@@ -483,9 +483,23 @@ export const useChat = () => {
       });
       
       if (isMounted.current) {
-        const sentMsg = response.data?.data || response.data?.message || response.data || response;
-        setMessages((prev) => 
-          prev.map(msg => msg._id === tempId ? { ...sentMsg, status: "sent" } : msg)
+        // Robust extraction of the message object from response
+        let sentMsg = response.data?.data || response.data || response;
+        
+        // If we got a string (the message text) instead of an object, 
+        // convert it to a message object so it doesn't break the UI
+        if (typeof sentMsg === "string") {
+          sentMsg = { message: sentMsg, _id: `sent-${Date.now()}` };
+        } else if (response.data?.message && !sentMsg.message) {
+          // If response.data.message exists and sentMsg doesn't have a message field,
+          // it might be that the object is in response.data and the text is in response.data.message
+          sentMsg = { ...sentMsg, message: response.data.message };
+        }
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === tempId ? { ...msg, ...sentMsg, status: "sent" } : msg,
+          ),
         );
         updateChatLastMessage(bookingId, sentMsg);
       }

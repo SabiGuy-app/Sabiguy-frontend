@@ -279,8 +279,10 @@ export default function ChatView({ emptyStateText }) {
                         </button>
                       </div>
                     )}
-                    {Object.entries(groupedMessages).map(([date, msgs]) => (
-                    <div key={date}>
+                    {Object.entries(groupedMessages).map(([date, msgs]) => {
+                      if (!date || date === "Invalid Date") return null;
+                      return (
+                        <div key={date}>
                       {/* Date Divider */}
                       <div className="flex items-center justify-center py-4">
                         <span className="px-4 py-1 bg-white rounded-full text-xs text-gray-500 border border-gray-200 shadow-sm">
@@ -291,6 +293,16 @@ export default function ChatView({ emptyStateText }) {
                       {/* Messages for this date */}
                       <div className="space-y-3">
                         {msgs.map((msg) => {
+                          // Skip truly empty messages, but ALWAYS show "sending" messages 
+                          // and check for both .message and .text fields
+                          const messageContent = msg.message || msg.text || "";
+                          const hasContent = typeof messageContent === "string" && messageContent.trim().length > 0;
+                          const hasAttachments = msg.attachments && msg.attachments.length > 0;
+                          
+                          if (!hasContent && !hasAttachments && msg.status !== "sending") {
+                            return null;
+                          }
+
                           const isCurrentUser =
                             msg.senderId?.toString() === currentUserId;
                           const isSending = msg.status === "sending";
@@ -361,38 +373,18 @@ export default function ChatView({ emptyStateText }) {
                                       </button>
                                     </div>
                                   )}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </>
                 )}
 
-                {/* Typing indicator — Fix 6.5: uses resolved bookingId */}
-                {typingStatus[typingBookingId]?.isTyping && (
-                  <div className="flex items-end gap-2 justify-start">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                      {getInitials(selectedChat.otherParticipant?.name)}
-                    </div>
-                    <div className="bg-white text-gray-800 px-4 py-3 rounded-2xl rounded-bl-none border border-gray-200 shadow-sm">
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                        <span
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></span>
-                        <span
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></span>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 <div ref={messagesEndRef} />
               </div>
