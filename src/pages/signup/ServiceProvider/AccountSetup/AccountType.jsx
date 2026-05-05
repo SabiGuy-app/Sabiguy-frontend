@@ -11,7 +11,7 @@ export default function AccountTypeForm({onNext, onBack}) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const NIN_SLIP_MAX_SIZE_MB = 2;
+  const NIN_SLIP_MAX_SIZE_MB = 10;
   const NIN_SLIP_MAX_SIZE_BYTES = NIN_SLIP_MAX_SIZE_MB * 1024 * 1024;
 
   const handleSubmit = async (values) => {
@@ -111,7 +111,7 @@ export default function AccountTypeForm({onNext, onBack}) {
       )
       .test(
         "fileSize",
-        `NIN slip must be 2MB or smaller`,
+        `NIN slip must be 10MB or smaller`,
         (value) => !value || value.size <= NIN_SLIP_MAX_SIZE_BYTES,
       ),
     businessName: Yup.string(),
@@ -223,7 +223,7 @@ onSubmit={(values, { setSubmitting }) => {
                             <div>
   <p className="font-medium text-gray-700 mb-2">NIN Slip</p>
   <p className="text-sm text-gray-500 mb-3">
-    Kindly upload a clear NIN slip in PDF, JPEG, or PNG format. Maximum file size is 2MB.
+    Kindly upload a clear NIN slip in PDF, JPEG, or PNG format. Maximum file size is 10MB.
   </p>
 
   {/* Hidden file input */}
@@ -307,7 +307,7 @@ onSubmit={(values, { setSubmitting }) => {
                           <div>
   <p className="font-medium text-gray-700 mb-2">CAC Certificate</p>
   <p className="text-sm text-gray-500 mb-3">
-    Kindly upload a picture of your CAC certificate (make sure all details are readable). Accepted formats are PDF, JPEG & PNG
+    Kindly upload a picture of your CAC certificate (make sure all details are readable). Accepted formats are PDF, JPEG & PNG. Maximum file size is 10MB.
   </p>
 
   {/* Hidden file input */}

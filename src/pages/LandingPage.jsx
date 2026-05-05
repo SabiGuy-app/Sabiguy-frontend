@@ -801,7 +801,7 @@ const steps = [
 ];
 
 const stats = [
-  { number: "500+", label: "OF ONLINE VENDORS" },
+  { number: "500+", label: "ONLINE VENDORS" },
   { number: "200+", label: "RESTAURANTS" },
   { number: "50+", label: "PHARMACIES" },
   { number: "30+", label: "LOCAL BUSINESSES" },

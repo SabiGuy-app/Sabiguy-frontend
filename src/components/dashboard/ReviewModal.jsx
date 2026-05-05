@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
 
-export default function ReviewModal({ isOpen, onClose, onSubmit, loading, apiError }) {
+export default function ReviewModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  loading,
+  apiError,
+  providerName,
+}) {
   const [score, setScore] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [review, setReview] = useState("");
@@ -47,6 +54,9 @@ export default function ReviewModal({ isOpen, onClose, onSubmit, loading, apiErr
         <p className="text-sm text-gray-500 mb-5">
           Rate your experience with this provider
         </p>
+        <div className="mb-5 inline-flex rounded-full bg-[#005823]/5 px-3 py-1 text-xs font-semibold text-[#005823]">
+          {providerName ? `Provider: ${providerName}` : "Provider"}
+        </div>
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">

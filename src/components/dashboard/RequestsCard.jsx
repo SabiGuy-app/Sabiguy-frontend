@@ -98,7 +98,7 @@ export default function RequestCard({
       else if (status === 401) message = "Unauthorized. Please log in again.";
       else if (status === 409)
         message =
-          "This booking has not been marked as completed by the provider yet.";
+          "Job completion already accepted.";
       setApiError(message);
       toast.error(message);
     } finally {

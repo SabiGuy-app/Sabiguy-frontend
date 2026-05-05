@@ -3,10 +3,13 @@ import { Bell, Search, Menu, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
+import NotificationCompletionModal from "../NotificationCompletionModal";
+import ReviewModal from "./ReviewModal";
 import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
+import { acceptCompletion } from "../../api/bookings";
 import { handleLogout } from "../../api/auth";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
@@ -19,6 +22,11 @@ export default function Navbar({ onMenuClick }) {
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completionNotification, setCompletionNotification] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewApiError, setReviewApiError] = useState(null);
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
@@ -113,6 +121,12 @@ export default function Navbar({ onMenuClick }) {
 
   // Show toast notification
   const showNotificationToast = (notification) => {
+    if (notification?.type === "booking_completed") {
+      setCompletionNotification(notification);
+      setShowCompletionModal(true);
+      return;
+    }
+
     // Play sound
     notificationSoundService.play();
 
@@ -210,6 +224,79 @@ export default function Navbar({ onMenuClick }) {
   const handleNotificationClick = () => {
     setShowNotifications(true);
     fetchNotifications();
+  };
+
+  const handleBookingCompletedNotification = (notification) => {
+    setCompletionNotification(notification);
+    setShowCompletionModal(true);
+  };
+
+  const completionBookingId =
+    completionNotification?.data?.bookingId ||
+    completionNotification?.data?.booking?._id ||
+    completionNotification?.bookingId ||
+    completionNotification?.data?._id ||
+    null;
+
+  const completionProviderName =
+    completionNotification?.data?.providerName ||
+    completionNotification?.data?.provider?.fullName ||
+    null;
+
+  const handleAcceptCompletion = () => {
+    if (!completionBookingId) {
+      toast.error("Booking details are unavailable for this notification.");
+      return;
+    }
+
+    setShowCompletionModal(false);
+    setReviewApiError(null);
+    setShowReviewModal(true);
+  };
+
+  const handleReviewSubmit = async ({ score, review, tipAmount }) => {
+    if (!completionBookingId) {
+      setReviewApiError("Booking details are unavailable.");
+      return;
+    }
+
+    setReviewLoading(true);
+    setReviewApiError(null);
+
+    try {
+      const payload = { score, review };
+      const tipIsEmpty =
+        tipAmount === undefined ||
+        tipAmount === null ||
+        tipAmount === "" ||
+        tipAmount === 0;
+      if (!tipIsEmpty) payload.tipAmount = tipAmount;
+
+      const response = await acceptCompletion(completionBookingId, payload);
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion accepted successfully";
+      toast.success(successMsg);
+      setShowReviewModal(false);
+      setCompletionNotification(null);
+    } catch (err) {
+      console.error("Failed to submit completion review:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+      if (status === 400)
+        message =
+          "Invalid rating score or tip amount. Please check your inputs.";
+      else if (status === 401) message = "Unauthorized. Please log in again.";
+      else if (status === 409)
+        message =
+          "Job completion already accepted.";
+
+      setReviewApiError(message);
+      toast.error(message);
+    } finally {
+      setReviewLoading(false);
+    }
   };
 
   const startLocationTracking = async () => {
@@ -402,6 +489,28 @@ export default function Navbar({ onMenuClick }) {
           onMarkAsRead={markAsRead}
           onMarkAllAsRead={markAllAsRead}
           onDelete={deleteNotification}
+          onBookingCompleted={handleBookingCompletedNotification}
+        />
+        <NotificationCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => {
+            setShowCompletionModal(false);
+            setCompletionNotification(null);
+          }}
+          onAcceptCompletion={handleAcceptCompletion}
+          providerName={completionProviderName}
+          notification={completionNotification}
+        />
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => {
+            setShowReviewModal(false);
+            setReviewApiError(null);
+          }}
+          onSubmit={handleReviewSubmit}
+          loading={reviewLoading}
+          apiError={reviewApiError}
+          providerName={completionProviderName}
         />
       </header>
     </>
