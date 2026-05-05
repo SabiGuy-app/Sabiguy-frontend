@@ -79,7 +79,7 @@ export default function Navbar({ onMenuClick }) {
         // Update local state
         setNotifications((prev) =>
           prev.map((notif) =>
-            notif._id === id ? { ...notif, read: true } : notif,
+            notif._id === id ? { ...notif, isRead: true } : notif,
           ),
         );
         // Refresh unread count
@@ -96,7 +96,7 @@ export default function Navbar({ onMenuClick }) {
       if (res.success) {
         // Update local state
         setNotifications((prev) =>
-          prev.map((notif) => ({ ...notif, read: true })),
+          prev.map((notif) => ({ ...notif, isRead: true })),
         );
         setUnreadCount(0);
       }

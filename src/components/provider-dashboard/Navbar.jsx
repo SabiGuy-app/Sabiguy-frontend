@@ -69,11 +69,11 @@ export default function ProviderNavbar({ onMenuClick }) {
     try {
       const res = await notificationService.markAsRead(id);
 
-      if (res.data.success) {
+      if (res.success || res.data?.success) {
         // Update local state
         setNotifications((prev) =>
           prev.map((notif) =>
-            notif._id === id ? { ...notif, read: true } : notif,
+            notif._id === id ? { ...notif, isRead: true } : notif,
           ),
         );
         // Refresh unread count
@@ -87,10 +87,10 @@ export default function ProviderNavbar({ onMenuClick }) {
   const markAllAsRead = async () => {
     try {
       const res = await notificationService.markAllAsRead();
-      if (res.data.success) {
+      if (res.success || res.data?.success) {
         // Update local state
         setNotifications((prev) =>
-          prev.map((notif) => ({ ...notif, read: true })),
+          prev.map((notif) => ({ ...notif, isRead: true })),
         );
         setUnreadCount(0);
       }
@@ -102,7 +102,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   const deleteNotification = async (id) => {
     try {
       const res = await notificationService.deleteNotification(id);
-      if (res.data.success) {
+      if (res.success || res.data?.success) {
         // Remove from local state
         setNotifications((prev) => prev.filter((notif) => notif._id !== id));
         // Refresh unread count
