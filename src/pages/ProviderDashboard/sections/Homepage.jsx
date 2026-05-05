@@ -146,7 +146,7 @@ export default function ProviderDashboard() {
             <WalletCard data={dashboardData?.walletData} />
           </div>
           <div>
-            <RevenueByServiceType data={dashboardData?.revenueByService} amount={completedJobs.toString()} />
+            {/* <RevenueByServiceType data={dashboardData?.revenueByService} amount={completedJobs.toString()} /> */}
           </div>
         </div>
       </div>

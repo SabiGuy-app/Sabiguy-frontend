@@ -16,6 +16,7 @@ export default function NotificationDrawer({
   onMarkAsRead,
   onMarkAllAsRead,
   onDelete,
+  onBookingCompleted,
 }) {
   const navigate = useNavigate();
   const [markingAsRead, setMarkingAsRead] = useState(null); // Track which notification is being marked as read
@@ -84,6 +85,12 @@ export default function NotificationDrawer({
     await onMarkAsRead(notification._id);
 
     onClose();
+
+    if (notification.type === "booking_completed") {
+      onBookingCompleted?.(notification);
+      setMarkingAsRead(null);
+      return;
+    }
 
     // Route to hire alert page for new_booking_request type
     if (
@@ -203,6 +210,13 @@ export default function NotificationDrawer({
 
     // For other types, close drawer and open the details modal
     onClose();
+
+    if (notification.type === "booking_completed") {
+      onBookingCompleted?.(notification);
+      return;
+    }
+
+    // Open the details modal (do NOT mark as read — let user do that explicitly)
     setSelectedNotification(notification);
   };
 
