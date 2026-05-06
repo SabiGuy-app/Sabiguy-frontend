@@ -629,10 +629,10 @@ export default function ChatPage() {
               </div>
 
               {/* Message Input */}
-              <div className="bg-white border-t border-gray-200 px-6 py-4 shadow-lg">
-                <div className="flex items-center gap-3">
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <FiPaperclip size={20} />
+              <div className="bg-white border-t border-gray-200 px-3 sm:px-6 py-2 sm:py-4 shadow-lg">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                    <FiPaperclip size={18} className="sm:w-5 sm:h-5" />
                   </button>
                   <input
                     type="text"
@@ -645,17 +645,17 @@ export default function ChatPage() {
                     onBlur={() => handleTyping(false)}
                     onKeyPress={handleKeyPress}
                     disabled={sendingMessage}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent disabled:bg-gray-100 transition-all"
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent disabled:bg-gray-100 transition-all"
                   />
                   <button
                     onClick={handleSendMessage}
                     disabled={!message.trim() || sendingMessage}
-                    className="w-10 h-10 bg-[#8BC53F] rounded-full flex items-center justify-center text-white hover:bg-[#7ab037] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 shadow-md hover:shadow-lg"
+                    className="w-9 h-9 sm:w-10 sm:h-10 bg-[#8BC53F] rounded-full flex items-center justify-center text-white hover:bg-[#7ab037] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 shadow-md hover:shadow-lg"
                   >
                     {sendingMessage ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     ) : (
-                      <FiSend size={18} />
+                      <FiSend size={16} className="sm:w-4.5 sm:h-4.5" />
                     )}
                   </button>
                 </div>

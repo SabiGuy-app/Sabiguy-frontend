@@ -79,7 +79,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   <div className="flex justify-center lg:justify-start items-center gap-1 text-[14px] text-gray-600">
                     <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium text-gray-900">
-                      {request.providerRating ?? "New"}
+                      {request.providerRating ?? ""}
                     </span>
                     <span className="text-gray-500 ">
                       ({request.providerReviews ?? 0} reviews)
