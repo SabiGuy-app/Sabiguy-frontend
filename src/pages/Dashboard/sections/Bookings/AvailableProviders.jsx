@@ -1,6 +1,7 @@
 import React from "react";
 import OfferCard from "../../../../components/dashboard/OfferCard";
-import Navbar from "../../../../components/dashboard/Navbar"
+import Navbar from "../../../../components/dashboard/Navbar";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 
 export default function AvailableProviders () {
 
@@ -20,9 +21,8 @@ const mockProvider = {
   };
 
   return (
-    <>
-    <Navbar/>
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <DashboardLayout>
+    <div className="py-4 bg-gray-50 min-h-screen">
               <h1 className="text-2xl font-bold mb-3">Available Providers</h1>
 
               <h3 className="text-lg mb-2">2 Providers are available</h3>
@@ -49,7 +49,7 @@ const mockProvider = {
       </div>
 
     </div>
-    </>
+    </DashboardLayout>
   )
 
 }
