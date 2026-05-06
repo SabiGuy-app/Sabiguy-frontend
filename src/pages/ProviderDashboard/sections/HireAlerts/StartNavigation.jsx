@@ -14,6 +14,7 @@ import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { startJob, cancelBooking } from "../../../../api/bookings";
 import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
+import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 import CancelModal from "../../../../components/CancelModal";
 
 // Error Boundary for Map Component
@@ -125,8 +126,8 @@ export default function StartNavigation() {
   const customer = alert?.originalData?.userId || {};
 
   return (
-    <>
-      <ProviderNavbar />
+    <ProviderDashboardLayout>
+      <div className="py-4">
       <CancelModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
@@ -265,6 +266,7 @@ export default function StartNavigation() {
           </MapErrorBoundary>
         </div>
       </div>
-    </>
+      </div>
+    </ProviderDashboardLayout>
   );
 }
