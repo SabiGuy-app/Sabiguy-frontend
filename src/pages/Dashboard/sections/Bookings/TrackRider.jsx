@@ -213,7 +213,7 @@ export default function TrackRider() {
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
   const fareDisplay =
-    bookingDetails?.pricingBreakdown?.subtotal ?? 0;
+    bookingDetails?.pricingBreakdown?.riderPaysFinal ?? 0;
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -222,18 +222,28 @@ export default function TrackRider() {
       maximumFractionDigits: 0,
     }).format(amount);
 
-    const formatTitle = (text) =>
-  text
-    ?.replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  const formatTitle = (text) =>
+    text
+      ?.replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
 
-   const title = formatTitle(providerDetails?.job?.[0]?.title) ||
-  formatTitle(bookingDetails?.subCategory) ||
-  "—"
+  const normalizedSubCategory = String(bookingDetails?.subCategory || "")
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, " ");
 
-  const deliverySteps = [
+  const title =
+    formatTitle(providerDetails?.job?.[0]?.title) ||
+    formatTitle(bookingDetails?.subCategory) ||
+    "—";
+
+  const packageDeliverySteps = [
     { id: 1, title: "En route to pickup", subtitle: "On the way to pickup" },
-    { id: 2, title: "Arrived at pickup location", subtitle: "At pickup point" },
+    {
+      id: 2,
+      title: "Arrived at pickup location",
+      subtitle: "At pickup point",
+    },
     {
       id: 3,
       title: "En route to delivery",
@@ -246,6 +256,31 @@ export default function TrackRider() {
     },
     { id: 5, title: "Delivery completed", subtitle: "Package delivered" },
   ];
+
+  const bookARideSteps = [
+    { id: 1, title: "En route to pickup", subtitle: "On the way to pickup" },
+    {
+      id: 2,
+      title: "Arrived at pickup location",
+      subtitle: "At pickup point",
+    },
+    {
+      id: 3,
+      title: "En route to destination",
+      subtitle: "Leaving for dropoff location",
+    },
+    {
+      id: 4,
+      title: "Arrived at destination",
+      subtitle: "At dropoff location",
+    },
+    { id: 5, title: "Ride completed", subtitle: "Ride completed" },
+  ];
+
+  const deliverySteps =
+    normalizedSubCategory === "book a ride"
+      ? bookARideSteps
+      : packageDeliverySteps;
 
   const handleCancel = async (reason) => {
     setCancelLoading(true);
