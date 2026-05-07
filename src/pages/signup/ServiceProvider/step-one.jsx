@@ -59,7 +59,7 @@ export default function StepOne({ onNext, email }) {
         )
       ) {
         setErrorMessage(
-          "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
+          "Your email is registered but not verified yet, you have however recieved another OTP. You will be redirected to the otp input page in a moment...",
         );
         localStorage.setItem("email", effectiveEmail);
         setTimeout(() => {
@@ -92,7 +92,7 @@ export default function StepOne({ onNext, email }) {
         const apiMessage = error.response.data?.message;
         if (apiMessage?.startsWith("Email not verified. OTP sent to email")) {
           setSuccessMessage(
-            "Your email is registered but not verified yet, you have however received another otp. You will be redirected to the otp input page in a moment...",
+            "Your email is registered but not verified yet, you have however received another OTP. You will be redirected to the otp input page in a moment...",
           );
           localStorage.setItem("email", effectiveEmail);
           setTimeout(() => {
@@ -153,12 +153,10 @@ export default function StepOne({ onNext, email }) {
           data?.email || data?.newUser?.email || profile?.email || "";
 
         if (
-          data?.message?.startsWith(
-            "Email not verified. OTP sent to email",
-          )
+          data?.message?.startsWith("Email not verified. OTP sent to email")
         ) {
           setSuccessMessage(
-            "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
+            "Your email is registered but not verified yet, you have however recieved another OTP. You will be redirected to the otp input page in a moment...",
           );
           localStorage.setItem("email", googleEmail);
           setTimeout(() => {
@@ -197,7 +195,7 @@ export default function StepOne({ onNext, email }) {
     <div className="h-screen">
       <Navbar />
       <AuthLayout
-        title="Welcome Back!"
+        title="Let's Get Started!"
         description="Connect with trusted providers, verified professionals,
         and manage bookings in real time."
       >
@@ -209,8 +207,8 @@ export default function StepOne({ onNext, email }) {
           transition={{ duration: 0.3 }}
         >
           <h2 className="text-2xl font-semibold text-center mt-7 mb-1">
- Please enter your details          </h2>
-          
+            Please enter your details{" "}
+          </h2>
 
           <Formik
             initialValues={{
@@ -284,8 +282,9 @@ export default function StepOne({ onNext, email }) {
                     component="span"
                     className="text-[#db3a3a]"
                   />
-                   <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                    Password must be at least 8 characters long and include a letter, number, and special character
+                  <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+                    Password must be at least 8 characters long and include a
+                    letter, number, and special character
                   </p>
                   {showPassword ? (
                     <BsEye
@@ -343,21 +342,20 @@ export default function StepOne({ onNext, email }) {
                   )}
                 </div>
 
-        
-                               <Button
-                                 type="submit"
-                                disabled={
-                                   !(
-                                  values.fullName.trim() &&
-                                  (email || values.email).trim() &&
-                                     values.phoneNumber.trim() &&
-                                     values.password.trim() &&
-                                termAccepted
-                                   )
-                                 }
-                               >
-                                 {loading ? "Loading..." : "Continue"}
-                               </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    !(
+                      values.fullName.trim() &&
+                      (email || values.email).trim() &&
+                      values.phoneNumber.trim() &&
+                      values.password.trim() &&
+                      termAccepted
+                    )
+                  }
+                >
+                  {loading ? "Loading..." : "Continue"}
+                </Button>
 
                 <div className="flex items-center my-4">
                   <div className="flex-grow border-t border-gray-300"></div>
@@ -373,7 +371,9 @@ export default function StepOne({ onNext, email }) {
                 >
                   <img src="/Google.svg" alt="Google" className="w-5 h-5" />
                   <span className="text-gray-700 font-medium">
-                    {googleLoading ? "Just a moment..." : "Continue with Google"}
+                    {googleLoading
+                      ? "Just a moment..."
+                      : "Continue with Google"}
                   </span>
                 </button>
 

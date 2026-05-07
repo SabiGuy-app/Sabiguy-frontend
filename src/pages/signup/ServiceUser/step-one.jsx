@@ -87,7 +87,7 @@ export default function StepOne({ onNext }) {
         const apiMessage = error.response.data?.message;
         if (apiMessage === "Email not verified. OTP sent to email") {
           setSuccessMessage(
-            "Your email is registered but not verified yet, you have however received another otp. You will be redirected to the otp input page in a moment...",
+            "Your email is registered but not verified yet, you have however received another OTP. You will be redirected to the otp input page in a moment...",
           );
           localStorage.setItem("email", values.email);
           setTimeout(() => {
@@ -152,7 +152,7 @@ export default function StepOne({ onNext }) {
           )
         ) {
           setSuccessMessage(
-            "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
+            "Your email is registered but not verified yet, you have however recieved another OTP. You will be redirected to the otp input page in a moment...",
           );
           localStorage.setItem("email", googleEmail);
           setTimeout(() => {
@@ -189,7 +189,7 @@ export default function StepOne({ onNext }) {
     <div className="h-screen">
       <Navbar />
       <AuthLayout
-        title="Welcome Back!"
+        title="Let's Get Started!"
         description="Connect with trusted providers, verified professionals,
         and manage bookings in real time."
       >

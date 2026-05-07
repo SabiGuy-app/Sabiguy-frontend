@@ -23,10 +23,11 @@ export const getAllBookings = async (params = {}) => {
     page = 1,
     limit = 10,
     startDate = 'Today',
-    timeWindow = '30m',
+    timeWindow = '20m',
+    maxDistanceKm =30
   } = params;
 
-  const queryParams = { status, page, limit, startDate, timeWindow };
+  const queryParams = { status, page, limit, startDate, timeWindow, maxDistanceKm };
   if (serviceType) queryParams.serviceType = serviceType;
   if (subCategory) queryParams.subCategory = subCategory;
   if (modeOfDelivery) queryParams.modeOfDelivery = modeOfDelivery;

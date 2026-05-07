@@ -15,7 +15,7 @@ export default function ChatBotDrawer({ isOpen, onClose, children }) {
       {/* Header */}
       <div className="flex items-center  justify-between px-5 py-4 border-b">
         <BotIcon/>
-        <h2 className="text-lg font-semibold">SabiGuy (Your Friendly Chat Bot)</h2>
+        <h2 className="text-lg font-semibold">SabiBot (Your Friendly Chat Bot)</h2>
         <button onClick={onClose}>
           <X size={22} />
         </button>

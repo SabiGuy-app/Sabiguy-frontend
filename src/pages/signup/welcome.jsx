@@ -9,9 +9,8 @@ export default function Welcome() {
     <div className="h-screen">
       <SignupNavbar />
       <AuthLayout
-        title="Welcome Back!"
-        description="Join us to discover reliable professionals
-anytime, anywhere."
+        title="Let's Get Started!"
+        description="Join us to discover reliable professionals anytime, anywhere."
       >
         <motion.div
           key="step-one"

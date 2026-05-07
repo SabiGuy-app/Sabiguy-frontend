@@ -1,5 +1,6 @@
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
+import LocationAutocomplete from "../../../../components/LocationAutocomplete";
 import { useState, useEffect } from "react";
 import { Bike } from "lucide-react";
 import Button from "../../../../components/button";
@@ -23,7 +24,7 @@ const vehicleOptions = [
     value: "Bike",
     label: "Bike Delivery",
     icon: <Bike color="black" size={30} />,
-    eta: "15 min",
+    // eta: "15 min",
     capacity: 2,
     description: "Best for small packages",
   },
@@ -44,7 +45,7 @@ const vehicleOptions = [
         <circle cx="17" cy="18" r="1.5" fill="currentColor" stroke="none" />
       </svg>
     ),
-    eta: "21 min",
+    // eta: "21 min",
     capacity: 4,
     description: "Medium sized delivery",
   },
@@ -59,11 +60,9 @@ export default function Bookings() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [pickupMode, setPickupMode] = useState("manual");
-
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
-
   const setBooking = useBookingStore((state) => state.setBooking);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
@@ -250,7 +249,7 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-        <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
+      <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (
           <button
             key={filter}
@@ -265,7 +264,6 @@ export default function Bookings() {
           </button>
         ))}
       </div>
-     
     );
   };
 
@@ -298,7 +296,6 @@ export default function Bookings() {
 
     orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
     fullOrderId: booking._id || "",
-    providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     fullProviderId: booking.providerId?._id || "",
     price: booking.calculatedPrice || booking.agreedPrice || 0,
     totalAmount: booking.totalAmount || 0,
@@ -310,8 +307,8 @@ export default function Bookings() {
       ? `${booking.distance.value} ${booking.distance.unit}`
       : "—",
 
-    description: booking.description || null,
-    notes: null,
+    // description: booking.description || null,
+    notes: booking.pickupNote,
     modeOfDelivery: booking.modeOfDelivery || "—",
 
     scheduledDate: booking.createdAt
@@ -341,25 +338,24 @@ export default function Bookings() {
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
         return [
+          "in progress",
           "enroute to pickup",
-          "paid escrow",
-          "provider selected",
-          "completed",
           "arrived at pickup",
           "enroute to dropoff",
           "arrived at dropoff",
+          "completed",
         ].includes(status);
       if (statusFilter === "pending")
         return [
-          "pending providers",
           "payment pending",
-          // "awaiting provider acceptance",
+          "awaiting provider acceptance",
+          "provider selected",
         ].includes(status);
       if (statusFilter === "completed")
         return [
           // "completed",
-          // "funds_released",
-          "user_accepted_completion",
+          "funds released",
+          "user accepted completion",
         ].includes(status);
       return false;
     });
@@ -426,7 +422,7 @@ export default function Bookings() {
             }`}
           >
             <span className="flex items-center justify-center gap-2">
-              Request a service
+              Request A Service
             </span>
             {activeTab === "request" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
@@ -442,7 +438,7 @@ export default function Bookings() {
             }`}
           >
             <span className="flex items-center justify-center gap-2">
-              My requests
+              My Requests
             </span>
             {activeTab === "requests" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
@@ -532,17 +528,27 @@ export default function Bookings() {
                     Enter manually
                   </button>
                 </div>
-                <InputField
-                  name="pickupAddress"
-                  label="Pickup location"
-                  placeholder="24 Palm Avenue, Lagos"
-                  value={formik.values.pickupAddress}
-                  onChange={
-                    pickupMode === "manual" ? formik.handleChange : undefined
-                  }
-                  onBlur={formik.handleBlur}
-                  readOnly={pickupMode === "current"}
-                />
+                {pickupMode === "current" ? (
+                  <InputField
+                    name="pickupAddress"
+                    label="Pickup location"
+                    placeholder="24 Palm Avenue, Lagos"
+                    value={formik.values.pickupAddress}
+                    onBlur={formik.handleBlur}
+                    readOnly
+                  />
+                ) : (
+                  <LocationAutocomplete
+                    name="pickupAddress"
+                    label="Pickup location"
+                    placeholder="24 Palm Avenue, Lagos"
+                    value={formik.values.pickupAddress}
+                    onChange={(value) =>
+                      formik.setFieldValue("pickupAddress", value)
+                    }
+                    onBlur={() => formik.setFieldTouched("pickupAddress", true)}
+                  />
+                )}
                 {formik.touched.pickupAddress &&
                   formik.errors.pickupAddress && (
                     <p className="mt-1 text-sm text-red-600">
@@ -551,13 +557,15 @@ export default function Bookings() {
                   )}
               </div>
               <div>
-                <InputField
+                <LocationAutocomplete
                   name="dropoffAddress"
                   label="Dropoff location"
                   placeholder="24 Palm Avenue, Lagos"
                   value={formik.values.dropoffAddress}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+                  onChange={(value) =>
+                    formik.setFieldValue("dropoffAddress", value)
+                  }
+                  onBlur={() => formik.setFieldTouched("dropoffAddress", true)}
                 />
                 {formik.touched.dropoffAddress &&
                   formik.errors.dropoffAddress && (

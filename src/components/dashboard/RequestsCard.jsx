@@ -18,6 +18,7 @@ import { acceptCompletion } from "../../api/bookings";
 import ReviewModal from "./ReviewModal";
 import CancelRequestButton from "../CancelRequestButton";
 import useBookingStore from "../../stores/booking.store";
+import { canMessage } from "../../utils/chat.utils";
 
 export default function RequestCard({
   request,
@@ -97,7 +98,7 @@ export default function RequestCard({
       else if (status === 401) message = "Unauthorized. Please log in again.";
       else if (status === 409)
         message =
-          "This booking has not been marked as completed by the provider yet.";
+          "Job completion already accepted.";
       setApiError(message);
       toast.error(message);
     } finally {
@@ -108,7 +109,8 @@ export default function RequestCard({
   const isCompleted =
     request.status.toLowerCase() === "completed" ||
     request.status.toLowerCase() === "waiting confirmation" ||
-    request.status.toLowerCase() === "user_accepted_completion";
+    request.status.toLowerCase() === "funds released" ||
+    request.status.toLowerCase() === "user accepted completion";
 
   return (
     <>
@@ -122,7 +124,6 @@ export default function RequestCard({
         loading={submitLoading}
         apiError={apiError}
       />
-
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
         <div className="flex-1">
@@ -140,7 +141,7 @@ export default function RequestCard({
             <div className="w-full">
               <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2 w-full">
                 <div>
-                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <h3 className="text-xl font-semibold text-gray-900">
                       {request.title}
                     </h3>
@@ -150,7 +151,7 @@ export default function RequestCard({
   {request.status}
 </span>
                   </div>
-                 <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <p className="text-[16px] text-[#231F20BF]">
                       {request.providerName}
                     </p>

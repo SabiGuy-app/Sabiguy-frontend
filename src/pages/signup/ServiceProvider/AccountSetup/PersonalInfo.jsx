@@ -34,7 +34,7 @@ export default function PersonalInfoForm({ onNext }) {
                 Authorization: `Bearer ${token}`,
               },
             }
-          : undefined
+          : undefined,
       );
 
       if (response.status === 200 || response.status === 201) {
@@ -48,7 +48,7 @@ export default function PersonalInfoForm({ onNext }) {
       if (error.response) {
         setErrorMessage(
           error.response.data?.message ||
-            "Unable to save your details. Please try again."
+            "Unable to save your details. Please try again.",
         );
       } else if (error.request) {
         setErrorMessage("No response from the server. Please try again later.");
@@ -59,7 +59,6 @@ export default function PersonalInfoForm({ onNext }) {
       setLoading(false);
     }
   };
-
 
   return (
     <AccountSetupLayout currentStep={0}>
@@ -83,10 +82,8 @@ export default function PersonalInfoForm({ onNext }) {
               address: "",
             }}
             validationSchema={PersonalInfoSchema}
-            
             onSubmit={handleSubmit}
           >
-
             {({
               values,
               handleChange,
@@ -96,7 +93,6 @@ export default function PersonalInfoForm({ onNext }) {
               isValid,
               dirty,
             }) => (
-
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
                   <InputField
@@ -110,7 +106,7 @@ export default function PersonalInfoForm({ onNext }) {
                       { label: "Female", value: "female" },
                     ]}
                     value={values.gender}
-  onChange={(option) => setFieldValue("gender", option.value)}
+                    onChange={(option) => setFieldValue("gender", option.value)}
                     onBlur={handleBlur}
                   />
                   <ErrorMessage
@@ -151,7 +147,7 @@ export default function PersonalInfoForm({ onNext }) {
                     className="text-[#db3a3a]"
                   />
                 </div>
-{/* <CoverageRadius
+                {/* <CoverageRadius
             initialRadius={values.radius}
             initialAllowOutside={values.allowAnywhere}
             onChange={(coverageData) => {
@@ -176,9 +172,9 @@ export default function PersonalInfoForm({ onNext }) {
                   </p>
                 )}
               </form>
-        )}
-        </Formik>
-      </div>
+            )}
+          </Formik>
+        </div>
       </motion.div>
     </AccountSetupLayout>
   );

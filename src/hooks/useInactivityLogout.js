@@ -12,6 +12,23 @@ export default function useInactivityLogout({
   const [showWarning, setShowWarning] = useState(false);
   const warningTimeoutRef = useRef(null);
   const logoutTimeoutRef = useRef(null);
+  const activityEventsRef = useRef([
+    "mousemove",
+    "mousedown",
+    "keydown",
+    "touchstart",
+    "touchmove",
+    "touchend",
+    "pointerdown",
+    "pointermove",
+    "scroll",
+    "wheel",
+    "click",
+    "focus",
+    "visibilitychange",
+    "pageshow",
+  ]);
+  const listenerOptionsRef = useRef({ capture: true, passive: true });
 
   const clearTimers = useCallback(() => {
     if (warningTimeoutRef.current) {
@@ -37,9 +54,9 @@ export default function useInactivityLogout({
 
   const handleActivity = useCallback(() => {
     if (!enabled) return;
-    if (showWarning) return;
+    if (document.visibilityState === "hidden") return;
     startTimers();
-  }, [enabled, showWarning, startTimers]);
+  }, [enabled, startTimers]);
 
   const extendSession = useCallback(() => {
     if (!enabled) return;
@@ -60,21 +77,29 @@ export default function useInactivityLogout({
       return undefined;
     }
 
-    const events = [
-      "mousemove",
-      "mousedown",
-      "keydown",
-      "touchstart",
-      "scroll",
-      "click",
-      "focus",
-    ];
+    const events = activityEventsRef.current;
+    const listenerOptions = listenerOptionsRef.current;
 
-    events.forEach((event) => window.addEventListener(event, handleActivity));
+    events.forEach((event) => {
+      if (event === "visibilitychange" || event === "pageshow") {
+        document.addEventListener(event, handleActivity, listenerOptions);
+        return;
+      }
+
+      window.addEventListener(event, handleActivity, listenerOptions);
+    });
+
     startTimers();
 
     return () => {
-      events.forEach((event) => window.removeEventListener(event, handleActivity));
+      events.forEach((event) => {
+        if (event === "visibilitychange" || event === "pageshow") {
+          document.removeEventListener(event, handleActivity, listenerOptions);
+          return;
+        }
+
+        window.removeEventListener(event, handleActivity, listenerOptions);
+      });
       clearTimers();
     };
   }, [clearTimers, enabled, handleActivity, startTimers]);

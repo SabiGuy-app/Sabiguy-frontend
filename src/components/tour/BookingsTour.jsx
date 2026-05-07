@@ -54,7 +54,7 @@ const STEPS = [
   {
     type: "modal",
     title: "You're Ready to Go!",
-    desc: "You've completed the bookings tour. Remember, you can always revisit the tour or access helpful tips from the Help section.",
+    desc: "You've completed the bookings tour. Remember, you can always access helpful tips from the Help section via the Chat Now button.",
     btn: "Continue",
   },
 ];
@@ -223,7 +223,7 @@ export default function BookingsTour() {
           <h3 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 700, color: "#111" }}>{s.title}</h3>
           <p style={{ margin: "0 0 26px", fontSize: 13.5, color: "#555", lineHeight: 1.6 }}>{s.desc}</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button onClick={skip} style={{ background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 14, padding: 0 }}>Skip</button>
+            <button onClick={skip} style={{ background: "none", border: "1px solid black", color: "#666", cursor: "pointer", fontSize: 14, padding: "5px 20px" }}>Skip</button>
             <button onClick={next} style={{ background: G, color: "white", border: "none", borderRadius: 8, padding: "9px 26px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{s.btn}</button>
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function BookingsTour() {
           </div>
           <p style={{ margin: "0 0 18px", fontSize: 13, color: "#555", lineHeight: 1.55 }}>{s.desc}</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button onClick={skip} style={{ background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 13.5, padding: 0 }}>Skip</button>
+            <button onClick={skip} style={{ background: "none", border: "1px solid black", color: "#666", cursor: "pointer", fontSize: 13.5, padding: "5px 20px" }}>Skip</button>
             <button onClick={next} style={{ background: G, color: "white", border: "none", borderRadius: 8, padding: "8px 22px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>{s.btn}</button>
           </div>
         </div>

@@ -1,421 +1,536 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import Map, { Marker, Source, Layer } from "react-map-gl";
-// import "mapbox-gl/dist/mapbox-gl.css";
-// import { Navigation } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-// const DeliveryMap = ({ pickup, dropoff, riderLocation }) => {
-//   const mapRef = useRef(null);
-//   const [routeCoordinates, setRouteCoordinates] = useState([]);
-//   const [viewport, setViewport] = useState({
-//     longitude: pickup?.longitude || 3.3792,
-//     latitude: pickup?.latitude || 6.5244,
-//     zoom: 13,
-//   });
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-//   // Fetch route from Mapbox Directions API
-//   useEffect(() => {
-//     if (!pickup?.longitude || !dropoff?.longitude) return;
+let googleMapsLoaderPromise = null;
 
-//     const fetchRoute = async () => {
-//       try {
-//         const response = await fetch(
-//           `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.longitude},${pickup.latitude};${dropoff.longitude},${dropoff.latitude}?geometries=geojson&overview=full&access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`
-//         );
+const isValidCoordinate = (coord) => {
+  return (
+    coord &&
+    typeof coord.latitude === "number" &&
+    typeof coord.longitude === "number" &&
+    !Number.isNaN(coord.latitude) &&
+    !Number.isNaN(coord.longitude) &&
+    coord.latitude >= -90 &&
+    coord.latitude <= 90 &&
+    coord.longitude >= -180 &&
+    coord.longitude <= 180
+  );
+};
 
-//         const data = await response.json();
-//         if (data.routes && data.routes[0]) {
-//           const coordinates = data.routes[0].geometry.coordinates;
-//           setRouteCoordinates(coordinates);
-//         }
-//       } catch (error) {
-//         console.error("Error fetching route:", error);
-//       }
-//     };
+const toLatLngLiteral = (coord) => ({
+  lat: coord.latitude,
+  lng: coord.longitude,
+});
 
-//     fetchRoute();
-//   }, [pickup, dropoff]);
+const isBikeVehicleType = (vehicleType) => {
+  const normalizedType = String(vehicleType || "").toLowerCase();
+  return (
+    normalizedType.includes("bike") || normalizedType.includes("motorbike")
+  );
+};
 
-//   // Auto-fit bounds when markers change
-//   useEffect(() => {
-//     if (!mapRef.current || !pickup || !dropoff) return;
+const extractPointFromCurrentLocation = (currentLocation) => {
+  if (!currentLocation) return null;
 
-//     const bounds = [
-//       [
-//         Math.min(pickup.longitude, dropoff.longitude),
-//         Math.min(pickup.latitude, dropoff.latitude),
-//       ],
-//       [
-//         Math.max(pickup.longitude, dropoff.longitude),
-//         Math.max(pickup.latitude, dropoff.latitude),
-//       ],
-//     ];
+  const coords = currentLocation.coordinates;
+  if (Array.isArray(coords) && coords.length >= 2) {
+    return {
+      latitude: coords[1],
+      longitude: coords[0],
+      address: currentLocation.address || "",
+    };
+  }
 
-//     // Include rider location in bounds if available
-//     if (riderLocation?.longitude && riderLocation?.latitude) {
-//       bounds[0][0] = Math.min(bounds[0][0], riderLocation.longitude);
-//       bounds[0][1] = Math.min(bounds[0][1], riderLocation.latitude);
-//       bounds[1][0] = Math.max(bounds[1][0], riderLocation.longitude);
-//       bounds[1][1] = Math.max(bounds[1][1], riderLocation.latitude);
-//     }
+  if (
+    typeof currentLocation.latitude === "number" &&
+    typeof currentLocation.longitude === "number"
+  ) {
+    return {
+      latitude: currentLocation.latitude,
+      longitude: currentLocation.longitude,
+      address: currentLocation.address || "",
+    };
+  }
 
-//     mapRef.current?.fitBounds(bounds, {
-//       padding: { top: 100, bottom: 100, left: 100, right: 100 },
-//       duration: 1000,
-//     });
-//   }, [pickup, dropoff, riderLocation]);
+  return null;
+};
 
-//   // Route GeoJSON
-//   const routeGeoJSON = {
-//     type: "Feature",
-//     geometry: {
-//       type: "LineString",
-//       coordinates: routeCoordinates,
-//     },
-//   };
+const getBookingRiderLocation = (bookingDetails) => {
+  const provider = bookingDetails?.providerId;
+  if (provider && typeof provider === "object") {
+    return extractPointFromCurrentLocation(provider.currentLocation);
+  }
 
-//   return (
-//     <div className="w-full h-full rounded-lg overflow-hidden shadow-lg">
-//       <Map
-//         ref={mapRef}
-//         {...viewport}
-//         onMove={(evt) => setViewport(evt.viewState)}
-//         style={{ width: "100%", height: "100%" }}
-//         mapStyle="mapbox://styles/mapbox/streets-v12"
-//         mapboxAccessToken={import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}
-//       >
-//         {/* Pickup Marker */}
-//         {pickup?.longitude && pickup?.latitude && (
-//           <Marker
-//             longitude={pickup.longitude}
-//             latitude={pickup.latitude}
-//             anchor="bottom"
-//           >
-//             <div className="relative">
-//               <div className="w-10 h-10 bg-green-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-//                 <div className="w-4 h-4 bg-white rounded-full"></div>
-//               </div>
-//               <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-white px-2 py-1 rounded shadow-md text-xs font-medium">
-//                 Pickup
-//               </div>
-//             </div>
-//           </Marker>
-//         )}
+  return null;
+};
 
-//         {/* Dropoff Marker */}
-//         {dropoff?.longitude && dropoff?.latitude && (
-//           <Marker
-//             longitude={dropoff.longitude}
-//             latitude={dropoff.latitude}
-//             anchor="bottom"
-//           >
-//             <div className="relative">
-//               <div className="w-10 h-10 bg-red-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-//                 <div className="w-4 h-4 bg-white rounded-full"></div>
-//               </div>
-//               <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-white px-2 py-1 rounded shadow-md text-xs font-medium">
-//                 Dropoff
-//               </div>
-//             </div>
-//           </Marker>
-//         )}
+const loadGoogleMaps = () => {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Google Maps can only load in the browser."));
+  }
 
-//         {/* Rider Location Marker (Real-time from WebSocket) */}
-//         {riderLocation?.longitude && riderLocation?.latitude && (
-//           <Marker
-//             longitude={riderLocation.longitude}
-//             latitude={riderLocation.latitude}
-//             anchor="center"
-//           >
-//             <div className="relative animate-pulse">
-//               {/* Pulsing circle background */}
-//               <div className="absolute inset-0 bg-blue-400 rounded-full opacity-40 animate-ping"></div>
-              
-//               {/* Rider icon/avatar */}
-//               <div className="relative w-12 h-12 bg-blue-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-//                 <Navigation 
-//                   className="w-6 h-6 text-white" 
-//                   style={{ 
-//                     transform: `rotate(${riderLocation.bearing || 0}deg)` 
-//                   }}
-//                 />
-//               </div>
-//             </div>
-//           </Marker>
-//         )}
+  if (window.google?.maps) {
+    return Promise.resolve(window.google.maps);
+  }
 
-//         {/* Route Line */}
-//         {routeCoordinates.length > 0 && (
-//           <Source id="route" type="geojson" data={routeGeoJSON}>
-//             <Layer
-//               id="route-layer"
-//               type="line"
-//               paint={{
-//                 "line-color": "#3B82F6",
-//                 "line-width": 5,
-//                 "line-opacity": 0.75,
-//               }}
-//             />
-//           </Source>
-//         )}
-//       </Map>
-//     </div>
-//   );
-// };
+  if (!GOOGLE_MAPS_API_KEY) {
+    return Promise.reject(
+      new Error("Missing VITE_GOOGLE_MAPS_API_KEY environment variable."),
+    );
+  }
 
-// export default DeliveryMap;
+  if (!googleMapsLoaderPromise) {
+    googleMapsLoaderPromise = new Promise((resolve, reject) => {
+      const existingScript = document.querySelector(
+        'script[data-google-maps="true"]',
+      );
 
-import React, { useEffect, useRef } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+      if (existingScript) {
+        existingScript.addEventListener("load", () =>
+          resolve(window.google.maps),
+        );
+        existingScript.addEventListener("error", () =>
+          reject(new Error("Google Maps failed to load.")),
+        );
+        return;
+      }
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&v=weekly`;
+      script.async = true;
+      script.defer = true;
+      script.dataset.googleMaps = "true";
+      script.onload = () => resolve(window.google.maps);
+      script.onerror = () => reject(new Error("Google Maps failed to load."));
+      document.head.appendChild(script);
+    });
+  }
 
-const DeliveryMap = ({ pickup, dropoff, riderLocation }) => {
+  return googleMapsLoaderPromise;
+};
+
+const createPinSvg = (color, label) => {
+  const safeLabel = label ?? "";
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56">
+      <path d="M24 2C15.2 2 8 9.2 8 18c0 12 16 36 16 36s16-24 16-36C40 9.2 32.8 2 24 2z" fill="${color}" stroke="white" stroke-width="3"/>
+      <circle cx="24" cy="18" r="7" fill="white"/>
+      <text x="24" y="49" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="#111827">${safeLabel}</text>
+    </svg>
+  `)}`;
+};
+
+const createVehicleSvg = (vehicleType, bearing = 0) => {
+  const isBike = isBikeVehicleType(vehicleType);
+  const accent = isBike ? "#2563eb" : "#005823";
+  const body = isBike
+    ? `
+      <circle cx="14" cy="35" r="5" fill="none" stroke="white" stroke-width="3"/>
+      <circle cx="34" cy="35" r="5" fill="none" stroke="white" stroke-width="3"/>
+      <path d="M14 35l7-14h7l-4 8h8l4 6" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20 21l4 7" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M31 21l3 6" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    `
+    : `
+      <rect x="11" y="18" width="26" height="14" rx="4" fill="white" opacity="0.2"/>
+      <path d="M13 27h22l-2-7c-.4-1.4-1.7-2.3-3.2-2.3h-11.6c-1.5 0-2.8.9-3.2 2.3L13 27z" fill="none" stroke="white" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M15 18l3-4h12l3 4" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="17" cy="32" r="3" fill="white"/>
+      <circle cx="31" cy="32" r="3" fill="white"/>
+      <path d="M14 23h20" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56">
+      <circle cx="28" cy="28" r="24" fill="${accent}" opacity="0.18"/>
+      <circle cx="28" cy="28" r="18" fill="${accent}" stroke="white" stroke-width="4"/>
+      <g transform="rotate(${bearing} 28 28)">
+        ${body}
+      </g>
+    </svg>
+  `)}`;
+};
+
+const createFallbackMapStyle = [
+  {
+    featureType: "all",
+    elementType: "geometry",
+    stylers: [{ color: "#f5f7f6" }],
+  },
+  {
+    featureType: "poi",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#7f8a87" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#ffffff" }],
+  },
+  {
+    featureType: "road.arterial",
+    elementType: "geometry",
+    stylers: [{ color: "#e7ece9" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry",
+    stylers: [{ color: "#dbe6df" }],
+  },
+  {
+    featureType: "transit",
+    elementType: "geometry",
+    stylers: [{ color: "#e9efe9" }],
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#d7eef7" }],
+  },
+];
+
+const animateMarker = (marker, from, to, duration = 700) => {
+  if (!marker || !from || !to) return;
+
+  const startTime = performance.now();
+  const easeInOut = (t) => t * (2 - t);
+
+  const step = (now) => {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = easeInOut(progress);
+    const lat = from.lat + (to.lat - from.lat) * eased;
+    const lng = from.lng + (to.lng - from.lng) * eased;
+
+    marker.setPosition({ lat, lng });
+
+    if (progress < 1) {
+      marker.__raf = window.requestAnimationFrame(step);
+    }
+  };
+
+  if (marker.__raf) {
+    window.cancelAnimationFrame(marker.__raf);
+  }
+
+  marker.__raf = window.requestAnimationFrame(step);
+  return marker.__raf;
+};
+
+const DeliveryMap = ({ pickup, dropoff, bookingDetails }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const pickupMarker = useRef(null);
   const dropoffMarker = useRef(null);
   const riderMarker = useRef(null);
+  const routePolyline = useRef(null);
+  const directionsService = useRef(null);
+  const markerAnimation = useRef(null);
+  const [loadState, setLoadState] = useState(
+    GOOGLE_MAPS_API_KEY ? "loading" : "missing",
+  );
+  const [loadError, setLoadError] = useState("");
+  const riderLocation = useMemo(
+    () => getBookingRiderLocation(bookingDetails),
+    [bookingDetails?.providerId?.currentLocation],
+  );
+  const vehicleType = useMemo(
+    () => bookingDetails?.modeOfDelivery || "car",
+    [bookingDetails?.modeOfDelivery],
+  );
 
-  // Validate coordinates helper
-  const isValidCoordinate = (coord) => {
-    return (
-      coord &&
-      typeof coord.latitude === "number" &&
-      typeof coord.longitude === "number" &&
-      !isNaN(coord.latitude) &&
-      !isNaN(coord.longitude) &&
-      coord.latitude >= -90 &&
-      coord.latitude <= 90 &&
-      coord.longitude >= -180 &&
-      coord.longitude <= 180
-    );
+  const getCenter = () => {
+    if (isValidCoordinate(riderLocation)) {
+      return toLatLngLiteral(riderLocation);
+    }
+
+    if (isValidCoordinate(pickup)) {
+      return toLatLngLiteral(pickup);
+    }
+
+    if (isValidCoordinate(dropoff)) {
+      return toLatLngLiteral(dropoff);
+    }
+
+    return null;
   };
 
-  // Initialize map
-  useEffect(() => {
-    if (map.current) return;
-
-    const center = isValidCoordinate(riderLocation)
-      ? [riderLocation.longitude, riderLocation.latitude]
-      : isValidCoordinate(pickup)
-        ? [pickup.longitude, pickup.latitude]
-        : isValidCoordinate(dropoff)
-          ? [dropoff.longitude, dropoff.latitude]
-          : null;
-
-    if (!center) return;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: center,
-      zoom: 13,
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
-  }, [pickup, dropoff, riderLocation]);
-
-  // Add/Update Pickup Marker
-  useEffect(() => {
-    if (!map.current || !isValidCoordinate(pickup)) return;
-
-    if (pickupMarker.current) {
-      pickupMarker.current.setLngLat([pickup.longitude, pickup.latitude]);
-    } else {
-      const el = document.createElement("div");
-      el.innerHTML = `
-        <div style="position: relative;">
-          <div style="width: 40px; height: 40px; background-color: #10b981; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-            <div style="width: 16px; height: 16px; background-color: white; border-radius: 50%;"></div>
-          </div>
-          <div style="position: absolute; top: 45px; left: 50%; transform: translateX(-50%); background: white; padding: 4px 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap; font-size: 12px; font-weight: 500;">
-            Pickup
-          </div>
-        </div>
-      `;
-
-      pickupMarker.current = new mapboxgl.Marker({ element: el })
-        .setLngLat([pickup.longitude, pickup.latitude])
-        .addTo(map.current);
-    }
-  }, [pickup]);
-
-  // Add/Update Dropoff Marker
-  useEffect(() => {
-    if (!map.current || !isValidCoordinate(dropoff)) return;
-
-    if (dropoffMarker.current) {
-      dropoffMarker.current.setLngLat([dropoff.longitude, dropoff.latitude]);
-    } else {
-      const el = document.createElement("div");
-      el.innerHTML = `
-        <div style="position: relative;">
-          <div style="width: 40px; height: 40px; background-color: #ef4444; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-center: center;">
-            <div style="width: 16px; height: 16px; background-color: white; border-radius: 50%;"></div>
-          </div>
-          <div style="position: absolute; top: 45px; left: 50%; transform: translateX(-50%); background: white; padding: 4px 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap; font-size: 12px; font-weight: 500;">
-            Dropoff
-          </div>
-        </div>
-      `;
-
-      dropoffMarker.current = new mapboxgl.Marker({ element: el })
-        .setLngLat([dropoff.longitude, dropoff.latitude])
-        .addTo(map.current);
-    }
-  }, [dropoff]);
-
-  // Add/Update Rider Marker
-  useEffect(() => {
-    if (!map.current || !isValidCoordinate(riderLocation)) return;
-
-    if (riderMarker.current) {
-      riderMarker.current.setLngLat([
-        riderLocation.longitude,
-        riderLocation.latitude,
-      ]);
-
-      const el = riderMarker.current.getElement();
-      const icon = el.querySelector(".rider-icon");
-      if (icon && riderLocation.bearing !== undefined) {
-        icon.style.transform = `rotate(${riderLocation.bearing}deg)`;
-      }
-    } else {
-      const el = document.createElement("div");
-      el.innerHTML = `
-        <div style="position: relative;">
-          <div style="position: absolute; width: 60px; height: 60px; background-color: rgba(59, 130, 246, 0.3); border-radius: 50%; animation: pulse 2s infinite;"></div>
-          <div style="position: relative; width: 48px; height: 48px; background-color: #3b82f6; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-            <svg class="rider-icon" style="width: 24px; height: 24px; color: white; transition: transform 0.3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-            </svg>
-          </div>
-        </div>
-      `;
-
-      if (!document.getElementById("pulse-animation")) {
-        const style = document.createElement("style");
-        style.id = "pulse-animation";
-        style.textContent = `
-          @keyframes pulse {
-            0%, 100% {
-              transform: scale(1);
-              opacity: 0.5;
-            }
-            50% {
-              transform: scale(1.2);
-              opacity: 0.3;
-            }
-          }
-        `;
-        document.head.appendChild(style);
-      }
-
-      riderMarker.current = new mapboxgl.Marker({ element: el })
-        .setLngLat([riderLocation.longitude, riderLocation.latitude])
-        .addTo(map.current);
-    }
-  }, [riderLocation]);
-
-  // Fetch and draw route
-  useEffect(() => {
-    if (
-      !map.current ||
-      !isValidCoordinate(pickup) ||
-      !isValidCoordinate(dropoff)
-    )
-      return;
-
-    const fetchRoute = async () => {
-      try {
-        const response = await fetch(
-          `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.longitude},${pickup.latitude};${dropoff.longitude},${dropoff.latitude}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`
-        );
-
-        const data = await response.json();
-        if (data.routes && data.routes[0]) {
-          const route = data.routes[0].geometry;
-
-          if (!map.current.isStyleLoaded()) {
-            map.current.once("load", () => addRouteToMap(route));
-          } else {
-            addRouteToMap(route);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching route:", error);
-      }
-    };
-
-    const addRouteToMap = (route) => {
-      if (map.current.getSource("route")) {
-        map.current.removeLayer("route-layer");
-        map.current.removeSource("route");
-      }
-
-      map.current.addSource("route", {
-        type: "geojson",
-        data: {
-          type: "Feature",
-          properties: {},
-          geometry: route,
-        },
-      });
-
-      map.current.addLayer({
-        id: "route-layer",
-        type: "line",
-        source: "route",
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
-        },
-        paint: {
-          "line-color": "#3b82f6",
-          "line-width": 5,
-          "line-opacity": 0.75,
-        },
-      });
-    };
-
-    fetchRoute();
-  }, [pickup, dropoff]);
-
-  // Auto-fit bounds (only when at least two valid points exist)
-  useEffect(() => {
-    if (!map.current) return;
+  const updateBounds = () => {
+    if (!map.current || !window.google?.maps) return;
 
     const points = [];
     if (isValidCoordinate(riderLocation)) {
-      points.push([riderLocation.longitude, riderLocation.latitude]);
+      points.push(toLatLngLiteral(riderLocation));
     }
     if (isValidCoordinate(pickup)) {
-      points.push([pickup.longitude, pickup.latitude]);
+      points.push(toLatLngLiteral(pickup));
     }
     if (isValidCoordinate(dropoff)) {
-      points.push([dropoff.longitude, dropoff.latitude]);
+      points.push(toLatLngLiteral(dropoff));
     }
 
     if (points.length >= 2) {
-      const bounds = new mapboxgl.LngLatBounds();
-      points.forEach((pt) => bounds.extend(pt));
+      const bounds = new window.google.maps.LatLngBounds();
+      points.forEach((point) => bounds.extend(point));
       map.current.fitBounds(bounds, {
-        padding: { top: 100, bottom: 100, left: 100, right: 100 },
-        duration: 1000,
+        top: 100,
+        bottom: 100,
+        left: 100,
+        right: 100,
       });
       return;
     }
 
     if (points.length === 1) {
-      map.current.easeTo({ center: points[0], zoom: 13, duration: 600 });
+      map.current.setCenter(points[0]);
+      map.current.setZoom(13);
     }
-  }, [pickup, dropoff, riderLocation]);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    loadGoogleMaps()
+      .then(() => {
+        if (!cancelled) {
+          setLoadState("ready");
+          setLoadError("");
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setLoadState("error");
+          setLoadError(error.message || "Unable to load Google Maps.");
+          console.error("Google Maps load error:", error);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (loadState !== "ready" || map.current || !mapContainer.current) return;
+
+    const center = getCenter();
+    if (!center) return;
+
+    map.current = new window.google.maps.Map(mapContainer.current, {
+      center,
+      zoom: 13,
+      styles: createFallbackMapStyle,
+      disableDefaultUI: true,
+      zoomControl: true,
+      fullscreenControl: false,
+      streetViewControl: false,
+      mapTypeControl: false,
+      clickableIcons: false,
+      gestureHandling: "greedy",
+    });
+
+    directionsService.current = new window.google.maps.DirectionsService();
+    updateBounds();
+  }, [loadState, pickup, dropoff, riderLocation]);
+
+  useEffect(() => {
+    if (!map.current || !window.google?.maps || !isValidCoordinate(pickup)) {
+      return;
+    }
+
+    const position = toLatLngLiteral(pickup);
+
+    if (pickupMarker.current) {
+      pickupMarker.current.setPosition(position);
+      return;
+    }
+
+    pickupMarker.current = new window.google.maps.Marker({
+      position,
+      map: map.current,
+      title: "Pickup",
+      icon: {
+        url: createPinSvg("#10b981", "P"),
+        scaledSize: new window.google.maps.Size(48, 56),
+        anchor: new window.google.maps.Point(24, 52),
+      },
+    });
+  }, [pickup, loadState]);
+
+  useEffect(() => {
+    if (!map.current || !window.google?.maps || !isValidCoordinate(dropoff)) {
+      return;
+    }
+
+    const position = toLatLngLiteral(dropoff);
+
+    if (dropoffMarker.current) {
+      dropoffMarker.current.setPosition(position);
+      return;
+    }
+
+    dropoffMarker.current = new window.google.maps.Marker({
+      position,
+      map: map.current,
+      title: "Dropoff",
+      icon: {
+        url: createPinSvg("#ef4444", "D"),
+        scaledSize: new window.google.maps.Size(48, 56),
+        anchor: new window.google.maps.Point(24, 52),
+      },
+    });
+  }, [dropoff, loadState]);
+
+  useEffect(() => {
+    if (
+      !map.current ||
+      !window.google?.maps ||
+      !isValidCoordinate(riderLocation)
+    ) {
+      return;
+    }
+
+    const position = toLatLngLiteral(riderLocation);
+    const bearing = riderLocation.bearing ?? 0;
+    const iconUrl = createVehicleSvg(vehicleType, bearing);
+
+    if (riderMarker.current) {
+      const currentPosition = riderMarker.current.getPosition()?.toJSON?.();
+      if (markerAnimation.current) {
+        window.cancelAnimationFrame(markerAnimation.current);
+      }
+
+      if (currentPosition) {
+        markerAnimation.current = animateMarker(
+          riderMarker.current,
+          currentPosition,
+          position,
+          700,
+        );
+      } else {
+        riderMarker.current.setPosition(position);
+      }
+
+      riderMarker.current.setIcon({
+        url: iconUrl,
+        scaledSize: new window.google.maps.Size(56, 56),
+        anchor: new window.google.maps.Point(28, 28),
+      });
+      return;
+    }
+
+    riderMarker.current = new window.google.maps.Marker({
+      position,
+      map: map.current,
+      title: isBikeVehicleType(vehicleType) ? "Bike courier" : "Vehicle",
+      icon: {
+        url: iconUrl,
+        scaledSize: new window.google.maps.Size(56, 56),
+        anchor: new window.google.maps.Point(28, 28),
+      },
+    });
+  }, [riderLocation, loadState, vehicleType]);
+
+  useEffect(() => {
+    if (
+      !map.current ||
+      !window.google?.maps ||
+      !directionsService.current ||
+      !isValidCoordinate(pickup) ||
+      !isValidCoordinate(dropoff)
+    ) {
+      return;
+    }
+
+      directionsService.current.route(
+      {
+        origin: toLatLngLiteral(pickup),
+        destination: toLatLngLiteral(dropoff),
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status !== "OK" || !result) {
+          console.warn("Google Directions request failed:", status);
+          return;
+        }
+
+        const routePath = result.routes?.[0]?.overview_path;
+        if (!routePath?.length) return;
+
+        if (routePolyline.current) {
+          routePolyline.current.setMap(null);
+        }
+
+        routePolyline.current = new window.google.maps.Polyline({
+          path: routePath,
+          strokeColor: "#005823",
+          strokeOpacity: 0.8,
+          strokeWeight: 5,
+          map: map.current,
+        });
+      },
+    );
+  }, [pickup, dropoff, loadState]);
+
+  useEffect(() => {
+    if (!map.current) return;
+    updateBounds();
+  }, [pickup, dropoff, riderLocation, loadState]);
+
+  useEffect(() => {
+    return () => {
+      if (markerAnimation.current) {
+        window.cancelAnimationFrame(markerAnimation.current);
+      }
+
+      if (pickupMarker.current) {
+        pickupMarker.current.setMap(null);
+      }
+
+      if (dropoffMarker.current) {
+        dropoffMarker.current.setMap(null);
+      }
+
+      if (riderMarker.current) {
+        riderMarker.current.setMap(null);
+      }
+
+      if (routePolyline.current) {
+        routePolyline.current.setMap(null);
+      }
+    };
+  }, []);
+
+  if (loadState === "missing") {
+    return (
+      <div className="w-full h-full rounded-lg overflow-hidden shadow-lg bg-white flex items-center justify-center p-6 text-center border border-dashed border-gray-200">
+        <div>
+          <p className="font-semibold text-gray-900 mb-2">Google Maps key missing</p>
+          <p className="text-sm text-gray-500 max-w-xs">
+            Add <code>VITE_GOOGLE_MAPS_API_KEY</code> to your environment to load the live delivery map.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadState === "error") {
+    return (
+      <div className="w-full h-full rounded-lg overflow-hidden shadow-lg bg-white flex items-center justify-center p-6 text-center border border-dashed border-gray-200">
+        <div>
+          <p className="font-semibold text-gray-900 mb-2">Map unavailable</p>
+          <p className="text-sm text-gray-500 max-w-xs">
+            {loadError || "Google Maps could not be loaded right now."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       ref={mapContainer}
-      className="w-full h-full rounded-lg overflow-hidden shadow-lg"
+      className="w-full h-full rounded-lg overflow-hidden shadow-lg bg-[#f5f7f6]"
     />
   );
 };

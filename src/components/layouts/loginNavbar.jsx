@@ -22,7 +22,7 @@ export default function LoginNavbar() {
             Login
           </button>
         </Link> */}
-        <Link to="/">
+        <Link to="/welcome">
           <Button variant="primary" size="md">
             Sign Up
           </Button>
@@ -46,7 +46,7 @@ export default function LoginNavbar() {
         >
           Login      
          </Link>
-          <Link to="/" onClick={() => setMenuOpen(false)}>
+          <Link to="/welcome" onClick={() => setMenuOpen(false)}>
             <Button variant="primary" size="md">
               Sign Up
             </Button>

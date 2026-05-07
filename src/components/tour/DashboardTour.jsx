@@ -9,7 +9,7 @@ const GAP = 14;
 const STEPS = [
   {
     type: "modal",
-    title: "Welcome back!",
+    title: "Welcome!",
     desc: "Take a quick tour of how to get a service done today",
     btn: "Continue",
   },
@@ -53,7 +53,7 @@ const STEPS = [
   {
     type: "modal",
     title: "You're Ready to Go!",
-    desc: "You've completed the dashboard tour. Remember, you can always revisit the tour or access helpful tips from the Help section.",
+    desc: "You've completed the bookings tour. Remember, you can always access helpful tips from the Help section via the Chat Now button.",
     btn: "Finish",
   },
 ];
@@ -246,7 +246,7 @@ export default function DashboardTour() {
           </div>
           <p style={{ margin: "0 0 18px", fontSize: 13, color: "#555", lineHeight: 1.55 }}>{s.desc}</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button onClick={skip} style={{ background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 13.5, padding: 0 }}>Skip</button>
+            <button onClick={skip} style={{ background: "none", border: "1px solid black", color: "#666", cursor: "pointer", fontSize: 13.5, padding: "5px 20px" }}>Skip</button>
             <button onClick={next} style={{ background: G, color: "white", border: "none", borderRadius: 8, padding: "8px 22px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>{s.btn}</button>
           </div>
         </div>

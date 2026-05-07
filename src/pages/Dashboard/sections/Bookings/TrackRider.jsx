@@ -9,8 +9,8 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import DeliveryMap from "../../../../components/dashboard/Map";
-import Navbar from "../../../../components/dashboard/Navbar";
 import { useNavigate } from "react-router-dom";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import useBookingStore from "../../../../stores/booking.store";
 import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
 import CancelModal from "../../../../components/CancelModal";
@@ -35,30 +35,54 @@ const STATUS_LABELS = {
 const POLL_INTERVAL_MS = 6000;
 
 export default function TrackRider() {
-  const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] = useState(true);
+  const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
+    useState(true);
   const [bookingStatus, setBookingStatus] = useState("in_progress");
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [riderLocation, setRiderLocation] = useState(null); // Rider/provider location
+  const [providerDetails, setProviderDetails] = useState({});
 
   const navigate = useNavigate();
   const wsRef = useRef(null); // WebSocket reference
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
-  const selectedProviderId = useBookingStore((state) => state.selectedProviderId);
-  const providerDetails =
-    booking?.data?.providers?.find((p) => p.id === selectedProviderId) ||
-    booking?.data?.providers?.[0] ||
-    {};
+  const selectedProviderId = useBookingStore(
+    (state) => state.selectedProviderId,
+  );
+
+  // console.log(providerDetails);
 
   const bookingId = bookingDetails?._id;
 
-  const estimatedDuration = bookingDetails?.estimatedDuration;
-  const arrivalText =
-    estimatedDuration?.value && estimatedDuration?.unit
-      ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
-      : "Tracking your rider";
+  const acceptedProviderId =
+    bookingDetails?.providerId?._id ||
+    providerDetails?._id ||
+    selectedProviderId;
+  const providerDistanceInfo = bookingDetails?.providerDistances?.find(
+    (p) => p.providerId === acceptedProviderId,
+  );
+  const providerETA = providerDistanceInfo?.providerETAMinutes;
+
+  const getArrivalText = () => {
+    switch (bookingStatus) {
+      case "in_progress":
+        return providerETA != null
+          ? `Arrival in ${providerETA} mins`
+          : "Arrival in — mins";
+      case "arrived_at_pickup":
+        return "Rider is at your pickup";
+      case "enroute_to_dropoff":
+        return "On the way to delivery";
+      case "arrived_at_dropoff":
+        return "Arrived at destination";
+      default:
+        return providerETA != null
+          ? `Arrival in ${providerETA} mins`
+          : "Arrival in — mins";
+    }
+  };
 
   // Extract pickup and dropoff coordinates (GeoJSON -> coordinates array)
   const pickupCoords = {
@@ -93,10 +117,15 @@ export default function TrackRider() {
     const poll = async () => {
       try {
         const res = await getBookingsDetails(bookingId);
-        console.log(res);
-        const latestStatus = res?.data?.booking?.status || res?.data?.status;
+        const booking = res?.data?.booking;
+
+        const latestStatus = booking?.status;
         if (latestStatus && STEPS_COMPLETED_BY_STATUS[latestStatus]) {
           setBookingStatus(latestStatus);
+        }
+
+        if (booking?.providerId && typeof booking.providerId === "object") {
+          setProviderDetails(booking.providerId);
         }
       } catch (err) {
         console.error("Polling error:", err);
@@ -183,13 +212,8 @@ export default function TrackRider() {
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
-  const serviceCost = bookingDetails?.agreedPrice ?? bookingDetails?.calculatedPrice ?? bookingDetails?.price ?? 0;
-  const calculatedServiceFee = Math.round(serviceCost * 0.10);
-  const calculatedTotalAmount = serviceCost + calculatedServiceFee;
-  
-  const totalAmount = bookingDetails?.totalAmount ?? bookingDetails?.total_amount ?? bookingDetails?.amount ?? calculatedTotalAmount;
-  const fareDisplay = totalAmount ?? serviceCost;
-
+  const fareDisplay =
+    bookingDetails?.pricingBreakdown?.riderPaysFinal ?? 0;
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -198,9 +222,28 @@ export default function TrackRider() {
       maximumFractionDigits: 0,
     }).format(amount);
 
-  const deliverySteps = [
+  const formatTitle = (text) =>
+    text
+      ?.replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+  const normalizedSubCategory = String(bookingDetails?.subCategory || "")
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, " ");
+
+  const title =
+    formatTitle(providerDetails?.job?.[0]?.title) ||
+    formatTitle(bookingDetails?.subCategory) ||
+    "—";
+
+  const packageDeliverySteps = [
     { id: 1, title: "En route to pickup", subtitle: "On the way to pickup" },
-    { id: 2, title: "Arrived at pickup location", subtitle: "At pickup point" },
+    {
+      id: 2,
+      title: "Arrived at pickup location",
+      subtitle: "At pickup point",
+    },
     {
       id: 3,
       title: "En route to delivery",
@@ -213,6 +256,31 @@ export default function TrackRider() {
     },
     { id: 5, title: "Delivery completed", subtitle: "Package delivered" },
   ];
+
+  const bookARideSteps = [
+    { id: 1, title: "En route to pickup", subtitle: "On the way to pickup" },
+    {
+      id: 2,
+      title: "Arrived at pickup location",
+      subtitle: "At pickup point",
+    },
+    {
+      id: 3,
+      title: "En route to destination",
+      subtitle: "Leaving for dropoff location",
+    },
+    {
+      id: 4,
+      title: "Arrived at destination",
+      subtitle: "At dropoff location",
+    },
+    { id: 5, title: "Ride completed", subtitle: "Ride completed" },
+  ];
+
+  const deliverySteps =
+    normalizedSubCategory === "book a ride"
+      ? bookARideSteps
+      : packageDeliverySteps;
 
   const handleCancel = async (reason) => {
     setCancelLoading(true);
@@ -231,13 +299,16 @@ export default function TrackRider() {
 
   const handleMessageProvider = () => {
     if (!bookingId) return;
-    navigate(`/dashboard/chat?bookingId=${bookingId}`);
+    navigate(`/dashboard/chat?bookingId=${bookingId}`, {
+      state: {
+        booking: bookingDetails,
+        provider: providerDetails,
+      },
+    });
   };
 
   return (
-    <>
-      <Navbar />
-
+    <DashboardLayout>
       <CancelModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
@@ -247,7 +318,7 @@ export default function TrackRider() {
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:grid md:grid-cols-2 md:gap-10 space-y-8">
         <div>
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-1">
-            {isFullyComplete ? "Delivery Completed 🎉" : arrivalText}
+            {isFullyComplete ? "Delivery Completed 🎉" : getArrivalText()}
           </h1>
           <p className="text-sm text-[#005823] font-medium mb-4">
             {STATUS_LABELS[bookingStatus]}
@@ -292,36 +363,25 @@ export default function TrackRider() {
                 </div>
                 <div className="text-[#231F20BF] text-[16px] mb-1">
                   <p>
-                    {providerDetails?.services?.[0]?.title?.replace(/_/g, " ") ||
-                      bookingDetails?.subCategory?.replace(/_/g, " ") ||
-                      "—"}
+                        {title}
                   </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium text-gray-900">
-                    {providerDetails?.rating?.average > 0
-                      ? providerDetails.rating.average.toFixed(1)
-                      : "New"}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    ({providerDetails?.rating?.count ?? 0} reviews)
-                  </span>
                 </div>
               </div>
             </div>
 
             <div className="md:grid md:grid-cols-3 gap-6">
-              <button className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              {/* <button className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
-              </button>
+              </button> */}
               <button
                 onClick={handleMessageProvider}
                 className="md:flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <MessageCircle className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Message</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Message
+                </span>
               </button>
             </div>
           </div>
@@ -333,17 +393,43 @@ export default function TrackRider() {
             {bookingDetails?.pickupNote || "No note provided."}
           </p>
 
-          <div className="mb-4">
-            <h3 className="text-[16px] font-semibold text-[#231F20]">Fare</h3>
-            <span className="text-[20px] font-bold text-[#231F20]">
-              {fareDisplay != null ? formatCurrency(fareDisplay) : "—"}
-            </span>
+          <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
+            <div>
+              <h3 className="text-[14px] font-semibold text-[#231F20BF] mb-1">
+                Fare
+              </h3>
+              <span className="text-[18px] font-bold text-[#231F20]">
+                {fareDisplay != null ? formatCurrency(fareDisplay) : "—"}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-[14px] font-semibold text-[#231F20BF] mb-1">
+                Provider ETA
+              </h3>
+              <span className="text-[18px] font-bold text-[#231F20]">
+                {providerETA != null ? `${providerETA} mins` : "—"}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-[14px] font-semibold text-[#231F20BF] mb-1">
+                Duration
+              </h3>
+              <span className="text-[18px] font-bold text-[#231F20]">
+                {bookingDetails?.bookingDuration?.value
+                  ? `${bookingDetails.bookingDuration.value} ${bookingDetails.bookingDuration.unit}`
+                  : bookingDetails?.estimatedDuration?.value
+                    ? `${bookingDetails.estimatedDuration.value} ${bookingDetails.estimatedDuration.unit}`
+                    : "—"}
+              </span>
+            </div>
           </div>
 
           {/* Description */}
           {bookingDetails?.description && (
             <div className="mb-4">
-              <h3 className="text-[16px] font-semibold text-[#231F20] mb-1">Description</h3>
+              <h3 className="text-[16px] font-semibold text-[#231F20] mb-1">
+                Description
+              </h3>
               <p className="bg-[#007BFF08] rounded-lg text-[#231F20BF] border border-[#231F201A] p-4">
                 {bookingDetails.description}
               </p>
@@ -352,7 +438,9 @@ export default function TrackRider() {
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <button
-              onClick={() => setIsDeliveryStatusExpanded(!isDeliveryStatusExpanded)}
+              onClick={() =>
+                setIsDeliveryStatusExpanded(!isDeliveryStatusExpanded)
+              }
               className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
             >
               <h3 className="text-[16px] font-semibold text-[#231F20]">
@@ -434,10 +522,10 @@ export default function TrackRider() {
           <DeliveryMap
             pickup={pickupCoords}
             dropoff={dropoffCoords}
-            riderLocation={riderLocation}
+            bookingDetails={bookingDetails}
           />
         </div>
       </div>
-    </>
+    </DashboardLayout>
   );
 }

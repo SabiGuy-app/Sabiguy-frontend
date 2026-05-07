@@ -7,7 +7,8 @@ export function DriverInfoSection({
   handleChange,
   handleBlur,
   setFieldValue,
-}) {
+})
+{
   const handleYearChange = (e) => {
     const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 4);
     setFieldValue("vehicleProductionYear", digitsOnly);
@@ -17,6 +18,11 @@ export function DriverInfoSection({
     const lettersOnly = e.target.value.replace(/[^a-zA-Z\s]/g, "");
     setFieldValue("vehicleColor", lettersOnly);
   };
+ const options = [
+    { value: "pre2000", label: "pre2000" },
+    { value: "post2000", label: "post2000" },
+ ];
+
 
   return (
     <div className="flex flex-col gap-4">
@@ -34,8 +40,10 @@ export function DriverInfoSection({
 
       <h6 className="text-xl font-semibold mt-5">Automobile Information</h6>
       <InputField
+        select
         label="Automobile Production Year"
         name="vehicleProductionYear"
+        options={options}
         value={values?.vehicleProductionYear || ""}
         onChange={handleYearChange}
         onBlur={handleBlur}

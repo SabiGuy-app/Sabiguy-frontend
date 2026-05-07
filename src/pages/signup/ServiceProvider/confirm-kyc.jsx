@@ -32,6 +32,7 @@ export default function ConfirmKyc({ onNext }) {
         `${import.meta.env.VITE_BASE_URL}/provider/kyc-level`,
         { email: email.trim() }
       );
+          localStorage.setItem("email", email.trim());
 
       if (response.status === 200 || response.status === 201) {
         const token =
@@ -75,7 +76,7 @@ export default function ConfirmKyc({ onNext }) {
     <div className="h-screen"> 
       <Navbar/>
       <AuthLayout
-        title="Welcome Back!"
+        title="Let's Get Started!"
         description="Join us to discover reliable professionals anytime, anywhere."
       >
         <motion.div
@@ -124,7 +125,7 @@ Let's get you started!
             </Button>
           </form>
           <div className="inline-flex mt-4 justify-center w-full">
-            <Link to="/">
+            <Link to="/login">
               <button
                 className="w-90 text-sm px-2 py-2 font-medium text-[#005823] hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-3 rounded-md"
               >
