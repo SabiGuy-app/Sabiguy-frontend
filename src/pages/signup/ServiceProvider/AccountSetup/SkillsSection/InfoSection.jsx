@@ -40,10 +40,8 @@ export function DriverInfoSection({
 
       <h6 className="text-xl font-semibold mt-5">Automobile Information</h6>
       <InputField
-        select
         label="Automobile Production Year"
         name="vehicleProductionYear"
-        options={options}
         value={values?.vehicleProductionYear || ""}
         onChange={handleYearChange}
         onBlur={handleBlur}
