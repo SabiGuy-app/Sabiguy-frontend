@@ -1,28 +1,29 @@
 // DriverInfoSection.jsx
 import { IoIosAdd } from "react-icons/io";
 import InputField from "../../../../../components/InputField";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export function DriverInfoSection({
   values,
   handleChange,
   handleBlur,
   setFieldValue,
-})
-{
-  const handleYearChange = (e) => {
-    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 4);
-    setFieldValue("vehicleProductionYear", digitsOnly);
-  };
-
+}) {
   const handleColorChange = (e) => {
     const lettersOnly = e.target.value.replace(/[^a-zA-Z\s]/g, "");
     setFieldValue("vehicleColor", lettersOnly);
   };
- const options = [
-    { value: "pre2000", label: "pre2000" },
-    { value: "post2000", label: "post2000" },
- ];
 
+  const handleYearChange = (date) => {
+    if (date) {
+      setFieldValue("vehicleProductionYear", date.getFullYear().toString());
+    }
+  };
+
+  const selectedYear = values?.vehicleProductionYear
+    ? new Date(values.vehicleProductionYear, 0, 1)
+    : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -39,18 +40,22 @@ export function DriverInfoSection({
       />
 
       <h6 className="text-xl font-semibold mt-5">Automobile Information</h6>
-      <InputField
-        select
-        label="Automobile Production Year"
-        name="vehicleProductionYear"
-        options={options}
-        value={values?.vehicleProductionYear || ""}
-        onChange={handleYearChange}
-        onBlur={handleBlur}
-        placeholder="Automobile Production Year"
-        inputMode="numeric"
-        pattern="[0-9]*"
-      />
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Automobile Production Year
+        </label>
+        <DatePicker
+          selected={selectedYear}
+          onChange={handleYearChange}
+          showYearPicker
+          dateFormat="yyyy"
+          minDate={new Date(1999, 0, 1)}
+          maxDate={new Date(2026, 0, 1)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53FBF] focus:border-[#8BC53FBF]"
+          placeholderText="Select year"
+          onBlur={handleBlur}
+        />
+      </div>
 
       <InputField
         label="Automobile Name"
