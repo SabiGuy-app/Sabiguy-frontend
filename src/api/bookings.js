@@ -175,6 +175,29 @@ export const acceptCompletion = async (bookingId, payload) => {
   return data;
 };
 
+export const disputeCompletion = async (bookingId, payload) => {
+  const endpoints = [
+    `/bookings/${bookingId}/dispute`,
+  ];
+
+  let lastError;
+
+  for (const endpoint of endpoints) {
+    try {
+      const { data } = await api.patch(endpoint, payload);
+      return data;
+    } catch (error) {
+      lastError = error;
+      const status = error?.response?.status;
+      if (status !== 404 && status !== 405) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
+};
+
 export const cancelBooking = async (bookingId, reason) => {
   const { data } = await api.patch(`/bookings/${bookingId}/cancel`, { reason });
   return data;

@@ -262,7 +262,7 @@ export function listenForMessages(callback) {
         console.error("❌ Failed to play notification sound:", soundError);
         // Try fallback: simple HTML5 audio as last resort
         try {
-          const fallback = new Audio("/notify.mp3");
+          const fallback = new Audio("/notifyy.mp3");
           fallback.volume = 1.0;
           fallback
             .play()

@@ -5,11 +5,12 @@ import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
 import NotificationCompletionModal from "../NotificationCompletionModal";
 import ReviewModal from "./ReviewModal";
+import DisputeCompletionModal from "./DisputeCompletionModal";
 import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
-import { acceptCompletion } from "../../api/bookings";
+import { acceptCompletion, disputeCompletion } from "../../api/bookings";
 import { handleLogout } from "../../api/auth";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
@@ -27,6 +28,9 @@ export default function Navbar({ onMenuClick }) {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewApiError, setReviewApiError] = useState(null);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeLoading, setDisputeLoading] = useState(false);
+  const [disputeApiError, setDisputeApiError] = useState(null);
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
@@ -250,8 +254,21 @@ export default function Navbar({ onMenuClick }) {
     }
 
     setShowCompletionModal(false);
+    setShowDisputeModal(false);
     setReviewApiError(null);
     setShowReviewModal(true);
+  };
+
+  const handleDisputeCompletion = () => {
+    if (!completionBookingId) {
+      toast.error("Booking details are unavailable for this notification.");
+      return;
+    }
+
+    setShowCompletionModal(false);
+    setShowReviewModal(false);
+    setDisputeApiError(null);
+    setShowDisputeModal(true);
   };
 
   const handleReviewSubmit = async ({ score, review, tipAmount }) => {
@@ -296,6 +313,49 @@ export default function Navbar({ onMenuClick }) {
       toast.error(message);
     } finally {
       setReviewLoading(false);
+    }
+  };
+
+  const handleDisputeSubmit = async ({ reason }) => {
+    if (!completionBookingId) {
+      setDisputeApiError("Booking details are unavailable.");
+      return;
+    }
+
+    setDisputeLoading(true);
+    setDisputeApiError(null);
+
+    try {
+      const response = await disputeCompletion(completionBookingId, { reason });
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion disputed successfully";
+      toast.success(successMsg);
+      setShowDisputeModal(false);
+      setCompletionNotification(null);
+    } catch (err) {
+      console.error("Failed to dispute completion:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+      if (status === 400) {
+        message = "Please provide a valid dispute reason.";
+      } else if (status === 401) {
+        message = "Unauthorized. Please log in again.";
+      } else if (status === 409) {
+        message = "This job completion has already been processed.";
+      } else {
+        message =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          message;
+      }
+
+      setDisputeApiError(message);
+      toast.error(message);
+    } finally {
+      setDisputeLoading(false);
     }
   };
 
@@ -498,8 +558,21 @@ export default function Navbar({ onMenuClick }) {
             setCompletionNotification(null);
           }}
           onAcceptCompletion={handleAcceptCompletion}
+          onDisputeCompletion={handleDisputeCompletion}
           providerName={completionProviderName}
           notification={completionNotification}
+        />
+
+        <DisputeCompletionModal
+          isOpen={showDisputeModal}
+          onClose={() => {
+            setShowDisputeModal(false);
+            setDisputeApiError(null);
+          }}
+          onSubmit={handleDisputeSubmit}
+          loading={disputeLoading}
+          apiError={disputeApiError}
+          providerName={completionProviderName}
         />
         <ReviewModal
           isOpen={showReviewModal}
