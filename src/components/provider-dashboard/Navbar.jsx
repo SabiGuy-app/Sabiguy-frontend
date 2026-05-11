@@ -10,6 +10,7 @@ import notificationSoundService from "../../services/notificationSoundService";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import { notificationService } from "../../api/notifications";
 import { toggleAvailability as apiToggleAvailability } from "../../api/provider";
+import KycVerificationModal from "./KycVerificationModal";
 
 export default function ProviderNavbar({ onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
@@ -23,6 +24,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   const [socket, setSocket] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
   const navigate = useNavigate();
   const isAvailable = user?.data?.availability?.isAvailable ?? false;
 
@@ -261,6 +263,10 @@ export default function ProviderNavbar({ onMenuClick }) {
     fetchNotifications();
   };
 
+  const isKycVerificationError = (message) =>
+    typeof message === "string" &&
+    message.toLowerCase().includes("kyc verification required");
+
   const toggleAvailability = async () => {
     const newAvailability = !isAvailable;
 
@@ -308,6 +314,14 @@ export default function ProviderNavbar({ onMenuClick }) {
         console.log(
           `âœ… Availability ${newAvailability ? "enabled" : "disabled"}`,
         );
+      } else if (isKycVerificationError(data.message)) {
+        setShowKycModal(true);
+
+        // Roll back location tracking if the backend blocks the toggle
+        if (newAvailability) {
+          locationService.stopTracking();
+          setLocationEnabled(false);
+        }
       } else {
         console.error("Failed to update availability:", data.message);
         alert("Failed to update availability. Please try again.");
@@ -320,7 +334,17 @@ export default function ProviderNavbar({ onMenuClick }) {
       }
     } catch (error) {
       console.error("Error updating availability:", error);
-      alert("Error updating availability. Please check your connection.");
+      const apiMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "";
+
+      if (isKycVerificationError(apiMessage)) {
+        setShowKycModal(true);
+      } else {
+        alert("Error updating availability. Please check your connection.");
+      }
 
       // Rollback location tracking on error
       if (newAvailability) {
@@ -334,6 +358,10 @@ export default function ProviderNavbar({ onMenuClick }) {
 
   return (
     <>
+      <KycVerificationModal
+        isOpen={showKycModal}
+        onClose={() => setShowKycModal(false)}
+      />
       <Toaster position="top-right" />
       <header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-40 shadow-sm h-16 sm:h-20">
 

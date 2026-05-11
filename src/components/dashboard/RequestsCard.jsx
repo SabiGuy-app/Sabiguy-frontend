@@ -14,8 +14,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // ← new
 import { toast } from "react-toastify";
 import distance from "/distance.png";
-import { acceptCompletion } from "../../api/bookings";
+import { acceptCompletion, disputeCompletion } from "../../api/bookings";
 import ReviewModal from "./ReviewModal";
+import DisputeCompletionModal from "./DisputeCompletionModal";
 import CancelRequestButton from "../CancelRequestButton";
 import useBookingStore from "../../stores/booking.store";
 import { canMessage } from "../../utils/chat.utils";
@@ -33,6 +34,9 @@ export default function RequestCard({
   const [apiError, setApiError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false);
+  const [disputeLoading, setDisputeLoading] = useState(false);
+  const [disputeApiError, setDisputeApiError] = useState(null);
 
   const navigate = useNavigate();
   const setBooking = useBookingStore((s) => s.setBooking);
@@ -106,11 +110,44 @@ export default function RequestCard({
     }
   };
 
-  const isCompleted =
-    request.status.toLowerCase() === "completed" ||
-    request.status.toLowerCase() === "waiting confirmation" ||
-    request.status.toLowerCase() === "funds released" ||
-    request.status.toLowerCase() === "user accepted completion";
+  const handleDisputeSubmit = async ({ reason }) => {
+    setDisputeLoading(true);
+    setDisputeApiError(null);
+
+    try {
+      const response = await disputeCompletion(request.id, { reason });
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion disputed successfully";
+      toast.success(successMsg);
+      setDisputeModalOpen(false);
+      if (onStatusUpdate) onStatusUpdate();
+    } catch (err) {
+      console.error("Failed to dispute completion:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+
+      if (status === 400) {
+        message = "Please provide a valid dispute reason.";
+      } else if (status === 401) {
+        message = "Unauthorized. Please log in again.";
+      } else if (status === 409) {
+        message = "This job completion has already been processed.";
+      } else {
+        message =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          message;
+      }
+
+      setDisputeApiError(message);
+      toast.error(message);
+    } finally {
+      setDisputeLoading(false);
+    }
+  };
 
   return (
     <>
@@ -123,6 +160,18 @@ export default function RequestCard({
         onSubmit={handleReviewSubmit}
         loading={submitLoading}
         apiError={apiError}
+      />
+
+      <DisputeCompletionModal
+        isOpen={disputeModalOpen}
+        onClose={() => {
+          setDisputeModalOpen(false);
+          setDisputeApiError(null);
+        }}
+        onSubmit={handleDisputeSubmit}
+        loading={disputeLoading}
+        apiError={disputeApiError}
+        providerName={request.providerName}
       />
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
@@ -322,33 +371,43 @@ export default function RequestCard({
                 </button>
               )}
 
-              {isCompleted && (
+              {request.status.toLowerCase() === "completed" &&
+                !request.ratings &&
+                !submitted && (
                 <>
-                  {request.ratings || submitted ? (
-                    <div className="px-3 py-1 mt-3 flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-5 h-5 ${
-                            i < Math.round(request.ratings)
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "fill-gray-300 text-gray-300"
-                          }`}
-                        />
-                      ))}
-                      <span className="text-sm font-bold ml-2">
-                        {request.ratings}.0
-                      </span>
-                    </div>
-                  ) : (
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <button
+                      onClick={() => setDisputeModalOpen(true)}
+                      className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      Dispute Job Completion
+                    </button>
                     <button
                       onClick={() => setModalOpen(true)}
-                      className="w-full sm:w-auto px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                     >
                       Accept Job Completion
                     </button>
-                  )}
+                  </div>
                 </>
+              )}
+
+              {(request.ratings || submitted) && (
+                <div className="px-3 py-1 mt-3 flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${
+                        i < Math.round(request.ratings)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "fill-gray-300 text-gray-300"
+                      }`}
+                    />
+                  ))}
+                  <span className="text-sm font-bold ml-2">
+                    {request.ratings}.0
+                  </span>
+                </div>
               )}
             </div>
           </div>

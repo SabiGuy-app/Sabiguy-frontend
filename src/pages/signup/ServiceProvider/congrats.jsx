@@ -48,8 +48,6 @@ you’re verified.</p>
                     </Button>
                    </div>
   <p className="text-gray-500 text-sm font-extralight italic mt-8">Tip: You can always update your profile or verification info in settings</p>
-
-
             </div>
 
     )

@@ -5,6 +5,7 @@ export default function NotificationCompletionModal({
   isOpen,
   onClose,
   onAcceptCompletion,
+  onDisputeCompletion,
   providerName,
   notification,
 }) {
@@ -109,6 +110,12 @@ export default function NotificationCompletionModal({
                     className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#231F201A] bg-white px-5 py-3 text-sm font-semibold text-[#231F20] transition hover:bg-[#F7F8F7]"
                   >
                     Not now
+                  </button>
+                  <button
+                    onClick={onDisputeCompletion}
+                    className="inline-flex flex-1 items-center justify-center rounded-xl border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                  >
+                    Dispute Completion
                   </button>
                   <button
                     onClick={onAcceptCompletion}
