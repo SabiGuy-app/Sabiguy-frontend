@@ -519,9 +519,11 @@ export default function Navbar({ onMenuClick }) {
                 className="w-8 h-8 rounded-full border"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-sm">
-                {user?.data?.fullName?.[0] || user?.data?.name?.[0] || "U"}
-              </div>
+              <img
+                src="/avatar.png"
+                alt="Profile"
+                className="w-8 h-8 rounded-full border"
+              />
             )}
           </button>
         </div>

@@ -446,16 +446,16 @@ export default function ChatPage() {
                   }`}
                 >
                   <div className="relative">
-                    <div className="w-12 h-12 bg-[#8BC53F] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-                      {chat.otherParticipant?.avatar ? (
-                        <img
-                          src={chat.otherParticipant.avatar}
-                          alt=""
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        getInitials(chat.otherParticipant?.name)
-                      )}
+                    <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
+                      <img
+                        src={chat.otherParticipant?.avatar || chat.otherParticipant?.profilePicture || "/avatar.png"}
+                        alt=""
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/avatar.png";
+                        }}
+                      />
                     </div>
                     {chat.unreadCount > 0 && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
@@ -492,16 +492,16 @@ export default function ChatPage() {
               <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#8BC53F] rounded-full flex items-center justify-center text-white font-semibold">
-                      {selectedChat.otherParticipant?.avatar ? (
-                        <img
-                          src={selectedChat.otherParticipant.profilePicture}
-                          alt=""
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        getInitials(selectedChat.otherParticipant?.name)
-                      )}
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                      <img
+                        src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                        alt=""
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/avatar.png";
+                        }}
+                      />
                     </div>
                     <div>
                       <h2 className="font-semibold text-gray-800">
@@ -564,10 +564,16 @@ export default function ChatPage() {
                               >
                                 <div className="flex items-end gap-2 max-w-xs">
                                   {!isCurrentUser && (
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-                                      {getInitials(
-                                        selectedChat.otherParticipant?.name,
-                                      )}
+                                    <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+                                      <img
+                                        src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                                        alt=""
+                                        className="w-full h-full rounded-full object-cover"
+                                        onError={(e) => {
+                                          e.target.onerror = null;
+                                          e.target.src = "/avatar.png";
+                                        }}
+                                      />
                                     </div>
                                   )}
                                   <div>
@@ -605,8 +611,16 @@ export default function ChatPage() {
                   {/* Typing indicator */}
                   {typingStatus[selectedChat?.bookingId._id]?.isTyping && (
                     <div className="flex items-end gap-2 justify-start">
-                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                        {getInitials(selectedChat.otherParticipant?.name)}
+                      <div className="w-8 h-8 rounded-full overflow-hidden">
+                        <img
+                          src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                          alt=""
+                          className="w-full h-full rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/avatar.png";
+                          }}
+                        />
                       </div>
                       <div className="bg-white text-gray-800 px-4 py-3 rounded-2xl rounded-bl-none border border-gray-200 shadow-sm">
                         <div className="flex gap-1">
