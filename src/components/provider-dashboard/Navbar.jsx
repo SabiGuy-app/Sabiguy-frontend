@@ -475,11 +475,17 @@ export default function ProviderNavbar({ onMenuClick }) {
                 src={user.data.profilePicture}
                 alt="Profile"
                 className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/avatar.png";
+                }}
               />
             ) : (
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
-                {user?.data?.name?.charAt(0) || 'U'}
-              </div>
+              <img
+                src="/avatar.png"
+                alt="Profile"
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
+              />
             )}
           </button>
         </div>
