@@ -508,13 +508,15 @@ export default function TrackDelivery() {
                   <Phone className="w-5 h-5 text-gray-600" />
                   <span className="text-sm">Call</span>
                 </button> */}
-                <button
-                  onClick={handleMessageCustomer}
-                  className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95"
-                >
-                  <MessageCircle className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm">Message</span>
-                </button>
+                {bookingStatus?.toLowerCase() !== "cancelled" && (
+                  <button
+                    onClick={handleMessageCustomer}
+                    className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95"
+                  >
+                    <MessageCircle className="w-5 h-5 text-gray-600" />
+                    <span className="text-sm">Message</span>
+                  </button>
+                )}
               </div>
             </div>
 

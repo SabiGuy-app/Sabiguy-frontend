@@ -8,7 +8,7 @@ const bookingData = {
     service: "Electrical Installation",
     provider: {
       name: "Phil Crook",
-      avatar: 'https://i.pravatar.cc/80'
+      avatar: '/avatar.png'
     },
     status: "Pending Confirmation",
     startDate: "Oct 18, 2025 - 10 AM",

@@ -239,7 +239,7 @@ export default function BookingSummary2() {
               <span className="text-gray-600">Service Cost:</span>
               <span className="font-medium text-gray-900">{formatCurrency(serviceCost)}</span>
             </div>
-             <div className="flex justify-between items-center text-sm">
+            <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Tax:</span>
               <span className="font-medium text-gray-900">{formatCurrency(tax)}</span>
             </div>
@@ -375,9 +375,13 @@ export default function BookingSummary2() {
               <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
                 <div className="relative">
                   <img
-                    src={providerDetails?.profilePicture}
+                    src={providerDetails?.profilePicture || "/avatar.png"}
                     alt={providerDetails?.fullName || "Provider"}
                     className="w-20 h-20 rounded-full object-cover border-2 border-[#0058231A]"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/avatar.png";
+                    }}
                   />
                   <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
                     <BadgeCheck className="w-6 h-6 text-[#8BC53F]" />
@@ -435,11 +439,11 @@ export default function BookingSummary2() {
                   <div className="hidden sm:block h-px bg-gray-100 w-full my-1"></div>
                   <div className="text-center sm:text-left">
                     <div className="text-[20px] md:text-2xl font-bold text-[#231F20]">
-                      {bookingDetails?.bookingDuration?.value 
-                        ? `${bookingDetails.bookingDuration.value} ${bookingDetails.bookingDuration.unit}` 
+                      {bookingDetails?.bookingDuration?.value
+                        ? `${bookingDetails.bookingDuration.value} ${bookingDetails.bookingDuration.unit}`
                         : bookingDetails?.estimatedDuration?.value
-                        ? `${bookingDetails.estimatedDuration.value} ${bookingDetails.estimatedDuration.unit}`
-                        : "—"}
+                          ? `${bookingDetails.estimatedDuration.value} ${bookingDetails.estimatedDuration.unit}`
+                          : "—"}
                     </div>
                     <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                       Duration
@@ -454,20 +458,22 @@ export default function BookingSummary2() {
                   <Phone className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
                 </button> */}
-                <button 
-                  onClick={() => {
-                    if (!bookingDetails?._id) return;
-                    navigate(`/dashboard/chat?bookingId=${bookingDetails._id}`, {
-                      state: {
-                        booking: bookingDetails,
-                        provider: providerDetails,
-                      }
-                    });
-                  }}
-                  className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <MessageCircle className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-700">Message</span>
-                </button>
+                {bookingDetails?.status?.toLowerCase() !== "cancelled" && (
+                  <button
+                    onClick={() => {
+                      if (!bookingDetails?._id) return;
+                      navigate(`/dashboard/chat?bookingId=${bookingDetails._id}`, {
+                        state: {
+                          booking: bookingDetails,
+                          provider: providerDetails,
+                        }
+                      });
+                    }}
+                    className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <MessageCircle className="w-4 h-4 text-gray-600" />
+                    <span className="font-medium text-gray-700">Message</span>
+                  </button>
+                )}
                 {!isPaid && (
                   <button
                     onClick={() => setCancelModalOpen(true)}
@@ -479,160 +485,160 @@ export default function BookingSummary2() {
               </div>
             </div>
 
-          {/* Sidebar Column */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* Job Summary */}
-            <div className="bg-[#231F2005] border border-[#231F201A] p-6 rounded-[16px] space-y-6">
-              <h3 className="text-xl font-bold text-[#231F20]">Job Summary</h3>
-              
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <div className="w-3 h-3 bg-[#005823] rounded-full" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Pickup Location</div>
-                    <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
-                      {pickupAddress}
+            {/* Sidebar Column */}
+            <div className="lg:col-span-5 space-y-6">
+              {/* Job Summary */}
+              <div className="bg-[#231F2005] border border-[#231F201A] p-6 rounded-[16px] space-y-6">
+                <h3 className="text-xl font-bold text-[#231F20]">Job Summary</h3>
+
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <div className="w-3 h-3 bg-[#005823] rounded-full" />
                     </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <MapPin className="w-5 h-5 text-[#005823]" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Dropoff Location</div>
-                    <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
-                      {dropoffAddress}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                    <Navigation className="w-5 h-5 text-[#005823]" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Estimated Distance</div>
-                    <div className="text-[15px] font-medium text-[#231F20] mt-1">{estimatedDistance}</div>
-                  </div>
-                </div>
-              </div>
-
-              {bookingDetails?.description && (
-                <div className="pt-4 border-t border-[#231F201A]">
-                  <h4 className="font-bold text-sm text-[#231F2080] uppercase tracking-wide mb-2">Description</h4>
-                  <p className="text-sm text-[#231F20BF] leading-relaxed italic">
-                    "{bookingDetails.description}"
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Payment Summary & Method */}
-            <div className="bg-white border border-[#231F201A] p-6 rounded-[16px] shadow-sm space-y-6">
-              <h3 className="text-xl font-bold text-[#231F20]">Payment Summary</h3>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm font-medium text-gray-600">
-                  <span>Base Fare</span>
-                  <span>{formatCurrency(baseFare)}</span>
-                </div>
-                <div className="flex justify-between text-sm font-medium text-gray-600">
-                  <span>Price per Minute</span>
-                  <span>{formatCurrency(perMinuteRate)}</span>
-                </div>
-                <div className="flex justify-between text-sm font-medium text-gray-600">
-                  <span>Price per KM</span>
-                  <span>{formatCurrency(perKmRate)}</span>
-                </div>
-                <div className="flex justify-between text-sm font-medium text-gray-600">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(serviceCost)}</span>
-                </div>
-                <div className="flex justify-between text-sm font-medium text-gray-600">
-                  <span>Tax </span>
-                  <span>{formatCurrency(tax)}</span>
-                </div>
-                <div className="flex justify-between text-sm font-medium text-gray-600">
-                  <span>Platform Fee</span>
-                  <span>{formatCurrency(serviceCharge)}</span>
-                </div>
-                <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
-                  <span className="font-bold text-gray-900">Total Amount</span>
-                  <span className="text-xl font-black text-[#005823]">{formatCurrency(totalAmount)}</span>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t border-gray-100">
-                <h4 className="font-bold text-sm text-gray-900 tracking-wide uppercase">Select Payment Method</h4>
-                <div className="grid grid-cols-1 gap-3">
-                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === 'wallet' ? 'border-[#005823] bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300'}`}>
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="wallet"
-                      checked={selectedPayment === "wallet"}
-                      onChange={(e) => setSelectedPayment(e.target.value)}
-                      disabled={isPaid}
-                      className="w-4 h-4 accent-[#005823]"
-                    />
                     <div className="flex-1">
-                      <div className="font-bold text-gray-900">Wallet</div>
-                      <div className="text-xs text-gray-500">Bal: {formatCurrency(walletBalance)}</div>
+                      <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Pickup Location</div>
+                      <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
+                        {pickupAddress}
+                      </div>
                     </div>
-                  </label>
-                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === 'online' ? 'border-[#005823] bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300'}`}>
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="online"
-                      checked={selectedPayment === "online"}
-                      onChange={(e) => setSelectedPayment(e.target.value)}
-                      disabled={isPaid}
-                      className="w-4 h-4 accent-[#005823]"
-                    />
-                    <div className="flex-1 font-bold text-gray-900">Pay Online</div>
-                  </label>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <MapPin className="w-5 h-5 text-[#005823]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Dropoff Location</div>
+                      <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
+                        {dropoffAddress}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                      <Navigation className="w-5 h-5 text-[#005823]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Estimated Distance</div>
+                      <div className="text-[15px] font-medium text-[#231F20] mt-1">{estimatedDistance}</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Pickup Notes (Optional)</label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Need something specific? Tell the provider..."
-                  disabled={isPaid}
-                  className="w-full p-3 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#00582333] transition-all resize-none h-20"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  onClick={handleConfirmAndPay}
-                  disabled={isProcessing || isPaid}
-                  className="w-full py-4 bg-[#005823] text-white rounded-xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-900/10 disabled:opacity-50"
-                >
-                  {isPaid ? "Payment Successful ✓" : isProcessing ? "Processing..." : `Confirm & Pay ${formatCurrency(totalAmount)}`}
-                </button>
-                {!isPaid && (
-                  <button
-                    onClick={() => setCancelModalOpen(true)}
-                    className="w-full py-2 text-red-600 font-bold hover:bg-red-50 rounded-lg transition-all text-sm"
-                  >
-                    Cancel Request
-                  </button>
+                {bookingDetails?.description && (
+                  <div className="pt-4 border-t border-[#231F201A]">
+                    <h4 className="font-bold text-sm text-[#231F2080] uppercase tracking-wide mb-2">Description</h4>
+                    <p className="text-sm text-[#231F20BF] leading-relaxed italic">
+                      "{bookingDetails.description}"
+                    </p>
+                  </div>
                 )}
-                <p className="text-center text-[10px] text-gray-400 font-medium">Rider will proceed once payment is confirmed</p>
+              </div>
+
+              {/* Payment Summary & Method */}
+              <div className="bg-white border border-[#231F201A] p-6 rounded-[16px] shadow-sm space-y-6">
+                <h3 className="text-xl font-bold text-[#231F20]">Payment Summary</h3>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <span>Base Fare</span>
+                    <span>{formatCurrency(baseFare)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <span>Price per Minute</span>
+                    <span>{formatCurrency(perMinuteRate)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <span>Price per KM</span>
+                    <span>{formatCurrency(perKmRate)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(serviceCost)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <span>Tax </span>
+                    <span>{formatCurrency(tax)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <span>Platform Fee</span>
+                    <span>{formatCurrency(serviceCharge)}</span>
+                  </div>
+                  <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
+                    <span className="font-bold text-gray-900">Total Amount</span>
+                    <span className="text-xl font-black text-[#005823]">{formatCurrency(totalAmount)}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <h4 className="font-bold text-sm text-gray-900 tracking-wide uppercase">Select Payment Method</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === 'wallet' ? 'border-[#005823] bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300'}`}>
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="wallet"
+                        checked={selectedPayment === "wallet"}
+                        onChange={(e) => setSelectedPayment(e.target.value)}
+                        disabled={isPaid}
+                        className="w-4 h-4 accent-[#005823]"
+                      />
+                      <div className="flex-1">
+                        <div className="font-bold text-gray-900">Wallet</div>
+                        <div className="text-xs text-gray-500">Bal: {formatCurrency(walletBalance)}</div>
+                      </div>
+                    </label>
+                    <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === 'online' ? 'border-[#005823] bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300'}`}>
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="online"
+                        checked={selectedPayment === "online"}
+                        onChange={(e) => setSelectedPayment(e.target.value)}
+                        disabled={isPaid}
+                        className="w-4 h-4 accent-[#005823]"
+                      />
+                      <div className="flex-1 font-bold text-gray-900">Pay Online</div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Pickup Notes (Optional)</label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Need something specific? Tell the provider..."
+                    disabled={isPaid}
+                    className="w-full p-3 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#00582333] transition-all resize-none h-20"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={handleConfirmAndPay}
+                    disabled={isProcessing || isPaid}
+                    className="w-full py-4 bg-[#005823] text-white rounded-xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-900/10 disabled:opacity-50"
+                  >
+                    {isPaid ? "Payment Successful ✓" : isProcessing ? "Processing..." : `Confirm & Pay ${formatCurrency(totalAmount)}`}
+                  </button>
+                  {!isPaid && (
+                    <button
+                      onClick={() => setCancelModalOpen(true)}
+                      className="w-full py-2 text-red-600 font-bold hover:bg-red-50 rounded-lg transition-all text-sm"
+                    >
+                      Cancel Request
+                    </button>
+                  )}
+                  <p className="text-center text-[10px] text-gray-400 font-medium">Rider will proceed once payment is confirmed</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      {showSuccessModal && <SuccessModal />}
+        {showSuccessModal && <SuccessModal />}
       </div>
     </DashboardLayout>
   );

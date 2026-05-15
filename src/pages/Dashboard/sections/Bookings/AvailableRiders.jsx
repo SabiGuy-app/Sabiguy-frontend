@@ -74,11 +74,12 @@ function WaitingForProvider({ provider, onTimeout, onCancel }) {
         <div className="px-6 pt-8 pb-8 flex flex-col items-center gap-5">
           <div className="relative">
             <img
-              src={provider?.profilePicture}
+              src={provider?.profilePicture || "/avatar.png"}
               alt={provider?.fullName}
               className="w-16 h-16 rounded-full object-cover border-2 border-[#005823]/20"
               onError={(e) => {
-                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(provider?.fullName ?? "P")}&background=e5e7eb&color=374151`;
+                e.target.onerror = null;
+                e.target.src = "/avatar.png";
               }}
             />
             <span className="absolute inset-0 rounded-full border-2 border-[#005823]/30 animate-ping" />
@@ -435,11 +436,12 @@ export default function AvailableRiders() {
                       <div className="w-full md:w-1/2">
                         <div className="w-full h-[200px] sm:h-[250px] bg-gray-100 rounded-lg overflow-hidden">
                           <img
-                            src={provider.profilePicture}
+                            src={provider.profilePicture || "/avatar.png"}
                             alt={provider.fullName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.fullName)}&background=e5e7eb&color=374151`;
+                              e.target.onerror = null;
+                              e.target.src = "/avatar.png";
                             }}
                           />
                         </div>

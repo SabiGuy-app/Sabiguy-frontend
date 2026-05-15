@@ -14,17 +14,15 @@ return (
         border-gray-200 p-6 hover:border-green-100 shadow-lg transition-all">
         <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden flex-shrink-0">
-                    {provider.avatar ? (
-                        <img 
-              src={provider.avatar} 
+                    <img 
+              src={provider.avatar || "/avatar.png"} 
               alt={provider.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "/avatar.png";
+              }}
             />
-                    ) : (
-                        <div className="w-full h-full bg-[#8BC53F] flex items-center justify-center text-white font-semibold">
-              {provider.name.charAt(0)}
-            </div>
-                    )}
                     </div>
                     <div className="flex-1 min-w-0">
                          <h3 className="font-semibold text-gray-900 text-base mb-1">

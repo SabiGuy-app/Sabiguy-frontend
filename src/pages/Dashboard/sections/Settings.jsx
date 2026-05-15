@@ -63,9 +63,17 @@ export default function ProfilePage() {
                     src={user?.data?.profilePicture}
                     alt={user?.data?.fullName}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/avatar.png";
+                    }}
                   />
                 ) : (
-                  <FiUser size={24} className="text-gray-500" />
+                  <img
+                    src="/avatar.png"
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 )}
               </div>
 

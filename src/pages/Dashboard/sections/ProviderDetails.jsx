@@ -112,9 +112,13 @@ const { icon, style } = getStatusConfig(provider.status);
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-start gap-4">
                 <img
-                  src={provider.profilePicture}
+                  src={provider.profilePicture || "/avatar.png"}
                   alt={provider.name}
                   className="w-20 h-20 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/avatar.png";
+                  }}
                 />
                 <div className="flex flex-col ">
                   <div className="flex items-center gap-2 mb-1">
@@ -255,8 +259,16 @@ const { icon, style } = getStatusConfig(provider.status);
                 ) : (
                   reviewsList.map((review, idx) => (
                     <div key={idx} className="flex gap-4 pb-4 border-b last:border-b-0">
-                      <div className="w-12 h-12 rounded-full bg-[#005823] flex items-center justify-center text-white font-semibold">
-                        {review.user?.fullName?.split(" ").map(n => n[0]).join("").toUpperCase() || "U"}
+                      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                        <img
+                          src={review.user?.profilePicture || "/avatar.png"}
+                          alt={review.user?.fullName || "User"}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/avatar.png";
+                          }}
+                        />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -366,9 +378,13 @@ const { icon, style } = getStatusConfig(provider.status);
                 <div className="rounded-lg">
                 <div className="flex items-start gap-4">
   <img
-                  src={provider.profilePicture}
+                  src={provider.profilePicture || "/avatar.png"}
                   alt={provider.name}
                   className="w-20 h-20 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/avatar.png";
+                  }}
                 />
                 <div className="flex flex-col ">
                     <h1 className="text-xs">{provider.fullName}</h1>

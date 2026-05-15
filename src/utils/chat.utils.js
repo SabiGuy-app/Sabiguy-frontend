@@ -9,6 +9,7 @@ export const MESSAGING_ALLOWED_STATUSES = [
   "arrived_at_pickup",
   "enroute_to_dropoff",
   "arrived_at_dropoff",
+  "funds_released",
 ];
 
 /**

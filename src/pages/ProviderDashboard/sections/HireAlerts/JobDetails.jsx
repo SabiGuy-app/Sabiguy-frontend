@@ -12,6 +12,7 @@ import {
   Check,
 } from "lucide-react";
 import { useState } from "react";
+import { canMessage } from "../../../../utils/chat.utils";
 
 export default function JobDetailsModal({
   isOpen,
@@ -116,13 +117,15 @@ export default function JobDetailsModal({
                   <PhoneCall className="w-4 h-4" />
                   Call
                 </button> */}
-                <button
-                  className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                  onClick={() => onMessageCustomer?.(job)}
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Message
-                </button>
+                {canMessage(job?.status || job?.originalData?.status) && (
+                  <button
+                    className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    onClick={() => onMessageCustomer?.(job)}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Message
+                  </button>
+                )}
               </div>
             </div>
 
