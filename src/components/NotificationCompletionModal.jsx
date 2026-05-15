@@ -1,5 +1,12 @@
+import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Sparkles, X } from "lucide-react";
+import notificationSoundService from "../services/notificationSoundService";
+
+const completionNotificationTypes = [
+  "booking_completed",
+  "booking_completed_awaiting_acceptance",
+];
 
 export default function NotificationCompletionModal({
   isOpen,
@@ -9,10 +16,39 @@ export default function NotificationCompletionModal({
   providerName,
   notification,
 }) {
+  const playedNotificationRef = useRef(null);
   const title = notification?.title || "Booking completed";
   const message =
     notification?.message ||
     "Please accept job completion and rate the provider so payment can be released.";
+
+  useEffect(() => {
+    const notificationKey =
+      notification?._id ||
+      notification?.id ||
+      notification?.createdAt ||
+      notification?.title ||
+      null;
+
+    if (
+      !isOpen ||
+      !completionNotificationTypes.includes(notification?.type) ||
+      !notificationKey
+    ) {
+      playedNotificationRef.current = null;
+      return;
+    }
+
+    if (playedNotificationRef.current === notificationKey) {
+      return;
+    }
+
+    playedNotificationRef.current = notificationKey;
+
+    notificationSoundService.play().catch((err) => {
+      console.warn("Modal sound playback failed:", err);
+    });
+  }, [isOpen, notification]);
 
   return (
     <AnimatePresence>

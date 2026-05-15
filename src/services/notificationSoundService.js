@@ -196,6 +196,39 @@ class NotificationSoundService {
     }
     console.log(`🔊 Volume set to: ${this.volume}`);
   }
+
+  // Unlock audio context (call on user gesture to enable autoplay)
+  async unlock() {
+    try {
+      console.log("🔓 Unlocking audio context...");
+      
+      // Resume Web Audio Context
+      if (this.audioContext && this.audioContext.state === "suspended") {
+        console.log("🔓 Resuming suspended Web Audio context...");
+        await this.audioContext.resume();
+        console.log("✅ Web Audio context resumed");
+      }
+      
+      // For HTML5 audio, play and immediately pause to "unlock" it
+      if (this.htmlAudio) {
+        console.log("🔓 Unlocking HTML5 audio...");
+        try {
+          const playPromise = this.htmlAudio.play();
+          if (playPromise !== undefined) {
+            await playPromise;
+            this.htmlAudio.pause();
+            this.htmlAudio.currentTime = 0;
+            console.log("✅ HTML5 audio unlocked");
+          }
+        } catch (e) {
+          console.warn("⚠️ Could not unlock HTML5 audio:", e);
+        }
+      }
+    } catch (error) {
+      console.warn("⚠️ Error unlocking audio:", error);
+    }
+  }
 }
+
 
 export default new NotificationSoundService();
