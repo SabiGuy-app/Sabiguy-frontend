@@ -1,17 +1,54 @@
+import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Sparkles, X } from "lucide-react";
+import notificationSoundService from "../services/notificationSoundService";
+
+const completionNotificationTypes = [
+  "booking_completed",
+  "booking_completed_awaiting_acceptance",
+];
 
 export default function NotificationCompletionModal({
   isOpen,
   onClose,
   onAcceptCompletion,
+  onDisputeCompletion,
   providerName,
   notification,
 }) {
+  const playedNotificationRef = useRef(null);
   const title = notification?.title || "Booking completed";
   const message =
     notification?.message ||
     "Please accept job completion and rate the provider so payment can be released.";
+
+  useEffect(() => {
+    const notificationKey =
+      notification?._id ||
+      notification?.id ||
+      notification?.createdAt ||
+      notification?.title ||
+      null;
+
+    if (
+      !isOpen ||
+      !completionNotificationTypes.includes(notification?.type) ||
+      !notificationKey
+    ) {
+      playedNotificationRef.current = null;
+      return;
+    }
+
+    if (playedNotificationRef.current === notificationKey) {
+      return;
+    }
+
+    playedNotificationRef.current = notificationKey;
+
+    notificationSoundService.play().catch((err) => {
+      console.warn("Modal sound playback failed:", err);
+    });
+  }, [isOpen, notification]);
 
   return (
     <AnimatePresence>
@@ -109,6 +146,12 @@ export default function NotificationCompletionModal({
                     className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#231F201A] bg-white px-5 py-3 text-sm font-semibold text-[#231F20] transition hover:bg-[#F7F8F7]"
                   >
                     Not now
+                  </button>
+                  <button
+                    onClick={onDisputeCompletion}
+                    className="inline-flex flex-1 items-center justify-center rounded-xl border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                  >
+                    Dispute Completion
                   </button>
                   <button
                     onClick={onAcceptCompletion}

@@ -26,6 +26,10 @@ export default function NotificationDrawer({
   const user = useAuthStore((state) => state.user);
   const isProvider = user?.data?.role === "provider";
   const chatBase = isProvider ? "/dashboard/provider/chat" : "/dashboard/chat";
+  const completionNotificationTypes = [
+    "booking_completed",
+    "booking_completed_awaiting_acceptance",
+  ];
 
   // Filter to only show UNREAD notifications
   const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -69,6 +73,11 @@ export default function NotificationDrawer({
       ),
       new_message: <FiMessageSquare className="text-orange-500" size={20} />,
       counter_offer: <FiBell className="text-blue-500" size={20} />,
+      booking_disputed: <FiBell className="text-red-500" size={20} />,
+      booking_auto_completed: <FiCalendar className="text-green-500" size={20} />,
+      booking_completed_awaiting_acceptance: (
+        <FiCalendar className="text-green-500" size={20} />
+      ),
       job_completed_confirmed: (
         <FiCalendar className="text-green-500" size={20} />
       ),
@@ -86,7 +95,7 @@ export default function NotificationDrawer({
 
     onClose();
 
-    if (notification.type === "booking_completed") {
+    if (completionNotificationTypes.includes(notification.type)) {
       onBookingCompleted?.(notification);
       setMarkingAsRead(null);
       return;
@@ -211,7 +220,7 @@ export default function NotificationDrawer({
     // For other types, close drawer and open the details modal
     onClose();
 
-    if (notification.type === "booking_completed") {
+    if (completionNotificationTypes.includes(notification.type)) {
       onBookingCompleted?.(notification);
       return;
     }

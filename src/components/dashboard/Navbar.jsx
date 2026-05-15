@@ -5,11 +5,12 @@ import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
 import NotificationCompletionModal from "../NotificationCompletionModal";
 import ReviewModal from "./ReviewModal";
+import DisputeCompletionModal from "./DisputeCompletionModal";
 import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
-import { acceptCompletion } from "../../api/bookings";
+import { acceptCompletion, disputeCompletion } from "../../api/bookings";
 import { handleLogout } from "../../api/auth";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
@@ -27,10 +28,17 @@ export default function Navbar({ onMenuClick }) {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewApiError, setReviewApiError] = useState(null);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeLoading, setDisputeLoading] = useState(false);
+  const [disputeApiError, setDisputeApiError] = useState(null);
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
+  const completionNotificationTypes = [
+    "booking_completed",
+    "booking_completed_awaiting_acceptance",
+  ];
 
   // Don't render until store is hydrated
   if (!hydrated) {
@@ -121,14 +129,22 @@ export default function Navbar({ onMenuClick }) {
 
   // Show toast notification
   const showNotificationToast = (notification) => {
-    if (notification?.type === "booking_completed") {
+    console.log(
+      "🔔 showNotificationToast called for type:",
+      notification?.type,
+    );
+
+    // Play sound for all notifications
+    // play() method handles initialization internally
+    notificationSoundService.play().catch((err) => {
+      console.warn("⚠️ Sound playback failed:", err);
+    });
+
+    if (completionNotificationTypes.includes(notification?.type)) {
       setCompletionNotification(notification);
       setShowCompletionModal(true);
       return;
     }
-
-    // Play sound
-    notificationSoundService.play();
 
     // Show toast
     toast.custom(
@@ -221,6 +237,25 @@ export default function Navbar({ onMenuClick }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Unlock audio on first user interaction to enable autoplay
+  useEffect(() => {
+    const handleUserInteraction = async () => {
+      console.log("👆 User interaction detected - unlocking audio");
+      await notificationSoundService.unlock();
+      // Remove listener after first interaction
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
+
+    document.addEventListener("click", handleUserInteraction);
+    document.addEventListener("touchstart", handleUserInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
+  }, []);
+
   const handleNotificationClick = () => {
     setShowNotifications(true);
     fetchNotifications();
@@ -250,8 +285,21 @@ export default function Navbar({ onMenuClick }) {
     }
 
     setShowCompletionModal(false);
+    setShowDisputeModal(false);
     setReviewApiError(null);
     setShowReviewModal(true);
+  };
+
+  const handleDisputeCompletion = () => {
+    if (!completionBookingId) {
+      toast.error("Booking details are unavailable for this notification.");
+      return;
+    }
+
+    setShowCompletionModal(false);
+    setShowReviewModal(false);
+    setDisputeApiError(null);
+    setShowDisputeModal(true);
   };
 
   const handleReviewSubmit = async ({ score, review, tipAmount }) => {
@@ -288,14 +336,55 @@ export default function Navbar({ onMenuClick }) {
         message =
           "Invalid rating score or tip amount. Please check your inputs.";
       else if (status === 401) message = "Unauthorized. Please log in again.";
-      else if (status === 409)
-        message =
-          "Job completion already accepted.";
+      else if (status === 409) message = "Job completion already accepted.";
 
       setReviewApiError(message);
       toast.error(message);
     } finally {
       setReviewLoading(false);
+    }
+  };
+
+  const handleDisputeSubmit = async ({ reason }) => {
+    if (!completionBookingId) {
+      setDisputeApiError("Booking details are unavailable.");
+      return;
+    }
+
+    setDisputeLoading(true);
+    setDisputeApiError(null);
+
+    try {
+      const response = await disputeCompletion(completionBookingId, { reason });
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion disputed successfully";
+      toast.success(successMsg);
+      setShowDisputeModal(false);
+      setCompletionNotification(null);
+    } catch (err) {
+      console.error("Failed to dispute completion:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+      if (status === 400) {
+        message = "Please provide a valid dispute reason.";
+      } else if (status === 401) {
+        message = "Unauthorized. Please log in again.";
+      } else if (status === 409) {
+        message = "This job completion has already been processed.";
+      } else {
+        message =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          message;
+      }
+
+      setDisputeApiError(message);
+      toast.error(message);
+    } finally {
+      setDisputeLoading(false);
     }
   };
 
@@ -374,10 +463,12 @@ export default function Navbar({ onMenuClick }) {
   return (
     <>
       <Toaster position="top-right" />
-<header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-4 sticky top-0 z-50 shadow-sm">
-
+      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-4 sticky top-0 z-50 shadow-sm">
         {/* Mobile Menu Button (toggles sidebar) */}
-        <button className="md:hidden p-2 text-gray-600 hover:text-gray-800 mr-0.5" onClick={onMenuClick}>
+        <button
+          className="md:hidden p-2 text-gray-600 hover:text-gray-800 mr-0.5"
+          onClick={onMenuClick}
+        >
           <Menu size={26} className="text-gray-600" />
         </button>
 
@@ -386,7 +477,11 @@ export default function Navbar({ onMenuClick }) {
           className="text-2xl md:text-3xl font-bold text-[#005823]"
           onClick={() => navigate("/dashboard")}
         >
-          <img src="/logo.jpg" alt="SabiGuy Logo" className="h-6 sm:h-8 w-auto" />
+          <img
+            src="/logo.jpg"
+            alt="SabiGuy Logo"
+            className="h-6 sm:h-8 w-auto"
+          />
         </button>
 
         {/* Desktop Search */}
@@ -437,7 +532,11 @@ export default function Navbar({ onMenuClick }) {
           </button> */}
 
           {/* Bell */}
-          <button id="notification-bell" onClick={handleNotificationClick} className="relative">
+          <button
+            id="notification-bell"
+            onClick={handleNotificationClick}
+            className="relative"
+          >
             <Bell size={24} />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[20px] h-4 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1">
@@ -459,9 +558,11 @@ export default function Navbar({ onMenuClick }) {
                 className="w-8 h-8 rounded-full border"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-sm">
-                {user?.data?.fullName?.[0] || user?.data?.name?.[0] || "U"}
-              </div>
+              <img
+                src="/avatar.png"
+                alt="Profile"
+                className="w-8 h-8 rounded-full border"
+              />
             )}
           </button>
         </div>
@@ -498,8 +599,21 @@ export default function Navbar({ onMenuClick }) {
             setCompletionNotification(null);
           }}
           onAcceptCompletion={handleAcceptCompletion}
+          onDisputeCompletion={handleDisputeCompletion}
           providerName={completionProviderName}
           notification={completionNotification}
+        />
+
+        <DisputeCompletionModal
+          isOpen={showDisputeModal}
+          onClose={() => {
+            setShowDisputeModal(false);
+            setDisputeApiError(null);
+          }}
+          onSubmit={handleDisputeSubmit}
+          loading={disputeLoading}
+          apiError={disputeApiError}
+          providerName={completionProviderName}
         />
         <ReviewModal
           isOpen={showReviewModal}

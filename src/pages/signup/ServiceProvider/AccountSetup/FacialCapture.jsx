@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import { FaceMesh } from "@mediapipe/face_mesh";
@@ -13,24 +12,24 @@ export default function FaceCapture({ onNext, handleBack }) {
   const faceMeshRef = useRef(null);
   const prevDetectedRef = useRef(false);
   const isCleaningUpRef = useRef(false);
-  
+
   const [image, setImage] = useState(null);
   const [shouldInitialize, setShouldInitialize] = useState(true);
   const [faceQuality, setFaceQuality] = useState({
     detected: false,
     centered: false,
     tooClose: false,
-    tooFar: false
+    tooFar: false,
   });
   const [uploading, setUploading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [captureError, setCaptureError] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [captureError, setCaptureError] = useState("");
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [cameraError, setCameraError] = useState(null);
 
   const email = localStorage.getItem("email");
-  const google_email =   localStorage.getItem("google-email")
+  const google_email = localStorage.getItem("google-email");
 
   const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/profile_pictures`;
   const saveEndpoint = `${import.meta.env.VITE_BASE_URL}/provider/profile-pic`;
@@ -56,7 +55,7 @@ export default function FaceCapture({ onNext, handleBack }) {
       }
       cameraInstanceRef.current = null;
     }
-    
+
     if (faceMeshRef.current) {
       try {
         faceMeshRef.current.close();
@@ -81,17 +80,20 @@ export default function FaceCapture({ onNext, handleBack }) {
     faceMesh.onResults((results) => {
       // Don't process if we're cleaning up
       if (isCleaningUpRef.current) return;
-      
-      if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+
+      if (
+        !results.multiFaceLandmarks ||
+        results.multiFaceLandmarks.length === 0
+      ) {
         const currentDetected = false;
-        
+
         // Only update if detection state changed
         if (currentDetected !== prevDetectedRef.current) {
           setFaceQuality({
             detected: false,
             centered: false,
             tooClose: false,
-            tooFar: false
+            tooFar: false,
           });
           canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
           prevDetectedRef.current = currentDetected;
@@ -100,11 +102,12 @@ export default function FaceCapture({ onNext, handleBack }) {
       }
 
       const landmarks = results.multiFaceLandmarks[0];
-      
+
       // Check if face is centered (nose tip should be near center)
       const noseTip = landmarks[1];
-      const centered = Math.abs(noseTip.x - 0.5) < 0.2 && Math.abs(noseTip.y - 0.5) < 0.2;
-      
+      const centered =
+        Math.abs(noseTip.x - 0.5) < 0.2 && Math.abs(noseTip.y - 0.5) < 0.2;
+
       // Check if face is too close or too far
       const leftCheek = landmarks[234];
       const rightCheek = landmarks[454];
@@ -113,21 +116,22 @@ export default function FaceCapture({ onNext, handleBack }) {
       const tooFar = faceWidth < 0.25;
 
       const currentDetected = true;
-      
+
       // Only redraw if detection state changed or face is detected
       if (currentDetected !== prevDetectedRef.current || currentDetected) {
         setFaceQuality({
           detected: true,
           centered,
           tooClose,
-          tooFar
+          tooFar,
         });
 
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
         // Draw face mesh landmarks
-        canvasCtx.fillStyle = centered && !tooClose && !tooFar ? "#00FF00" : "#FFD700";
+        canvasCtx.fillStyle =
+          centered && !tooClose && !tooFar ? "#00FF00" : "#FFD700";
         for (const point of landmarks) {
           const x = point.x * canvasElement.width;
           const y = point.y * canvasElement.height;
@@ -137,12 +141,17 @@ export default function FaceCapture({ onNext, handleBack }) {
         }
 
         // Draw face oval guide
-        canvasCtx.strokeStyle = centered && !tooClose && !tooFar ? "#00FF00" : "#FFD700";
+        canvasCtx.strokeStyle =
+          centered && !tooClose && !tooFar ? "#00FF00" : "#FFD700";
         canvasCtx.lineWidth = 3;
         canvasCtx.beginPath();
-        
+
         // Draw oval around face
-        const faceOval = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109];
+        const faceOval = [
+          10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365,
+          379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93,
+          234, 127, 162, 21, 54, 103, 67, 109,
+        ];
         for (let i = 0; i < faceOval.length; i++) {
           const point = landmarks[faceOval[i]];
           const x = point.x * canvasElement.width;
@@ -170,7 +179,7 @@ export default function FaceCapture({ onNext, handleBack }) {
         onFrame: async () => {
           // Check if we're cleaning up or instance is closed
           if (isCleaningUpRef.current || !faceMeshRef.current) return;
-          
+
           try {
             await faceMeshRef.current.send({ image: videoElement });
           } catch (error) {
@@ -183,24 +192,27 @@ export default function FaceCapture({ onNext, handleBack }) {
         width: 280,
         height: 280,
       });
-      
-      camera.start().then(() => {
-        if (!isCleaningUpRef.current) {
-          setModelsLoaded(true);
-        }
-      }).catch((error) => {
-        if (!isCleaningUpRef.current) {
-          console.error("Camera start error:", error);
-          setCameraError("Failed to start camera. Please check permissions.");
-        }
-      });
+
+      camera
+        .start()
+        .then(() => {
+          if (!isCleaningUpRef.current) {
+            setModelsLoaded(true);
+          }
+        })
+        .catch((error) => {
+          if (!isCleaningUpRef.current) {
+            console.error("Camera start error:", error);
+            setCameraError("Failed to start camera. Please check permissions.");
+          }
+        });
       cameraInstanceRef.current = camera;
     }
 
     // Cleanup function
     return () => {
       isCleaningUpRef.current = true;
-      
+
       if (cameraInstanceRef.current) {
         try {
           cameraInstanceRef.current.stop();
@@ -209,10 +221,10 @@ export default function FaceCapture({ onNext, handleBack }) {
         }
         cameraInstanceRef.current = null;
       }
-      
+
       if (videoElement?.srcObject) {
         const tracks = videoElement.srcObject.getTracks();
-        tracks.forEach(track => {
+        tracks.forEach((track) => {
           try {
             track.stop();
           } catch (e) {
@@ -220,7 +232,7 @@ export default function FaceCapture({ onNext, handleBack }) {
           }
         });
       }
-      
+
       if (faceMeshRef.current) {
         try {
           faceMeshRef.current.close();
@@ -235,7 +247,7 @@ export default function FaceCapture({ onNext, handleBack }) {
   // Stop camera after capture to save resources
   const stopCamera = () => {
     isCleaningUpRef.current = true;
-    
+
     if (cameraInstanceRef.current) {
       try {
         cameraInstanceRef.current.stop();
@@ -244,10 +256,10 @@ export default function FaceCapture({ onNext, handleBack }) {
       }
       cameraInstanceRef.current = null;
     }
-    
+
     if (webcamRef.current?.video?.srcObject) {
       const tracks = webcamRef.current.video.srcObject.getTracks();
-      tracks.forEach(track => {
+      tracks.forEach((track) => {
         try {
           track.stop();
         } catch (e) {
@@ -255,7 +267,7 @@ export default function FaceCapture({ onNext, handleBack }) {
         }
       });
     }
-    
+
     if (faceMeshRef.current) {
       try {
         faceMeshRef.current.close();
@@ -269,35 +281,37 @@ export default function FaceCapture({ onNext, handleBack }) {
   // Capture screenshot from webcam
   const capture = () => {
     const { detected, centered, tooClose, tooFar } = faceQuality;
-    
+
     if (!detected) {
-      setCaptureError("No face detected! Please ensure your face is clearly visible.");
-      setTimeout(() => setCaptureError(''), 3000);
+      setCaptureError(
+        "No face detected! Please ensure your face is clearly visible.",
+      );
+      setTimeout(() => setCaptureError(""), 3000);
       return;
     }
-    
+
     if (!centered) {
       setCaptureError("Please center your face in the frame.");
-      setTimeout(() => setCaptureError(''), 3000);
+      setTimeout(() => setCaptureError(""), 3000);
       return;
     }
-    
+
     if (tooClose) {
       setCaptureError("You're too close! Please move back a bit.");
-      setTimeout(() => setCaptureError(''), 3000);
+      setTimeout(() => setCaptureError(""), 3000);
       return;
     }
-    
+
     if (tooFar) {
       setCaptureError("You're too far! Please move closer.");
-      setTimeout(() => setCaptureError(''), 3000);
+      setTimeout(() => setCaptureError(""), 3000);
       return;
     }
-    
-    setCaptureError('');
+
+    setCaptureError("");
     const imageSrc = webcamRef.current.getScreenshot();
     setImage(imageSrc);
-    
+
     // Stop camera to save resources
     stopCamera();
   };
@@ -305,18 +319,18 @@ export default function FaceCapture({ onNext, handleBack }) {
   // Restart camera when retaking
   const retake = () => {
     setImage(null);
-    setCaptureError('');
-    setErrorMessage('');
+    setCaptureError("");
+    setErrorMessage("");
     setModelsLoaded(false);
-    
+
     // Reset face quality state
     setFaceQuality({
       detected: false,
       centered: false,
       tooClose: false,
-      tooFar: false
+      tooFar: false,
     });
-    
+
     // Trigger re-initialization
     setShouldInitialize(false);
     setTimeout(() => {
@@ -328,8 +342,8 @@ export default function FaceCapture({ onNext, handleBack }) {
   const handleSave = async () => {
     if (!image) return;
     setUploading(true);
-    setErrorMessage('');
-    setSuccessMessage('');
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       // Convert base64 to Blob
@@ -342,11 +356,11 @@ export default function FaceCapture({ onNext, handleBack }) {
         method: "POST",
         body: formData,
       });
-      
+
       if (!res.ok) {
         throw new Error(`Upload failed with status: ${res.status}`);
       }
-      
+
       const data = await res.json();
 
       if (!data.file?.url) {
@@ -366,7 +380,7 @@ export default function FaceCapture({ onNext, handleBack }) {
       });
 
       const saveData = await saveRes.json();
-      
+
       if (saveData.success) {
         setSuccessMessage("Facial capture successful!");
         setTimeout(() => {
@@ -385,8 +399,10 @@ export default function FaceCapture({ onNext, handleBack }) {
 
   // Get feedback message based on face quality
   const getFeedbackMessage = () => {
+    if (!modelsLoaded) return "⏳ Initializing face detection...";
+
     const { detected, centered, tooClose, tooFar } = faceQuality;
-    
+
     if (!detected) return "❌ No face detected";
     if (tooClose) return "⚠️ Too close - move back";
     if (tooFar) return "⚠️ Too far - move closer";
@@ -395,15 +411,20 @@ export default function FaceCapture({ onNext, handleBack }) {
   };
 
   const getFeedbackColor = () => {
+    if (!modelsLoaded) return "text-gray-500";
+
     const { detected, centered, tooClose, tooFar } = faceQuality;
-    
+
     if (!detected) return "text-red-500";
     if (tooClose || tooFar || !centered) return "text-yellow-600";
     return "text-green-600";
   };
 
-  const canCapture = faceQuality.detected && faceQuality.centered && 
-                     !faceQuality.tooClose && !faceQuality.tooFar;
+  const canCapture =
+    faceQuality.detected &&
+    faceQuality.centered &&
+    !faceQuality.tooClose &&
+    !faceQuality.tooFar;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-6">
@@ -426,21 +447,23 @@ export default function FaceCapture({ onNext, handleBack }) {
               Loading face detection models...
             </div>
           )}
-          
+
           <div className="relative w-[280px] h-[280px] mb-5">
             <Webcam
               ref={webcamRef}
               screenshotFormat="image/jpeg"
               mirrored
               className="absolute top-0 left-0 w-full h-full border border-gray-300 rounded-lg object-cover"
-              videoConstraints={{ 
-                facingMode: "user", 
-                width: 280, 
-                height: 280 
+              videoConstraints={{
+                facingMode: "user",
+                width: 280,
+                height: 280,
               }}
               onUserMediaError={(error) => {
                 console.error("Camera error:", error);
-                setCameraError("Camera access denied. Please enable camera permissions.");
+                setCameraError(
+                  "Camera access denied. Please enable camera permissions.",
+                );
               }}
             />
             <canvas
@@ -481,20 +504,20 @@ export default function FaceCapture({ onNext, handleBack }) {
             alt="Captured face"
             className="shadow-lg w-[280px] h-[280px] mb-5 border border-gray-300 object-cover rounded-lg"
           />
-          
+
           {errorMessage && (
             <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
               <FaExclamationCircle />
               <span>{errorMessage}</span>
             </div>
           )}
-          
+
           {successMessage && (
             <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
               {successMessage}
             </div>
           )}
-          
+
           <div className="flex gap-3 mt-4">
             <button
               onClick={retake}

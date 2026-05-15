@@ -173,16 +173,16 @@ export default function ChatView({ emptyStateText }) {
                 }`}
               >
                 <div className="relative">
-                  <div className="w-12 h-12 bg-[#8BC53F] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-                    {chat.otherParticipant?.avatar ? (
-                      <img
-                        src={chat.otherParticipant.avatar}
-                        alt=""
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      getInitials(chat.otherParticipant?.name)
-                    )}
+                  <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
+                    <img
+                      src={chat.otherParticipant?.avatar || chat.otherParticipant?.profilePicture || "/avatar.png"}
+                      alt=""
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/avatar.png";
+                      }}
+                    />
                   </div>
                   {chat.unreadCount > 0 && (
                     <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
@@ -223,7 +223,7 @@ export default function ChatView({ emptyStateText }) {
             {/* Chat Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-1">
                   {/* Fix 6.4: Mobile back button */}
                   <button
                     onClick={handleMobileBack}
@@ -231,18 +231,18 @@ export default function ChatView({ emptyStateText }) {
                   >
                     <FiArrowLeft size={20} />
                   </button>
-                  <div className="w-10 h-10 bg-[#8BC53F] rounded-full flex items-center justify-center text-white font-semibold">
-                    {selectedChat.otherParticipant?.avatar || selectedChat.otherParticipant?.profilePicture ? (
-                      <img
-                        src={selectedChat.otherParticipant.profilePicture || selectedChat.otherParticipant.avatar}
-                        alt=""
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      getInitials(selectedChat.otherParticipant?.name)
-                    )}
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
+                    <img
+                      src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                      alt=""
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/avatar.png";
+                      }}
+                    />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h2 className="font-semibold text-gray-800">
                       {selectedChat.otherParticipant?.name || "Unknown User"}
                     </h2>
@@ -252,6 +252,49 @@ export default function ChatView({ emptyStateText }) {
                   </div>
                 </div>
               </div>
+              
+              {/* Booking Details Panel */}
+              {selectedChat.bookingId && (
+                <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 md:grid-cols-4">
+                  {/* Status */}
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-gray-500 uppercase">Status</span>
+                    <span className="mt-1 text-sm font-medium text-gray-800 capitalize">
+                      {selectedChat.bookingId?.status?.replace(/_/g, " ") || "—"}
+                    </span>
+                  </div>
+                  
+                  {/* Amount */}
+                  {selectedChat.bookingId?.totalAmount && (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Amount</span>
+                      <span className="mt-1 text-sm font-medium text-green-600">
+                        ₦{selectedChat.bookingId.totalAmount.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Location */}
+                  {selectedChat.bookingId?.location && (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Location</span>
+                      <span className="mt-1 text-sm font-medium text-gray-800 truncate">
+                        {selectedChat.bookingId.location}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Date */}
+                  {selectedChat.bookingId?.scheduleDate && (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Date</span>
+                      <span className="mt-1 text-sm font-medium text-gray-800">
+                        {new Date(selectedChat.bookingId.scheduleDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Messages Area */}
@@ -320,10 +363,16 @@ export default function ChatView({ emptyStateText }) {
                             >
                               <div className={`flex items-end gap-2 max-w-xs ${isSending ? "opacity-70" : ""} ${isError ? "opacity-80" : ""}`}>
                                 {!isCurrentUser && (
-                                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-                                    {getInitials(
-                                      selectedChat.otherParticipant?.name,
-                                    )}
+                                  <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+                                    <img
+                                      src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                                      alt=""
+                                      className="w-full h-full rounded-full object-cover"
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "/avatar.png";
+                                      }}
+                                    />
                                   </div>
                                 )}
                                 <div>

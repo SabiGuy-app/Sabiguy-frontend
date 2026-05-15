@@ -10,6 +10,7 @@ import notificationSoundService from "../../services/notificationSoundService";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import { notificationService } from "../../api/notifications";
 import { toggleAvailability as apiToggleAvailability } from "../../api/provider";
+import KycVerificationModal from "./KycVerificationModal";
 
 export default function ProviderNavbar({ onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
@@ -23,6 +24,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   const [socket, setSocket] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
   const navigate = useNavigate();
   const isAvailable = user?.data?.availability?.isAvailable ?? false;
 
@@ -115,14 +117,16 @@ export default function ProviderNavbar({ onMenuClick }) {
 
   // Show toast notification
   const showNotificationToast = (notification) => {
-    console.log("ðŸ”” showNotificationToast called with:", notification);
+    console.log("🔔 showNotificationToast called with:", notification);
 
-    // Play sound
-    console.log("ðŸ”Š Playing notification sound...");
-    notificationSoundService.play();
+    // Play sound - play() method handles initialization internally
+    console.log("🔊 Playing notification sound...");
+    notificationSoundService.play().catch((err) => {
+      console.warn("⚠️ Sound playback failed:", err);
+    });
 
     // Show toast
-    console.log("ðŸ“¢ Displaying toast notification...");
+    console.log("📢 Displaying toast notification...");
     toast.custom(
       (t) => (
         <NotificationToast
@@ -203,6 +207,25 @@ export default function ProviderNavbar({ onMenuClick }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Unlock audio on first user interaction to enable autoplay
+  useEffect(() => {
+    const handleUserInteraction = async () => {
+      console.log("👆 User interaction detected - unlocking audio");
+      await notificationSoundService.unlock();
+      // Remove listener after first interaction
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
+
+    document.addEventListener("click", handleUserInteraction);
+    document.addEventListener("touchstart", handleUserInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
+  }, []);
+
   // Sync location tracking with availability
   useEffect(() => {
     if (isAvailable && socket) {
@@ -261,6 +284,10 @@ export default function ProviderNavbar({ onMenuClick }) {
     fetchNotifications();
   };
 
+  const isKycVerificationError = (message) =>
+    typeof message === "string" &&
+    message.toLowerCase().includes("kyc verification required");
+
   const toggleAvailability = async () => {
     const newAvailability = !isAvailable;
 
@@ -308,6 +335,14 @@ export default function ProviderNavbar({ onMenuClick }) {
         console.log(
           `âœ… Availability ${newAvailability ? "enabled" : "disabled"}`,
         );
+      } else if (isKycVerificationError(data.message)) {
+        setShowKycModal(true);
+
+        // Roll back location tracking if the backend blocks the toggle
+        if (newAvailability) {
+          locationService.stopTracking();
+          setLocationEnabled(false);
+        }
       } else {
         console.error("Failed to update availability:", data.message);
         alert("Failed to update availability. Please try again.");
@@ -320,7 +355,17 @@ export default function ProviderNavbar({ onMenuClick }) {
       }
     } catch (error) {
       console.error("Error updating availability:", error);
-      alert("Error updating availability. Please check your connection.");
+      const apiMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "";
+
+      if (isKycVerificationError(apiMessage)) {
+        setShowKycModal(true);
+      } else {
+        alert("Error updating availability. Please check your connection.");
+      }
 
       // Rollback location tracking on error
       if (newAvailability) {
@@ -334,11 +379,17 @@ export default function ProviderNavbar({ onMenuClick }) {
 
   return (
     <>
+      <KycVerificationModal
+        isOpen={showKycModal}
+        onClose={() => setShowKycModal(false)}
+      />
       <Toaster position="top-right" />
       <header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-40 shadow-sm h-16 sm:h-20">
-
         {/* Mobile Menu Button (toggles sidebar) */}
-        <button className="md:hidden p-2 text-gray-600 hover:text-gray-800" onClick={onMenuClick}>
+        <button
+          className="md:hidden p-2 text-gray-600 hover:text-gray-800"
+          onClick={onMenuClick}
+        >
           <Menu size={26} className="text-gray-600" />
         </button>
 
@@ -347,7 +398,11 @@ export default function ProviderNavbar({ onMenuClick }) {
           className="block text-xl sm:text-2xl md:text-3xl font-bold text-[#005823] flex-shrink-0"
           onClick={() => navigate("/dashboard/provider")}
         >
-          <img src="/logo.jpg" alt="SabiGuy Logo" className="h-6 sm:h-8 w-auto" />
+          <img
+            src="/logo.jpg"
+            alt="SabiGuy Logo"
+            className="h-6 sm:h-8 w-auto"
+          />
         </button>
 
         {/* Desktop Search */}
@@ -377,15 +432,19 @@ export default function ProviderNavbar({ onMenuClick }) {
           <div className="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center justify-center gap-1 sm:gap-2">
               {locationEnabled && (
-                <MapPin size={10} className="sm:size-3 text-green-500 animate-pulse" />
+                <MapPin
+                  size={10}
+                  className="sm:size-3 text-green-500 animate-pulse"
+                />
               )}
               <span
-                className={`text-[10px] sm:text-xs font-semibold transition-colors ${isAvailable ? "text-gray-700" : "text-gray-400"
-                  }`}
+                className={`text-[10px] sm:text-xs font-semibold transition-colors ${
+                  isAvailable ? "text-gray-700" : "text-gray-400"
+                }`}
               >
                 {isAvailable
                   ? locationEnabled
-                    ? "Available" 
+                    ? "Available"
                     : "Available"
                   : "Offline"}
               </span>
@@ -394,8 +453,9 @@ export default function ProviderNavbar({ onMenuClick }) {
             <button
               onClick={toggleAvailability}
               disabled={updatingAvailability}
-              className={`relative w-5 h-2 rounded-full transition-all duration-300 ${isAvailable ? "bg-green-500" : "bg-gray-300"
-                } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`relative w-5 h-2 rounded-full transition-all duration-300 ${
+                isAvailable ? "bg-green-500" : "bg-gray-300"
+              } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label="Toggle availability and location"
               title={
                 isAvailable
@@ -409,8 +469,9 @@ export default function ProviderNavbar({ onMenuClick }) {
                 </div>
               ) : (
                 <div
-                  className={`absolute top-0 w-2 h-2 bg-white rounded-full shadow-md transition-transform duration-300 ${isAvailable ? "translate-x-3" : "translate-x-0.5"
-                    }`}
+                  className={`absolute top-0 w-2 h-2 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                    isAvailable ? "translate-x-3" : "translate-x-0.5"
+                  }`}
                 />
               )}
             </button>
@@ -447,11 +508,17 @@ export default function ProviderNavbar({ onMenuClick }) {
                 src={user.data.profilePicture}
                 alt="Profile"
                 className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/avatar.png";
+                }}
               />
             ) : (
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
-                {user?.data?.name?.charAt(0) || 'U'}
-              </div>
+              <img
+                src="/avatar.png"
+                alt="Profile"
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
+              />
             )}
           </button>
         </div>
@@ -471,7 +538,6 @@ export default function ProviderNavbar({ onMenuClick }) {
           </div>
         )} 
         */}
-
 
         <NotificationDrawer
           isOpen={showNotifications}

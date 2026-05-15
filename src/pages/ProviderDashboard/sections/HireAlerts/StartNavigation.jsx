@@ -13,7 +13,9 @@ import DeliveryMap from "../../../../components/dashboard/Map";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { startJob, cancelBooking } from "../../../../api/bookings";
+import { canMessage } from "../../../../utils/chat.utils";
 import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
+import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 import CancelModal from "../../../../components/CancelModal";
 
 // Error Boundary for Map Component
@@ -125,8 +127,8 @@ export default function StartNavigation() {
   const customer = alert?.originalData?.userId || {};
 
   return (
-    <>
-      <ProviderNavbar />
+    <ProviderDashboardLayout>
+      <div className="py-4">
       <CancelModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
@@ -215,18 +217,22 @@ export default function StartNavigation() {
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
               </button> */}
-              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <MessageCircle className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">
-                  Message
-                </span>
-              </button>
-              <button
-                onClick={() => setCancelModalOpen(true)}
-                className="text-[#E90000] font-medium text-[16px] px-3 py-3 rounded-[10px] hover:text-red-600 transition-colors hover:bg-red-200"
-              >
-                Cancel Request
-              </button>
+              {canMessage(alert?.status || bookingDetails?.status) && (
+                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <MessageCircle className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Message
+                  </span>
+                </button>
+              )}
+              {!canMessage(alert?.status || bookingDetails?.status) && (
+                <button
+                  onClick={() => setCancelModalOpen(true)}
+                  className="text-[#E90000] font-medium text-[16px] px-3 py-3 rounded-[10px] hover:text-red-600 transition-colors hover:bg-red-200"
+                >
+                  Cancel Request
+                </button>
+              )}
             </div>
           </div>
 
@@ -265,6 +271,7 @@ export default function StartNavigation() {
           </MapErrorBoundary>
         </div>
       </div>
-    </>
+      </div>
+    </ProviderDashboardLayout>
   );
 }

@@ -7,9 +7,10 @@ import {
   MapPin,
   Star,
   BadgeCheck,
+  ChevronLeft,
 } from "lucide-react";
 import DeliveryMap from "../../../../components/dashboard/Map";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import useBookingStore from "../../../../stores/booking.store";
 import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
@@ -317,6 +318,10 @@ export default function TrackRider() {
       />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:grid md:grid-cols-2 md:gap-10 space-y-8">
         <div>
+          <Link to={"/bookings"} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 w-fit">
+            <ChevronLeft size={20} />
+            <span className="font-medium text-sm">Back to Bookings</span>
+          </Link>
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-1">
             {isFullyComplete ? "Delivery Completed 🎉" : getArrivalText()}
           </h1>
@@ -348,9 +353,13 @@ export default function TrackRider() {
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-4">
               <img
-                src={providerDetails?.profilePicture}
+                src={providerDetails?.profilePicture || "/avatar.png"}
                 alt={providerDetails?.fullName || "Provider"}
                 className="w-14 h-14 rounded-full object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/avatar.png";
+                }}
               />
               <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-0.5">
@@ -374,15 +383,17 @@ export default function TrackRider() {
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
               </button> */}
-              <button
-                onClick={handleMessageProvider}
-                className="md:flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <MessageCircle className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">
-                  Message
-                </span>
-              </button>
+              {bookingStatus?.toLowerCase() !== "cancelled" && (
+                <button
+                  onClick={handleMessageProvider}
+                  className="md:flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Message
+                  </span>
+                </button>
+              )}
             </div>
           </div>
 
