@@ -112,7 +112,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-white overflow-x-hidden w-full relative">
       {/* Navigation */}
       <motion.nav
         initial={{ y: -100 }}
