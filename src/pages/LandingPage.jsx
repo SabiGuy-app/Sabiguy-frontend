@@ -8,6 +8,8 @@ import {
   CircleCheckBig,
   Menu,
   X,
+  Play,
+  Pause,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import LandingFooter from "../components/LandingFooter";
@@ -65,6 +67,7 @@ const useDeviceType = () => {
 };
 
 const LandingPage = () => {
+  const AUTOSLIDE_INTERVAL = 5000;
   const [active, setActive] = useState("providers");
   const content = tabs[active];
   const [current, setCurrent] = useState(0);
@@ -72,6 +75,7 @@ const LandingPage = () => {
   const [openIndex, setOpenIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const deviceType = useDeviceType();
   const navigate = useNavigate();
 
@@ -83,9 +87,11 @@ const LandingPage = () => {
   const next = () => goTo(current + 1);
 
   useEffect(() => {
-    timerRef.current = setInterval(next, AUTOSLIDE_INTERVAL);
+    if (!isPaused) {
+      timerRef.current = setInterval(next, AUTOSLIDE_INTERVAL);
+    }
     return () => clearInterval(timerRef.current);
-  }, [current]);
+  }, [current, isPaused]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -93,7 +99,13 @@ const LandingPage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const AUTOSLIDE_INTERVAL = 4000;
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#31784D";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
 
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -106,11 +118,10 @@ const LandingPage = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
-        className={`w-full h-16 md:h-20 flex items-center sticky top-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? "bg-white border-b border-gray-50 shadow-md"
-            : "bg-white border-b border-gray-50"
-        }`}
+        className={`w-full h-16 md:h-20 flex items-center sticky top-0 z-50 transition-all duration-300 ${isScrolled
+          ? "bg-white border-b border-gray-50 shadow-md"
+          : "bg-white border-b border-gray-50"
+          }`}
       >
         <div className="w-full px-4 md:px-6 flex items-center justify-between max-w-7xl mx-auto">
           <motion.div whileHover={{ scale: 1.05 }} className="flex-shrink-0">
@@ -139,7 +150,7 @@ const LandingPage = () => {
             <div className="flex items-center gap-8 ml-4 border-l border-gray-200 pl-4">
               <motion.a
                 whileHover={{ color: "#4F8461" }}
-               href="/login"
+                href="/login"
                 className="text-[#1A1A1A] font-medium text-sm transition-colors"
               >
                 Login
@@ -156,13 +167,13 @@ const LandingPage = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-gray-700 p-2 -mr-2"
+            className="md:hidden text-gray-700 p-2 -mr-2 cursor-pointer z-50 focus:outline-none"
+            aria-label="Toggle menu"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </motion.button>
+          </button>
         </div>
 
         {/* Mobile Menu */}
@@ -170,25 +181,24 @@ const LandingPage = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: isOpen ? 1 : 0, height: isOpen ? "auto" : 0 }}
           transition={{ duration: 0.3 }}
-          className="absolute top-16 left-0 w-full bg-white border-b shadow-md md:hidden overflow-hidden"
+          className="absolute top-16 left-0 w-full bg-white border-b shadow-md md:hidden overflow-hidden z-50"
         >
           <div className="flex flex-col items-center gap-4 py-6 px-4">
-            <a href="/" className="font-medium text-[#1A1A1A] text-sm">
+            <a href="/" className="font-medium text-[#1A1A1A] text-sm cursor-pointer w-full text-center py-2 hover:bg-gray-50 rounded">
               Home
             </a>
-            <a href="#" className="font-medium text-[#1A1A1A] text-sm">
+            <a href="#" className="font-medium text-[#1A1A1A] text-sm cursor-pointer w-full text-center py-2 hover:bg-gray-50 rounded">
               Support
             </a>
-            <a href="/login" className="font-medium text-[#1A1A1A] text-sm">
+            <a href="/login" className="font-medium text-[#1A1A1A] text-sm cursor-pointer w-full text-center py-2 hover:bg-gray-50 rounded">
               Login
             </a>
-            <motion.a
-              whileTap={{ scale: 0.95 }}
+            <a
               href="/welcome"
-              className="bg-[#4F8461] text-white text-center w-full px-6 py-2.5 rounded-full font-medium text-sm"
+              className="bg-[#4F8461] text-white text-center w-full px-6 py-2.5 rounded-full font-medium text-sm cursor-pointer hover:bg-[#3e694d] transition-colors"
             >
               Sign up
-            </motion.a>
+            </a>
           </div>
         </motion.div>
       </motion.nav>
@@ -206,9 +216,9 @@ const LandingPage = () => {
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-[#1A1A1A] leading-tight mb-4 md:mb-6"
+              className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-[#1A1A1A] leading-tight mb-4 md:mb-6"
             >
-              Need Something <br />
+              Need Something <br className="hidden md:block" />
               Done Quickly? <br />
               <span className="text-[#005823]">Get a SabiGuy.</span>
             </motion.h1>
@@ -260,7 +270,7 @@ const LandingPage = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  to="/welcome"
+                  to="/signup"
                   className="bg-[#31784D] text-white px-6 md:px-10 py-3 md:py-4 rounded-lg md:rounded-xl font-bold hover:bg-[#255d3b] transition-all shadow-lg shadow-green-900/10 inline-block w-full text-center text-sm md:text-base"
                 >
                   Request a SabiGuy
@@ -304,46 +314,54 @@ const LandingPage = () => {
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true, margin: "-100px" }}
-        className="py-8 md:py-12 bg-white text-center"
+        className="py-12 md:py-20 bg-white text-center"
       >
-        <motion.h2
-          variants={fadeInUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="text-base md:text-lg mb-8 md:mb-12 px-4"
-        >
-          Trusted by individuals and businesses across major Nigerian cities.
-        </motion.h2>
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="flex flex-col items-center mb-10 md:mb-16"
+          >
+            {/* <span className="inline-block bg-[#E8F2EC] text-[#005823] text-xs md:text-sm font-bold px-4 py-1.5 rounded-full mb-3 uppercase tracking-wider">
+              Our Impact
+            </span> */}
+            <h2 className="text-xl md:text-2xl font-bold text-[#2A3349] max-w-2xl px-4 leading-snug">
+              Trusted by individuals and businesses across major Nigerian cities.
+            </h2>
+          </motion.div>
 
-        <div className="flex flex-wrap justify-center items-center max-w-6xl mx-auto px-4 md:px-6">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              viewport={{ once: true }}
-              className={`flex-1 min-w-[150px] md:min-w-[200px] px-4 md:px-6 py-4 
-              ${index !== stats.length - 1 ? "border-r border-gray-200" : ""} 
-              max-sm:border-r-0 max-sm:border-b max-sm:last:border-b-0`}
-            >
+          <div className="max-w-6xl mx-auto bg-gradient-to-b from-white to-[#F9FBF9] border border-gray-100 rounded-2xl md:rounded-3xl shadow-xl shadow-green-900/5 px-4 md:px-6 py-8 md:py-12 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+            {stats.map((stat, index) => (
               <motion.div
-                whileInView={{ scale: 1.1 }}
-                transition={{ duration: 0.5 }}
-                className="text-2xl md:text-3xl lg:text-4xl font-bold text-black mb-1 md:mb-2"
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -6, scale: 1.03 }}
+                className={`w-full px-4 md:px-6 py-4 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-green-900/5 transition-all duration-300 relative group
+                ${index !== stats.length - 1 ? "lg:border-r border-gray-100" : ""}`}
               >
-                <AnimatedCounter
-                  from={0}
-                  to={parseInt(stat.number)}
-                  duration={2}
-                />
+                <div
+                  className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#005823] mb-1 md:mb-2 flex items-center justify-center"
+                >
+                  <AnimatedCounter
+                    from={0}
+                    to={parseInt(stat.number)}
+                    duration={2}
+                  />
+                  {stat.number.includes("+") && (
+                    <span className="text-[#005823] ml-0.5 group-hover:scale-110 transition-transform duration-300">+</span>
+                  )}
+                </div>
+                <div className="text-xs md:text-sm font-bold tracking-wider text-gray-500 uppercase mt-2">
+                  {stat.label}
+                </div>
               </motion.div>
-              <div className="text-xs md:text-sm lg:text-base font-semibold tracking-wide text-black uppercase">
-                {stat.label}
-              </div>
-            </motion.div>
-          ))}
+            ))}
+          </div>
         </div>
       </motion.section>
 
@@ -378,11 +396,10 @@ const LandingPage = () => {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center ${
-                  service.imgSide === "left"
-                    ? "md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1"
-                    : ""
-                }`}
+                className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center ${service.imgSide === "left"
+                  ? "md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1"
+                  : ""
+                  }`}
               >
                 <motion.div
                   initial={{
@@ -403,7 +420,7 @@ const LandingPage = () => {
                     {service.desc2}
                   </p>
 
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 mb-6 md:mb-8">
+                  <ul className="grid grid-cols-2 gap-2 md:gap-3 mb-6 md:mb-8">
                     {service.checks.map((item, i) => (
                       <motion.li
                         key={i}
@@ -495,19 +512,18 @@ const LandingPage = () => {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                whileHover={{ y: -10 }}
-                className="p-4 md:p-6 border-2 border-gray-200 rounded-lg md:rounded-xl hover:bg-[#F0FDF4] transition-colors"
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="p-4 md:p-6 bg-gradient-to-br from-[#31784D] to-[#255d3b] border border-[#255d3b] rounded-lg md:rounded-2xl shadow-md shadow-black/20 hover:shadow-xl hover:shadow-black/30 transition-all duration-300 relative group"
               >
-                <div className="w-6 h-6 md:w-8 md:h-8 bg-[#31784D] rounded flex items-center justify-center mb-3 md:mb-5">
-                  <OptimizedImage src={step.image} className="w-3.5 h-3.5 md:w-5 md:h-5" />
-
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-white/10 rounded-lg flex items-center justify-center mb-4 md:mb-6 backdrop-blur-sm group-hover:bg-white/20 transition-all duration-300">
+                  <OptimizedImage src={step.image} className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
 
-                <h4 className="text-base md:text-lg font-bold text-[#2A3349] mb-1 md:mb-2 leading-snug">
+                <h4 className="text-base md:text-lg font-bold text-white mb-2 leading-snug">
                   {step.title}
                 </h4>
 
-                <p className="text-xs md:text-sm text-[#2A3349BF] leading-relaxed">
+                <p className="text-xs md:text-sm text-green-100/80 leading-relaxed">
                   {step.desc}
                 </p>
               </motion.div>
@@ -518,11 +534,11 @@ const LandingPage = () => {
 
       {/* Carousel Section - Responsive */}
       <section className="py-12 md:py-16 bg-white">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-6">
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 relative">
+          <div className="text-center max-w-2xl mx-auto mb-8 flex flex-col items-center">
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
@@ -534,36 +550,40 @@ const LandingPage = () => {
                 timely, conveniently, and at fair pricing.
               </p>
             </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="hidden md:flex items-center justify-end gap-2"
-            >
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={prev}
-                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={next}
-                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </motion.button>
-            </motion.div>
           </div>
 
-          <div className="overflow-hidden rounded-lg md:rounded-2xl">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="hidden md:flex items-center gap-2 absolute right-4 md:right-6 top-1.5"
+          >
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={prev}
+              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors bg-white"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={next}
+              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors bg-white"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </motion.button>
+          </motion.div>
+
+          <div
+            className="relative group overflow-hidden rounded-lg md:rounded-2xl aspect-[1.81]"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
             <motion.div
-              className="flex transition-transform duration-500 ease-in-out"
+              className="flex h-full transition-transform duration-500 ease-in-out"
               style={{
                 transform: `translateX(calc(-${current * 100}%))`,
               }}
@@ -571,18 +591,14 @@ const LandingPage = () => {
               {slides.map((slide, i) => (
                 <motion.div
                   key={i}
-                  className="relative flex-shrink-0 w-full"
-                  style={{
-                    minHeight: deviceType === "mobile" ? "220px" : "400px",
-                  }}
-                  whileHover={deviceType !== "mobile" ? { scale: 1.02 } : {}}
+                  className="relative flex-shrink-0 w-full h-full overflow-hidden"
+                  whileHover={deviceType !== "mobile" ? { scale: 1.01 } : {}}
                 >
                   <OptimizedImage
                     src={slide.imgSrc}
                     alt={`Slide ${i}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover brightness-[0.85] contrast-[1.02]"
                   />
-
                 </motion.div>
               ))}
             </motion.div>
@@ -603,17 +619,34 @@ const LandingPage = () => {
               <ChevronLeft className="w-4 h-4" />
             </motion.button>
 
-            <div className="flex items-center gap-2">
-              {slides.map((_, i) => (
-                <motion.button
-                  key={i}
-                  whileHover={{ scale: 1.2 }}
-                  onClick={() => goTo(i)}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === current ? "w-6 bg-green-600" : "w-1.5 bg-gray-300"
-                  }`}
-                />
-              ))}
+            <div className="flex items-center gap-3 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100">
+              <div className="flex items-center gap-2">
+                {slides.map((_, i) => (
+                  <motion.button
+                    key={i}
+                    whileHover={{ scale: 1.2 }}
+                    onClick={() => goTo(i)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-6 bg-green-600" : "w-1.5 bg-gray-300"
+                      }`}
+                  />
+                ))}
+              </div>
+
+              {/* In-pagination Play/Pause Toggle button */}
+              <div className="h-4 w-px bg-gray-200 mx-1"></div>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsPaused(!isPaused)}
+                className="text-[#005823] hover:text-green-700 transition-colors cursor-pointer flex items-center justify-center"
+                title={isPaused ? "Play" : "Pause"}
+              >
+                {isPaused ? (
+                  <Play className="w-3.5 h-3.5 fill-[#005823]" />
+                ) : (
+                  <Pause className="w-3.5 h-3.5 fill-[#005823]" />
+                )}
+              </motion.button>
             </div>
 
             {/* Mobile-only next button */}
@@ -630,64 +663,64 @@ const LandingPage = () => {
       </section>
 
       {/* FAQ Section - Responsive */}
-      <section className="w-full max-w-7xl mx-auto px-4 md:px-6 my-12 md:my-20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+      <section className="w-full max-w-4xl mx-auto px-4 md:px-6 my-12 md:my-20">
+        <div className="text-center mb-8 md:mb-12">
           <motion.h2
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-2xl md:text-3xl text-[#231F20] font-bold"
+            className="text-2xl md:text-3xl lg:text-4xl text-[#231F20] font-bold"
           >
-            Frequently Asked <br /> Questions
+            Frequently Asked Questions
           </motion.h2>
-
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="md:col-span-2"
-          >
-            <div className="border-t border-gray-200">
-              {faqs.map((faq, index) => (
-                <div key={index} className="border-b border-gray-200">
-                  <motion.button
-                    whileHover={{ backgroundColor: "#f9f9f9" }}
-                    onClick={() => toggleFAQ(index)}
-                    className="w-full flex justify-between items-center py-4 md:py-6 text-left focus:outline-none group"
-                  >
-                    <span className="text-base md:text-lg font-semibold text-gray-900 group-hover:text-gray-600 transition-colors pr-4">
-                      {faq.question}
-                    </span>
-                    <motion.span
-                      animate={{ rotate: openIndex === index ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="flex-shrink-0"
-                    >
-                      {openIndex === index ? (
-                        <ChevronUp className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
-                      )}
-                    </motion.span>
-                  </motion.button>
-
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: openIndex === index ? "auto" : 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <p className="text-sm md:text-base text-gray-600 leading-relaxed pb-4 md:pb-6">
-                      {faq.answer}
-                    </p>
-                  </motion.div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="w-full"
+        >
+          <div className="border-t border-gray-200">
+            {faqs.map((faq, index) => (
+              <div key={index} className="border-b border-gray-200">
+                <motion.button
+                  whileHover={{ backgroundColor: "#f9f9f9" }}
+                  onClick={() => toggleFAQ(index)}
+                  className="w-full flex justify-between items-center py-4 md:py-6 text-left focus:outline-none group"
+                >
+                  <span className="text-base md:text-lg font-semibold text-gray-900 group-hover:text-gray-600 transition-colors pr-4">
+                    {faq.question}
+                  </span>
+                  <motion.span
+                    animate={{ rotate: openIndex === index ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex-shrink-0"
+                  >
+                    {openIndex === index ? (
+                      <ChevronUp className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
+                    )}
+                  </motion.span>
+                </motion.button>
+
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: openIndex === index ? "auto" : 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <p className="text-sm md:text-base text-gray-600 leading-relaxed pb-4 md:pb-6">
+                    {faq.answer}
+                  </p>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       <LandingFooter />
