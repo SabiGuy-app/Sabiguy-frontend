@@ -128,8 +128,12 @@ export default function HireAlerts() {
           formattedSubCategory ||
           booking.serviceType ||
           "Untitled job",
-        price:
+        BookingPrice:
           booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || 0,
+        platformFee:
+          booking?.pricingBreakdown?.ProviderPlatformFee || booking?.pricing?.breakdown?.providerPlatformFee || 0,
+        RiderReceives:
+          booking?.pricingBreakdown?.driverReceives || booking?.pricing?.breakdown?.driverReceives || 0,
         calculatedPrice:
           booking.calculatedPrice || booking.agreedPrice || booking.budget || 0,
         agreedPrice:

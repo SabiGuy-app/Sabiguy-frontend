@@ -166,17 +166,20 @@ export default function StepTwo({onNext, email}) {
           </p>
           
           <div className="flex flex-col gap-4 items-center">
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-1.5 sm:gap-2">
               {otp.map((digit, index) => (
                 <input
                   key={index}
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="one-time-code"
                   maxLength="1"
                   value={digit}
                   ref={(el) => (inputRefs.current[index] = el)}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-14 h-14 text-center border border-gray-300 rounded-md text-xl focus:outline-none focus:ring-2 focus:ring-[#8BC53FBF]"
+                  className="w-11 h-12 sm:w-14 sm:h-14 box-border appearance-none px-1.5 sm:px-3 text-center border border-gray-300 rounded-md text-lg sm:text-xl focus:outline-none focus:ring-2 focus:ring-[#8BC53FBF]"
                 />
               ))}
             </div>

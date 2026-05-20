@@ -4,7 +4,7 @@ import CategoryCarousel from "../../../components/dashboard/CategoryCarousel";
 import Button from "../../../components/dashboard/Button";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/auth.store";
-import { getAllProviders } from "../../../api/provider";
+// import { getAllProviders } from "../../../api/provider";
 import { useState, useEffect } from "react";
 import { useProviderStore } from "../../../stores/provider.store";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
@@ -24,7 +24,7 @@ export default function DashboardHome() {
   const [loading, setLoading] = useState(false);
   const { token } = useAuthStore();
   const hydrated = useAuthStore((state) => state.hydrated);
-  const { providers, setProviders } = useProviderStore();
+  // const { providers, setProviders } = useProviderStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const user = useAuthStore((state) => state.user);
@@ -189,15 +189,15 @@ export default function DashboardHome() {
     }
   };
 
-  useEffect(() => {
-    const loadProviders = async () => {
-      const data = await getAllProviders(token);
-      console.log("Setting providers:", data.data);
-      setProviders(data.data);
-    };
+  // useEffect(() => {
+  //   const loadProviders = async () => {
+  //     const data = await getAllProviders(token);
+  //     console.log("Setting providers:", data.data);
+  //     setProviders(data.data);
+  //   };
 
-    loadProviders();
-  }, []);
+  //   loadProviders();
+  // }, []);
 
   return (
     <DashboardLayout>

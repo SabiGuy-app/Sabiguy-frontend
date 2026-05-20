@@ -9,8 +9,8 @@ export default function Welcome() {
     <div className="h-screen">
       <SignupNavbar />
       <AuthLayout
-        title="Let's Get Started!"
-        description="Join us to discover reliable professionals anytime, anywhere."
+        title="Get Help. Get It Done."
+        description="Reliable professionals at your fingertips — anytime, anywhere."
       >
         <motion.div
           key="step-one"
@@ -20,10 +20,10 @@ export default function Welcome() {
           transition={{ duration: 0.3 }}
         >
           <h2 className="text-2xl mt-4 font-semibold text-center mb-1">
-            Welcome to SabiGuy
+            Join SabiGuy Now
           </h2>
           <p className="text-gray-500 text-center mb-6">
-            How do you want to use SabiGuy?
+            Choose how you want to get started.
           </p>
 
           <div className="p-6 flex flex-col items-center justify-center space-y-6">
@@ -37,15 +37,15 @@ export default function Welcome() {
 
                 {/* Text */}
                 <h2 className="text-xl font-semibold text-gray-800 mb-1">
-                  I need a service
+                  Book a Service Now
                 </h2>
-                <p className="text-gray-600 text-lg">
-                  Find skilled professionals for your needs.
+                <p className="text-gray-600">
+                  Stop waiting. Find trusted drivers and logistics professionals ready to move you  — right now.
                 </p>
-                <p className="text-gray-600 text-sm">
+                {/* <p className="text-gray-600 text-sm">
                   Connect with plumbers, electricians, tutors, tech experts and
                   more.
-                </p>
+                </p> */}
               </div>
             </Link>
 
@@ -62,19 +62,19 @@ export default function Welcome() {
 
                 {/* Text */}
                 <h2 className="text-xl font-semibold text-gray-800 mb-1">
-                  I provide a service
+                  Start Earning Today
                 </h2>
-                <p className="text-gray-600 text-lg">
-                  Grow your business and find new clients.
+                <p className="text-gray-600">
+                  Turn your skills into income. Get Hired for jobs in your area  — your next client is waiting.
                 </p>
-                <p className="text-gray-600 text-sm">
+                {/* <p className="text-gray-600 text-sm">
                   Showcase your skills and get hired for jobs in your area.
-                </p>
+                </p> */}
               </div>
             </Link>
           </div>
 
-          <div className="text-center text-sm mt-4">
+          <div className="text-center text-sm mt-4 mb-5">
             Already have an account?
             <div className="group inline-flex">
               {/* Arrow icon that appears on hover */}
