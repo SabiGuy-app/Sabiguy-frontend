@@ -270,7 +270,7 @@ const LandingPage = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  to="/welcome"
+                  to="/signup"
                   className="bg-[#31784D] text-white px-6 md:px-10 py-3 md:py-4 rounded-lg md:rounded-xl font-bold hover:bg-[#255d3b] transition-all shadow-lg shadow-green-900/10 inline-block w-full text-center text-sm md:text-base"
                 >
                   Request a SabiGuy
