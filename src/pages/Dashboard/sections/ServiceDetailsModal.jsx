@@ -24,6 +24,24 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
     navigate(`/dashboard/chat?bookingId=${bookingId}`);
   };
 
+  const getStatusStyles = (status) => {
+    const styles = {
+      pending: "bg-yellow-100 text-[#FFC107] border-yellow-200",
+      paid_escrow: "bg-[#007BFF1A] text-[#007BFF] border-[#007BFF]",
+      cancelled: "bg-red-100 text-red-700 border-red-200",
+      active: "bg-blue-100 text-blue-600 border-blue-200",
+      "enroute to pickup": "bg-blue-100 text-blue-800 border-blue-200",
+      "arrived at pickup": "bg-blue-100 text-blue-800 border-blue-200",
+      "enroute to dropoff": "bg-blue-100 text-blue-800 border-blue-200",
+      "arrived at dropoff": "bg-blue-100 text-blue-800 border-blue-200",
+      "waiting confirmation": "bg-orange-200 text-orange-800 border-orange-200",
+      completed: "bg-green-100 text-green-700 border-green-200",
+      user_accepted_completion: "bg-green-100 text-green-700 border-green-200",
+      "funds released": "bg-green-100 text-green-700 border-green-200",
+    };
+    return styles[status.toLowerCase()] || styles.pending;
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-50 bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white p-5 rounded-2xl max-w-6xl w-full h-[95vh] overflow-y-auto">
@@ -37,11 +55,23 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
           <h2 className="text-xl font-semibold text-gray-900">
             Service Details
           </h2>
-          {request.orderId && (
-            <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-md border border-[#0058234D] w-fit">
-              {request.orderId}
-            </span>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {request.orderId && (
+              <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-full border border-[#0058234D] w-fit">
+                {request.orderId}
+              </span>
+            )}
+
+            {request.status && (
+              <span
+                className={`text-[12px] font-medium px-3 py-1 rounded-full capitalize border ${getStatusStyles(
+                  request.status,
+                )}`}
+              >
+                {request.status.replace(/_/g, " ")}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
