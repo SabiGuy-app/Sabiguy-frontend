@@ -2,7 +2,7 @@ import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
 import { useState, useEffect } from "react";
-import { Bike } from "lucide-react";
+import { Bike, Car } from "lucide-react";
 import Button from "../../../../components/button";
 import RequestCard from "../../../../components/dashboard/RequestsCard";
 import ServiceDetailsModal from "../ServiceDetailsModal";
@@ -19,37 +19,25 @@ import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
 import { useAuthStore } from "../../../../stores/auth.store";
 
-const vehicleOptions = [
-  {
-    value: "Bike",
-    label: "Bike Delivery",
-    icon: <Bike color="black" size={30} />,
-    // eta: "15 min",
-    capacity: 2,
-    description: "Best for small packages",
-  },
-  {
-    value: "Car",
-    label: "Car Delivery",
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className="w-7 h-7"
-        stroke="currentColor"
-        strokeWidth={1.6}
-      >
-        <rect x="2" y="9" width="20" height="9" rx="2" />
-        <path d="M5 9l2-4h10l2 4" />
-        <circle cx="7" cy="18" r="1.5" fill="currentColor" stroke="none" />
-        <circle cx="17" cy="18" r="1.5" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-    // eta: "21 min",
-    capacity: 4,
-    description: "Medium sized delivery",
-  },
-];
+const vehicleOptions = (service) => {
+  const isRide = service === "book a ride";
+  return [
+    {
+      value: "Bike",
+      label: isRide ? "Bike Rider" : "Bike Delivery",
+      icon: <Bike color="black" size={30} />,
+      capacity: 2,
+      description: isRide ? "Quick rides for one" : "Best for small packages",
+    },
+    {
+      value: "Car",
+      label: isRide ? "Car Rider" : "Car Delivery",
+      icon: <Car color="black" size={30} />,
+      capacity: 4,
+      description: isRide ? "Comfortable rides for groups" : "Medium sized delivery",
+    },
+  ];
+};
 
 export default function Bookings() {
   const [activeTab, setActiveTab] = useState("request");
@@ -656,7 +644,7 @@ export default function Bookings() {
                 Choose Vehicle
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {vehicleOptions.map((vehicle) => {
+                {vehicleOptions(formik.values.service).map((vehicle) => {
                   const isSelected =
                     formik.values.modeOfDelivery === vehicle.value;
                   return (
