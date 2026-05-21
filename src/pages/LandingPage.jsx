@@ -111,6 +111,8 @@ const LandingPage = () => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  const closeMobileMenu = () => setIsOpen(false);
+
   return (
     <div className="bg-white overflow-x-hidden w-full relative">
       {/* Navigation */}
@@ -118,29 +120,48 @@ const LandingPage = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
-        className={`w-full h-16 md:h-20 flex items-center sticky top-0 z-50 transition-all duration-300 ${isScrolled
-          ? "bg-white border-b border-gray-50 shadow-md"
-          : "bg-white border-b border-gray-50"
-          }`}
+        className={`sticky top-0 z-50 w-full bg-white transition-shadow duration-300 ${
+          isScrolled ? "border-b border-gray-100 shadow-md" : "border-b border-gray-100"
+        }`}
       >
-        <div className="w-full px-4 md:px-6 flex items-center justify-between max-w-7xl mx-auto">
-          <motion.div whileHover={{ scale: 1.05 }} className="flex-shrink-0">
-            <OptimizedImage src="/logo.jpg" alt="SabiGuy" className="h-8 md:h-9 w-auto" priority={true} />
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 md:h-20 md:px-6">
+          <motion.div whileHover={{ scale: 1.03 }} className="flex shrink-0 items-center">
+            <Link
+              to="/"
+              onClick={closeMobileMenu}
+              aria-label="Go to SabiGuy home"
+              className="flex h-10 w-[118px] items-center overflow-hidden md:h-12 md:w-[136px]"
+            >
+              <img
+                src="/logo.jpg"
+                alt="SabiGuy"
+                loading="eager"
+                className="block"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  maxWidth: "136px",
+                  maxHeight: "48px",
+                  objectFit: "contain",
+                }}
+              />
+            </Link>
           </motion.div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-10">
+          <div className="hidden items-center gap-10 md:flex">
             <div className="flex items-center gap-10">
+              <motion.div whileHover={{ color: "#4F8461" }}>
+                <Link
+                  to="/"
+                  className="text-sm font-medium text-[#1A1A1A] transition-colors hover:text-[#4F8461]"
+                >
+                  Home
+                </Link>
+              </motion.div>
               <motion.a
                 whileHover={{ color: "#4F8461" }}
-                href="/"
-                className="text-[#1A1A1A] font-medium text-sm transition-colors"
-              >
-                Home
-              </motion.a>
-              <motion.a
-                whileHover={{ color: "#4F8461" }}
-                href="#"
+                href="#faq"
                 className="text-[#1A1A1A] font-medium text-sm transition-colors"
               >
                 Support
@@ -148,29 +169,31 @@ const LandingPage = () => {
             </div>
 
             <div className="flex items-center gap-8 ml-4 border-l border-gray-200 pl-4">
-              <motion.a
-                whileHover={{ color: "#4F8461" }}
-                href="/login"
-                className="text-[#1A1A1A] font-medium text-sm transition-colors"
-              >
-                Login
-              </motion.a>
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                href="/welcome"
-                className="bg-[#4F8461] text-white px-6 md:px-8 py-2.5 rounded-full font-medium hover:bg-[#3e694d] transition-all shadow-sm text-sm"
-              >
-                Sign up
-              </motion.a>
+              <motion.div whileHover={{ color: "#4F8461" }}>
+                <Link
+                  to="/login"
+                  className="text-sm font-medium text-[#1A1A1A] transition-colors hover:text-[#4F8461]"
+                >
+                  Login
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link
+                  to="/welcome"
+                  className="inline-flex items-center justify-center rounded-full bg-[#4F8461] px-8 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#3e694d]"
+                >
+                  Sign up
+                </Link>
+              </motion.div>
             </div>
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-gray-700 p-2 -mr-2 cursor-pointer z-50 focus:outline-none"
-            aria-label="Toggle menu"
+            className="z-50 -mr-2 inline-flex h-10 w-10 items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#4F8461] md:hidden"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -181,24 +204,37 @@ const LandingPage = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: isOpen ? 1 : 0, height: isOpen ? "auto" : 0 }}
           transition={{ duration: 0.3 }}
-          className="absolute top-16 left-0 w-full bg-white border-b shadow-md md:hidden overflow-hidden z-50"
+          className="absolute left-0 top-16 z-50 w-full overflow-hidden border-b border-gray-100 bg-white shadow-md md:hidden"
         >
-          <div className="flex flex-col items-center gap-4 py-6 px-4">
-            <a href="/" className="font-medium text-[#1A1A1A] text-sm cursor-pointer w-full text-center py-2 hover:bg-gray-50 rounded">
+          <div className="flex flex-col items-center gap-2 px-4 py-5">
+            <Link
+              to="/"
+              onClick={closeMobileMenu}
+              className="w-full rounded py-3 text-center text-sm font-medium text-[#1A1A1A] hover:bg-gray-50"
+            >
               Home
-            </a>
-            <a href="#" className="font-medium text-[#1A1A1A] text-sm cursor-pointer w-full text-center py-2 hover:bg-gray-50 rounded">
+            </Link>
+            <a
+              href="#faq"
+              onClick={closeMobileMenu}
+              className="w-full rounded py-3 text-center text-sm font-medium text-[#1A1A1A] hover:bg-gray-50"
+            >
               Support
             </a>
-            <a href="/login" className="font-medium text-[#1A1A1A] text-sm cursor-pointer w-full text-center py-2 hover:bg-gray-50 rounded">
+            <Link
+              to="/login"
+              onClick={closeMobileMenu}
+              className="w-full rounded py-3 text-center text-sm font-medium text-[#1A1A1A] hover:bg-gray-50"
+            >
               Login
-            </a>
-            <a
-              href="/welcome"
-              className="bg-[#4F8461] text-white text-center w-full px-6 py-2.5 rounded-full font-medium text-sm cursor-pointer hover:bg-[#3e694d] transition-colors"
+            </Link>
+            <Link
+              to="/welcome"
+              onClick={closeMobileMenu}
+              className="mt-2 w-full rounded-full bg-[#4F8461] px-6 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-[#3e694d]"
             >
               Sign up
-            </a>
+            </Link>
           </div>
         </motion.div>
       </motion.nav>
@@ -663,7 +699,7 @@ const LandingPage = () => {
       </section>
 
       {/* FAQ Section - Responsive */}
-      <section className="w-full max-w-4xl mx-auto px-4 md:px-6 my-12 md:my-20">
+      <section id="faq" className="w-full max-w-4xl mx-auto px-4 md:px-6 my-12 md:my-20 scroll-mt-24">
         <div className="text-center mb-8 md:mb-12">
           <motion.h2
             initial={{ opacity: 0, y: -20 }}
