@@ -14,13 +14,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
+html, body {
   margin: 0;
-  /* display: flex; */
-  /* place-items: center; */
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
   min-width: 320px;
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
 @media (prefers-color-scheme: light) {
