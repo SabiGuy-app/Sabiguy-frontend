@@ -78,7 +78,7 @@ export default function JobsCard({
     "N/A";
   const amount = job?.BookingPrice || job?.originalData?.BookingPrice || 0;
   const platformFee =
-    job?.providerCommission || job?.originalData?.providerCommission || 0;
+    job?.providerCommission || job?.originalData?.providerCommission || job?.originalData?.pricingBreakdown?.driverCommission || 0;
   const riderReceives = job?.RiderReceives || job?.originalData?.RiderReceives || 0;
   const shouldShowNavigation =
     normalizedStatus === "paid_escrow" ||
