@@ -1,4 +1,3 @@
-// RequestCard.jsx
 import {
   Calendar,
   MapPin,
@@ -8,18 +7,18 @@ import {
   MessageCircle,
   Copy,
   Check,
-  CreditCard, // ← new
+  CreditCard,
 } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ← new
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import distance from "/distance.png";
 import { acceptCompletion, disputeCompletion } from "../../api/bookings";
+import { getWalletBalance } from "../../api/provider";
 import ReviewModal from "./ReviewModal";
 import DisputeCompletionModal from "./DisputeCompletionModal";
 import CancelRequestButton from "../CancelRequestButton";
 import useBookingStore from "../../stores/booking.store";
-import { canMessage } from "../../utils/chat.utils";
 
 export default function RequestCard({
   request,
@@ -38,8 +37,33 @@ export default function RequestCard({
   const [disputeLoading, setDisputeLoading] = useState(false);
   const [disputeApiError, setDisputeApiError] = useState(null);
 
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState(false);
+
   const navigate = useNavigate();
   const setBooking = useBookingStore((s) => s.setBooking);
+
+  // Fetch wallet balance whenever the review modal opens
+  useEffect(() => {
+    if (!modalOpen) return;
+
+    const fetchBalance = async () => {
+      setWalletLoading(true);
+      setWalletError(false);
+      try {
+        const res = await getWalletBalance({ bustCache: true });
+        setWalletBalance(res.data.available);
+      } catch (err) {
+        console.error("Failed to fetch wallet balance:", err);
+        setWalletError(true);
+      } finally {
+        setWalletLoading(false);
+      }
+    };
+
+    fetchBalance();
+  }, [modalOpen]);
 
   const handleMakePayment = () => {
     if (request.rawBooking) {
@@ -100,9 +124,7 @@ export default function RequestCard({
         message =
           "Invalid rating score or tip amount. Please check your inputs.";
       else if (status === 401) message = "Unauthorized. Please log in again.";
-      else if (status === 409)
-        message =
-          "Job completion already accepted.";
+      else if (status === 409) message = "Job completion already accepted.";
       setApiError(message);
       toast.error(message);
     } finally {
@@ -160,6 +182,10 @@ export default function RequestCard({
         onSubmit={handleReviewSubmit}
         loading={submitLoading}
         apiError={apiError}
+        providerName={request.providerName}
+        walletBalance={walletBalance}
+        walletLoading={walletLoading}
+        walletError={walletError}
       />
 
       <DisputeCompletionModal
@@ -194,11 +220,11 @@ export default function RequestCard({
                     <h3 className="text-xl font-semibold text-gray-900">
                       {request.title}
                     </h3>
-                   <span
-  className={`inline-flex items-center justify-center text-center px-1 py-1 text-xs font-medium rounded-full border max-w-30 break-words ${getStatusStyles(request.status)}`}
->
-  {request.status}
-</span>
+                    <span
+                      className={`inline-flex items-center justify-center text-center px-1 py-1 text-xs font-medium rounded-full border max-w-30 break-words ${getStatusStyles(request.status)}`}
+                    >
+                      {request.status}
+                    </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-[16px] text-[#231F20BF]">
@@ -267,7 +293,6 @@ export default function RequestCard({
             )}
           </div>
 
-          {/* ── locations ────────────────────────────────────────────────── */}
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
@@ -374,23 +399,23 @@ export default function RequestCard({
               {request.status.toLowerCase() === "completed" &&
                 !request.ratings &&
                 !submitted && (
-                <>
-                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                    <button
-                      onClick={() => setDisputeModalOpen(true)}
-                      className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      Dispute Job Completion
-                    </button>
-                    <button
-                      onClick={() => setModalOpen(true)}
-                      className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      Accept Job Completion
-                    </button>
-                  </div>
-                </>
-              )}
+                  <>
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      <button
+                        onClick={() => setDisputeModalOpen(true)}
+                        className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        Dispute Job Completion
+                      </button>
+                      <button
+                        onClick={() => setModalOpen(true)}
+                        className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        Accept Job Completion
+                      </button>
+                    </div>
+                  </>
+                )}
 
               {(request.ratings || submitted) && (
                 <div className="px-3 py-1 mt-3 flex items-center gap-1">
