@@ -247,7 +247,7 @@ export default function StartNavigation() {
             <h3 className="text-[16px] font-semibold text-[#231F20]">Fare</h3>
             <div className="flex items-center gap-2">
               <span className="text-[20px] font-bold text-[#231F20]">
-                ₦{Number(alert?.price || 0).toLocaleString()}
+                ₦{Number(alert?.RiderReceives || 0).toLocaleString()}
               </span>
             </div>
           </div>

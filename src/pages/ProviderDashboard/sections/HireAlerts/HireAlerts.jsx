@@ -131,7 +131,7 @@ export default function HireAlerts() {
         BookingPrice:
           booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || 0,
         platformFee:
-          booking?.pricingBreakdown?.ProviderPlatformFee || booking?.pricing?.breakdown?.providerPlatformFee || 0,
+          booking?.pricingBreakdown?.ProviderPlatformFee || booking?.pricingBreakdown?.driverCommission || booking?.pricing?.breakdown?.providerPlatformFee || 0,
         RiderReceives:
           booking?.pricingBreakdown?.driverReceives || booking?.pricing?.breakdown?.driverReceives || 0,
         calculatedPrice:

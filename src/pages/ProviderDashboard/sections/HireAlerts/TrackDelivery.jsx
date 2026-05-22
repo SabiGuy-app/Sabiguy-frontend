@@ -169,7 +169,7 @@ export default function TrackDelivery() {
     bookingDetails?.dropoffLocation?.address ||
     "N/A";
   const serviceCost =
-    alert?.price ||
+    alert?.RiderReceives ||
     alert?.originalData?.calculatedPrice ||
     bookingDetails?.calculatedPrice ||
     0;
