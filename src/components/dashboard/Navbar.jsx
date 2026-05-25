@@ -505,7 +505,7 @@ export default function Navbar({ onMenuClick }) {
         {/* Right Icons */}
         <div className="flex items-center space-x-4">
           {/* Location Indicator (user) */}
-          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+          {/* <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
             {locationEnabled ? (
               <>
                 <MapPin size={12} className="text-green-500 animate-pulse" />
@@ -521,7 +521,7 @@ export default function Navbar({ onMenuClick }) {
                 </span>
               </>
             )}
-          </div>
+          </div> */}
 
           {/* Test Button (remove after debugging) */}
           {/* <button
