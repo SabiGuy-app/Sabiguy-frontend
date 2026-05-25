@@ -116,6 +116,7 @@ export default function Login() {
   const handleLogin = async (values, { setSubmitting }) => {
     setLoading(true);
     setSuccessMessage("");
+    setErrorMessage("");
 
     try {
       const normalizedEmail = values.email.trim().toLowerCase();
@@ -132,19 +133,12 @@ export default function Login() {
       if (!res?.token) {
         setErrorMessage("Login failed. Please try again.");
         setLoading(false);
+        setSubmitting(false);
         return;
       }
 
-      // Extract token + email
-      const token = res.token;
-      const refreshToken = res.refreshToken;
+      // Tokens are already stored in login() function
       const loginEmail = res.email || normalizedEmail;
-
-      // Store token
-      localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
-      useAuthStore.getState().setToken(token);
-      // useAuthStore.getState().setRefreshToken(refreshToken);
 
       // 2. GET FULL USER DETAILS
       const fullUser = await getUserByEmail(loginEmail);
@@ -152,11 +146,16 @@ export default function Login() {
       // Store in Zustand
       useAuthStore.getState().setUser(fullUser);
 
-      // Register FCM token
-      await registerFCM();
+      // 3. Register FCM token (non-blocking, but wait for it)
+      try {
+        await registerFCM();
+      } catch (error) {
+        console.error("FCM registration failed, continuing with login:", error);
+      }
 
-      // Navigate based on user role
+      // 4. Navigate based on user role
       if (res.role === "buyer") {
+        setLoading(false);
         navigate("/dashboard");
       } else if (res.role === "provider") {
         const kycStatus = await handleProviderKycRedirect(
@@ -167,14 +166,17 @@ export default function Login() {
           setErrorMessage(
             "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
           );
+          setLoading(false);
           setTimeout(() => {
             navigate("/service-provider/signup");
-          }, 5000);
+          }, 2000);
           return;
         }
         if (kycStatus === "verified" || kycStatus === "not_verified") {
+          setLoading(false);
           return;
         }
+        setLoading(false);
         navigate("/dashboard/provider");
       }
     } catch (error) {
@@ -211,7 +213,7 @@ export default function Login() {
           finalMessage.trim() === "Please verify your email before logging in"
         ) {
           finalMessage =
-            "Please verify your email before logging in. Try signing up again to recieve a verification mail.";
+            "Please verify your email before logging in. Try signing up again to receive a verification mail.";
         }
         setErrorMessage(finalMessage);
       } else if (error.request) {
@@ -234,9 +236,10 @@ export default function Login() {
 
   const GoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      try {
-        setGoogleLoading(true);
+      setGoogleLoading(true);
+      setErrorMessage("");
 
+      try {
         const data = await googleLogin(tokenResponse.access_token);
 
         if (!data?.token) {
@@ -257,22 +260,28 @@ export default function Login() {
           return;
         }
 
-        const token = data.token;
         const loginEmail =
           data.user?.email || data.email || data.newUser?.email || "";
 
-        // Store token
-        localStorage.setItem("token", token);
-        useAuthStore.getState().setToken(token);
+        // Tokens are already stored in googleLogin() function
 
         // Get full user
         const fullUser = await getUserByEmail(loginEmail);
         useAuthStore.getState().setUser(fullUser);
 
-        await registerFCM();
+        // Register FCM
+        try {
+          await registerFCM();
+        } catch (error) {
+          console.error(
+            "FCM registration failed, continuing with login:",
+            error,
+          );
+        }
 
         // Navigate based on user role
         if (data.user.role === "buyer") {
+          setGoogleLoading(false);
           navigate("/dashboard");
         } else if (data.user.role === "provider") {
           const kycStatus = await handleProviderKycRedirect(loginEmail);
@@ -280,16 +289,17 @@ export default function Login() {
             setErrorMessage(
               "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
             );
+            setGoogleLoading(false);
             setTimeout(() => {
               navigate("/service-provider/signup");
-            }, 5000);
-            setGoogleLoading(false);
+            }, 2000);
             return;
           }
           if (kycStatus === "verified" || kycStatus === "not_verified") {
             setGoogleLoading(false);
             return;
           }
+          setGoogleLoading(false);
           navigate("/dashboard/provider");
         }
       } catch (err) {

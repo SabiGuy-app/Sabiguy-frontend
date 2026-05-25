@@ -7,6 +7,7 @@ export const useAuthStore = create(
       (set) => ({
         user: null,
         token: null,
+        refreshToken: null,
         isAuthenticated: false,
         id: null,
         hydrated: false,
@@ -20,12 +21,15 @@ export const useAuthStore = create(
                 : { ...state.user, ...updater },
           })),
         setToken: (token) => set({ token }),
+        setRefreshToken: (refreshToken) => set({ refreshToken }),
+        setTokens: (token, refreshToken) => set({ token, refreshToken }),
         setId: (id) => set({ currentUserId: id }),
         setHydrated: (hydrated) => set({ hydrated }),
         logout: () =>
           set({
             user: null,
             token: null,
+            refreshToken: null,
             id: null,
             isAuthenticated: false,
             hydrated: true,
