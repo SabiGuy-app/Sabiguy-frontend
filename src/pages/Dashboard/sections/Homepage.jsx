@@ -223,7 +223,7 @@ export default function DashboardHome() {
       </div> */}
       <div className="mb-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-          <h3 className="text-[20px] font-semibold mb-4">Explore Categories</h3>
+          <h3 className="text-[20px] font-semibold mb-4">Categories</h3>
         </div>
         <div id="explore-categories">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">

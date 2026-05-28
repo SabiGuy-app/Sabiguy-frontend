@@ -62,7 +62,7 @@ export default function Categories() {
           ]}
         />
 
-        <h1 className="font-semibold text-3xl mb-7">Explore Categories</h1>
+        <h1 className="font-semibold text-3xl mb-7">Categories</h1>
 
         {categories.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
