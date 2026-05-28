@@ -18,3 +18,8 @@ export const payWithWallet = async (bookingId, pickupNote) => {
     const { data } = await api.post("/wallet/pay", payload);
     return data;
 };
+
+export const getPromoEligibility = async () => {
+    const { data } = await api.get("/payment/promo-eligibility");
+    return data;
+};

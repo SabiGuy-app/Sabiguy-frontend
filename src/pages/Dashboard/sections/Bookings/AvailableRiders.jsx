@@ -206,6 +206,9 @@ export default function AvailableRiders() {
     bookingDetails?.calculatedPrice ??
     bookingDetails?.price ??
     0;
+  const hasFirstRideDiscount =
+    Boolean(bookingDetails?.applyFirstRideDiscount) ||
+    Boolean(bookingData?.applyFirstRideDiscount);
 
   const getProviderId = (provider) =>
     provider?._id || provider?.id || provider?.userId || provider?.providerId;
@@ -297,7 +300,16 @@ export default function AvailableRiders() {
 
   const getProviderDistanceLabel = (provider) => {
     if (provider?.distanceFromPickup == null) return "Distance unavailable";
-    return `${Number(provider.distanceFromPickup).toFixed(1)} km away`;
+
+    const distance = Number(provider.distanceFromPickup);
+    if (Number.isNaN(distance)) return "Distance unavailable";
+
+    if (distance < 1) {
+      const meters = Math.round(distance * 1000);
+      return `${meters} meters away`;
+    }
+
+    return `${distance.toFixed(1)} km away`;
   };
 
   const getProviderPrice = (provider) =>
@@ -490,9 +502,36 @@ export default function AvailableRiders() {
                               </span>
                             </div>
 
-                            <h2 className="text-2xl sm:text-[25px] text-[#005823] font-semibold mt-4">
-                              {formatCurrency(getProviderPrice(provider))}
-                            </h2>
+                            <div className="mt-4 rounded-2xl border border-[#005823]/10 bg-white/80 px-4 py-3">
+                              <div className="flex items-end justify-between gap-3">
+                                <div>
+                                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Normal price
+                                  </p>
+                                  <h2
+                                    className={`text-2xl sm:text-[25px] font-semibold ${
+                                      hasFirstRideDiscount
+                                        ? "text-gray-400 line-through"
+                                        : "text-[#005823]"
+                                    }`}
+                                  >
+                                    {formatCurrency(getProviderPrice(provider))}
+                                  </h2>
+                                </div>
+
+                                {hasFirstRideDiscount && (
+                                  <div className="text-right">
+                                    <p className="text-sm font-semibold text-[#005823]">
+                                      Discount available
+                                    </p>
+                                    <p className="mt-1 text-xs text-[#231F2080] max-w-[180px]">
+                                      Select a provider to see your discounted
+                                      price.
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
 
                           <div className="space-y-3 sm:flex-row gap-2 mt-4">
@@ -534,13 +573,13 @@ export default function AvailableRiders() {
           )}
         </div>
 
-        <div className="h-[660px]">
+        {/* <div className="h-[660px]">
           <DeliveryMap
             pickup={pickupCoords}
             dropoff={dropoffCoords}
             bookingDetails={bookingDetails}
           />
-        </div>
+        </div> */}
       </div>
     </DashboardLayout>
   );

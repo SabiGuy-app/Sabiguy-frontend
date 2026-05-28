@@ -86,7 +86,7 @@ export default function Login() {
             await registerFCM();
           }
         }
-        navigate("/dashboard/provider");
+        navigate("/dashboard/provider", { replace: true });
         return "verified";
       }
 
@@ -155,8 +155,8 @@ export default function Login() {
 
       // 4. Navigate based on user role
       if (res.role === "buyer") {
-        setLoading(false);
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
+        return;
       } else if (res.role === "provider") {
         const kycStatus = await handleProviderKycRedirect(
           normalizedEmail,
@@ -173,11 +173,10 @@ export default function Login() {
           return;
         }
         if (kycStatus === "verified" || kycStatus === "not_verified") {
-          setLoading(false);
           return;
         }
-        setLoading(false);
-        navigate("/dashboard/provider");
+        navigate("/dashboard/provider", { replace: true });
+        return;
       }
     } catch (error) {
       console.error("Login failed:", error);
@@ -281,8 +280,8 @@ export default function Login() {
 
         // Navigate based on user role
         if (data.user.role === "buyer") {
-          setGoogleLoading(false);
-          navigate("/dashboard");
+          navigate("/dashboard", { replace: true });
+          return;
         } else if (data.user.role === "provider") {
           const kycStatus = await handleProviderKycRedirect(loginEmail);
           if (kycStatus === "incomplete") {
@@ -296,11 +295,10 @@ export default function Login() {
             return;
           }
           if (kycStatus === "verified" || kycStatus === "not_verified") {
-            setGoogleLoading(false);
             return;
           }
-          setGoogleLoading(false);
-          navigate("/dashboard/provider");
+          navigate("/dashboard/provider", { replace: true });
+          return;
         }
       } catch (err) {
         console.error("Google login failed:", err);

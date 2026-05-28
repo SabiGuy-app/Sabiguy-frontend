@@ -64,7 +64,7 @@ export default function TrackRider() {
   const providerDistanceInfo = bookingDetails?.providerDistances?.find(
     (p) => p.providerId === acceptedProviderId,
   );
-  const providerETA = providerDistanceInfo?.providerETAMinutes;
+  const providerETA = providerDistanceInfo?.providerETAMinutes || bookingDetails?.providerETA?.value || null;
 
   const getArrivalText = () => {
     switch (bookingStatus) {
@@ -214,7 +214,7 @@ export default function TrackRider() {
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
   const fareDisplay =
-    bookingDetails?.pricingBreakdown?.riderPaysFinal ?? 0;
+    bookingDetails?.pricingBreakdown?.riderPaysFinal ?? bookingDetails?.totalAmount ?? 0;
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-NG", {
       style: "currency",
