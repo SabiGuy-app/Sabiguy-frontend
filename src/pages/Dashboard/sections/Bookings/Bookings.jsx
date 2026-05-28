@@ -15,6 +15,7 @@ import {
   getBookingsDetails,
 } from "../../../../api/bookings";
 import { allowSystem } from "../../../../api/bookings";
+import { getPromoEligibility } from "../../../../api/payment";
 import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
 import { useAuthStore } from "../../../../stores/auth.store";
@@ -51,6 +52,9 @@ export default function Bookings() {
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
+  const [promoEligibility, setPromoEligibility] = useState(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
   const setBooking = useBookingStore((state) => state.setBooking);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
@@ -75,6 +79,25 @@ export default function Bookings() {
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    const fetchPromoEligibility = async () => {
+      setPromoLoading(true);
+      setPromoError("");
+
+      try {
+        const res = await getPromoEligibility();
+        setPromoEligibility(res?.data?.promo || res?.promo || null);
+      } catch (err) {
+        console.error("Failed to fetch promo eligibility:", err);
+        setPromoError("Unable to load discount eligibility right now.");
+      } finally {
+        setPromoLoading(false);
+      }
+    };
+
+    fetchPromoEligibility();
+  }, []);
+
   const location = useLocation();
   const preselectedService =
     new URLSearchParams(location.search).get("service") ?? "";
@@ -94,6 +117,7 @@ export default function Bookings() {
       // vehicle: "",
       modeOfDelivery: "",
       autoAcceptNearest: false,
+      applyFirstRideDiscount: false,
     },
     validationSchema: Yup.object().shape({
       jobTitle: Yup.string().required("Work category is required"),
@@ -134,6 +158,7 @@ export default function Bookings() {
           scheduleType: values.serviceType,
           // vehicle: values.modeOfDelivery,
           modeOfDelivery: values.modeOfDelivery,
+          applyFirstRideDiscount: values.applyFirstRideDiscount,
           scheduleDate:
             values.serviceType === "scheduled"
               ? `${values.scheduleDate}T${values.scheduleTime}:00`
@@ -387,6 +412,25 @@ export default function Bookings() {
       formik.setFieldValue("pickupAddress", currentLocationValue);
     }
   };
+
+  const promoTitle =
+    promoLoading
+      ? "Checking discount..."
+      : promoEligibility?.eligible && promoEligibility?.remaining > 0
+        ? `${promoEligibility.percent || 0}% first ride discount available`
+        : promoEligibility?.isNewUser
+          ? "First ride discount available"
+          : "First ride discount unavailable";
+
+  const promoDescription =
+    promoLoading
+      ? "We’re checking your promo status."
+      : promoEligibility?.eligible && promoEligibility?.canApplyAtPayment
+        ? `You have ${promoEligibility.remaining || 0} promo use(s) left.`
+        : promoEligibility?.eligible
+          ? "You qualify for a promo, and it can be applied at payment."
+          : promoError ||
+            "You are not currently eligible for the first ride discount.";
 
   return (
     <DashboardLayout>
@@ -743,6 +787,76 @@ export default function Bookings() {
                 </p>
               </div>
             )}
+            <div
+              id="booking-first-ride-discount"
+              className="rounded-2xl border border-[#005823]/10 bg-gradient-to-r from-[#F5FBF7] to-white p-4 sm:p-5 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#231F20]">
+                    {promoTitle}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#231F2080]">
+                    {promoDescription}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={formik.values.applyFirstRideDiscount}
+                  disabled={
+                    !promoEligibility?.eligible ||
+                    !promoEligibility?.canApplyAtPayment
+                  }
+                  onClick={() =>
+                    formik.setFieldValue(
+                      "applyFirstRideDiscount",
+                      !formik.values.applyFirstRideDiscount,
+                    )
+                  }
+                  className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full border transition-colors duration-300 ${
+                    formik.values.applyFirstRideDiscount &&
+                    promoEligibility?.eligible &&
+                    promoEligibility?.canApplyAtPayment
+                      ? "border-[#005823] bg-[#005823]"
+                      : "border-gray-300 bg-gray-200"
+                  } ${
+                    !promoEligibility?.eligible ||
+                    !promoEligibility?.canApplyAtPayment
+                      ? "cursor-not-allowed opacity-60"
+                      : ""
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                      formik.values.applyFirstRideDiscount &&
+                      promoEligibility?.eligible &&
+                      promoEligibility?.canApplyAtPayment
+                        ? "translate-x-7"
+                        : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3 text-sm">
+                <span className="text-xs font-medium text-[#005823] bg-white border border-[#005823]/10 px-3 py-1.5 rounded-full">
+                  {promoEligibility?.eligible &&
+                  promoEligibility?.canApplyAtPayment
+                    ? formik.values.applyFirstRideDiscount
+                      ? "Enabled"
+                      : "Available"
+                    : "Unavailable"}
+                </span>
+                <span className="text-[#231F2080]">
+                  {promoEligibility?.eligible &&
+                  promoEligibility?.canApplyAtPayment
+                    ? "Toggle this on to apply the promo to this booking."
+                    : "The promo cannot be applied for this account right now."}
+                </span>
+              </div>
+            </div>
             <div className="flex flex-col">
               <Button
                 variant="secondary"

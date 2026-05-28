@@ -23,7 +23,7 @@ export const getAllBookings = async (params = {}) => {
     page = 1,
     limit = 10,
     startDate = 'Today',
-    timeWindow = '20m',
+    timeWindow = '10m',
     maxDistanceKm =30
   } = params;
 

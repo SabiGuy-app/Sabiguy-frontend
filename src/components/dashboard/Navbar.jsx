@@ -4,13 +4,14 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
 import NotificationCompletionModal from "../NotificationCompletionModal";
+import BookingRequestModal from "../BookingRequestModal";
 import ReviewModal from "./ReviewModal";
 import DisputeCompletionModal from "./DisputeCompletionModal";
 import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
-import { acceptCompletion, disputeCompletion } from "../../api/bookings";
+import { acceptCompletion, disputeCompletion, getAllBookings } from "../../api/bookings";
 import { handleLogout } from "../../api/auth";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
@@ -25,6 +26,8 @@ export default function Navbar({ onMenuClick }) {
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completionNotification, setCompletionNotification] = useState(null);
+  const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
+  const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewApiError, setReviewApiError] = useState(null);
@@ -38,6 +41,10 @@ export default function Navbar({ onMenuClick }) {
   const completionNotificationTypes = [
     "booking_completed",
     "booking_completed_awaiting_acceptance",
+  ];
+  const bookingRequestNotificationTypes = [
+    "new_booking_request",
+    "booking_selected",
   ];
 
   // Don't render until store is hydrated
@@ -143,6 +150,12 @@ export default function Navbar({ onMenuClick }) {
     if (completionNotificationTypes.includes(notification?.type)) {
       setCompletionNotification(notification);
       setShowCompletionModal(true);
+      return;
+    }
+
+    if (bookingRequestNotificationTypes.includes(notification?.type)) {
+      setBookingRequestNotification(notification);
+      setShowBookingRequestModal(true);
       return;
     }
 
@@ -264,6 +277,48 @@ export default function Navbar({ onMenuClick }) {
   const handleBookingCompletedNotification = (notification) => {
     setCompletionNotification(notification);
     setShowCompletionModal(true);
+  };
+
+  const handleBookingRequestNotification = async (notification) => {
+    if (!notification) return;
+
+    setShowBookingRequestModal(false);
+    setBookingRequestNotification(null);
+
+    try {
+      const serviceType = notification.data?.serviceType;
+      const modeOfDelivery = notification.data?.modeOfDelivery;
+
+      const bookingResponse = await getAllBookings({
+        status: "awaiting_provider_acceptance",
+        serviceType: serviceType
+          ? String(serviceType).trim().toLowerCase()
+          : undefined,
+        modeOfDelivery: modeOfDelivery
+          ? String(modeOfDelivery).trim()
+          : undefined,
+        page: 1,
+        limit: 20,
+      });
+
+      const bookingData = bookingResponse.data || bookingResponse;
+
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          fetchedAlerts: bookingData,
+          tab: "alert",
+        },
+      });
+    } catch (err) {
+      console.error("Error preparing booking request navigation:", err);
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          tab: "alert",
+        },
+      });
+    }
   };
 
   const completionBookingId =
@@ -602,6 +657,17 @@ export default function Navbar({ onMenuClick }) {
           onDisputeCompletion={handleDisputeCompletion}
           providerName={completionProviderName}
           notification={completionNotification}
+        />
+        <BookingRequestModal
+          isOpen={showBookingRequestModal}
+          onClose={() => {
+            setShowBookingRequestModal(false);
+            setBookingRequestNotification(null);
+          }}
+          onViewBooking={() =>
+            handleBookingRequestNotification(bookingRequestNotification)
+          }
+          notification={bookingRequestNotification}
         />
 
         <DisputeCompletionModal
