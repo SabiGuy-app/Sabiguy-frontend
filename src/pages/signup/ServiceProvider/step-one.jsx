@@ -196,8 +196,7 @@ export default function StepOne({ onNext, email }) {
       <Navbar />
       <AuthLayout
         title="Let's Get Started!"
-        description="Connect with trusted providers, verified professionals,
-        and manage bookings in real time."
+        description="Sign up, get verified, and get a ₦500 credit bonus!"
       >
         <motion.div
           key="step-one"

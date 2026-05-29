@@ -190,8 +190,7 @@ export default function StepOne({ onNext }) {
       <Navbar />
       <AuthLayout
         title="Let's Get Started!"
-        description="Connect with trusted providers, verified professionals,
-        and manage bookings in real time."
+        description="Sign up and get a 20% discount on your first two rides!"
       >
         <motion.div
           key="step-one"
