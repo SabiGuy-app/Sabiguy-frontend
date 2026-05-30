@@ -389,7 +389,7 @@ export default function StepOne({ onNext }) {
                   </span>
                 </button>
 
-                <p className="text-center text-sm mt-2 mb-5">
+                <p className="text-center text-sm mb-5">
                   Already have an account?
                   <Link
                     to="/login"

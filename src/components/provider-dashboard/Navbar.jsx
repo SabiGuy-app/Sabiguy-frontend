@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationDrawer from "../dashboard/Notification";
 import NotificationToast from "../NotificationToast";
+import BookingRequestModal from "../BookingRequestModal";
 import { useAuthStore } from "../../stores/auth.store";
 import locationService from "../../services/locationService";
 import notificationSoundService from "../../services/notificationSoundService";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import { notificationService } from "../../api/notifications";
+import { getAllBookings } from "../../api/bookings";
 import { toggleAvailability as apiToggleAvailability } from "../../api/provider";
 import KycVerificationModal from "./KycVerificationModal";
 
@@ -25,8 +27,14 @@ export default function ProviderNavbar({ onMenuClick }) {
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
+  const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
+  const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
   const navigate = useNavigate();
   const isAvailable = user?.data?.availability?.isAvailable ?? false;
+  const bookingRequestNotificationTypes = [
+    "new_booking_request",
+    "booking_selected",
+  ];
 
   // Don't render until store is hydrated
   if (!hydrated) {
@@ -175,6 +183,14 @@ export default function ProviderNavbar({ onMenuClick }) {
       console.log("📬 New notification received:", notification);
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
+      if (bookingRequestNotificationTypes.includes(notification?.type)) {
+        notificationSoundService.play().catch((err) => {
+          console.warn("âš ï¸ Sound playback failed:", err);
+        });
+        setBookingRequestNotification(notification);
+        setShowBookingRequestModal(true);
+        return;
+      }
       showNotificationToast(notification);
     };
 
@@ -284,6 +300,48 @@ export default function ProviderNavbar({ onMenuClick }) {
     fetchNotifications();
   };
 
+  const handleBookingRequestView = async (notification) => {
+    if (!notification) return;
+
+    setShowBookingRequestModal(false);
+    setBookingRequestNotification(null);
+
+    try {
+      const serviceType = notification.data?.serviceType;
+      const modeOfDelivery = notification.data?.modeOfDelivery;
+
+      const bookingResponse = await getAllBookings({
+        status: "awaiting_provider_acceptance",
+        serviceType: serviceType
+          ? String(serviceType).trim().toLowerCase()
+          : undefined,
+        modeOfDelivery: modeOfDelivery
+          ? String(modeOfDelivery).trim()
+          : undefined,
+        page: 1,
+        limit: 20,
+      });
+
+      const bookingData = bookingResponse.data || bookingResponse;
+
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          fetchedAlerts: bookingData,
+          tab: "alert",
+        },
+      });
+    } catch (err) {
+      console.error("Error preparing booking request navigation:", err);
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          tab: "alert",
+        },
+      });
+    }
+  };
+
   const isKycVerificationError = (message) =>
     typeof message === "string" &&
     message.toLowerCase().includes("kyc verification required");
@@ -382,6 +440,17 @@ export default function ProviderNavbar({ onMenuClick }) {
       <KycVerificationModal
         isOpen={showKycModal}
         onClose={() => setShowKycModal(false)}
+      />
+      <BookingRequestModal
+        isOpen={showBookingRequestModal}
+        onClose={() => {
+          setShowBookingRequestModal(false);
+          setBookingRequestNotification(null);
+        }}
+        onViewBooking={() =>
+          handleBookingRequestView(bookingRequestNotification)
+        }
+        notification={bookingRequestNotification}
       />
       <Toaster position="top-right" />
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 sm:h-20 items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 shadow-sm">

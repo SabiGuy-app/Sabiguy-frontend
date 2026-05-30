@@ -10,6 +10,17 @@ import { useNavigate } from "react-router-dom";
 export const login = async (payload) => {
   const { data } = await api.post("/auth", payload);
   useAuthStore.getState().setId(data.id);
+
+  // Store tokens in both store and localStorage
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    useAuthStore.getState().setToken(data.token);
+  }
+  if (data.refreshToken) {
+    localStorage.setItem("refreshToken", data.refreshToken);
+    useAuthStore.getState().setRefreshToken(data.refreshToken);
+  }
+
   return data;
 };
 
@@ -31,6 +42,17 @@ export const googleLogin = async (accessToken) => {
   const { data } = await api.post(`/auth/google-login`, {
     token: accessToken,
   });
+
+  // Store tokens in both store and localStorage
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    useAuthStore.getState().setToken(data.token);
+  }
+  if (data.refreshToken) {
+    localStorage.setItem("refreshToken", data.refreshToken);
+    useAuthStore.getState().setRefreshToken(data.refreshToken);
+  }
+
   return data;
 };
 
@@ -43,10 +65,11 @@ export async function handleLogout() {
 
   try {
     // ✅ Save tour keys before clearing
-    const tourKeys = Object.keys(localStorage).filter(key =>
-      key.startsWith("tourSeen_") || key.startsWith("bookingTourSeen_")
+    const tourKeys = Object.keys(localStorage).filter(
+      (key) =>
+        key.startsWith("tourSeen_") || key.startsWith("bookingTourSeen_"),
     );
-    const savedTours = tourKeys.map(key => [key, localStorage.getItem(key)]);
+    const savedTours = tourKeys.map((key) => [key, localStorage.getItem(key)]);
 
     // Clear everything
     localStorage.clear();

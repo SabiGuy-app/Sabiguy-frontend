@@ -57,15 +57,24 @@ export default function BookingSummary2() {
   const pricing = targetProvider?.pricing || bookingDetails?.pricing;
 
 
-  const baseFare = pricing?.breakdown?.baseFare ?? bookingDetails?.pricingBreakdown?.baseFare ?? 0;
+  const baseFare = bookingDetails?.pricingBreakdown?.meta?.ratesUsed?.baseFare ?? pricing?.meta?.ratesUsed?.baseFare ?? 0;
   const timeCost = pricing?.breakdown?.timeCost ?? bookingDetails?.pricingBreakdown?.timeCost ?? 0;
   const distanceCost = pricing?.breakdown?.distanceCost ?? bookingDetails?.pricingBreakdown?.distanceCost ?? 0;
   const perMinuteRate = pricing?.meta?.ratesUsed?.perMinuteRate ?? bookingDetails?.pricingMeta?.ratesUsed?.perMinuteRate ?? 0;
   const perKmRate = pricing?.meta?.ratesUsed?.perKmRate ?? bookingDetails?.pricingMeta?.ratesUsed?.perKmRate ?? 0;
-  const tax = pricing?.breakdown?.tax ?? bookingDetails?.pricingBreakdown?.tax ?? 0;
-  const serviceCost = pricing?.breakdown?.subtotal ?? bookingDetails?.pricingBreakdown?.subtotal ?? 0;
-  const serviceCharge = pricing?.breakdown?.platformFee ?? bookingDetails?.pricingBreakdown?.platformFee ?? 0;
-  const totalAmount = pricing?.riderPays ?? bookingDetails?.pricingBreakdown?.riderPaysFinal ?? 0;
+  const tax =  bookingDetails?.providerPricingOptions?.[0]?.breakdown?.tax ?? bookingDetails?.originalPricing?.breakdown?.tax ?? pricing?.tax?.amount ?? 0;
+  const serviceCost = pricing?.fare?.subtotal ?? bookingDetails?.pricingBreakdown?.subtotal ?? bookingDetails?.pricing?.subtotal ?? 0;
+  const serviceCharge = pricing?.breakdown?.platformFee ?? bookingDetails?.pricingBreakdown?.originalServiceFee ?? pricing?.fees?.userPlatformFee ??0;
+  const discount = pricing?.totals?.discountAmount ?? bookingDetails?.pricingBreakdown?.discountAmount ?? 0;
+  const totalAmount = bookingDetails?.pricingBreakdown?.originalTotalAmount ??  pricing?.totals?.beforeDiscount ?? 0;
+  const DiscountedAmount = bookingDetails?.pricingBreakdown?.totalAmount ?? pricing?.totals?.riderPaysFinal ?? 0;
+  const hasFirstRideDiscount = Boolean(
+    bookingDetails?.applyFirstRideDiscount ??
+      bookingDetails?.pricing?.applyFirstRideDiscount ??
+      pricing?.applyFirstRideDiscount,
+  );
+  const payableAmount = hasFirstRideDiscount ? DiscountedAmount : totalAmount;
+
 
   const providerDistanceInfo = bookingDetails?.providerDistances?.find(
     (p) => p.providerId === acceptedProviderId
@@ -157,7 +166,10 @@ export default function BookingSummary2() {
       }
 
       if (selectedPayment === "wallet") {
-        if (totalAmount != null && walletBalance < totalAmount) {
+        const amountToPay = Number(payableAmount || 0);
+        const currentWalletBalance = Number(walletBalance || 0);
+
+        if (amountToPay > 0 && currentWalletBalance < amountToPay) {
           toast.error("Insufficient wallet balance. Please fund your wallet.");
           setIsProcessing(false);
           return;
@@ -250,7 +262,7 @@ export default function BookingSummary2() {
             <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
               <span className="text-gray-600 font-semibold">Total Deducted:</span>
               <span className="font-bold text-green-600 text-lg">
-                {formatCurrency(totalAmount)}
+                {formatCurrency(DiscountedAmount)}
               </span>
             </div>
 
@@ -566,10 +578,33 @@ export default function BookingSummary2() {
                     <span>Platform Fee</span>
                     <span>{formatCurrency(serviceCharge)}</span>
                   </div>
+                  {hasFirstRideDiscount && (
+                    <div className="flex justify-between text-sm font-medium text-gray-600">
+                      <span>Discount</span>
+                      <span>{formatCurrency(discount)}</span>
+                    </div>
+                  )}
                   <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
                     <span className="font-bold text-gray-900">Total Amount</span>
-                    <span className="text-xl font-black text-[#005823]">{formatCurrency(totalAmount)}</span>
+                    <span
+                      className={`text-xl font-black ${
+                        hasFirstRideDiscount
+                          ? "text-[#005823] line-through"
+                          : "text-[#005823]"
+                      }`}
+                    >
+                      {formatCurrency(totalAmount)}
+                    </span>
                   </div>
+
+                  {hasFirstRideDiscount && (
+                    <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
+                      <span className="font-bold text-gray-900">Discounted Amount</span>
+                      <span className="text-xl font-black text-[#005823]">
+                        {formatCurrency(DiscountedAmount)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4 pt-4 border-t border-gray-100">
@@ -622,7 +657,11 @@ export default function BookingSummary2() {
                     disabled={isProcessing || isPaid}
                     className="w-full py-4 bg-[#005823] text-white rounded-xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-900/10 disabled:opacity-50"
                   >
-                    {isPaid ? "Payment Successful ✓" : isProcessing ? "Processing..." : `Confirm & Pay ${formatCurrency(totalAmount)}`}
+                    {isPaid
+                      ? "Payment Successful ✓"
+                      : isProcessing
+                        ? "Processing..."
+                        : `Confirm & Pay ${formatCurrency(payableAmount)}`}
                   </button>
                   {!isPaid && (
                     <button

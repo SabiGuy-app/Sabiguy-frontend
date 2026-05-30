@@ -6,7 +6,10 @@ import Modal from "../Modal";
 import Button from "../button";
 import { handleLogout } from "../../api/auth";
 import { useAuthStore } from "../../stores/auth.store";
-import useInactivityLogout from "../../hooks/useInactivityLogout";
+import useInactivityLogout, {
+  PROVIDER_INACTIVITY_MS,
+  PROVIDER_WARNING_GRACE_MS,
+} from "../../hooks/useInactivityLogout";
 
 export default function ProviderDashboardLayout({ children }) {
   const navigate = useNavigate();
@@ -27,6 +30,8 @@ export default function ProviderDashboardLayout({ children }) {
 
   const { showWarning, extendSession, logoutNow } = useInactivityLogout({
     enabled: isAuthenticated,
+    inactivityMs: PROVIDER_INACTIVITY_MS,
+    warningGraceMs: PROVIDER_WARNING_GRACE_MS,
     onTimeout: onTimeoutLogout,
   });
 
@@ -42,7 +47,10 @@ export default function ProviderDashboardLayout({ children }) {
             onClick={() => setSidebarOpen(false)}
           />
         )}
-        <ProviderSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <ProviderSidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
         <div className="flex-1 md:ml-64 flex flex-col w-full">
           <main className="flex-1 min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] p-3 sm:p-6 w-full">
             <div className="max-w-7xl mx-auto w-full">{children}</div>
@@ -56,7 +64,7 @@ export default function ProviderDashboardLayout({ children }) {
         title="Are you still there?"
       >
         <p className="text-sm text-gray-600 text-center">
-          You have been inactive for 10 minutes. You will be logged out soon if
+          You have been inactive for 1 hour. You will be logged out soon if
           there is no activity.
         </p>
         <div className="flex items-center justify-center gap-4 mt-6">

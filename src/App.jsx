@@ -17,6 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 import NotificationSoundService from "./services/notificationSoundService";
 import { listenForMessages } from "./services/fcmService";
 import Loader from "./components/Loader";
+import { Analytics } from '@vercel/analytics/react';
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -299,6 +300,7 @@ function App() {
           </Suspense>
         </div>
       </Router>
+      <Analytics />
     </>
   );
 }

@@ -129,11 +129,11 @@ export default function HireAlerts() {
           booking.serviceType ||
           "Untitled job",
         BookingPrice:
-          booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || 0,
+          booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || booking.agreedPrice || 0,
         platformFee:
-          booking?.pricingBreakdown?.ProviderPlatformFee || booking?.pricing?.breakdown?.providerPlatformFee || 0,
+          booking?.pricingBreakdown?.originalProviderCommission || booking?.pricing?.fees?.driverCommission || 0,
         RiderReceives:
-          booking?.pricingBreakdown?.driverReceives || booking?.pricing?.breakdown?.driverReceives || 0,
+          booking?.driverReceives || booking?.breakdown?.providerReceives || 0,
         calculatedPrice:
           booking.calculatedPrice || booking.agreedPrice || booking.budget || 0,
         agreedPrice:
