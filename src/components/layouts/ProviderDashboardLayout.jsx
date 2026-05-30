@@ -31,10 +31,10 @@ export default function ProviderDashboardLayout({ children }) {
   });
 
   return (
-    <div className="">
+    <div className="min-h-screen bg-gray-50">
       <ProviderNavbar onMenuClick={toggleSidebar} />
 
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-gray-50 pt-16 sm:pt-20">
         {/* Overlay for mobile */}
         {sidebarOpen && (
           <div
@@ -44,7 +44,7 @@ export default function ProviderDashboardLayout({ children }) {
         )}
         <ProviderSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="flex-1 md:ml-64 flex flex-col w-full">
-          <main className="flex-1 min-h-screen p-3 sm:p-6 pt-4 sm:pt-5 w-full">
+          <main className="flex-1 min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] p-3 sm:p-6 w-full">
             <div className="max-w-7xl mx-auto w-full">{children}</div>
           </main>
         </div>

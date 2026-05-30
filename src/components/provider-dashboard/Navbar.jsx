@@ -384,7 +384,7 @@ export default function ProviderNavbar({ onMenuClick }) {
         onClose={() => setShowKycModal(false)}
       />
       <Toaster position="top-right" />
-      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-40 shadow-sm h-16 sm:h-20">
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 sm:h-20 items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 shadow-sm">
         {/* Mobile Menu Button (toggles sidebar) */}
         <button
           className="md:hidden p-2 text-gray-600 hover:text-gray-800"

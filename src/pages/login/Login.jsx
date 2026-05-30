@@ -5,12 +5,12 @@ import LoginNavbar from "../../components/layouts/loginNavbar";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import { LoginSchema } from "./schema";
 import ForgotPassword from "../Forgot-Password/ForgotPassword";
 import Loader from "../../components/Loader";
@@ -18,6 +18,9 @@ import { useAuthStore } from "../../stores/auth.store";
 import { login, googleLogin, getUserByEmail } from "../../api/auth";
 import { requestNotificationPermission } from "../../services/fcmService";
 import { registerUserFCMToken } from "../../api/fcm";
+import { getUserRecord } from "../../utils/buyerKycStatus";
+
+const MotionDiv = motion.div;
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -156,9 +159,12 @@ export default function Login() {
       await registerFCM();
 
       // Navigate based on user role
-      if (res.role === "buyer") {
+      const userRole = getUserRecord(fullUser)?.role || res.role;
+
+      if (userRole === "buyer") {
         navigate("/dashboard");
-      } else if (res.role === "provider") {
+        return;
+      } else if (userRole === "provider") {
         const kycStatus = await handleProviderKycRedirect(
           normalizedEmail,
           values.password,
@@ -232,7 +238,7 @@ export default function Login() {
     handleChange(e);
   };
 
-  const GoogleLogin = useGoogleLogin({
+  const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
         setGoogleLoading(true);
@@ -272,9 +278,12 @@ export default function Login() {
         await registerFCM();
 
         // Navigate based on user role
-        if (data.user.role === "buyer") {
+        const userRole = getUserRecord(fullUser)?.role || data.user?.role;
+
+        if (userRole === "buyer") {
           navigate("/dashboard");
-        } else if (data.user.role === "provider") {
+          setGoogleLoading(false);
+        } else if (userRole === "provider") {
           const kycStatus = await handleProviderKycRedirect(loginEmail);
           if (kycStatus === "incomplete") {
             setErrorMessage(
@@ -351,7 +360,7 @@ export default function Login() {
         title="Welcome Back!"
         description="Log in with your detail to keep exploring our platform"
       >
-        <motion.div
+        <MotionDiv
           key="step-one"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -449,7 +458,7 @@ export default function Login() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => GoogleLogin()}
+                  onClick={() => handleGoogleLogin()}
                   disabled={googleLoading}
                   className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
                 >
@@ -474,7 +483,7 @@ export default function Login() {
               </form>
             )}
           </Formik>
-        </motion.div>
+        </MotionDiv>
       </AuthLayout>
       <ForgotPassword
         isOpen={showForgotPassword}

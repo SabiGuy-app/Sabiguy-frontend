@@ -1,8 +1,17 @@
-import axios from "axios";
 import api from "./axios";
+import { useAuthStore } from "../stores/auth.store";
+import { getBuyerBookingGate } from "../utils/buyerKycStatus";
 
 export const bookingPost = async (payload) => {
   const token = localStorage.getItem("token");
+  const bookingGate = getBuyerBookingGate(useAuthStore.getState().user);
+
+  if (!bookingGate.canCreateBooking) {
+    const error = new Error(bookingGate.message);
+    error.code = "BUYER_KYC_REQUIRED";
+    error.kycGate = bookingGate;
+    throw error;
+  }
 
   const { data } = await api.post("/bookings", payload, {
     headers: {
