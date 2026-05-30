@@ -9,16 +9,22 @@ import ServiceDetailsModal from "../ServiceDetailsModal";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { jwtDecode } from "jwt-decode";
 import {
   bookingPost,
   getUserBookings,
   getBookingsDetails,
 } from "../../../../api/bookings";
+import { getUserByEmail } from "../../../../api/auth";
 import { allowSystem } from "../../../../api/bookings";
 import { getPromoEligibility } from "../../../../api/payment";
 import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
 import { useAuthStore } from "../../../../stores/auth.store";
+import {
+  getBuyerBookingGate,
+  getUserRecord,
+} from "../../../../utils/buyerKycStatus";
 
 const vehicleOptions = (service) => {
   const isRide = service === "book a ride";
@@ -52,12 +58,112 @@ export default function Bookings() {
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
+  const [kycStatusLoading, setKycStatusLoading] = useState(true);
+  const [kycProfileChecked, setKycProfileChecked] = useState(false);
+  const [kycProfileError, setKycProfileError] = useState("");
   const [promoEligibility, setPromoEligibility] = useState(null);
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
   const setBooking = useBookingStore((state) => state.setBooking);
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const navigate = useNavigate();
+  const bookingGate = getBuyerBookingGate(user);
+  const requestBookingGate =
+    kycStatusLoading || !kycProfileChecked
+      ? {
+          actionPath: null,
+          canCreateBooking: false,
+          message: "Checking your KYC status...",
+          status: "unknown",
+        }
+      : kycProfileError
+        ? {
+            actionPath: null,
+            canCreateBooking: false,
+            message: kycProfileError,
+            status: "unknown",
+          }
+        : bookingGate;
+  const requestBookingGateActionLabel =
+    requestBookingGate.status === "kyc_pending"
+      ? "View KYC Status"
+      : "Complete KYC";
+
+  const showBookingGateMessage = (bookingGate) => {
+    const redirectHint = bookingGate.actionPath ? " Redirecting..." : "";
+    setErrorMessage(`${bookingGate.message}${redirectHint}`);
+
+    if (bookingGate.actionPath) {
+      setTimeout(() => {
+        navigate(bookingGate.actionPath);
+      }, 1200);
+    }
+  };
+
+  const getProfileEmail = () => {
+    const currentUser = getUserRecord(useAuthStore.getState().user || user);
+    const storedEmail =
+      currentUser?.email ||
+      localStorage.getItem("email") ||
+      localStorage.getItem("google-email");
+
+    if (storedEmail) return storedEmail;
+
+    const token = localStorage.getItem("token");
+    if (!token) return "";
+
+    try {
+      return jwtDecode(token)?.email || "";
+    } catch {
+      return "";
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    const email = getProfileEmail();
+
+    setKycProfileChecked(false);
+    setKycProfileError("");
+
+    if (!email) {
+      setKycStatusLoading(false);
+      setKycProfileChecked(true);
+      setKycProfileError(
+        "We could not confirm your KYC status. Please log in again and try creating a booking.",
+      );
+      return undefined;
+    }
+
+    const refreshKycProfile = async () => {
+      setKycStatusLoading(true);
+      try {
+        const latestUser = await getUserByEmail(email);
+        if (isMounted) {
+          setUser(latestUser);
+        }
+      } catch (error) {
+        console.error("Failed to refresh KYC status:", error);
+        if (isMounted) {
+          setKycProfileError(
+            "We could not confirm your KYC status. Please refresh and try again.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setKycStatusLoading(false);
+          setKycProfileChecked(true);
+        }
+      }
+    };
+
+    refreshKycProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [setUser]);
 
   useEffect(() => {
     if (activeTab === "requests") {
@@ -145,9 +251,29 @@ export default function Bookings() {
     }),
     onSubmit: async (values) => {
       console.log("Submitting booking with values:", values);
-      setLoading(true);
       setSuccessMessage("");
       setErrorMessage("");
+
+      if (!kycProfileChecked || kycStatusLoading) {
+        setErrorMessage("Checking your KYC status. Please wait a moment.");
+        return;
+      }
+
+      if (kycProfileError) {
+        setErrorMessage(kycProfileError);
+        return;
+      }
+
+      const latestBookingGate = getBuyerBookingGate(
+        useAuthStore.getState().user || user,
+      );
+
+      if (!latestBookingGate.canCreateBooking) {
+        showBookingGateMessage(latestBookingGate);
+        return;
+      }
+
+      setLoading(true);
 
       try {
         const payload = {
@@ -188,7 +314,9 @@ export default function Bookings() {
         }
       } catch (error) {
         console.error("Booking creation error:", error);
-        if (error.response) {
+        if (error.code === "BUYER_KYC_REQUIRED") {
+          showBookingGateMessage(error.kycGate);
+        } else if (error.response) {
           setErrorMessage(
             error.response.data?.message ||
               "Booking creation failed. Try again.",
@@ -478,7 +606,31 @@ export default function Bookings() {
           </button>
         </div>
 
-        {activeTab === "request" ? (
+        {activeTab === "request" && !requestBookingGate.canCreateBooking ? (
+          <div className="space-y-5 p-5">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+              {requestBookingGate.message}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {requestBookingGate.actionPath && (
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => navigate(requestBookingGate.actionPath)}
+                >
+                  {requestBookingGateActionLabel}
+                </Button>
+              )}
+              <button
+                type="button"
+                onClick={() => setActiveTab("requests")}
+                className="px-4 py-3 rounded-md border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                View My Requests
+              </button>
+            </div>
+          </div>
+        ) : activeTab === "request" ? (
           <form onSubmit={formik.handleSubmit} className="space-y-5 p-5">
             {errorMessage && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">

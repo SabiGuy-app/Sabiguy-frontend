@@ -10,8 +10,9 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
-import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
-import Loader from "../../../components/Loader";
+import { useGoogleLogin } from "@react-oauth/google";
+
+const MotionDiv = motion.div;
 
 export default function StepOne({ onNext }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +43,7 @@ export default function StepOne({ onNext }) {
         city: values.city,
         email: values.email,
         password: values.password,
-        term: values.term,
+        term: termAccepted,
       };
 
       const response = await axios.post(
@@ -193,7 +194,7 @@ export default function StepOne({ onNext }) {
         description="Connect with trusted providers, verified professionals,
         and manage bookings in real time."
       >
-        <motion.div
+        <MotionDiv
           key="step-one"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -405,7 +406,7 @@ export default function StepOne({ onNext }) {
               );
             }}
           </Formik>
-        </motion.div>
+        </MotionDiv>
       </AuthLayout>
     </div>
   );

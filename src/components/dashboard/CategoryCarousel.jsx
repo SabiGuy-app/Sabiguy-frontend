@@ -1,12 +1,15 @@
 import CategoryCard from "./CategoryCard";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-export default function ({ categories, onCategoryClick }) {
+const AUTOPLAY_INTERVAL_MS = 5000;
+
+export default function CategoryCarousel({ categories, onCategoryClick }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(2);
+  const [isPaused, setIsPaused] = useState(false);
 
-  // ✅ Mobile = 1, Tablet & Desktop = 2
+  // ? Mobile = 1, Tablet & Desktop = 2
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -23,16 +26,35 @@ export default function ({ categories, onCategoryClick }) {
 
   const maxIndex = Math.max(0, categories.length - itemsPerPage);
 
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
-  };
+  useEffect(() => {
+    setCurrentIndex((prev) => Math.min(prev, maxIndex));
+  }, [maxIndex]);
 
-  const handleNext = () => {
+  useEffect(() => {
+    if (isPaused || maxIndex === 0) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+    }, AUTOPLAY_INTERVAL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [isPaused, maxIndex]);
+
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const handleNext = useCallback(() => {
     setCurrentIndex((prev) => Math.min(maxIndex, prev + 1));
-  };
+  }, [maxIndex]);
 
   return (
-    <div>
+    <div
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onFocus={() => setIsPaused(true)}
+      onBlur={() => setIsPaused(false)}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[20px] font-semibold">
           What do you need today?
@@ -40,6 +62,8 @@ export default function ({ categories, onCategoryClick }) {
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
+            aria-label="Previous services"
             onClick={handlePrevious}
             disabled={currentIndex === 0}
             className="w-7 h-7 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 disabled:opacity-40"
@@ -48,6 +72,8 @@ export default function ({ categories, onCategoryClick }) {
           </button>
 
           <button
+            type="button"
+            aria-label="Next services"
             onClick={handleNext}
             disabled={currentIndex >= maxIndex}
             className="w-7 h-7 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 disabled:opacity-40"
