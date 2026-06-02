@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import NotificationSoundService from "./services/notificationSoundService";
 import { listenForMessages } from "./services/fcmService";
+import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
 import { Analytics } from '@vercel/analytics/react';
 
@@ -78,6 +79,20 @@ function URLNormalizer() {
       navigate(normalized + location.search, { replace: true });
     }
   }, [location.pathname, navigate]);
+
+  return null;
+}
+
+function AnalyticsTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(`${location.pathname}${location.search}`);
+  }, [location.pathname, location.search]);
 
   return null;
 }
@@ -186,6 +201,7 @@ function App() {
 
       <Router>
         <URLNormalizer />
+        <AnalyticsTracker />
         <div>
           <Suspense fallback={<Loader />}>
             <Routes>

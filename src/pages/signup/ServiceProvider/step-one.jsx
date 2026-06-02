@@ -11,6 +11,7 @@ import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
 import { useGoogleLogin } from "@react-oauth/google";
+import { trackEvent } from "../../../services/analytics";
 
 const MotionDiv = motion.div;
 
@@ -37,6 +38,7 @@ export default function StepOne({ onNext, email }) {
 
     setLoading(true);
     setSuccessMessage("");
+    trackEvent("signup_started", { role: "provider", method: "password" });
     const effectiveEmail = (email || values.email || "").trim();
 
     try {
@@ -60,6 +62,7 @@ export default function StepOne({ onNext, email }) {
           "Email not verified. OTP sent to email",
         )
       ) {
+        trackEvent("signup_otp_sent", { role: "provider", method: "password" });
         setErrorMessage(
           "Your email is registered but not verified yet, you have however recieved another OTP. You will be redirected to the otp input page in a moment...",
         );
@@ -71,6 +74,7 @@ export default function StepOne({ onNext, email }) {
       }
 
       if (response.status === 200 || response.status === 201) {
+        trackEvent("signup_completed", { role: "provider", method: "password" });
         const token = response.data?.token;
         if (token) {
           localStorage.setItem("token", token);
@@ -93,6 +97,7 @@ export default function StepOne({ onNext, email }) {
       if (error.response) {
         const apiMessage = error.response.data?.message;
         if (apiMessage?.startsWith("Email not verified. OTP sent to email")) {
+          trackEvent("signup_otp_sent", { role: "provider", method: "password" });
           setSuccessMessage(
             "Your email is registered but not verified yet, you have however received another OTP. You will be redirected to the otp input page in a moment...",
           );
@@ -101,6 +106,11 @@ export default function StepOne({ onNext, email }) {
             onNext?.({ email: effectiveEmail });
           }, 5000);
         } else {
+          trackEvent("signup_failed", {
+            role: "provider",
+            method: "password",
+            status: error.response.status,
+          });
           setErrorMessage(apiMessage || "An error occurred");
         }
       } else if (error.request) {
@@ -118,6 +128,7 @@ export default function StepOne({ onNext, email }) {
     onSuccess: async (tokenResponse) => {
       try {
         setGoogleLoading(true);
+        trackEvent("signup_started", { role: "provider", method: "google" });
 
         // Get Google user info
         const userInfo = await fetch(
@@ -157,6 +168,7 @@ export default function StepOne({ onNext, email }) {
         if (
           data?.message?.startsWith("Email not verified. OTP sent to email")
         ) {
+          trackEvent("signup_otp_sent", { role: "provider", method: "google" });
           setSuccessMessage(
             "Your email is registered but not verified yet, you have however recieved another OTP. You will be redirected to the otp input page in a moment...",
           );
@@ -169,10 +181,12 @@ export default function StepOne({ onNext, email }) {
         }
 
         if (data?.newUser?.email) {
+          trackEvent("signup_completed", { role: "provider", method: "google" });
           localStorage.setItem("google-email", data.newUser.email);
           setGoogleLoading(false);
           onNext({ email: data.newUser.email, skipOtp: true });
         } else if (data.message === "Email already in use") {
+          trackEvent("signup_failed", { role: "provider", method: "google" });
           setGoogleLoading(false);
           setErrorMessage(data.message);
         } else {
@@ -181,12 +195,14 @@ export default function StepOne({ onNext, email }) {
         }
       } catch (err) {
         console.error(err);
+        trackEvent("signup_failed", { role: "provider", method: "google" });
         setGoogleLoading(false);
         setErrorMessage("Google login failed");
       }
     },
 
     onError: () => {
+      trackEvent("signup_failed", { role: "provider", method: "google" });
       setErrorMessage("Google login failed.");
       setGoogleLoading(false);
     },
@@ -198,8 +214,7 @@ export default function StepOne({ onNext, email }) {
       <Navbar />
       <AuthLayout
         title="Let's Get Started!"
-        description="Connect with trusted providers, verified professionals,
-        and manage bookings in real time."
+        description="Sign up, get verified, and get a ₦500 credit bonus!"
       >
         <MotionDiv
           key="step-one"

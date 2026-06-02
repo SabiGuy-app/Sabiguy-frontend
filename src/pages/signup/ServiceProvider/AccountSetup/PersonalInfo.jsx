@@ -7,6 +7,7 @@ import { Formik, ErrorMessage } from "formik";
 import { PersonalInfoSchema } from "../schema";
 import CoverageRadius from "../../../../components/Coverage";
 import axios from "axios";
+import { trackEvent } from "../../../../services/analytics";
 
 export default function PersonalInfoForm({ onNext }) {
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,10 @@ export default function PersonalInfoForm({ onNext }) {
       );
 
       if (response.status === 200 || response.status === 201) {
+        trackEvent("kyc_step_completed", {
+          role: "provider",
+          step: "personal_info",
+        });
         setSuccessMessage("Personal information saved successfully!");
         onNext(values);
       } else {
@@ -45,6 +50,11 @@ export default function PersonalInfoForm({ onNext }) {
       }
     } catch (error) {
       console.error("PersonalInfo submit error:", error);
+      trackEvent("kyc_step_failed", {
+        role: "provider",
+        step: "personal_info",
+        status: error?.response?.status,
+      });
       if (error.response) {
         setErrorMessage(
           error.response.data?.message ||

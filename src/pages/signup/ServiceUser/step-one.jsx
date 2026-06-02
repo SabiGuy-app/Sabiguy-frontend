@@ -11,6 +11,7 @@ import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
 import { useGoogleLogin } from "@react-oauth/google";
+import { trackEvent } from "../../../services/analytics";
 
 const MotionDiv = motion.div;
 
@@ -35,6 +36,7 @@ export default function StepOne({ onNext }) {
     }
     setLoading(true);
     setSuccessMessage("");
+    trackEvent("signup_started", { role: "buyer", method: "password" });
 
     try {
       const payload = {
@@ -54,6 +56,7 @@ export default function StepOne({ onNext }) {
       console.log("Backend response:", response);
 
       if (response.data?.message === "Email not verified. OTP sent to email") {
+        trackEvent("signup_otp_sent", { role: "buyer", method: "password" });
         setSuccessMessage(
           "Your email is registered but not verified yet, you have however received another OTP. You will be redirected to the OTP input page in a moment...",
         );
@@ -65,6 +68,7 @@ export default function StepOne({ onNext }) {
       }
 
       if (response.status === 200 || response.status === 201) {
+        trackEvent("signup_completed", { role: "buyer", method: "password" });
         const token = response.data?.token;
         if (token) {
           localStorage.setItem("token", token);
@@ -87,6 +91,7 @@ export default function StepOne({ onNext }) {
       if (error.response) {
         const apiMessage = error.response.data?.message;
         if (apiMessage === "Email not verified. OTP sent to email") {
+          trackEvent("signup_otp_sent", { role: "buyer", method: "password" });
           setSuccessMessage(
             "Your email is registered but not verified yet, you have however received another OTP. You will be redirected to the otp input page in a moment...",
           );
@@ -95,6 +100,11 @@ export default function StepOne({ onNext }) {
             onNext?.({ email: values.email });
           }, 5000);
         } else {
+          trackEvent("signup_failed", {
+            role: "buyer",
+            method: "password",
+            status: error.response.status,
+          });
           setErrorMessage(apiMessage || "An error occurred");
         }
       } else if (error.request) {
@@ -112,6 +122,7 @@ export default function StepOne({ onNext }) {
     onSuccess: async (tokenResponse) => {
       try {
         setGoogleLoading(true);
+        trackEvent("signup_started", { role: "buyer", method: "google" });
 
         // Get Google user info
         const userInfo = await fetch(
@@ -152,6 +163,7 @@ export default function StepOne({ onNext }) {
             "Email not verified. OTP sent to email",
           )
         ) {
+          trackEvent("signup_otp_sent", { role: "buyer", method: "google" });
           setSuccessMessage(
             "Your email is registered but not verified yet, you have however recieved another OTP. You will be redirected to the otp input page in a moment...",
           );
@@ -164,10 +176,12 @@ export default function StepOne({ onNext }) {
         }
 
         if (data?.newUser?.email) {
+          trackEvent("signup_completed", { role: "buyer", method: "google" });
           localStorage.setItem("google-email", data.newUser.email);
           setGoogleLoading(false);
           onNext({ email: data.newUser.email, skipOtp: true });
         } else if (data.message === "Email already in use") {
+          trackEvent("signup_failed", { role: "buyer", method: "google" });
           setGoogleLoading(false);
           setErrorMessage(data.message);
         } else {
@@ -176,6 +190,7 @@ export default function StepOne({ onNext }) {
         }
       } catch (error) {
         console.error("Google login failed:", error);
+        trackEvent("signup_failed", { role: "buyer", method: "google" });
         setErrorMessage("Google login failed")
         setGoogleLoading(false);
 
@@ -191,8 +206,7 @@ export default function StepOne({ onNext }) {
       <Navbar />
       <AuthLayout
         title="Let's Get Started!"
-        description="Connect with trusted providers, verified professionals,
-        and manage bookings in real time."
+        description="Sign up and get a 20% discount on your first two rides!"
       >
         <MotionDiv
           key="step-one"

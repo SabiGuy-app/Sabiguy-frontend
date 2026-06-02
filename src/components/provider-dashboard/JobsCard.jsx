@@ -91,7 +91,8 @@ export default function JobsCard({
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_");
-  const shouldShowMessageButton = canMessage(bookingStatus);
+  const shouldShowMessageButton =
+    bookingStatus !== "funds_released" && canMessage(bookingStatus);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">

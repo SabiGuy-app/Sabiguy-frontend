@@ -5,23 +5,37 @@ import { useUIStore } from "../stores/ui.store";
 import { useProviderStore } from "../stores/provider.store";
 import { removeFCMToken } from "./fcm";
 import { useNavigate } from "react-router-dom";
+import { trackEvent } from "../services/analytics";
 
 // LOGIN (email + password)
 export const login = async (payload) => {
-  const { data } = await api.post("/auth", payload);
-  useAuthStore.getState().setId(data.id);
+  try {
+    const { data } = await api.post("/auth", payload);
+    useAuthStore.getState().setId(data.id);
 
-  // Store tokens in both store and localStorage
-  if (data.token) {
-    localStorage.setItem("token", data.token);
-    useAuthStore.getState().setToken(data.token);
-  }
-  if (data.refreshToken) {
-    localStorage.setItem("refreshToken", data.refreshToken);
-    useAuthStore.getState().setRefreshToken(data.refreshToken);
-  }
+    // Store tokens in both store and localStorage
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      useAuthStore.getState().setToken(data.token);
+    }
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      useAuthStore.getState().setRefreshToken(data.refreshToken);
+    }
 
-  return data;
+    trackEvent("login_success", {
+      method: "password",
+      role: data.role || data.user?.role,
+    });
+
+    return data;
+  } catch (error) {
+    trackEvent("login_failed", {
+      method: "password",
+      status: error?.response?.status,
+    });
+    throw error;
+  }
 };
 
 // GET USER BY EMAIL
@@ -39,21 +53,34 @@ export const getUserByEmail = async (email) => {
 
 // GOOGLE LOGIN
 export const googleLogin = async (accessToken) => {
-  const { data } = await api.post(`/auth/google-login`, {
-    token: accessToken,
-  });
+  try {
+    const { data } = await api.post(`/auth/google-login`, {
+      token: accessToken,
+    });
 
-  // Store tokens in both store and localStorage
-  if (data.token) {
-    localStorage.setItem("token", data.token);
-    useAuthStore.getState().setToken(data.token);
-  }
-  if (data.refreshToken) {
-    localStorage.setItem("refreshToken", data.refreshToken);
-    useAuthStore.getState().setRefreshToken(data.refreshToken);
-  }
+    // Store tokens in both store and localStorage
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      useAuthStore.getState().setToken(data.token);
+    }
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      useAuthStore.getState().setRefreshToken(data.refreshToken);
+    }
 
-  return data;
+    trackEvent("login_success", {
+      method: "google",
+      role: data.role || data.user?.role,
+    });
+
+    return data;
+  } catch (error) {
+    trackEvent("login_failed", {
+      method: "google",
+      status: error?.response?.status,
+    });
+    throw error;
+  }
 };
 
 export async function handleLogout() {

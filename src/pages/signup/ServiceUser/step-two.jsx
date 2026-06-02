@@ -147,7 +147,9 @@ export default function StepTwo({onNext, email}) {
       <Navbar/>
       <AuthLayout
         title="Let's Get Started!!"
-        description="Join us to discover reliable professionals anytime, anywhere."
+        description="Sign up and get a 20% discount on your first two rides!"
+
+        // description="Join us to discover reliable professionals anytime, anywhere."
       >
         <motion.div
           key="step-two"
