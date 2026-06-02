@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import NotificationDrawer from "../dashboard/Notification";
 import NotificationToast from "../NotificationToast";
 import BookingRequestModal from "../BookingRequestModal";
+import ActivityDetailsModal from "../dashboard/ActivityDetailsModal";
 import { useAuthStore } from "../../stores/auth.store";
 import locationService from "../../services/locationService";
 import notificationSoundService from "../../services/notificationSoundService";
@@ -29,6 +30,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   const [showKycModal, setShowKycModal] = useState(false);
   const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
   const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
+  const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
   const navigate = useNavigate();
   const isAvailable = user?.data?.availability?.isAvailable ?? false;
   const bookingRequestNotificationTypes = [
@@ -189,6 +191,13 @@ export default function ProviderNavbar({ onMenuClick }) {
         });
         setBookingRequestNotification(notification);
         setShowBookingRequestModal(true);
+        return;
+      }
+      if (notification?.type === "job_completed_confirmed") {
+        notificationSoundService.play().catch((err) => {
+          console.warn("âš ï¸ Sound playback failed:", err);
+        });
+        setJobCompletedNotification(notification);
         return;
       }
       showNotificationToast(notification);
@@ -451,6 +460,11 @@ export default function ProviderNavbar({ onMenuClick }) {
           handleBookingRequestView(bookingRequestNotification)
         }
         notification={bookingRequestNotification}
+      />
+      <ActivityDetailsModal
+        isOpen={!!jobCompletedNotification}
+        onClose={() => setJobCompletedNotification(null)}
+        notification={jobCompletedNotification}
       />
       <Toaster position="top-right" />
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 sm:h-20 items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 shadow-sm">
