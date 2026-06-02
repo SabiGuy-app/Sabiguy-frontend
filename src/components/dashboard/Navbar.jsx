@@ -518,7 +518,7 @@ export default function Navbar({ onMenuClick }) {
   return (
     <>
       <Toaster position="top-right" />
-      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-4 sticky top-0 z-50 shadow-sm">
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 sm:h-20 items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-4 shadow-sm">
         {/* Mobile Menu Button (toggles sidebar) */}
         <button
           className="md:hidden p-2 text-gray-600 hover:text-gray-800 mr-0.5"

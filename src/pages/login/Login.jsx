@@ -514,6 +514,8 @@ import { login, googleLogin, getUserByEmail } from "../../api/auth";
 import { requestNotificationPermission } from "../../services/fcmService";
 import { registerUserFCMToken } from "../../api/fcm";
 
+const MotionDiv = motion.div;
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /**
@@ -600,10 +602,18 @@ const getProviderKycStatus = async (email) => {
     const kycVerified = data?.kycVerified ?? data?.data?.kycVerified;
 
     if (kycCompleted && !kycVerified) return "verified"; // allow in, show limited UI
-    if (data?.message === "This is a new customer") return "incomplete";
+    if (data?.message === "This is a new customer") {
+      localStorage.setItem("kycLevel", "0");
+      localStorage.setItem("email", email);
+      return "incomplete";
+    }
 
     const level = Number(data?.kycLevel || data?.data?.kycLevel || data?.level);
-    if (!Number.isNaN(level) && level < 6) return "incomplete";
+    if (!Number.isNaN(level) && level < 6) {
+      localStorage.setItem("kycLevel", String(level));
+      localStorage.setItem("email", email);
+      return "incomplete";
+    }
   } catch {
     // KYC lookup failure should not block login
   }
@@ -644,17 +654,23 @@ export default function Login() {
     // Fetch & store full user profile
     const fullUser = await getUserByEmail(email);
     useAuthStore.getState().setUser(fullUser);
+    const userRole =
+      role ||
+      fullUser?.role ||
+      fullUser?.data?.role ||
+      fullUser?.user?.role ||
+      fullUser?.data?.user?.role;
 
     // Non-blocking FCM registration
     registerFCM(); // intentionally NOT awaited — fire and forget
 
-    if (role === "buyer") {
+    if (userRole === "buyer") {
       setRedirecting(true);
       navigate("/dashboard", { replace: true });
       return;
     }
 
-    if (role === "provider") {
+    if (userRole === "provider") {
       const kycStatus = await getProviderKycStatus(email);
 
       if (kycStatus === "incomplete") {
@@ -708,6 +724,11 @@ export default function Login() {
   };
 
   // ── Google login ───────────────────────────────────────────────────────────
+  const handleFieldChange = (handleChange) => (e) => {
+    if (errorMessage) setErrorMessage("");
+    handleChange(e);
+  };
+
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       clearMessages();
@@ -760,7 +781,7 @@ export default function Login() {
         title="Welcome Back!"
         description="Log in with your detail to keep exploring our platform"
       >
-        <motion.div
+        <MotionDiv
           key="step-one"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -878,7 +899,6 @@ export default function Login() {
                     </span>
                   </button>
 
-                  {/* Sign up link */}
                   <p className="text-center mb-5 text-sm mt-4">
                     Don&apos;t have an account yet?
                     <Link
@@ -896,7 +916,7 @@ export default function Login() {
               );
             }}
           </Formik>
-        </motion.div>
+        </MotionDiv>
       </AuthLayout>
 
       <ForgotPassword

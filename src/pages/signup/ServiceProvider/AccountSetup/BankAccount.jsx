@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import AccountSetupLayout from "./layout";
 import InputField from "../../../../components/InputField";
 import { IoIosArrowBack } from "react-icons/io";
+import { trackEvent } from "../../../../services/analytics";
 
 export default function BankAccountForm({ onBack, onNext }) {
   const [loading, setLoading] = useState(false);
@@ -158,12 +159,21 @@ export default function BankAccountForm({ onBack, onNext }) {
         const data = await res.json();
 
         if (data.success) {
+          trackEvent("kyc_step_completed", {
+            role: "provider",
+            step: "bank_account",
+          });
+          trackEvent("provider_onboarding_completed");
           setSuccessMessage("Bank account added successfully!");
           setTimeout(() => onNext?.(), 1500);
         } else {
           setErrorMessage(data.message || "Failed to add bank account");
         }
       } catch (err) {
+        trackEvent("kyc_step_failed", {
+          role: "provider",
+          step: "bank_account",
+        });
         setErrorMessage("Something went wrong. Please try again.");
       } finally {
         setLoading(false);

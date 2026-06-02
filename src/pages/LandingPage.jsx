@@ -78,20 +78,47 @@ const LandingPage = () => {
   const [isPaused, setIsPaused] = useState(false);
   const deviceType = useDeviceType();
   const navigate = useNavigate();
+  const touchStartX = useRef(null);
 
   const goTo = (index) => {
     setCurrent(((index % slides.length) + slides.length) % slides.length);
   };
 
-  const prev = () => goTo(current - 1);
-  const next = () => goTo(current + 1);
+  const prev = () => {
+    setCurrent((value) => ((value - 1 + slides.length) % slides.length));
+  };
+
+  const next = () => {
+    setCurrent((value) => ((value + 1) % slides.length));
+  };
+
+  const handleTouchStart = (event) => {
+    touchStartX.current = event.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (event) => {
+    if (touchStartX.current === null) return;
+
+    const touchEndX = event.changedTouches[0].clientX;
+    const distance = touchStartX.current - touchEndX;
+    const swipeThreshold = 40;
+
+    if (Math.abs(distance) > swipeThreshold) {
+      if (distance > 0) next();
+      else prev();
+    }
+
+    touchStartX.current = null;
+  };
 
   useEffect(() => {
     if (!isPaused) {
-      timerRef.current = setInterval(next, AUTOSLIDE_INTERVAL);
+      timerRef.current = setInterval(() => {
+        setCurrent((value) => ((value + 1) % slides.length));
+      }, AUTOSLIDE_INTERVAL);
     }
     return () => clearInterval(timerRef.current);
-  }, [current, isPaused]);
+  }, [isPaused]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -114,13 +141,13 @@ const LandingPage = () => {
   const closeMobileMenu = () => setIsOpen(false);
 
   return (
-    <div className="bg-white overflow-x-hidden w-full relative">
+    <div className="bg-white overflow-x-hidden w-full relative pt-16 md:pt-20">
       {/* Navigation */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
-        className={`sticky top-0 z-50 w-full bg-white transition-shadow duration-300 ${
+        className={`fixed left-0 right-0 top-0 z-50 w-full bg-white transition-shadow duration-300 ${
           isScrolled ? "border-b border-gray-100 shadow-md" : "border-b border-gray-100"
         }`}
       >
@@ -538,7 +565,7 @@ const LandingPage = () => {
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6 auto-rows-fr"
             initial="hidden"
             whileInView="visible"
             variants={staggerContainer}
@@ -549,10 +576,10 @@ const LandingPage = () => {
                 key={index}
                 variants={fadeInUp}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="p-4 md:p-6 bg-gradient-to-br from-[#31784D] to-[#255d3b] border border-[#255d3b] rounded-lg md:rounded-2xl shadow-md shadow-black/20 hover:shadow-xl hover:shadow-black/30 transition-all duration-300 relative group"
+                className="h-full p-4 md:p-6 bg-gradient-to-br from-[#31784D] to-[#255d3b] border border-[#255d3b] rounded-lg md:rounded-2xl shadow-md shadow-black/20 hover:shadow-xl hover:shadow-black/30 transition-all duration-300 relative group flex flex-col items-center text-center"
               >
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-white/10 rounded-lg flex items-center justify-center mb-4 md:mb-6 backdrop-blur-sm group-hover:bg-white/20 transition-all duration-300">
-                  <OptimizedImage src={step.image} className="w-4 h-4 md:w-5 md:h-5" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-lg flex items-center justify-center mb-3 md:mb-6 backdrop-blur-sm group-hover:bg-white/20 transition-all duration-300">
+                  <OptimizedImage src={step.image} className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
 
                 <h4 className="text-base md:text-lg font-bold text-white mb-2 leading-snug">
@@ -569,132 +596,126 @@ const LandingPage = () => {
       </section>
 
       {/* Carousel Section - Responsive */}
-      <section className="py-12 md:py-16 bg-white">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 relative">
-          <div className="text-center max-w-2xl mx-auto mb-8 flex flex-col items-center">
+      <section className="bg-white py-12 md:py-16 lg:py-20">
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+          <div className="mb-6 flex flex-col gap-5 md:mb-8 md:flex-row md:items-end md:justify-between">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
+              className="max-w-2xl text-center md:text-left"
             >
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#231F20] mb-2 md:mb-3">
+              <h2 className="mb-2 text-2xl font-bold leading-tight text-[#231F20] sm:text-3xl lg:text-4xl">
                 Why Choose <span className="text-[#005823CC]">SabiGuy</span>
               </h2>
-              <p className="text-sm md:text-base text-[#231F20BF] leading-relaxed">
+              <p className="text-sm leading-relaxed text-[#231F20BF] md:text-base">
                 SabiGuy is your go-to platform for everything you need done
                 timely, conveniently, and at fair pricing.
               </p>
             </motion.div>
-          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="hidden md:flex items-center gap-2 absolute right-4 md:right-6 top-1.5"
-          >
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={prev}
-              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors bg-white"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={next}
-              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors bg-white"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </motion.button>
-          </motion.div>
-
-          <div
-            className="relative group overflow-hidden rounded-lg md:rounded-2xl aspect-[1.81]"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-          >
             <motion.div
-              className="flex h-full transition-transform duration-500 ease-in-out"
-              style={{
-                transform: `translateX(calc(-${current * 100}%))`,
-              }}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="hidden items-center gap-2 md:flex"
             >
-              {slides.map((slide, i) => (
-                <motion.div
-                  key={i}
-                  className="relative flex-shrink-0 w-full h-full overflow-hidden"
-                  whileHover={deviceType !== "mobile" ? { scale: 1.01 } : {}}
-                >
-                  <OptimizedImage
-                    src={slide.imgSrc}
-                    alt={`Slide ${i}`}
-                    className="w-full h-full object-cover brightness-[0.85] contrast-[1.02]"
-                  />
-                </motion.div>
-              ))}
+              <button
+                type="button"
+                onClick={prev}
+                aria-label="Previous slide"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition-colors hover:border-[#31784D] hover:text-[#31784D] focus:outline-none focus:ring-2 focus:ring-[#31784D]/30"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={next}
+                aria-label="Next slide"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition-colors hover:border-[#31784D] hover:text-[#31784D] focus:outline-none focus:ring-2 focus:ring-[#31784D]/30"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </motion.div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center justify-center gap-3 mt-4 md:mt-5"
-          >
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={prev}
-              className="md:hidden w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors flex-shrink-0"
+          <div className="relative">
+            <div
+              className="group relative min-h-[240px] overflow-hidden rounded-xl bg-gray-100 shadow-lg shadow-green-900/5 sm:min-h-0 md:rounded-2xl"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
-              <ChevronLeft className="w-4 h-4" />
-            </motion.button>
-
-            <div className="flex items-center gap-3 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100">
-              <div className="flex items-center gap-2">
-                {slides.map((_, i) => (
-                  <motion.button
-                    key={i}
-                    whileHover={{ scale: 1.2 }}
-                    onClick={() => goTo(i)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-6 bg-green-600" : "w-1.5 bg-gray-300"
-                      }`}
-                  />
-                ))}
+              <div className="relative h-[240px] w-full sm:h-auto sm:aspect-video lg:aspect-[1.81]">
+                <motion.div
+                  className="flex h-full transition-transform duration-500 ease-in-out"
+                  style={{
+                    transform: `translateX(-${current * 100}%)`,
+                  }}
+                >
+                  {slides.map((slide, i) => (
+                    <div
+                      key={slide.imgSrc}
+                      className="relative h-full w-full flex-shrink-0 overflow-hidden"
+                      aria-hidden={i !== current}
+                    >
+                      <motion.div
+                        className="h-full w-full"
+                        whileHover={deviceType !== "mobile" ? { scale: 1.015 } : {}}
+                        transition={{ duration: 0.35 }}
+                      >
+                        <OptimizedImage
+                          src={slide.imgSrc}
+                          alt={`SabiGuy carousel slide ${i + 1}`}
+                          className="h-full w-full"
+                          priority={i === 0}
+                        />
+                      </motion.div>
+                    </div>
+                  ))}
+                </motion.div>
               </div>
 
-              {/* In-pagination Play/Pause Toggle button */}
-              <div className="h-4 w-px bg-gray-200 mx-1"></div>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsPaused(!isPaused)}
-                className="text-[#005823] hover:text-green-700 transition-colors cursor-pointer flex items-center justify-center"
-                title={isPaused ? "Play" : "Pause"}
+              <button
+                type="button"
+                onClick={prev}
+                aria-label="Previous slide"
+                className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-transparent text-white shadow-none transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#31784D]/30 z-20"
               >
-                {isPaused ? (
-                  <Play className="w-3.5 h-3.5 fill-[#005823]" />
-                ) : (
-                  <Pause className="w-3.5 h-3.5 fill-[#005823]" />
-                )}
-              </motion.button>
-            </div>
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={next}
+                aria-label="Next slide"
+                className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-transparent text-white shadow-none transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#31784D]/30 z-20"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
 
-            {/* Mobile-only next button */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={next}
-              className="md:hidden w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-green-600 hover:text-green-600 transition-colors flex-shrink-0"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </motion.button>
-          </motion.div>
+              <div className="absolute left-1/2 bottom-3 -translate-x-1/2 z-30">
+                <div className="flex min-w-0 items-center gap-3 px-2 py-1">
+                  <div className="flex items-center gap-2">
+                    {slides.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => goTo(i)}
+                        aria-label={`Go to slide ${i + 1}`}
+                        aria-current={i === current}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          i === current ? "w-7 bg-[#31784D]" : "w-2 bg-gray-300 hover:bg-gray-400"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

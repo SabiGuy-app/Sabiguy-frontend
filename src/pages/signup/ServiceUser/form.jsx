@@ -1,5 +1,6 @@
 import StepOne from "./step-one";
 import StepTwo from "./step-two";
+import NinUpload from "./nin-upload";
 import StepThree from "./step-three";
 import { AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -17,11 +18,16 @@ export default function Form() {
       return prev + 1;
     });
   };
-  const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
+  const handleBack = () =>
+    setStep((prev) => {
+      if (prev === 2 && formData.skipOtp) return 0;
+      return Math.max(prev - 1, 0);
+    });
 
   const forms = [
     <StepOne onNext={handleNext} />,
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
+    <NinUpload onNext={handleNext} onBack={handleBack} />,
     <StepThree onNext={handleNext} onBack={handleBack} />,
   ];
 
