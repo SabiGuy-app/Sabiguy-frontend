@@ -226,10 +226,10 @@ export default function DashboardHome() {
         <div className="grid items-center gap-5 sm:grid-cols-[minmax(0,1fr)_minmax(220px,34%)]">
           <div className="max-w-2xl">
             <h3 className="text-xl font-bold leading-tight text-[#231F20] md:text-2xl">
-              Get 40% off your first two rides
+              Get up to ₦500 off your rides in the month of June!
             </h3>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#231F20BF] md:text-base">
-              New users enjoy 40% discount on their first and second ride
+              New users enjoy ₦500 discount on their ride
               bookings. Book now and save instantly.
             </p>
             <button

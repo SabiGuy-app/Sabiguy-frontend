@@ -69,9 +69,9 @@ export default function BookingSummary2() {
   const totalAmount = bookingDetails?.pricingBreakdown?.originalTotalAmount ??  pricing?.totals?.beforeDiscount ?? 0;
   const DiscountedAmount = bookingDetails?.pricingBreakdown?.totalAmount ?? pricing?.totals?.riderPaysFinal ?? 0;
   const hasFirstRideDiscount = Boolean(
-    bookingDetails?.applyFirstRideDiscount ??
-      bookingDetails?.pricing?.applyFirstRideDiscount ??
-      pricing?.applyFirstRideDiscount,
+    bookingDetails?.applyRideDiscount ??
+      bookingDetails?.pricing?.applyRideDiscount ??
+      pricing?.applyRideDiscount,
   );
   const payableAmount = hasFirstRideDiscount ? DiscountedAmount : totalAmount;
 

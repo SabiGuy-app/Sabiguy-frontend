@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
 import NotificationCompletionModal from "../NotificationCompletionModal";
 import BookingRequestModal from "../BookingRequestModal";
+import ActivityDetailsModal from "./ActivityDetailsModal";
 import ReviewModal from "./ReviewModal";
 import DisputeCompletionModal from "./DisputeCompletionModal";
 import notificationSoundService from "../../services/notificationSoundService";
@@ -28,6 +29,7 @@ export default function Navbar({ onMenuClick }) {
   const [completionNotification, setCompletionNotification] = useState(null);
   const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
   const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
+  const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewApiError, setReviewApiError] = useState(null);
@@ -156,6 +158,11 @@ export default function Navbar({ onMenuClick }) {
     if (bookingRequestNotificationTypes.includes(notification?.type)) {
       setBookingRequestNotification(notification);
       setShowBookingRequestModal(true);
+      return;
+    }
+
+    if (notification?.type === "job_completed_confirmed") {
+      setJobCompletedNotification(notification);
       return;
     }
 
@@ -668,6 +675,11 @@ export default function Navbar({ onMenuClick }) {
             handleBookingRequestNotification(bookingRequestNotification)
           }
           notification={bookingRequestNotification}
+        />
+        <ActivityDetailsModal
+          isOpen={!!jobCompletedNotification}
+          onClose={() => setJobCompletedNotification(null)}
+          notification={jobCompletedNotification}
         />
 
         <DisputeCompletionModal

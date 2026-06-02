@@ -147,7 +147,7 @@ export default function StepTwo({onNext, email}) {
       <Navbar/>
       <AuthLayout
         title="Let's Get Started!!"
-        description="Sign up and get a 20% discount on your first two rides!"
+        description="Sign up and get up to ₦500 off your rides!"
 
         // description="Join us to discover reliable professionals anytime, anywhere."
       >
