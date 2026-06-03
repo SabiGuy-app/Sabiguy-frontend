@@ -28,35 +28,11 @@ export const getBuyerKycActionPath = (status) => {
 
 export const getBuyerBookingGate = (user) => {
   const status = getBuyerKycStatus(user);
-  const actionPath = getBuyerKycActionPath(status);
-
-  if (status === "approved" || status === "not_buyer") {
-    return {
-      actionPath: null,
-      canCreateBooking: true,
-      message: "",
-      status,
-    };
-  }
-
-  const messages = {
-    needs_email_verification:
-      "Please verify your email before creating a booking.",
-    needs_nin_upload:
-      "Please complete your KYC verification before creating a booking.",
-    kyc_pending:
-      "Your KYC verification is under review. You can create a booking once it is approved.",
-    kyc_rejected:
-      "Your KYC verification was rejected. Please resubmit your NIN before creating a booking.",
-    unknown: "We are checking your KYC status. Please wait a moment.",
-  };
 
   return {
-    actionPath,
-    canCreateBooking: false,
-    message:
-      messages[status] ||
-      "Please complete your KYC verification before creating a booking.",
+    actionPath: null,
+    canCreateBooking: true,
+    message: "",
     status,
   };
 };
