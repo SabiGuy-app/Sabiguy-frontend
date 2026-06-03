@@ -27,7 +27,7 @@ export default function Form() {
   const forms = [
     <StepOne onNext={handleNext} />,
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
-    <NinUpload onNext={handleNext} onBack={handleBack} />,
+    // <NinUpload onNext={handleNext} onBack={handleBack} />,
     <StepThree onNext={handleNext} onBack={handleBack} />,
   ];
 
