@@ -8,7 +8,7 @@ export default function AccountSetupLayout({ currentStep, children }) {
     'Face Capture',
     "Skill Verification",
     "Upload Automobile",
-    "Bank Account",
+    // "Bank Account",
   ];
 
 

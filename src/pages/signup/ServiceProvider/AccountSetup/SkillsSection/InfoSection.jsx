@@ -29,18 +29,18 @@ export function DriverInfoSection({
     <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold mb-2">Driver Information</h2>
       <p className="text-gray-500 mb-3">
-        Your driver's license will be kept private
+        Your driver's / rider's license will be kept private
       </p>
       <InputField
-        placeholder="Driver's license number"
+        placeholder="Driver's or Rider's license number"
         name="driverLicenseNumber"
         value={values?.driverLicenseNumber || ""}
         onChange={handleChange}
         onBlur={handleBlur}
       />
 
-      <h6 className="text-xl font-semibold mt-5">Automobile Information</h6>
-      <div className="mb-4">
+      {/* <h6 className="text-xl font-semibold mt-5">Automobile Information</h6> */}
+      {/* <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Automobile Production Year
         </label>
@@ -55,9 +55,9 @@ export function DriverInfoSection({
           placeholderText="Select year"
           onBlur={handleBlur}
         />
-      </div>
+      </div> */}
 
-      <InputField
+       <InputField
         label="Automobile Name"
         name="vehicleName"
         value={values?.vehicleName || ""}
@@ -65,14 +65,14 @@ export function DriverInfoSection({
         onBlur={handleBlur}
         placeholder="Automobile Name"
       />
-      <InputField
+      {/* <InputField
         label="Automobile Registration Number"
         name="vehicleRegNo"
         value={values?.vehicleRegNo || ""}
         onChange={handleChange}
         onBlur={handleBlur}
         placeholder="Automobile Registration Number"
-      />
+      /> */} 
       <InputField
         label="Automobile Color"
         name="vehicleColor"
@@ -80,7 +80,7 @@ export function DriverInfoSection({
         onChange={handleColorChange}
         onBlur={handleBlur}
         placeholder="Automobile Color"
-      />
+      /> 
     </div>
   );
 }
