@@ -196,9 +196,9 @@ export default function SkillsVerification({ onNext, onBack }) {
                 return (
                   values.driverLicenseNumber &&
                   values.vehicleColor &&
-                  values.vehicleName &&
-                  values.vehicleRegNo &&
-                  values.vehicleProductionYear
+                  values.vehicleName 
+                  // values.vehicleRegNo &&
+                  // values.vehicleProductionYear
                 );
               }
               if (selectedJobTitle === "domestic") {
