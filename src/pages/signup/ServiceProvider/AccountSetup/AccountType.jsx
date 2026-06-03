@@ -5,6 +5,7 @@ import { ErrorMessage, Formik } from 'formik';
 import * as Yup from "yup";
 import { IoIosArrowBack, IoIosAdd } from "react-icons/io";
 import axios from "axios";
+import { trackEvent } from "../../../../services/analytics";
 
 
 export default function AccountTypeForm({onNext, onBack}) {
@@ -79,6 +80,11 @@ export default function AccountTypeForm({onNext, onBack}) {
       );
 
       if (response.status === 200 || response.status === 201) {
+        trackEvent("kyc_step_completed", {
+          role: "provider",
+          step: "account_type",
+          account_type: accountType,
+        });
         setSuccessMessage("");
         onNext();
       } else {
@@ -86,6 +92,11 @@ export default function AccountTypeForm({onNext, onBack}) {
       }
     } catch (error) {
       console.error("An error occurred:", error);
+      trackEvent("kyc_step_failed", {
+        role: "provider",
+        step: "account_type",
+        status: error?.response?.status,
+      });
       if (error.response) {
         setErrorMessage(error.response.data?.message || "An error occurred");
       } else if (error.request) {

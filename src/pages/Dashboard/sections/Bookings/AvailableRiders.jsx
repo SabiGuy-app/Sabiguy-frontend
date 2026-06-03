@@ -207,8 +207,8 @@ export default function AvailableRiders() {
     bookingDetails?.price ??
     0;
   const hasFirstRideDiscount =
-    Boolean(bookingDetails?.applyFirstRideDiscount) ||
-    Boolean(bookingData?.applyFirstRideDiscount);
+    Boolean(bookingDetails?.applyRideDiscount) ||
+    Boolean(bookingData?.applyRideDiscount);
 
   const getProviderId = (provider) =>
     provider?._id || provider?.id || provider?.userId || provider?.providerId;

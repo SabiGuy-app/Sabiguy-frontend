@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
 import NotificationCompletionModal from "../NotificationCompletionModal";
 import BookingRequestModal from "../BookingRequestModal";
+import ActivityDetailsModal from "./ActivityDetailsModal";
 import ReviewModal from "./ReviewModal";
 import DisputeCompletionModal from "./DisputeCompletionModal";
 import notificationSoundService from "../../services/notificationSoundService";
@@ -28,6 +29,7 @@ export default function Navbar({ onMenuClick }) {
   const [completionNotification, setCompletionNotification] = useState(null);
   const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
   const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
+  const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewApiError, setReviewApiError] = useState(null);
@@ -156,6 +158,11 @@ export default function Navbar({ onMenuClick }) {
     if (bookingRequestNotificationTypes.includes(notification?.type)) {
       setBookingRequestNotification(notification);
       setShowBookingRequestModal(true);
+      return;
+    }
+
+    if (notification?.type === "job_completed_confirmed") {
+      setJobCompletedNotification(notification);
       return;
     }
 
@@ -518,7 +525,7 @@ export default function Navbar({ onMenuClick }) {
   return (
     <>
       <Toaster position="top-right" />
-      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-4 sticky top-0 z-50 shadow-sm">
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 sm:h-20 items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-4 shadow-sm">
         {/* Mobile Menu Button (toggles sidebar) */}
         <button
           className="md:hidden p-2 text-gray-600 hover:text-gray-800 mr-0.5"
@@ -668,6 +675,11 @@ export default function Navbar({ onMenuClick }) {
             handleBookingRequestNotification(bookingRequestNotification)
           }
           notification={bookingRequestNotification}
+        />
+        <ActivityDetailsModal
+          isOpen={!!jobCompletedNotification}
+          onClose={() => setJobCompletedNotification(null)}
+          notification={jobCompletedNotification}
         />
 
         <DisputeCompletionModal

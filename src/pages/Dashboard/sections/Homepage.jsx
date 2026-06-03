@@ -2,6 +2,7 @@ import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import ProviderCard from "../../../components/dashboard/ProviderCard";
 import CategoryCarousel from "../../../components/dashboard/CategoryCarousel";
 import Button from "../../../components/dashboard/Button";
+import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/auth.store";
 // import { getAllProviders } from "../../../api/provider";
@@ -19,6 +20,8 @@ import { sendTestNotification } from "../../../api/fcm";
 import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import DashboardTour from "../../../components/tour/DashboardTour";
 import NotificationTest from "../../../services/testNotify";
+
+const ridePromoService = "book a ride";
 
 export default function DashboardHome() {
   const [loading, setLoading] = useState(false);
@@ -189,6 +192,10 @@ export default function DashboardHome() {
     }
   };
 
+  const handleRidePromoClick = () => {
+    navigate(`/bookings?service=${encodeURIComponent(ridePromoService)}`);
+  };
+
   // useEffect(() => {
   //   const loadProviders = async () => {
   //     const data = await getAllProviders(token);
@@ -212,6 +219,40 @@ export default function DashboardHome() {
         </div>
       </div>
 
+      <section
+        aria-label="Ride booking promotion"
+        className="mb-7 mt-2 overflow-hidden rounded-2xl border border-[#7BCB8C] bg-[#E7F6EC] px-4 py-5 shadow-sm sm:px-6 md:px-8"
+      >
+        <div className="grid items-center gap-5 sm:grid-cols-[minmax(0,1fr)_minmax(220px,34%)]">
+          <div className="max-w-2xl">
+            <h3 className="text-xl font-bold leading-tight text-[#231F20] md:text-2xl">
+              Get up to ₦500 off your rides in the month of June!
+            </h3>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#231F20BF] md:text-base">
+              New users enjoy ₦500 discount on their ride
+              bookings. Book now and save instantly.
+            </p>
+            <button
+              type="button"
+              onClick={handleRidePromoClick}
+              className="mt-5 inline-flex items-center justify-center gap-3 rounded-lg bg-[#2F7D4B] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25683E] focus:outline-none focus:ring-2 focus:ring-[#2F7D4B]/30 focus:ring-offset-2 md:px-6"
+            >
+              Book Now
+              <ArrowRight size={18} strokeWidth={2} />
+            </button>
+          </div>
+
+          <div className="flex justify-center sm:justify-end">
+            <img
+              src="/car.svg"
+              alt="SabiGuy ride service car"
+              className="w-full max-w-[230px] object-contain sm:max-w-[270px] lg:max-w-[330px]"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </section>
+
       <div id="service-cards">
         <CategoryCarousel
           categories={categories}
@@ -226,7 +267,7 @@ export default function DashboardHome() {
           <h3 className="text-[20px] font-semibold mb-4">Categories</h3>
         </div>
         <div id="explore-categories">
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((ser, idx) => {
               const isDisabled = ser.title !== "Transport & Logistics";
               return (

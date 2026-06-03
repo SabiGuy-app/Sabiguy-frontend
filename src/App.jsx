@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import NotificationSoundService from "./services/notificationSoundService";
 import { listenForMessages } from "./services/fcmService";
+import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
 import { Analytics } from '@vercel/analytics/react';
 
@@ -63,6 +64,8 @@ const ProtectedRoute = lazy(() => import("./components/routes/ProtectedRoute"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 const NotVerified = lazy(() => import("./pages/signup/ServiceProvider/kyc-not-verified"));
 const NotificationTest = lazy(() => import("./services/testNotify"));
+const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
+const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -76,6 +79,20 @@ function URLNormalizer() {
       navigate(normalized + location.search, { replace: true });
     }
   }, [location.pathname, navigate]);
+
+  return null;
+}
+
+function AnalyticsTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(`${location.pathname}${location.search}`);
+  }, [location.pathname, location.search]);
 
   return null;
 }
@@ -184,6 +201,7 @@ function App() {
 
       <Router>
         <URLNormalizer />
+        <AnalyticsTracker />
         <div>
           <Suspense fallback={<Loader />}>
             <Routes>
@@ -208,6 +226,8 @@ function App() {
               <Route path="/payment/callback" element={<WalletCallback />} />
 
               <Route element={<ProtectedRoute />}>
+                <Route path="/kyc/nin" element={<BuyerNinUpload />} />
+                <Route path="/kyc/pending" element={<BuyerKycPending />} />
                 <Route path="/dashboard" element={<DashboardHome />} />
                 <Route
                   path="/dashboard/provider"

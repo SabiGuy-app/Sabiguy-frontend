@@ -18,7 +18,6 @@ import { allowSystem } from "../../../../api/bookings";
 import { getPromoEligibility } from "../../../../api/payment";
 import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
-import { useAuthStore } from "../../../../stores/auth.store";
 
 const vehicleOptions = (service) => {
   const isRide = service === "book a ride";
@@ -56,7 +55,6 @@ export default function Bookings() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
   const setBooking = useBookingStore((state) => state.setBooking);
-  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -117,7 +115,7 @@ export default function Bookings() {
       // vehicle: "",
       modeOfDelivery: "",
       autoAcceptNearest: false,
-      applyFirstRideDiscount: false,
+      applyRideDiscount: false,
     },
     validationSchema: Yup.object().shape({
       jobTitle: Yup.string().required("Work category is required"),
@@ -145,9 +143,10 @@ export default function Bookings() {
     }),
     onSubmit: async (values) => {
       console.log("Submitting booking with values:", values);
-      setLoading(true);
       setSuccessMessage("");
       setErrorMessage("");
+
+      setLoading(true);
 
       try {
         const payload = {
@@ -158,7 +157,7 @@ export default function Bookings() {
           scheduleType: values.serviceType,
           // vehicle: values.modeOfDelivery,
           modeOfDelivery: values.modeOfDelivery,
-          applyFirstRideDiscount: values.applyFirstRideDiscount,
+          applyRideDiscount: values.applyRideDiscount,
           scheduleDate:
             values.serviceType === "scheduled"
               ? `${values.scheduleDate}T${values.scheduleTime}:00`
@@ -419,7 +418,7 @@ export default function Bookings() {
       : promoEligibility?.eligible && promoEligibility?.remaining > 0
         ? `${promoEligibility.percent || 0}% first ride discount available`
         : promoEligibility?.isNewUser
-          ? "First ride discount available"
+          ? "Ride discount available"
           : "First ride discount unavailable";
 
   const promoDescription =
@@ -796,27 +795,27 @@ export default function Bookings() {
                   <p className="text-sm font-semibold text-[#231F20]">
                     {promoTitle}
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-[#231F2080]">
+                  {/* <p className="mt-1 text-sm leading-6 text-[#231F2080]">
                     {promoDescription}
-                  </p>
+                  </p> */}
                 </div>
 
                 <button
                   type="button"
                   role="switch"
-                  aria-checked={formik.values.applyFirstRideDiscount}
+                  aria-checked={formik.values.applyRideDiscount}
                   disabled={
                     !promoEligibility?.eligible ||
                     !promoEligibility?.canApplyAtPayment
                   }
                   onClick={() =>
                     formik.setFieldValue(
-                      "applyFirstRideDiscount",
-                      !formik.values.applyFirstRideDiscount,
+                      "applyRideDiscount",
+                      !formik.values.applyRideDiscount,
                     )
                   }
                   className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full border transition-colors duration-300 ${
-                    formik.values.applyFirstRideDiscount &&
+                    formik.values.applyRideDiscount &&
                     promoEligibility?.eligible &&
                     promoEligibility?.canApplyAtPayment
                       ? "border-[#005823] bg-[#005823]"
@@ -830,7 +829,7 @@ export default function Bookings() {
                 >
                   <span
                     className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
-                      formik.values.applyFirstRideDiscount &&
+                      formik.values.applyRideDiscount &&
                       promoEligibility?.eligible &&
                       promoEligibility?.canApplyAtPayment
                         ? "translate-x-7"
@@ -844,7 +843,7 @@ export default function Bookings() {
                 <span className="text-xs font-medium text-[#005823] bg-white border border-[#005823]/10 px-3 py-1.5 rounded-full">
                   {promoEligibility?.eligible &&
                   promoEligibility?.canApplyAtPayment
-                    ? formik.values.applyFirstRideDiscount
+                    ? formik.values.applyRideDiscount
                       ? "Enabled"
                       : "Available"
                     : "Unavailable"}

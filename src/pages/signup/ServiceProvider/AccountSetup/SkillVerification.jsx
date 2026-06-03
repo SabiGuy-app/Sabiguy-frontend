@@ -9,6 +9,7 @@ import AddService from "./SkillsSection/AddService";
 import { Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
+import { trackEvent } from "../../../../services/analytics";
 
 export default function SkillsVerification({ onNext, onBack }) {
   const [selectedJobTitle, setSelectedJobTitle] = useState("");
@@ -87,6 +88,12 @@ export default function SkillsVerification({ onNext, onBack }) {
       );
 
       if (response.status === 200 || response.status === 201) {
+        trackEvent("kyc_step_completed", {
+          role: "provider",
+          step: "skill_verification",
+          service_category: selectedJobTitle,
+          service: selectedService,
+        });
         setSuccessMessage("Registration successful");
         onNext();
       } else {
@@ -94,6 +101,12 @@ export default function SkillsVerification({ onNext, onBack }) {
       }
     } catch (error) {
       console.error("An error occurred:", error);
+      trackEvent("kyc_step_failed", {
+        role: "provider",
+        step: "skill_verification",
+        service_category: selectedJobTitle,
+        status: error?.response?.status,
+      });
       if (error.response) {
         setErrorMessage(error.response.data?.message || "An error occurred");
       } else if (error.request) {
