@@ -85,7 +85,7 @@ export default function Form() {
     <FaceCapture onNext={handleNext} onBack={handleBack} />,
     <SkillsVerification onNext={handleNext} onBack={handleBack} />, //KYC level 5
     <UploadAutoMobile onNext={handleNext} onBack={handleBack} />, //KYC level 6
-    <BankAccountForm onNext={handleNext} onBack={handleBack} />, //KYC level completed
+    // <BankAccountForm onNext={handleNext} onBack={handleBack} />, //KYC level completed
     <Congrats onNext={handleNext} onBack={handleBack} />,
   ];
 
