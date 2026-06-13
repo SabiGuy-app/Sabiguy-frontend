@@ -17,12 +17,20 @@ const MotionDiv = motion.div;
 
 export default function StepOne({ onNext }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
   const [termAccepted, setTermAccepted] = useState(false);
   const [termError, setTermError] = useState("");
+
+  const evaluatePasswordStrength = (password) => {
+    const strongPasswordPattern =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+    return strongPasswordPattern.test(password);
+  };
 
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev);
@@ -243,6 +251,9 @@ export default function StepOne({ onNext }) {
                 values.phoneNumber.trim() &&
                 values.password.trim() &&
                 termAccepted;
+              const showPasswordFeedback =
+                values.password.trim().length > 0 && !passwordFocused;
+              const isStrongPassword = evaluatePasswordStrength(values.password);
               return (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
@@ -316,16 +327,39 @@ export default function StepOne({ onNext }) {
                     placeholder="Enter your password"
                     value={values.password}
                     onChange={handleChange}
-                    onBlur={handleBlur}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={(e) => {
+                      handleBlur(e);
+                      setPasswordFocused(false);
+                    }}
                   />
                   <ErrorMessage
                     name="password"
                     component="span"
                     className="text-[#db3a3a]"
                   />
-                  <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                    Password must be at least 8 characters long and include a letter, number, and special character
-                  </p>
+                  {showPasswordFeedback && (
+                    <div
+                      className={`mt-2 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 ${
+                        isStrongPassword
+                          ? "border-emerald-200 bg-emerald-50/90 text-emerald-800"
+                          : "border-amber-200 bg-amber-50/90 text-amber-900"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`mt-0.5 h-2.5 w-2.5 rounded-full ${
+                            isStrongPassword ? "bg-emerald-500" : "bg-amber-500"
+                          }`}
+                        />
+                        <p className="leading-relaxed">
+                          {isStrongPassword
+                            ? "Nice, that's a strong password. You're doing great."
+                            : "Whoops, that's a rather weak password, but you can continue with it."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   {showPassword ? (
                     <BsEye
                       onClick={handleShowPassword}
