@@ -122,11 +122,16 @@ const LandingFooter = () => {
 
         <div className="pt-8 pb-2 border-t border-white/20 flex flex-col md:flex-row justify-between items-center gap-4 text-[13px] lg:text-[16px] text-white/70 text-center md:text-left">
           <p>© {currentYear} SabiGuy. All rights reserved.</p>
-          <div className="flex gap-8 justify-center">
+
+          <p className="max-w-xl text-white/70 text-center md:text-left">
+            SabiGuy is a technology enabled marketplace operated by Pitchers International. Services are provided by independent riders and service providers. By using this platform, you agree to our <Link to="/policies/terms" className="hover:text-white underline">Terms of Use</Link>, <Link to="/policies/privacy" className="hover:text-white underline">Privacy Policy</Link>, and <Link to="/policies" className="hover:text-white underline">related policies</Link>.
+          </p>
+
+          {/* <div className="flex gap-8 justify-center">
             <Link to="/policies" className="hover:text-white transition-colors">
               Policies (Terms & Privacy)
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

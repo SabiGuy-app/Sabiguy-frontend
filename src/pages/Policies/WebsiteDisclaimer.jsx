@@ -1,6 +1,7 @@
 import React from "react";
 import PublicHeader from "../../components/PublicHeader";
 import { NavLink } from "react-router-dom";
+import LandingFooter from "../../components/LandingFooter";
 
 const Section = ({ id, title, children }) => (
   <section id={id} className="py-8 border-b border-gray-200">
@@ -147,6 +148,7 @@ const PolicyPage = () => {
           </main>
         </div>
       </div>
+      <LandingFooter />
     </div>
   );
 };

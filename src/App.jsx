@@ -68,7 +68,7 @@ const RideServicesPolicy = lazy(() => import("./pages/Policies/RideServices"));
 const DispatchPolicy = lazy(() => import("./pages/Policies/Dispatch&Delivery"));
 const WebsiteDisclaimer = lazy(() => import("./pages/Policies/WebsiteDisclaimer"));
 const CookiePolicy = lazy(() => import("./pages/Policies/Cookie"));
-const CommunityPolicy = lazy(() => import("./pages/Policies/CommunityGuidelines"));
+const CommunityPolicy = lazy(() => import("./pages/Policies/communityGuidelines"));
 const ProtectedRoute = lazy(() => import("./components/routes/ProtectedRoute"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 const NotVerified = lazy(() => import("./pages/signup/ServiceProvider/kyc-not-verified"));
@@ -102,6 +102,28 @@ function AnalyticsTracker() {
   useEffect(() => {
     trackPageView(`${location.pathname}${location.search}`);
   }, [location.pathname, location.search]);
+
+  return null;
+}
+
+function ScrollToTopOnRouteChange() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    // If there's a hash and an element exists, let the existing handlers handle it.
+    if (hash) {
+      const id = hash.replace('#', '');
+      const el = document.getElementById(id);
+      if (el) {
+        // scroll to the element smoothly
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+
+    // Otherwise, scroll to top immediately on route change
+    window.scrollTo({ top: 0, left: 0 });
+  }, [pathname, hash]);
 
   return null;
 }
@@ -209,6 +231,7 @@ function App() {
       />
 
       <Router>
+        <ScrollToTopOnRouteChange />
         <URLNormalizer />
         <AnalyticsTracker />
         <div>
