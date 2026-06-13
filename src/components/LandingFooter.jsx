@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const LandingFooter = () => {
   const currentYear = new Date().getFullYear();
@@ -122,12 +123,9 @@ const LandingFooter = () => {
         <div className="pt-8 pb-2 border-t border-white/20 flex flex-col md:flex-row justify-between items-center gap-4 text-[13px] lg:text-[16px] text-white/70 text-center md:text-left">
           <p>© {currentYear} SabiGuy. All rights reserved.</p>
           <div className="flex gap-8 justify-center">
-            <a href="#" className="hover:text-white transition-colors">
-              Terms & Conditions
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
-              Privacy Policy
-            </a>
+            <Link to="/policies" className="hover:text-white transition-colors">
+              Policies (Terms & Privacy)
+            </Link>
           </div>
         </div>
       </div>
