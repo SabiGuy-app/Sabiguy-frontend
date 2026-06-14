@@ -337,7 +337,7 @@ const LandingPage = () => {
                   to="/signup"
                   className="bg-[#31784D] text-white px-6 md:px-10 py-3 md:py-4 rounded-lg md:rounded-xl font-bold hover:bg-[#255d3b] transition-all shadow-lg shadow-green-900/10 inline-block w-full text-center text-sm md:text-base"
                 >
-                  Request a SabiGuy
+                  Book a Service Now
                 </Link>
               </motion.div>
               <motion.div
@@ -349,7 +349,7 @@ const LandingPage = () => {
                   to="/service-provider/signup"
                   className="bg-white text-[#2A3349] border-2 border-gray-100 px-6 md:px-10 py-3 md:py-4 rounded-lg md:rounded-xl font-bold hover:bg-gray-50 transition-all inline-block w-full text-center text-sm md:text-base"
                 >
-                  Become a SabiGuy
+                  Start Earning Today
                 </Link>
               </motion.div>
             </motion.div>
