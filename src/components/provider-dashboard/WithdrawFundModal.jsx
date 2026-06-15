@@ -2,6 +2,7 @@ import Modal from "../Modal";
 import WithdrawStep1 from "./WithdrawFunds1";
 import WithdrawStep2 from "./WithdrawFunds2";
 import WithdrawStep3 from "./WithdrawFunds3";
+import AddBankDetails from "./AddBankDetails";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../../stores/auth.store";
 import { withdrawFromWallet } from "../../api/provider";
@@ -11,6 +12,7 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
   const { user } = useAuthStore();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showAddBankDetails, setShowAddBankDetails] = useState(false);
   const [withdrawalInfo, setWithdrawalInfo] = useState({
     amount: 0,
     accountName: user?.data?.accountName || "",
@@ -34,11 +36,14 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
 
   const handleClose = () => {
     setStep(1);
+    setShowAddBankDetails(false);
     onClose();
   };
 
   const handleNext = () => setStep(2);
   const handleBack = () => setStep(1);
+  const handleOpenAddBankDetails = () => setShowAddBankDetails(true);
+  const handleCloseAddBankDetails = () => setShowAddBankDetails(false);
 
   const handleConfirm = async () => {
     setIsProcessing(true);
@@ -80,6 +85,7 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
           withdrawalInfo={withdrawalInfo}
           setWithdrawalInfo={setWithdrawalInfo}
           hasBankDetails={hasBankDetails}
+          onAddBankDetails={handleOpenAddBankDetails}
         />
       )}
 
@@ -98,6 +104,11 @@ export default function WithdrawFundsModal({ isOpen, onClose, availableBalance =
           withdrawalInfo={withdrawalInfo}
         />
       )}
+
+      <AddBankDetails
+        isOpen={showAddBankDetails}
+        onClose={handleCloseAddBankDetails}
+      />
     </Modal>
   );
 }
