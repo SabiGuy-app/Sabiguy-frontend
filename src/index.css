@@ -23,6 +23,16 @@ html, body {
   min-height: 100vh;
 }
 
+.landing-carousel-slide img {
+  object-position: left center;
+}
+
+@media (min-width: 640px) {
+  .landing-carousel-slide img {
+    object-position: center center;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
