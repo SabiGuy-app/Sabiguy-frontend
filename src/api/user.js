@@ -2,7 +2,7 @@ import api from "./axios";
 import { trackEvent } from "../services/analytics";
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token")   ;
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
