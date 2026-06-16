@@ -60,6 +60,15 @@ const AvailableRiders = lazy(() => import("./pages/Dashboard/sections/Bookings/A
 const BookingSummary2 = lazy(() => import("./pages/Dashboard/sections/Bookings/BookingSummary2"));
 const TrackRider = lazy(() => import("./pages/Dashboard/sections/Bookings/TrackRider"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const PolicyPage = lazy(() => import("./pages/Policies/PrivacyPolicy"));
+const TermsOfUse = lazy(() => import("./pages/Policies/TermsOfUse"));
+const PaymentPolicy = lazy(() => import("./pages/Policies/Payment&Refunds"));
+const SafetyPolicy = lazy(() => import("./pages/Policies/Safety&Trust"));
+const RideServicesPolicy = lazy(() => import("./pages/Policies/RideServices"));
+const DispatchPolicy = lazy(() => import("./pages/Policies/Dispatch&Delivery"));
+const WebsiteDisclaimer = lazy(() => import("./pages/Policies/WebsiteDisclaimer"));
+const CookiePolicy = lazy(() => import("./pages/Policies/Cookie"));
+const CommunityPolicy = lazy(() => import("./pages/Policies/communityGuidelines"));
 const ProtectedRoute = lazy(() => import("./components/routes/ProtectedRoute"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 const NotVerified = lazy(() => import("./pages/signup/ServiceProvider/kyc-not-verified"));
@@ -78,7 +87,7 @@ function URLNormalizer() {
       const normalized = location.pathname.replace(/\/+/g, "/");
       navigate(normalized + location.search, { replace: true });
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname, location.search, navigate]);
 
   return null;
 }
@@ -93,6 +102,28 @@ function AnalyticsTracker() {
   useEffect(() => {
     trackPageView(`${location.pathname}${location.search}`);
   }, [location.pathname, location.search]);
+
+  return null;
+}
+
+function ScrollToTopOnRouteChange() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    // If there's a hash and an element exists, let the existing handlers handle it.
+    if (hash) {
+      const id = hash.replace('#', '');
+      const el = document.getElementById(id);
+      if (el) {
+        // scroll to the element smoothly
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+
+    // Otherwise, scroll to top immediately on route change
+    window.scrollTo({ top: 0, left: 0 });
+  }, [pathname, hash]);
 
   return null;
 }
@@ -200,6 +231,7 @@ function App() {
       />
 
       <Router>
+        <ScrollToTopOnRouteChange />
         <URLNormalizer />
         <AnalyticsTracker />
         <div>
@@ -207,6 +239,16 @@ function App() {
             <Routes>
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/" element={<LandingPage />} />
+              <Route path="/policies" element={<PolicyPage />} />
+              <Route path="/policies/privacy" element={<PolicyPage />} />
+              <Route path="/policies/terms" element={<TermsOfUse />} />
+              <Route path="/policies/payment" element={<PaymentPolicy />} />
+              <Route path="/policies/safety" element={<SafetyPolicy />} />
+              <Route path="/policies/ride-services" element={<RideServicesPolicy />} />
+              <Route path="/policies/dispatch-delivery" element={<DispatchPolicy />} />
+              <Route path="/policies/website" element={<WebsiteDisclaimer />} />
+              <Route path="/policies/cookies" element={<CookiePolicy />} />
+              <Route path="/policies/community" element={<CommunityPolicy />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/service-provider/signup" element={<SignupForm />} />
               <Route path="/congrats" element={<Congrats />} />
