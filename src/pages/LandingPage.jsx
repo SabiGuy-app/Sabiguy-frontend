@@ -30,19 +30,27 @@ import OptimizedImage from "../components/common/OptimizedImage";
 
 
 // Animated Counter Component
-const AnimatedCounter = ({ from = 0, to, duration = 2 }) => {
+const AnimatedCounter = ({ from = 0, to, duration = 2, start = true, resetKey = 0 }) => {
   const [count, setCount] = useState(from);
 
   useEffect(() => {
+    if (!start) {
+      setCount(from);
+      return undefined;
+    }
+
+    let animationFrame;
     let startTime;
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
       setCount(Math.floor(from + (to - from) * progress));
-      if (progress < 1) requestAnimationFrame(animate);
+      if (progress < 1) animationFrame = requestAnimationFrame(animate);
     };
-    requestAnimationFrame(animate);
-  }, [from, to, duration]);
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [from, to, duration, start, resetKey]);
 
   return <span>{count}</span>;
 };
@@ -73,10 +81,12 @@ const LandingPage = () => {
   const content = tabs[active];
   const [current, setCurrent] = useState(0);
   const timerRef = useRef(null);
+  const hasStartedStatsAnimation = useRef(false);
   const [openIndex, setOpenIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [statsAnimationKey, setStatsAnimationKey] = useState(0);
   const deviceType = useDeviceType();
   const navigate = useNavigate();
   const touchStartX = useRef(null);
@@ -140,6 +150,12 @@ const LandingPage = () => {
   };
 
   const closeMobileMenu = () => setIsOpen(false);
+
+  const startStatsAnimation = () => {
+    if (hasStartedStatsAnimation.current) return;
+    hasStartedStatsAnimation.current = true;
+    setStatsAnimationKey((key) => key + 1);
+  };
 
   return (
     <div className="bg-white overflow-x-hidden w-full relative pt-16 md:pt-20">
@@ -376,6 +392,7 @@ const LandingPage = () => {
       <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
+        onViewportEnter={startStatsAnimation}
         transition={{ duration: 0.8 }}
         viewport={{ once: true, margin: "-100px" }}
         className="py-12 md:py-20 bg-white text-center"
@@ -396,7 +413,7 @@ const LandingPage = () => {
             </h2>
           </motion.div>
 
-          <div className="max-w-6xl mx-auto bg-gradient-to-b from-white to-[#F9FBF9] border border-gray-100 rounded-2xl md:rounded-3xl shadow-xl shadow-green-900/5 px-4 md:px-6 py-8 md:py-12 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+          <div className="max-w-6xl mx-auto bg-gradient-to-b from-white to-[#F9FBF9] border border-gray-100 rounded-2xl md:rounded-3xl shadow-xl shadow-green-900/5 px-2 sm:px-4 md:px-6 py-6 md:py-12 grid grid-cols-4 gap-1 sm:gap-3 md:gap-6 lg:gap-8">
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
@@ -405,22 +422,24 @@ const LandingPage = () => {
                 transition={{ delay: index * 0.1, duration: 0.6 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -6, scale: 1.03 }}
-                className={`w-full px-4 md:px-6 py-4 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-green-900/5 transition-all duration-300 relative group
-                ${index !== stats.length - 1 ? "lg:border-r border-gray-100" : ""}`}
+                className={`w-full min-w-0 px-1 sm:px-3 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-green-900/5 transition-all duration-300 relative group
+                ${index !== stats.length - 1 ? "border-r border-gray-100" : ""}`}
               >
                 <div
-                  className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#005823] mb-1 md:mb-2 flex items-center justify-center"
+                  className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#005823] mb-1 md:mb-2 flex items-center justify-center"
                 >
                   <AnimatedCounter
                     from={0}
                     to={parseInt(stat.number)}
                     duration={2}
+                    start={statsAnimationKey > 0}
+                    resetKey={statsAnimationKey}
                   />
                   {stat.number.includes("+") && (
                     <span className="text-[#005823] ml-0.5 group-hover:scale-110 transition-transform duration-300">+</span>
                   )}
                 </div>
-                <div className="text-xs md:text-sm font-bold tracking-wider text-gray-500 uppercase mt-2">
+                <div className="text-[8px] sm:text-xs md:text-sm font-bold tracking-[0.04em] md:tracking-wider leading-[1.15] text-gray-500 uppercase mt-2 break-words">
                   {stat.label}
                 </div>
               </motion.div>
@@ -671,7 +690,7 @@ const LandingPage = () => {
                         <OptimizedImage
                           src={slide.imgSrc}
                           alt={`SabiGuy carousel slide ${i + 1}`}
-                          className="h-full w-full"
+                          className="landing-carousel-slide h-full w-full"
                           priority={i === 0}
                         />
                       </motion.div>
