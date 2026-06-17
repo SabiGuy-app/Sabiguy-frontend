@@ -419,7 +419,7 @@ export default function Bookings() {
         ? `${promoEligibility.percent || 0}% first ride discount available`
         : promoEligibility?.isNewUser
           ? "Ride discount available"
-          : "First ride discount unavailable";
+          : "Ride discount unavailable";
 
   const promoDescription =
     promoLoading

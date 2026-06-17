@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Phone,
+  PhoneCall,
   MessageCircle,
   Clock,
   Star,
@@ -466,10 +466,10 @@ export default function BookingSummary2() {
 
               {/* Action Buttons */}
               <div className="text-center md:grid md:grid-cols-2 gap-5">
-                {/* <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Phone className="w-4 h-4 text-gray-600" />
+                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <PhoneCall className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
-                </button> */}
+                </button>
                 {bookingDetails?.status?.toLowerCase() !== "cancelled" && (
                   <button
                     onClick={() => {
