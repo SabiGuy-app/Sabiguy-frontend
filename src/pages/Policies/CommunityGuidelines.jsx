@@ -10,7 +10,7 @@ const Section = ({ id, title, children }) => (
   </section>
 );
 
-const PolicyPage = () => {
+const CommunityGuidelines= () => {
   const sections = [
     { id: "privacy", title: "Privacy Policy", route: "/policies/privacy" },
     { id: "terms", title: "Terms of Use", route: "/policies/terms" },
@@ -402,4 +402,4 @@ const PolicyPage = () => {
   );
 };
 
-export default PolicyPage;
+export default CommunityGuidelines;
