@@ -4,6 +4,7 @@ import {
   Send,
   Clock,
   Star,
+  PhoneCall,
   MessageCircle,
   Copy,
   Check,
@@ -19,6 +20,7 @@ import ReviewModal from "./ReviewModal";
 import DisputeCompletionModal from "./DisputeCompletionModal";
 import CancelRequestButton from "../CancelRequestButton";
 import useBookingStore from "../../stores/booking.store";
+import { useCallContext } from "../shared/CallContext";
 
 export default function RequestCard({
   request,
@@ -43,6 +45,7 @@ export default function RequestCard({
 
   const navigate = useNavigate();
   const setBooking = useBookingStore((s) => s.setBooking);
+  const callContext = useCallContext();
 
   // Fetch wallet balance whenever the review modal opens
   useEffect(() => {
@@ -393,6 +396,35 @@ export default function RequestCard({
                 >
                   <MessageCircle className="w-4 h-4" />
                   Message Provider
+                </button>
+              )}
+
+              {[ 
+                "provider selected",
+                "paid escrow",
+                "enroute to pickup",
+                "arrived at pickup",
+                "enroute to dropoff",
+                "arrived at dropoff",
+              ].includes(request.status.toLowerCase()) && (
+                <button
+                  onClick={() =>
+                    callContext?.openCall?.({
+                      booking: request.rawBooking || request,
+                      targetOverride: {
+                        targetId:
+                          request.fullProviderId ||
+                          request.originalData?.providerId?._id ||
+                          request.originalData?.providerId,
+                        targetType: "provider",
+                        targetName: request.providerName || "Provider",
+                      },
+                    })
+                  }
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+                >
+                  <PhoneCall className="w-4 h-4" />
+                  Call Provider
                 </button>
               )}
 

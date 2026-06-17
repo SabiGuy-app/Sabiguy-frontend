@@ -1,5 +1,5 @@
 import {
-  Phone,
+  PhoneCall,
   MessageCircle,
   Star,
   MapPin,
@@ -11,9 +11,11 @@ import {
 import { FiChevronLeft } from "react-icons/fi";
 import distance from "/distance.png";
 import { useNavigate } from "react-router-dom";
+import { useCallContext } from "../../../components/shared/CallContext";
 
 export default function ServiceDetailsModal({ isOpen, onClose, request }) {
   const navigate = useNavigate();
+  const callContext = useCallContext();
   if (!isOpen) return null;
   console.log(request);
   const bookingId = request?.id;
@@ -151,10 +153,29 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                {/* <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Phone className="w-4 h-4 text-gray-600" />
+                <button
+                  onClick={() =>
+                    callContext?.openCall?.({
+                      booking: request?.originalData || request,
+                      targetOverride: {
+                        targetId:
+                          request?.originalData?.providerId?._id ||
+                          request?.originalData?.providerId ||
+                          request?.providerId?._id ||
+                          request?.providerId,
+                        targetType: "provider",
+                        targetName:
+                          request?.providerName ||
+                          request?.originalData?.providerId?.fullName ||
+                          "Provider",
+                      },
+                    })
+                  }
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <PhoneCall className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
-                </button> */}
+                </button>
                 {request.status?.toLowerCase() !== "cancelled" && (
                   <button
                     onClick={handleMessageProvider}

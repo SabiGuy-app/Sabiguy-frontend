@@ -1,6 +1,7 @@
-import { MapPin, Clock, Star, MessageCircle, Copy, Check } from "lucide-react";
+import { MapPin, Clock, Star, MessageCircle, Copy, Check, PhoneCall } from "lucide-react";
 import { useState } from "react";
 import { canMessage } from "../../utils/chat.utils";
+import { useCallContext } from "../shared/CallContext";
 
 export default function JobsCard({
   job,
@@ -10,6 +11,7 @@ export default function JobsCard({
   onMessageCustomer,
 }) {
   const [copied, setCopied] = useState(false);
+  const callContext = useCallContext();
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
@@ -318,6 +320,30 @@ export default function JobsCard({
                 Message Customer
               </button>
             )}
+
+                <button
+                  onClick={() =>
+                    callContext?.openCall?.({
+                      booking: job?.originalData || job,
+                      targetOverride: {
+                        targetId:
+                          job?.originalData?.userId?._id ||
+                          job?.originalData?.userId ||
+                          job?.userId?._id ||
+                          job?.userId,
+                        targetType: "buyer",
+                        targetName:
+                          job?.originalData?.userId?.fullName ||
+                          job?.originalData?.customerName ||
+                          "Customer",
+                      },
+                    })
+                  }
+                className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
+              >
+                <PhoneCall className="w-4 h-4" />
+                Call Customer
+              </button>
 
             {normalizedStatus === "awaiting_payment" && (
               <button className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95">
