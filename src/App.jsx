@@ -68,7 +68,7 @@ const RideServicesPolicy = lazy(() => import("./pages/Policies/RideServices"));
 const DispatchPolicy = lazy(() => import("./pages/Policies/Dispatch&Delivery"));
 const WebsiteDisclaimer = lazy(() => import("./pages/Policies/WebsiteDisclaimer"));
 const CookiePolicy = lazy(() => import("./pages/Policies/Cookie"));
-const CommunityPolicy = lazy(() => import("./pages/Policies/communityGuidelines"));
+const CommunityGuidelines = lazy(() => import("./pages/Policies/CommunityGuidelines"));
 const ProtectedRoute = lazy(() => import("./components/routes/ProtectedRoute"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 const NotVerified = lazy(() => import("./pages/signup/ServiceProvider/kyc-not-verified"));
@@ -248,7 +248,7 @@ function App() {
               <Route path="/policies/dispatch-delivery" element={<DispatchPolicy />} />
               <Route path="/policies/website" element={<WebsiteDisclaimer />} />
               <Route path="/policies/cookies" element={<CookiePolicy />} />
-              <Route path="/policies/community" element={<CommunityPolicy />} />
+              <Route path="/policies/community" element={<CommunityGuidelines />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/service-provider/signup" element={<SignupForm />} />
               <Route path="/congrats" element={<Congrats />} />
