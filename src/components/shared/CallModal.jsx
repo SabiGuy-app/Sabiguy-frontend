@@ -49,13 +49,16 @@ export function CallModal({ isOpen, onClose, socket, booking, currentUser, targe
 
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/v1/call/ice-servers`,
+          `${import.meta.env.VITE_API_URL}/api/v1/call/ice-servers`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
         const data = await response.json();
         setIceServers(data?.iceServers || []);
+
+          console.log("ICE servers:", iceServers); 
+
       } catch (error) {
         console.error("Failed to load ICE servers:", error);
         setIceServers([]);

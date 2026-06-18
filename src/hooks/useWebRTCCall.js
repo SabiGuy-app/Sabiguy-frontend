@@ -8,35 +8,56 @@ export function useWebRTCCall(socket) {
   const peerConnectionRef = useRef(null);
   const localStreamRef = useRef(null);
   const remoteAudioRef = useRef(new Audio());
-  const ringtoneAudioRef = useRef(null);
-  const ringtonePlayingRef = useRef(false);
+  const incomingToneAudioRef = useRef(null);
+  const outgoingToneAudioRef = useRef(null);
+  const incomingTonePlayingRef = useRef(false);
+  const outgoingTonePlayingRef = useRef(false);
 
-  const stopRingtone = useCallback(() => {
-    if (ringtoneAudioRef.current) {
-      ringtoneAudioRef.current.pause();
-      ringtoneAudioRef.current.currentTime = 0;
+  const stopTone = useCallback((toneRef, playingRef) => {
+    if (toneRef.current) {
+      toneRef.current.pause();
+      toneRef.current.currentTime = 0;
     }
-
-    ringtonePlayingRef.current = false;
+    playingRef.current = false;
   }, []);
 
-  const startRingtone = useCallback(async () => {
-    if (ringtonePlayingRef.current) return;
+  const stopIncomingTone = useCallback(
+    () => stopTone(incomingToneAudioRef, incomingTonePlayingRef),
+    [stopTone],
+  );
+
+  const stopOutgoingTone = useCallback(
+    () => stopTone(outgoingToneAudioRef, outgoingTonePlayingRef),
+    [stopTone],
+  );
+
+  const startTone = useCallback(async (toneRef, playingRef, src) => {
+    if (playingRef.current) return;
 
     try {
-      if (!ringtoneAudioRef.current) {
-        ringtoneAudioRef.current = new Audio("/notifyy.mp3");
-        ringtoneAudioRef.current.loop = true;
-        ringtoneAudioRef.current.preload = "auto";
+      if (!toneRef.current) {
+        toneRef.current = new Audio(src);
+        toneRef.current.loop = true;
+        toneRef.current.preload = "auto";
       }
 
-      ringtonePlayingRef.current = true;
-      await ringtoneAudioRef.current.play();
+      playingRef.current = true;
+      await toneRef.current.play();
     } catch (error) {
-      console.warn("Unable to start ringtone:", error);
-      stopRingtone();
+      console.warn(`Unable to start tone ${src}:`, error);
+      stopTone(toneRef, playingRef);
     }
-  }, [stopRingtone]);
+  }, [stopTone]);
+
+  const startIncomingTone = useCallback(
+    () => startTone(incomingToneAudioRef, incomingTonePlayingRef, "/notifyy.mp3"),
+    [startTone],
+  );
+
+  const startOutgoingTone = useCallback(
+    () => startTone(outgoingToneAudioRef, outgoingTonePlayingRef, "/ringing.mp3"),
+    [startTone],
+  );
 
   const getLocalStream = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -45,7 +66,8 @@ export function useWebRTCCall(socket) {
   }, []);
 
   const cleanup = useCallback(() => {
-    stopRingtone();
+    stopIncomingTone();
+    stopOutgoingTone();
 
     if (peerConnectionRef.current) {
       try {
@@ -65,11 +87,26 @@ export function useWebRTCCall(socket) {
     setIncomingCall(null);
     setActiveCall(null);
     setCallState("idle");
-  }, [stopRingtone]);
+  }, [stopIncomingTone, stopOutgoingTone]);
 
   const createPeerConnection = useCallback(
     (iceServers) => {
       const pc = new RTCPeerConnection({ iceServers });
+
+      // Add these debug listeners
+  pc.oniceconnectionstatechange = () => {
+    console.log("ICE state:", pc.iceConnectionState);
+    // You want to see: checking → connected
+    // If you see: checking → failed/disconnected = TURN needed
+  };
+
+  pc.onicegatheringstate = () => {
+    console.log("ICE gathering:", pc.iceGatheringState);
+  };
+
+  pc.onconnectionstatechange = () => {
+    console.log("Connection state:", pc.connectionState);
+  };
 
       pc.onicecandidate = (event) => {
         if (!event.candidate) return;
@@ -103,7 +140,7 @@ export function useWebRTCCall(socket) {
       try {
         setCallState("calling");
         setActiveCall({ bookingId, targetId: receiverId, targetType: receiverType });
-        startRingtone();
+        startOutgoingTone();
 
         const stream = await getLocalStream();
         const pc = createPeerConnection(iceServers);
@@ -123,7 +160,7 @@ export function useWebRTCCall(socket) {
         cleanup();
       }
     },
-    [socket, createPeerConnection, getLocalStream, startRingtone, cleanup],
+    [socket, createPeerConnection, getLocalStream, startOutgoingTone, cleanup],
   );
 
   const answerCall = useCallback(async () => {
@@ -157,12 +194,12 @@ export function useWebRTCCall(socket) {
 
       setActiveCall({ bookingId, targetId: callerId, targetType: callerType });
       setCallState("active");
-      stopRingtone();
+      stopIncomingTone();
     } catch (error) {
       console.error("Failed to answer call:", error);
       setCallState("incoming");
     }
-  }, [incomingCall, createPeerConnection, getLocalStream, socket, stopRingtone]);
+  }, [incomingCall, createPeerConnection, getLocalStream, socket, stopIncomingTone]);
 
   const rejectCall = useCallback(() => {
     if (!incomingCall) return;
@@ -189,7 +226,7 @@ export function useWebRTCCall(socket) {
   const handleCallAnswered = useCallback(
     async ({ answer, fromId, fromType }) => {
       try {
-        stopRingtone();
+        stopOutgoingTone();
         setCallState("active");
 
         if (fromId && fromType) {
@@ -211,7 +248,7 @@ export function useWebRTCCall(socket) {
         console.error("Failed to set remote description:", error);
       }
     },
-    [incomingCall?.bookingId, stopRingtone],
+    [incomingCall?.bookingId, stopOutgoingTone],
   );
 
   useEffect(() => {
@@ -220,7 +257,7 @@ export function useWebRTCCall(socket) {
     const onIncomingCall = (data) => {
       setIncomingCall(data);
       setCallState("incoming");
-      startRingtone();
+      startIncomingTone();
     };
 
     const onAnswer = (payload) => {
@@ -256,7 +293,7 @@ export function useWebRTCCall(socket) {
       socket.off("call:rejected", cleanup);
       socket.off("call:ended");
     };
-  }, [socket, cleanup, handleCallAnswered, startRingtone]);
+  }, [socket, cleanup, handleCallAnswered, startIncomingTone]);
 
   return {
     callState,
