@@ -1,11 +1,7 @@
 import { MapPin, Clock, Star, MessageCircle, Copy, Check, PhoneCall } from "lucide-react";
 import { useState } from "react";
-<<<<<<< HEAD
 import { canMessage, canProviderCancel } from "../../utils/chat.utils";
-=======
-import { canMessage } from "../../utils/chat.utils";
 import { useCallContext } from "../shared/CallContext";
->>>>>>> 0fb823223982c7a172923bed38a7152db039dd13
 
 export default function JobsCard({
   job,
@@ -329,40 +325,35 @@ export default function JobsCard({
               </button>
             )}
 
-<<<<<<< HEAD
+            <button
+              onClick={() =>
+                callContext?.openCall?.({
+                  booking: job?.originalData || job,
+                  targetOverride: {
+                    targetId:
+                      job?.originalData?.userId?._id ||
+                      job?.originalData?.userId ||
+                      job?.userId?._id ||
+                      job?.userId,
+                    targetType: "buyer",
+                    targetName:
+                      job?.originalData?.userId?.fullName ||
+                      job?.originalData?.customerName ||
+                      "Customer",
+                  },
+                })
+              }
+              className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
+            >
+              <PhoneCall className="w-4 h-4" />
+              Call Customer
+            </button>
+
             {shouldShowCancelButton && (
               <button
                 onClick={() => onCancel?.(job)}
                 className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95"
               >
-=======
-                <button
-                  onClick={() =>
-                    callContext?.openCall?.({
-                      booking: job?.originalData || job,
-                      targetOverride: {
-                        targetId:
-                          job?.originalData?.userId?._id ||
-                          job?.originalData?.userId ||
-                          job?.userId?._id ||
-                          job?.userId,
-                        targetType: "buyer",
-                        targetName:
-                          job?.originalData?.userId?.fullName ||
-                          job?.originalData?.customerName ||
-                          "Customer",
-                      },
-                    })
-                  }
-                className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
-              >
-                <PhoneCall className="w-4 h-4" />
-                Call Customer
-              </button>
-
-            {normalizedStatus === "awaiting_payment" && (
-              <button className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95">
->>>>>>> 0fb823223982c7a172923bed38a7152db039dd13
                 Cancel
               </button>
             )}
