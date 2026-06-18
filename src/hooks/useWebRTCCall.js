@@ -8,6 +8,7 @@ export function useWebRTCCall(socket) {
   const peerConnectionRef = useRef(null);
   const localStreamRef = useRef(null);
   const remoteAudioRef = useRef(new Audio());
+  const remoteStreamRef = useRef(new MediaStream());
   const incomingToneAudioRef = useRef(null);
   const outgoingToneAudioRef = useRef(null);
   const incomingTonePlayingRef = useRef(false);
@@ -31,23 +32,26 @@ export function useWebRTCCall(socket) {
     [stopTone],
   );
 
-  const startTone = useCallback(async (toneRef, playingRef, src) => {
-    if (playingRef.current) return;
+  const startTone = useCallback(
+    async (toneRef, playingRef, src) => {
+      if (playingRef.current) return;
 
-    try {
-      if (!toneRef.current) {
-        toneRef.current = new Audio(src);
-        toneRef.current.loop = true;
-        toneRef.current.preload = "auto";
+      try {
+        if (!toneRef.current) {
+          toneRef.current = new Audio(src);
+          toneRef.current.loop = true;
+          toneRef.current.preload = "auto";
+        }
+
+        playingRef.current = true;
+        await toneRef.current.play();
+      } catch (error) {
+        console.warn(`Unable to start tone ${src}:`, error);
+        stopTone(toneRef, playingRef);
       }
-
-      playingRef.current = true;
-      await toneRef.current.play();
-    } catch (error) {
-      console.warn(`Unable to start tone ${src}:`, error);
-      stopTone(toneRef, playingRef);
-    }
-  }, [stopTone]);
+    },
+    [stopTone],
+  );
 
   const startIncomingTone = useCallback(
     () => startTone(incomingToneAudioRef, incomingTonePlayingRef, "/notifyy.mp3"),
@@ -84,6 +88,7 @@ export function useWebRTCCall(socket) {
     }
 
     remoteAudioRef.current.srcObject = null;
+    remoteStreamRef.current = new MediaStream();
     setIncomingCall(null);
     setActiveCall(null);
     setCallState("idle");
@@ -93,20 +98,22 @@ export function useWebRTCCall(socket) {
     (iceServers) => {
       const pc = new RTCPeerConnection({ iceServers });
 
-      // Add these debug listeners
-  pc.oniceconnectionstatechange = () => {
-    console.log("ICE state:", pc.iceConnectionState);
-    // You want to see: checking → connected
-    // If you see: checking → failed/disconnected = TURN needed
-  };
+      remoteStreamRef.current = new MediaStream();
+      remoteAudioRef.current.autoplay = true;
+      remoteAudioRef.current.playsInline = true;
+      remoteAudioRef.current.muted = false;
 
-  pc.onicegatheringstate = () => {
-    console.log("ICE gathering:", pc.iceGatheringState);
-  };
+      pc.oniceconnectionstatechange = () => {
+        console.log("ICE state:", pc.iceConnectionState);
+      };
 
-  pc.onconnectionstatechange = () => {
-    console.log("Connection state:", pc.connectionState);
-  };
+      pc.onicegatheringstatechange = () => {
+        console.log("ICE gathering:", pc.iceGatheringState);
+      };
+
+      pc.onconnectionstatechange = () => {
+        console.log("Connection state:", pc.connectionState);
+      };
 
       pc.onicecandidate = (event) => {
         if (!event.candidate) return;
@@ -123,7 +130,11 @@ export function useWebRTCCall(socket) {
       };
 
       pc.ontrack = (event) => {
-        remoteAudioRef.current.srcObject = event.streams[0];
+        if (event.track) {
+          remoteStreamRef.current.addTrack(event.track);
+        }
+
+        remoteAudioRef.current.srcObject = remoteStreamRef.current;
         remoteAudioRef.current.play().catch((error) => {
           console.warn("Remote audio playback failed:", error);
         });
@@ -144,6 +155,7 @@ export function useWebRTCCall(socket) {
 
         const stream = await getLocalStream();
         const pc = createPeerConnection(iceServers);
+
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
         const offer = await pc.createOffer();

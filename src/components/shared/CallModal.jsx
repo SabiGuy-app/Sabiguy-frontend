@@ -39,26 +39,37 @@ export function CallModal({ isOpen, onClose, socket, booking, currentUser, targe
         bookingData?.providerName ||
         "Provider");
   const bookingId = bookingData?._id || bookingData?.id;
+  const modalOpen =
+    isOpen ||
+    callState === "incoming" ||
+    callState === "calling" ||
+    callState === "active" ||
+    callState === "ended";
 
   useEffect(() => {
     const loadIceServers = async () => {
-      if (!isOpen || iceServers) return;
+      if (!modalOpen || iceServers) return;
 
       const token = localStorage.getItem("token");
       if (!token) return;
 
       try {
+        const apiBase = import.meta.env.VITE_BASE_URL;
+        console.log("[CallModal] loading ICE servers from:", `${apiBase}/api/v1/call/ice-servers`);
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/v1/call/ice-servers`,
+          `${apiBase}/api/v1/call/ice-servers`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
         const data = await response.json();
+        console.log("ICE response:", data);
+        console.log(
+          "TURN present:",
+          data?.iceServers?.some((s) => String(s.urls).includes("turn:")),
+        );
         setIceServers(data?.iceServers || []);
-
-          console.log("ICE servers:", iceServers); 
-
+        console.log("[CallModal] ICE servers stored");
       } catch (error) {
         console.error("Failed to load ICE servers:", error);
         setIceServers([]);
@@ -66,7 +77,7 @@ export function CallModal({ isOpen, onClose, socket, booking, currentUser, targe
     };
 
     loadIceServers();
-  }, [isOpen, iceServers]);
+  }, [modalOpen, iceServers]);
 
   const startCall = async () => {
     await initiateCall({
@@ -85,12 +96,6 @@ export function CallModal({ isOpen, onClose, socket, booking, currentUser, targe
     return `Call ${targetName}`;
   }, [callState, targetName]);
 
-  const modalOpen =
-    isOpen ||
-    callState === "incoming" ||
-    callState === "calling" ||
-    callState === "active" ||
-    callState === "ended";
   const canAnswer = !!incomingCall?.offer && !!incomingCall?.iceServers?.length;
 
   if (!modalOpen) return null;
