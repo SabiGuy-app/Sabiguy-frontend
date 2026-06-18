@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProviderNavbar from "../provider-dashboard/Navbar";
 import ProviderSidebar from "../dashboard/ProviderSideBar";
@@ -10,12 +10,19 @@ import useInactivityLogout, {
   PROVIDER_INACTIVITY_MS,
   PROVIDER_WARNING_GRACE_MS,
 } from "../../hooks/useInactivityLogout";
+import { CallContext } from "../shared/CallContext";
+import { CallModal } from "../shared/CallModal";
+import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 
 export default function ProviderDashboardLayout({ children }) {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const currentUser = useAuthStore((state) => state.user);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
+  const [callPayload, setCallPayload] = useState(null);
+  const [socket, setSocket] = useState(null);
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
   const onTimeoutLogout = useCallback(async () => {
@@ -35,45 +42,67 @@ export default function ProviderDashboardLayout({ children }) {
     onTimeout: onTimeoutLogout,
   });
 
+  useEffect(() => {
+    const sharedSocket = getSharedSocket();
+    if (sharedSocket) setSocket(sharedSocket);
+    return () => releaseSocket();
+  }, []);
+
+  const openCall = (payload) => {
+    setCallPayload(payload);
+    setCallOpen(true);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <ProviderNavbar onMenuClick={toggleSidebar} />
+    <CallContext.Provider value={{ openCall }}>
+      <div className="min-h-screen bg-gray-50">
+        <ProviderNavbar onMenuClick={toggleSidebar} />
 
-      <div className="flex min-h-screen bg-gray-50 pt-16 sm:pt-20">
-        {/* Overlay for mobile */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-30 md:hidden"
-            onClick={() => setSidebarOpen(false)}
+        <div className="flex min-h-screen bg-gray-50 pt-16 sm:pt-20">
+          {/* Overlay for mobile */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-30 md:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          <ProviderSidebar
+            open={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
           />
-        )}
-        <ProviderSidebar
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
-        <div className="flex-1 md:ml-64 flex flex-col w-full">
-          <main className="flex-1 min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] p-3 sm:p-6 w-full">
-            <div className="max-w-7xl mx-auto w-full">{children}</div>
-          </main>
+          <div className="flex-1 md:ml-64 flex flex-col w-full">
+            <main className="flex-1 min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] p-3 sm:p-6 w-full">
+              <div className="max-w-7xl mx-auto w-full">{children}</div>
+            </main>
+          </div>
         </div>
-      </div>
 
-      <Modal
-        isOpen={showWarning}
-        onClose={extendSession}
-        title="Are you still there?"
-      >
-        <p className="text-sm text-gray-600 text-center">
-          You have been inactive for 1 hour. You will be logged out soon if
-          there is no activity.
-        </p>
-        <div className="flex items-center justify-center gap-4 mt-6">
-          <Button variant="ghost" onClick={logoutNow}>
-            Log out now
-          </Button>
-          <Button onClick={extendSession}>Stay logged in</Button>
-        </div>
-      </Modal>
-    </div>
+        <CallModal
+          isOpen={callOpen}
+          onClose={() => setCallOpen(false)}
+          socket={socket}
+          booking={callPayload?.booking}
+          currentUser={currentUser}
+          targetOverride={callPayload?.targetOverride}
+        />
+
+        <Modal
+          isOpen={showWarning}
+          onClose={extendSession}
+          title="Are you still there?"
+        >
+          <p className="text-sm text-gray-600 text-center">
+            You have been inactive for 1 hour. You will be logged out soon if
+            there is no activity.
+          </p>
+          <div className="flex items-center justify-center gap-4 mt-6">
+            <Button variant="ghost" onClick={logoutNow}>
+              Log out now
+            </Button>
+            <Button onClick={extendSession}>Stay logged in</Button>
+          </div>
+        </Modal>
+      </div>
+    </CallContext.Provider>
   );
 }
