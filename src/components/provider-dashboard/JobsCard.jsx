@@ -1,6 +1,6 @@
 import { MapPin, Clock, Star, MessageCircle, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import { canMessage } from "../../utils/chat.utils";
+import { canMessage, canProviderCancel } from "../../utils/chat.utils";
 
 export default function JobsCard({
   job,
@@ -8,6 +8,7 @@ export default function JobsCard({
   onMarkAsCompleted,
   onShowNavigation,
   onMessageCustomer,
+  onCancel,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -93,6 +94,9 @@ export default function JobsCard({
     .replace(/\s+/g, "_");
   const shouldShowMessageButton =
     bookingStatus !== "funds_released" && canMessage(bookingStatus);
+  const shouldShowCancelButton = canProviderCancel(
+    job?.originalData?.status || job?.status,
+  );
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
@@ -319,8 +323,11 @@ export default function JobsCard({
               </button>
             )}
 
-            {normalizedStatus === "awaiting_payment" && (
-              <button className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95">
+            {shouldShowCancelButton && (
+              <button
+                onClick={() => onCancel?.(job)}
+                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95"
+              >
                 Cancel
               </button>
             )}
