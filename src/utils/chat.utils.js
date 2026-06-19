@@ -12,6 +12,11 @@ export const MESSAGING_ALLOWED_STATUSES = [
   "funds_released",
 ];
 
+export const PROVIDER_CANCEL_ALLOWED_STATUSES = [
+  "provider_selected",
+  "awaiting_payment",
+];
+
 /**
  * Normalizes a status string to lowercase underscored format.
  */
@@ -25,6 +30,10 @@ export const normalizeStatus = (status) => {
  */
 export const canMessage = (status) => {
   return MESSAGING_ALLOWED_STATUSES.includes(normalizeStatus(status));
+};
+
+export const canProviderCancel = (status) => {
+  return PROVIDER_CANCEL_ALLOWED_STATUSES.includes(normalizeStatus(status));
 };
 
 /**
