@@ -34,6 +34,47 @@ const STATUS_LABELS = {
 
 const POLL_INTERVAL_MS = 6000;
 
+function TrackRiderCallButton({
+  booking,
+  bookingDetails,
+  providerDetails,
+  selectedProviderId,
+}) {
+  const callContext = useCallContext();
+  const targetId =
+    bookingDetails?.providerId?._id ||
+    bookingDetails?.providerId ||
+    providerDetails?._id ||
+    selectedProviderId;
+
+  const handleCallProvider = () => {
+    if (!targetId) return;
+
+    callContext?.openCall?.({
+      booking: booking?.data?.booking || booking,
+      targetOverride: {
+        targetId,
+        targetType: "provider",
+        targetName:
+          providerDetails?.fullName ||
+          bookingDetails?.providerId?.fullName ||
+          "Provider",
+      },
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCallProvider}
+      disabled={!targetId}
+      className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <span className="text-sm font-medium text-gray-700">Call</span>
+    </button>
+  );
+}
+
 export default function TrackRider() {
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
     useState(true);
@@ -51,7 +92,6 @@ export default function TrackRider() {
   const selectedProviderId = useBookingStore(
     (state) => state.selectedProviderId,
   );
-  const callContext = useCallContext();
 
   // console.log(providerDetails);
 
@@ -379,29 +419,12 @@ export default function TrackRider() {
             </div>
 
             <div className="md:grid md:grid-cols-3 gap-6">
-              <button
-                type="button"
-                onClick={() =>
-                  callContext?.openCall?.({
-                    booking: booking?.data?.booking || booking,
-                    targetOverride: {
-                      targetId:
-                        bookingDetails?.providerId?._id ||
-                        bookingDetails?.providerId ||
-                        providerDetails?._id ||
-                        selectedProviderId,
-                      targetType: "provider",
-                      targetName:
-                        providerDetails?.fullName ||
-                        bookingDetails?.providerId?.fullName ||
-                        "Provider",
-                    },
-                  })
-                }
-                className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-sm font-medium text-gray-700">Call</span>
-              </button>
+              <TrackRiderCallButton
+                booking={booking}
+                bookingDetails={bookingDetails}
+                providerDetails={providerDetails}
+                selectedProviderId={selectedProviderId}
+              />
               {bookingStatus?.toLowerCase() !== "cancelled" && (
                 <button
                   onClick={handleMessageProvider}
