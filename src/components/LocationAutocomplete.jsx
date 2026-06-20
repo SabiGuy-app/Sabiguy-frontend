@@ -51,6 +51,7 @@ function loadGoogleMapsScript() {
 const LocationAutocomplete = ({
   value,
   onChange,
+  onSelect,
   onBlur,
   label,
   placeholder,
@@ -67,6 +68,7 @@ const LocationAutocomplete = ({
   const suggestionsRef = useRef(null);
   const debounceTimeoutRef = useRef(null);
   const autocompleteServiceRef = useRef(null);
+  const placesServiceRef = useRef(null);
 
   // Load Google Maps SDK on mount
   useEffect(() => {
@@ -78,6 +80,9 @@ const LocationAutocomplete = ({
     loadGoogleMapsScript()
       .then(() => {
         autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        placesServiceRef.current = new window.google.maps.places.PlacesService(
+          document.createElement("div"),
+        );
         setSdkReady(true);
       })
       .catch(() => {
@@ -124,10 +129,53 @@ const LocationAutocomplete = ({
     debounceTimeoutRef.current = setTimeout(() => fetchSuggestions(inputValue), 300);
   };
 
-  const handleSelectSuggestion = (suggestion) => {
+  const handleSelectSuggestion = async (suggestion) => {
     onChange(suggestion.description);
     setIsOpen(false);
     setSuggestions([]);
+
+    if (!placesServiceRef.current || !suggestion?.place_id) {
+      onSelect?.({
+        address: suggestion.description,
+        placeId: suggestion?.place_id || null,
+      });
+      return;
+    }
+
+    try {
+      const placeDetails = await new Promise((resolve, reject) => {
+        placesServiceRef.current.getDetails(
+          {
+            placeId: suggestion.place_id,
+            fields: ["formatted_address", "geometry", "place_id", "name"],
+          },
+          (place, status) => {
+            if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+              resolve(place);
+            } else {
+              reject(new Error(`Failed to load place details: ${status}`));
+            }
+          },
+        );
+      });
+
+      const location = placeDetails?.geometry?.location;
+      onSelect?.({
+        address: placeDetails?.formatted_address || suggestion.description,
+        displayAddress: suggestion.description,
+        latitude: typeof location?.lat === "function" ? location.lat() : undefined,
+        longitude: typeof location?.lng === "function" ? location.lng() : undefined,
+        placeId: placeDetails?.place_id || suggestion.place_id,
+        name: placeDetails?.name || suggestion.description,
+      });
+    } catch (error) {
+      console.error("Failed to load place details:", error);
+      onSelect?.({
+        address: suggestion.description,
+        displayAddress: suggestion.description,
+        placeId: suggestion.place_id,
+      });
+    }
   };
 
   // Close on outside click
