@@ -1,44 +1,66 @@
 import React, { useEffect } from "react";
 
-function Modal({ isOpen, onClose, title, children }) {
-  // Close on ESC key
+function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  showCloseButton = true,
+  overlayClassName = "",
+  panelClassName = "",
+  titleClassName = "",
+  contentClassName = "",
+}) {
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
+    if (!isOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
     };
+
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn"
+      className={
+        overlayClassName ||
+        "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn"
+      }
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bg-white rounded-2xl shadow-lg w-[90%] sm:w-[80%] md:w-[600px] max-h-[90vh] overflow-y-auto p-6 relative"
+        className={
+          panelClassName ||
+          "bg-white rounded-2xl shadow-lg w-[90%] sm:w-[80%] md:w-[600px] max-h-[90vh] overflow-y-auto p-6 relative"
+        }
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          aria-label="Close modal"
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl"
-        >
-          ✕
-        </button>
+        {showCloseButton && (
+          <button
+            onClick={onClose}
+            aria-label="Close modal"
+            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl"
+          >
+            x
+          </button>
+        )}
 
-        {/* Title */}
         {title && (
-          <h2 className="text-xl sm:text-2xl font-semibold text-center mb-4">
+          <h2
+            className={
+              titleClassName ||
+              "text-xl sm:text-2xl font-semibold text-center mb-4"
+            }
+          >
             {title}
           </h2>
         )}
 
-        {/* Content */}
-        <div className="text-gray-700">{children}</div>
+        <div className={contentClassName || "text-gray-700"}>{children}</div>
       </div>
     </div>
   );
