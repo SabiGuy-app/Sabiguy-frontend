@@ -20,6 +20,7 @@ import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { updateBookingStatus, markAsComplete } from "../../../../api/bookings";
 import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
+import { useCallContext } from "../../../../components/shared/CallContext";
 
 // Error Boundary for Map Component
 class MapErrorBoundary extends React.Component {
@@ -84,6 +85,45 @@ const STEPS_COMPLETED_BY_STATUS = {
   arrived_at_dropoff: [1, 2, 3, 4],
   completed: [1, 2, 3, 4, 5],
 };
+
+function TrackDeliveryCallButton({ booking, bookingDetails, alert, customer }) {
+  const callContext = useCallContext();
+  const targetId =
+    customer?._id ||
+    bookingDetails?.userId?._id ||
+    bookingDetails?.userId ||
+    alert?.originalData?.userId?._id ||
+    alert?.originalData?.userId;
+
+  const handleCallCustomer = () => {
+    if (!targetId) return;
+
+    callContext?.openCall?.({
+      booking: alert?.originalData || bookingDetails || booking,
+      targetOverride: {
+        targetId,
+        targetType: "buyer",
+        targetName:
+          customer?.fullName ||
+          bookingDetails?.userId?.fullName ||
+          alert?.originalData?.userId?.fullName ||
+          "Customer",
+      },
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCallCustomer}
+      disabled={!targetId}
+      className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <Phone className="w-5 h-5 text-gray-600" />
+      <span className="text-sm">Call</span>
+    </button>
+  );
+}
 
 export default function TrackDelivery() {
   const routeLocation = useLocation();
@@ -504,10 +544,12 @@ export default function TrackDelivery() {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-                <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95">
-                  <Phone className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm">Call</span>
-                </button>
+                <TrackDeliveryCallButton
+                  booking={booking}
+                  bookingDetails={bookingDetails}
+                  alert={alert}
+                  customer={customer}
+                />
                 {bookingStatus?.toLowerCase() !== "cancelled" && (
                   <button
                     onClick={handleMessageCustomer}
