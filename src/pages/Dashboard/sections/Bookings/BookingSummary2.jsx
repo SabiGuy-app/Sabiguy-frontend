@@ -20,7 +20,7 @@ import { initializePayment, payWithWallet } from "../../../../api/payment";
 import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
 import { getWalletBalance } from "../../../../api/provider";
 import { useSearchParams } from "react-router-dom";
-import CancelModal from "../../../../components/CancelModal";
+import UserCancellationModal from "../../../../components/UserCancellationModal";
 
 export default function BookingSummary2() {
   const [selectedPayment, setSelectedPayment] = useState("wallet");
@@ -33,7 +33,6 @@ export default function BookingSummary2() {
   const [isPaid, setIsPaid] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -138,19 +137,13 @@ export default function BookingSummary2() {
     }).format(amount);
   };
 
-  const handleCancel = async (reason) => {
-    setCancelLoading(true);
-    try {
-      await cancelBooking(bookingDetails._id, reason);
-      setCancelModalOpen(false);
-      toast.success("Booking cancelled successfully.");
-      navigate("/bookings");
-    } catch (err) {
-      console.error("Failed to cancel booking:", err);
-      toast.error(err.response?.data?.message || "Failed to cancel booking.");
-    } finally {
-      setCancelLoading(false);
-    }
+  const handleCancelSubmit = async (reason) => {
+    await cancelBooking(bookingDetails._id, reason);
+  };
+
+  const handleCancelComplete = () => {
+    toast.success("Booking cancelled successfully.");
+    navigate("/bookings");
   };
 
   const handleConfirmAndPay = async () => {
@@ -328,11 +321,11 @@ export default function BookingSummary2() {
 
   return (
     <DashboardLayout>
-      <CancelModal
+      <UserCancellationModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
-        onConfirm={handleCancel}
-        loading={cancelLoading}
+        onSubmit={handleCancelSubmit}
+        onComplete={handleCancelComplete}
       />
 
       <div className="w-full px-3 sm:px-4 md:px-[5%]">
@@ -466,10 +459,7 @@ export default function BookingSummary2() {
 
               {/* Action Buttons */}
               <div className="text-center md:grid md:grid-cols-2 gap-5">
-                <button className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <PhoneCall className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-700">Call</span>
-                </button>
+                
                 {bookingDetails?.status?.toLowerCase() !== "cancelled" && (
                   <button
                     onClick={() => {
@@ -562,10 +552,10 @@ export default function BookingSummary2() {
                     <span>Price per Minute</span>
                     <span>{formatCurrency(perMinuteRate)}</span>
                   </div>
-                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                  {/* <div className="flex justify-between text-sm font-medium text-gray-600">
                     <span>Price per KM</span>
                     <span>{formatCurrency(perKmRate)}</span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between text-sm font-medium text-gray-600">
                     <span>Subtotal</span>
                     <span>{formatCurrency(serviceCost)}</span>

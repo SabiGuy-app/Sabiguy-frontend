@@ -12,7 +12,7 @@ import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import useBookingStore from "../../../../stores/booking.store";
 import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
-import CancelModal from "../../../../components/CancelModal";
+import UserCancellationModal from "../../../../components/UserCancellationModal";
 import { toast } from "react-hot-toast";
 import { useCallContext } from "../../../../components/shared/CallContext";
 
@@ -34,12 +34,52 @@ const STATUS_LABELS = {
 
 const POLL_INTERVAL_MS = 6000;
 
+function TrackRiderCallButton({
+  booking,
+  bookingDetails,
+  providerDetails,
+  selectedProviderId,
+}) {
+  const callContext = useCallContext();
+  const targetId =
+    bookingDetails?.providerId?._id ||
+    bookingDetails?.providerId ||
+    providerDetails?._id ||
+    selectedProviderId;
+
+  const handleCallProvider = () => {
+    if (!targetId) return;
+
+    callContext?.openCall?.({
+      booking: booking?.data?.booking || booking,
+      targetOverride: {
+        targetId,
+        targetType: "provider",
+        targetName:
+          providerDetails?.fullName ||
+          bookingDetails?.providerId?.fullName ||
+          "Provider",
+      },
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCallProvider}
+      disabled={!targetId}
+      className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <span className="text-sm font-medium text-gray-700">Call</span>
+    </button>
+  );
+}
+
 export default function TrackRider() {
   const [isDeliveryStatusExpanded, setIsDeliveryStatusExpanded] =
     useState(true);
   const [bookingStatus, setBookingStatus] = useState("in_progress");
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
   const [riderLocation, setRiderLocation] = useState(null); // Rider/provider location
   const [providerDetails, setProviderDetails] = useState({});
 
@@ -51,7 +91,6 @@ export default function TrackRider() {
   const selectedProviderId = useBookingStore(
     (state) => state.selectedProviderId,
   );
-  const callContext = useCallContext();
 
   // console.log(providerDetails);
 
@@ -283,19 +322,13 @@ export default function TrackRider() {
       ? bookARideSteps
       : packageDeliverySteps;
 
-  const handleCancel = async (reason) => {
-    setCancelLoading(true);
-    try {
-      await cancelBooking(bookingDetails._id, reason);
-      setCancelModalOpen(false);
-      toast.success("Booking cancelled successfully.");
-      navigate("/bookings");
-    } catch (err) {
-      console.error("Failed to cancel booking:", err);
-      toast.error(err.response?.data?.message || "Failed to cancel booking.");
-    } finally {
-      setCancelLoading(false);
-    }
+  const handleCancelSubmit = async (reason) => {
+    await cancelBooking(bookingDetails._id, reason);
+  };
+
+  const handleCancelComplete = () => {
+    toast.success("Booking cancelled successfully.");
+    navigate("/bookings");
   };
 
   const handleMessageProvider = () => {
@@ -310,11 +343,11 @@ export default function TrackRider() {
 
   return (
     <DashboardLayout>
-      <CancelModal
+      <UserCancellationModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
-        onConfirm={handleCancel}
-        loading={cancelLoading}
+        onSubmit={handleCancelSubmit}
+        onComplete={handleCancelComplete}
       />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:grid md:grid-cols-2 md:gap-10 space-y-8">
         <div>
@@ -379,29 +412,12 @@ export default function TrackRider() {
             </div>
 
             <div className="md:grid md:grid-cols-3 gap-6">
-              <button
-                type="button"
-                onClick={() =>
-                  callContext?.openCall?.({
-                    booking: booking?.data?.booking || booking,
-                    targetOverride: {
-                      targetId:
-                        bookingDetails?.providerId?._id ||
-                        bookingDetails?.providerId ||
-                        providerDetails?._id ||
-                        selectedProviderId,
-                      targetType: "provider",
-                      targetName:
-                        providerDetails?.fullName ||
-                        bookingDetails?.providerId?.fullName ||
-                        "Provider",
-                    },
-                  })
-                }
-                className="md:flex-1 flex items-center w-full justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-sm font-medium text-gray-700">Call</span>
-              </button>
+              <TrackRiderCallButton
+                booking={booking}
+                bookingDetails={bookingDetails}
+                providerDetails={providerDetails}
+                selectedProviderId={selectedProviderId}
+              />
               {bookingStatus?.toLowerCase() !== "cancelled" && (
                 <button
                   onClick={handleMessageProvider}
