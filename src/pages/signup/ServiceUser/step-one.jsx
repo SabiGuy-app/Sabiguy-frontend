@@ -229,6 +229,30 @@ export default function StepOne({ onNext }) {
           <p className="text-gray-500 text-center mb-6">
             Please enter your details and let's get you started
           </p>
+          <p className="mb-5 text-center text-sm text-gray-600">
+            By signing up, you agree to our{" "}
+            <Link
+              to="/policies/terms"
+              className="font-medium text-[#005823BF] underline"
+            >
+              Terms of Use
+            </Link>
+            ,{" "}
+            <Link
+              to="/policies/privacy"
+              className="font-medium text-[#005823BF] underline"
+            >
+              Privacy Policy
+            </Link>
+            , and{" "}
+            <Link
+              to="/policies"
+              className="font-medium text-[#005823BF] underline"
+            >
+              related policies
+            </Link>
+            .
+          </p>
 
           <Formik
             initialValues={{
@@ -398,13 +422,27 @@ export default function StepOne({ onNext }) {
                     />
                     <label htmlFor="terms" className="text-sm text-gray-600">
                       I agree to the{" "}
-                      <a href="#" className="text-[#005823BF] font-medium">
+                      <Link
+                        to="/policies/privacy"
+                        className="text-[#005823BF] font-medium"
+                      >
                         Privacy Policy
-                      </a>{" "}
-                      and{" "}
-                      <a href="#" className="text-[#005823BF] font-medium">
-                        Terms of Services
-                      </a>
+                      </Link>
+                      ,{" "}
+                      <Link
+                        to="/policies/terms"
+                        className="text-[#005823BF] font-medium"
+                      >
+                        Terms of Use
+                      </Link>
+                      , and{" "}
+                      <Link
+                        to="/policies"
+                        className="text-[#005823BF] font-medium"
+                      >
+                        related policies
+                      </Link>
+                      .
                     </label>
                   </div>
                   {termError && (
