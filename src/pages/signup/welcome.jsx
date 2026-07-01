@@ -25,31 +25,6 @@ export default function Welcome() {
           <p className="text-gray-500 text-center mb-6">
             Choose how you want to get started.
           </p>
-          <p className="text-center text-sm text-gray-600">
-            By signing up, you agree to our{" "}
-            <Link
-              to="/policies/terms"
-              className="font-medium text-[#005823] underline"
-            >
-              Terms of Use
-            </Link>
-            ,{" "}
-            <Link
-              to="/policies/privacy"
-              className="font-medium text-[#005823] underline"
-            >
-              Privacy Policy
-            </Link>
-            , and{" "}
-            <Link
-              to="/policies"
-              className="font-medium text-[#005823] underline"
-            >
-              related policies
-            </Link>
-            .
-          </p>
-
           <div className="p-6 flex flex-col items-center justify-center space-y-6">
             {/* Card 1 */}
             <Link to="/signup" className="block w-full max-w-md">

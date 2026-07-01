@@ -226,31 +226,6 @@ export default function StepOne({ onNext, email }) {
           <h2 className="text-2xl font-semibold text-center mt-7 mb-1">
             Please enter your details{" "}
           </h2>
-          <p className="mb-5 text-center text-sm text-gray-600">
-            By signing up, you agree to our{" "}
-            <Link
-              to="/policies/terms"
-              className="font-medium text-[#005823BF] underline"
-            >
-              Terms of Use
-            </Link>
-            ,{" "}
-            <Link
-              to="/policies/privacy"
-              className="font-medium text-[#005823BF] underline"
-            >
-              Privacy Policy
-            </Link>
-            , and{" "}
-            <Link
-              to="/policies"
-              className="font-medium text-[#005823BF] underline"
-            >
-              related policies
-            </Link>
-            .
-          </p>
-
           <Formik
             initialValues={{
               fullName: "",
