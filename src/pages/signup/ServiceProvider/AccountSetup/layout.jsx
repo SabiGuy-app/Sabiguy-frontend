@@ -5,7 +5,7 @@ export default function AccountSetupLayout({ currentStep, children }) {
   const steps = [
     "Account Type",       
     "Personal Info",
-    // 'Face Capture',
+    'Face Capture',
     "Verification",
     // "Upload Automobile",
     // "Bank Account",
