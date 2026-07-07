@@ -214,7 +214,7 @@ export default function StepOne({ onNext, email }) {
       <Navbar />
       <AuthLayout
         title="Let's Get Started!"
-        description="Sign up, get verified, and get a 5% credit bonus on every ride!"
+        description="Join us to connect customers with your services anytime, anywhere."
       >
         <MotionDiv
           key="step-one"

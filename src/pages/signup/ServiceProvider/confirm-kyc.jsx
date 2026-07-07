@@ -77,7 +77,7 @@ export default function ConfirmKyc({ onNext }) {
       <Navbar/>
       <AuthLayout
         title="Let's Get Started!"
-        description="Join us to discover reliable professionals anytime, anywhere."
+        description="Join us to connect customers with your services anytime, anywhere."
       >
         <motion.div
           key="step-two"

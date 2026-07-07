@@ -13,7 +13,7 @@ export default function FacialCapture({ onNext, onBack }) {
   // const handleBack = () => navigate(-1);
 
   return (
-    <AccountSetupLayout currentStep={1}>
+    <AccountSetupLayout currentStep={2}>
       <div className="w-full flex flex-col items-center">
         {/* Back Button */}
         <div
