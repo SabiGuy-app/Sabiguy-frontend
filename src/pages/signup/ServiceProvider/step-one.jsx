@@ -226,7 +226,6 @@ export default function StepOne({ onNext, email }) {
           <h2 className="text-2xl font-semibold text-center mt-7 mb-1">
             Please enter your details{" "}
           </h2>
-
           <Formik
             initialValues={{
               fullName: "",
@@ -345,13 +344,27 @@ export default function StepOne({ onNext, email }) {
                       className="text-sm text-gray-600"
                     >
                       I agree to the{" "}
-                      <a href="#" className="text-[#005823BF] font-medium">
+                      <Link
+                        to="/policies/privacy"
+                        className="text-[#005823BF] font-medium"
+                      >
                         Privacy Policy
-                      </a>{" "}
-                      and{" "}
-                      <a href="#" className="text-[#005823BF] font-medium">
-                        Terms of Services
-                      </a>
+                      </Link>
+                      ,{" "}
+                      <Link
+                        to="/policies/terms"
+                        className="text-[#005823BF] font-medium"
+                      >
+                        Terms of Use
+                      </Link>
+                      , and{" "}
+                      <Link
+                        to="/policies"
+                        className="text-[#005823BF] font-medium"
+                      >
+                        related policies
+                      </Link>
+                      .
                     </label>
                   </div>
                   {termError && (

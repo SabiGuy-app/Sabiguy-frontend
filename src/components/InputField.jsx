@@ -77,7 +77,7 @@ export default function InputField({
 
   return (
     <div className={`flex flex-col gap-1 ${widthClass}`}>
-      {label && <label className="text-[16px] font-medium">{label}</label>}
+      {label && <label className="text-[16px] text-[#231F20] font-medium">{label}</label>}
 
       {select ? (
         <Listbox
