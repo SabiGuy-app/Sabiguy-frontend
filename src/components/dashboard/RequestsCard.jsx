@@ -365,7 +365,6 @@ export default function RequestCard({
               )}
 
               {[
-                "provider selected",
                 "in progress",
                 "enroute to pickup",
                 "arrived at pickup",
@@ -383,7 +382,6 @@ export default function RequestCard({
               )}
 
               {[
-                "provider selected",
                 "paid escrow",
                 "enroute to pickup",
                 "arrived at pickup",
@@ -400,7 +398,6 @@ export default function RequestCard({
               )}
 
               {[ 
-                "provider selected",
                 "paid escrow",
                 "enroute to pickup",
                 "arrived at pickup",

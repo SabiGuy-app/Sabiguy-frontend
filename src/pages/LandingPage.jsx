@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import LandingFooter from "../components/LandingFooter";
+import LandingChatbotWidget from "../components/LandingChatbotWidget";
 import {
   fadeInUp,
   fadeInDown,
@@ -801,6 +802,7 @@ const LandingPage = () => {
       </section>
 
       <LandingFooter />
+      <LandingChatbotWidget />
     </div>
   );
 };

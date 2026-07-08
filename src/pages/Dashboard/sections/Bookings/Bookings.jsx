@@ -103,12 +103,40 @@ export default function Bookings() {
     localStorage.getItem("currentLocationAddress") || "";
   const hasCurrentLocation = !!currentLocationValue;
 
+  const geocodeAddress = async (address) => {
+    if (!address || !window.google?.maps?.Geocoder) return null;
+
+    const geocoder = new window.google.maps.Geocoder();
+    const result = await new Promise((resolve, reject) => {
+      geocoder.geocode(
+        { address, componentRestrictions: { country: "NG" } },
+        (results, status) => {
+          if (status === "OK" && results?.[0]) {
+            resolve(results[0]);
+          } else {
+            reject(new Error(`Geocoding failed: ${status}`));
+          }
+        },
+      );
+    });
+
+    const location = result?.geometry?.location;
+    return {
+      latitude: typeof location?.lat === "function" ? location.lat() : "",
+      longitude: typeof location?.lng === "function" ? location.lng() : "",
+    };
+  };
+
   const formik = useFormik({
     initialValues: {
       jobTitle: "transport",
       service: preselectedService,
       pickupAddress: "",
+      pickupLatitude: "",
+      pickupLongitude: "",
       dropoffAddress: "",
+      dropoffLatitude: "",
+      dropoffLongitude: "",
       serviceType: "",
       scheduleDate: "",
       scheduleTime: "",
@@ -149,11 +177,33 @@ export default function Bookings() {
       setLoading(true);
 
       try {
+        const pickupCoords =
+          values.pickupLatitude && values.pickupLongitude
+            ? {
+                address: values.pickupAddress,
+                latitude: values.pickupLatitude,
+                longitude: values.pickupLongitude,
+              }
+            : await geocodeAddress(values.pickupAddress);
+
+        const dropoffCoords =
+          values.dropoffLatitude && values.dropoffLongitude
+            ? {
+                address: values.dropoffAddress,
+                latitude: values.dropoffLatitude,
+                longitude: values.dropoffLongitude,
+              }
+            : await geocodeAddress(values.dropoffAddress);
+
         const payload = {
           serviceType: values.jobTitle,
           subCategory: values.service,
           pickupAddress: values.pickupAddress,
+          pickupLatitude: pickupCoords?.latitude || values.pickupLatitude || undefined,
+          pickupLongitude: pickupCoords?.longitude || values.pickupLongitude || undefined,
           dropoffAddress: values.dropoffAddress,
+          dropoffLatitude: dropoffCoords?.latitude || values.dropoffLatitude || undefined,
+          dropoffLongitude: dropoffCoords?.longitude || values.dropoffLongitude || undefined,
           scheduleType: values.serviceType,
           // vehicle: values.modeOfDelivery,
           modeOfDelivery: values.modeOfDelivery,
@@ -409,6 +459,21 @@ export default function Bookings() {
     setPickupMode(mode);
     if (mode === "current") {
       formik.setFieldValue("pickupAddress", currentLocationValue);
+      formik.setFieldValue("pickupLatitude", "");
+      formik.setFieldValue("pickupLongitude", "");
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            formik.setFieldValue("pickupLatitude", position.coords.latitude);
+            formik.setFieldValue("pickupLongitude", position.coords.longitude);
+          },
+          (error) => {
+            console.warn("Geolocation failed:", error);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        );
+      }
     }
   };
 
@@ -560,7 +625,7 @@ export default function Bookings() {
                   </button>
                 </div>
                 {pickupMode === "current" ? (
-                  <InputField
+                <InputField
                     name="pickupAddress"
                     label="Pickup location"
                     placeholder="24 Palm Avenue, Lagos"
@@ -575,7 +640,21 @@ export default function Bookings() {
                     placeholder="24 Palm Avenue, Lagos"
                     value={formik.values.pickupAddress}
                     onChange={(value) =>
-                      formik.setFieldValue("pickupAddress", value)
+                      {
+                        formik.setFieldValue("pickupAddress", value);
+                        formik.setFieldValue("pickupLatitude", "");
+                        formik.setFieldValue("pickupLongitude", "");
+                      }
+                    }
+                    onSelect={(location) =>
+                      {
+                        formik.setFieldValue(
+                          "pickupAddress",
+                          location.displayAddress || location.address || "",
+                        );
+                        formik.setFieldValue("pickupLatitude", location.latitude || "");
+                        formik.setFieldValue("pickupLongitude", location.longitude || "");
+                      }
                     }
                     onBlur={() => formik.setFieldTouched("pickupAddress", true)}
                   />
@@ -594,7 +673,21 @@ export default function Bookings() {
                   placeholder="24 Palm Avenue, Lagos"
                   value={formik.values.dropoffAddress}
                   onChange={(value) =>
-                    formik.setFieldValue("dropoffAddress", value)
+                    {
+                      formik.setFieldValue("dropoffAddress", value);
+                      formik.setFieldValue("dropoffLatitude", "");
+                      formik.setFieldValue("dropoffLongitude", "");
+                    }
+                  }
+                  onSelect={(location) =>
+                    {
+                      formik.setFieldValue(
+                        "dropoffAddress",
+                        location.displayAddress || location.address || "",
+                      );
+                      formik.setFieldValue("dropoffLatitude", location.latitude || "");
+                      formik.setFieldValue("dropoffLongitude", location.longitude || "");
+                    }
                   }
                   onBlur={() => formik.setFieldTouched("dropoffAddress", true)}
                 />
