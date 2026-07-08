@@ -214,7 +214,8 @@ export default function StepOne({ onNext }) {
       <Navbar />
       <AuthLayout
         title="Let's Get Started!"
-        description="Sign up and get up to ₦500 off your rides!"
+        // description="Sign up and get up to ₦500 off your rides!"
+        description= "Join us to discover reliable professionals anytime, anywhere."
       >
         <MotionDiv
           key="step-one"
@@ -229,7 +230,6 @@ export default function StepOne({ onNext }) {
           <p className="text-gray-500 text-center mb-6">
             Please enter your details and let's get you started
           </p>
-
           <Formik
             initialValues={{
               fullName: "",
@@ -398,13 +398,27 @@ export default function StepOne({ onNext }) {
                     />
                     <label htmlFor="terms" className="text-sm text-gray-600">
                       I agree to the{" "}
-                      <a href="#" className="text-[#005823BF] font-medium">
+                      <Link
+                        to="/policies/privacy"
+                        className="text-[#005823BF] font-medium"
+                      >
                         Privacy Policy
-                      </a>{" "}
-                      and{" "}
-                      <a href="#" className="text-[#005823BF] font-medium">
-                        Terms of Services
-                      </a>
+                      </Link>
+                      ,{" "}
+                      <Link
+                        to="/policies/terms"
+                        className="text-[#005823BF] font-medium"
+                      >
+                        Terms of Use
+                      </Link>
+                      , and{" "}
+                      <Link
+                        to="/policies"
+                        className="text-[#005823BF] font-medium"
+                      >
+                        related policies
+                      </Link>
+                      .
                     </label>
                   </div>
                   {termError && (

@@ -3,6 +3,7 @@ import { IoIosAdd } from "react-icons/io";
 import InputField from "../../../../../components/InputField";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { vehicleTypes } from "./jobData";
 
 export function DriverInfoSection({
   values,
@@ -10,77 +11,84 @@ export function DriverInfoSection({
   handleBlur,
   setFieldValue,
 }) {
-  const handleColorChange = (e) => {
-    const lettersOnly = e.target.value.replace(/[^a-zA-Z\s]/g, "");
-    setFieldValue("vehicleColor", lettersOnly);
-  };
-
-  const handleYearChange = (date) => {
-    if (date) {
-      setFieldValue("vehicleProductionYear", date.getFullYear().toString());
-    }
-  };
-
-  const selectedYear = values?.vehicleProductionYear
-    ? new Date(values.vehicleProductionYear, 0, 1)
-    : null;
+  const isCarDriver = values.vehicleType === "car_driver";
+  const isBikeRider = values.vehicleType === "motorbike_rider";
+  const hasVehicleType = isCarDriver || isBikeRider;
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-semibold mb-2">Driver Information</h2>
-      <p className="text-gray-500 mb-3">
-        Your driver's / rider's license will be kept private
-      </p>
       <InputField
-        placeholder="Driver's or Rider's license number"
-        name="driverLicenseNumber"
-        value={values?.driverLicenseNumber || ""}
-        onChange={handleChange}
-        onBlur={handleBlur}
+        label="Vehicle Type"
+        select
+        options={vehicleTypes}
+        value={values.vehicleType}
+        onChange={(option) => {
+          setFieldValue("vehicleType", option.value);
+          // Reset vehicle-specific fields when type changes
+          setFieldValue("driverLicenseNumber", "");
+          setFieldValue("vehicleName", "");
+          setFieldValue("vehicleProductionYear", "");
+          setFieldValue("vehicleRegNo", "");
+          setFieldValue("vehiclePictures", []);
+        }}
+        placeholder="Select vehicle type"
       />
 
-      {/* <h6 className="text-xl font-semibold mt-5">Automobile Information</h6> */}
-      {/* <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Automobile Production Year
-        </label>
-        <DatePicker
-          selected={selectedYear}
-          onChange={handleYearChange}
-          showYearPicker
-          dateFormat="yyyy"
-          minDate={new Date(1999, 0, 1)}
-          maxDate={new Date(2026, 0, 1)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53FBF] focus:border-[#8BC53FBF]"
-          placeholderText="Select year"
-          onBlur={handleBlur}
-        />
-      </div> */}
+      {/* ── Car Driver Fields ── */}
+      {isCarDriver && (
+        <>
+          <InputField
+            label="Driver's Licence Number"
+            name="driverLicenseNumber"
+            value={values?.driverLicenseNumber || ""}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="Enter driver's licence number"
+          />
 
-       <InputField
-        label="Automobile Name"
-        name="vehicleName"
-        value={values?.vehicleName || ""}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        placeholder="Automobile Name"
-      />
-      {/* <InputField
-        label="Automobile Registration Number"
-        name="vehicleRegNo"
-        value={values?.vehicleRegNo || ""}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        placeholder="Automobile Registration Number"
-      /> */} 
-      <InputField
-        label="Automobile Color"
-        name="vehicleColor"
-        value={values?.vehicleColor || ""}
-        onChange={handleColorChange}
-        onBlur={handleBlur}
-        placeholder="Automobile Color"
-      /> 
+          <InputField
+            label="Vehicle Name"
+            name="vehicleName"
+            value={values?.vehicleName || ""}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="e.g. Toyota Corolla"
+          />
+
+          <InputField
+            label="Vehicle Production Year"
+            name="vehicleProductionYear"
+            type="number"
+            value={values?.vehicleProductionYear || ""}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="e.g. 2019"
+          />
+
+          <InputField
+            label="License Plate Number"
+            name="vehicleRegNo"
+            value={values?.vehicleRegNo || ""}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="e.g. KSF-2843QR"
+          />
+        </>
+      )}
+
+      {/* ── Motorbike Rider Fields ── */}
+      {isBikeRider && (
+        <>
+          <InputField
+            label="Plate Number"
+            name="vehicleRegNo"
+            value={values?.vehicleRegNo || ""}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="e.g. KSF-2843QR"
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -127,7 +127,8 @@ const PolicyPage = () => {
         </ul>
 
         <h2 className="text-xl font-bold py-2 text-black">Device and Technical Information</h2>
-        <ul className="list-disc list-inside mt-2 space-y-1 px-7">
+        <ul className="list-disc list-inside mt-2 space-y-1 px-8">
+        <li>IP address</li>
         <li>IP address</li>
         <li>Browser type</li>
         <li>Device type</li>

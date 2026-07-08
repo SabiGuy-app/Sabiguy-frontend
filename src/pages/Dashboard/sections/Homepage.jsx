@@ -219,7 +219,7 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      <section
+      {/* <section
         aria-label="Ride booking promotion"
         className="mb-7 mt-2 overflow-hidden rounded-2xl border border-[#7BCB8C] bg-[#E7F6EC] px-4 py-5 shadow-sm sm:px-6 md:px-8"
       >
@@ -251,7 +251,7 @@ export default function DashboardHome() {
             />
           </div>
         </div>
-      </section>
+      </section> */}
 
       <div id="service-cards">
         <CategoryCarousel

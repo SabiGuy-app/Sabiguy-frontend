@@ -25,7 +25,6 @@ export default function Welcome() {
           <p className="text-gray-500 text-center mb-6">
             Choose how you want to get started.
           </p>
-
           <div className="p-6 flex flex-col items-center justify-center space-y-6">
             {/* Card 1 */}
             <Link to="/signup" className="block w-full max-w-md">

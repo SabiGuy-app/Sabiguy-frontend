@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 
 export default function AccountSetupLayout({ currentStep, children }) {
   const steps = [
+    "Account Type",       
     "Personal Info",
-    "Account Type",
     'Face Capture',
-    "Skill Verification",
-    "Upload Automobile",
+    "Verification",
+    // "Upload Automobile",
     // "Bank Account",
   ];
 

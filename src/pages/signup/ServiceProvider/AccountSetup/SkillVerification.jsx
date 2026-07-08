@@ -10,6 +10,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { trackEvent } from "../../../../services/analytics";
+import { useRef } from "react";
+import { LuUpload, LuFileCheck, LuX } from "react-icons/lu";
 
 export default function SkillsVerification({ onNext, onBack }) {
   const [selectedJobTitle, setSelectedJobTitle] = useState("");
@@ -20,6 +22,10 @@ export default function SkillsVerification({ onNext, onBack }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [workPictures, setWorkPictures] = useState([]);
+  const [uploadingVisuals, setUploadingVisuals] = useState(false);
+
+  const pictureInputRef = useRef(null);
 
   const serviceOptions = selectedJobTitle
     ? allServices[selectedJobTitle] || []
@@ -28,6 +34,51 @@ export default function SkillsVerification({ onNext, onBack }) {
   const SelectedSection = jobSections[selectedJobTitle];
 
   const token = localStorage.getItem("token");
+  const email = localStorage.getItem("email");
+
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/file/${email}/work_visuals`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    return response.data.file.url;
+  };
+
+  const handleWorkPicturesChange = async (files) => {
+    const newFiles = Array.from(files);
+    setUploadingVisuals(true);
+    setErrorMessage("");
+    try {
+      const uploaded = await Promise.all(
+        newFiles.map(async (file) => {
+          const url = await uploadFile(file);
+          // console.log("URL", url);
+          return { file, url };
+        }),
+      );
+      setWorkPictures((prev) => [...prev, ...uploaded]);
+    } catch (err) {
+      setErrorMessage(
+        err.response?.data?.message ||
+          "Failed to upload picture(s). Please try again.",
+      );
+    } finally {
+      setUploadingVisuals(false);
+    }
+  };
+
+  const removeWorkPicture = (index) =>
+    setWorkPictures((prev) => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -70,6 +121,11 @@ export default function SkillsVerification({ onNext, onBack }) {
           },
         ],
         ...dynamicFields,
+        workVisuals: [
+          {
+            pictures: workPictures.map((p) => p.url),
+          },
+        ],
 
         service: services.map((s) => ({
           serviceName: s.name,
@@ -151,7 +207,13 @@ export default function SkillsVerification({ onNext, onBack }) {
           <IoIosArrowBack size={24} />
           <h2 className="text-lg">Back</h2>
         </div>
-        <h2 className="text-xl font-semibold mb-2">Verify your skill</h2>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold mb-2">Verify your skill</h2>
+          <p className="text-[#231F20BF]">
+            Complete your verification to build trust with customers and access
+            more features.
+          </p>
+        </div>
         <Formik
           initialValues={{
             service: "",
@@ -180,6 +242,12 @@ export default function SkillsVerification({ onNext, onBack }) {
             // Freelance fields
             portfolioUrl: "",
             freelanceExperience: "",
+
+            // Transport fields
+            vehicleTypes: "",
+            vehicleModel: "",
+            vehicleRegNo: "",
+            vehiclePictures: [],
           }}
           onSubmit={handleSubmit}
         >
@@ -191,15 +259,31 @@ export default function SkillsVerification({ onNext, onBack }) {
             setFieldValue,
           }) => {
             const isFormComplete = (() => {
-              if (!values.title || !values.service) return false;
+              if (!values.title) return false;
               if (selectedJobTitle === "transport") {
-                return (
-                  values.driverLicenseNumber &&
-                  values.vehicleColor &&
-                  values.vehicleName 
-                  // values.vehicleRegNo &&
-                  // values.vehicleProductionYear
-                );
+                const isCarDriver = values.vehicleType === "car_driver";
+                const isBikeRider = values.vehicleType === "motorbike_rider";
+
+                if (isCarDriver) {
+                  return (
+                    values.vehicleType &&
+                    values.driverLicenseNumber &&
+                    values.vehicleName &&
+                    values.vehicleProductionYear &&
+                    values.vehicleRegNo &&
+                    workPictures.length >= 2
+                  );
+                }
+
+                if (isBikeRider) {
+                  return (
+                    values.vehicleType &&
+                    values.vehicleRegNo &&
+                    workPictures.length >= 2
+                  );
+                }
+
+                return false;
               }
               if (selectedJobTitle === "domestic") {
                 return (
@@ -223,44 +307,118 @@ export default function SkillsVerification({ onNext, onBack }) {
               return false;
             })();
 
+            console.log(values);
+
             return (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-9">
-              <InputField
-                select
-                options={jobTitles}
-                value={values.title}
-                placeholder="Select Category"
-                onChange={(option) => {
-                  setFieldValue("title", option.value);
-                  setSelectedJobTitle(option.value);
-                  setFieldValue("service", "");
-                  setSelectedService("");
-                }}
-              />
-              {/* Dynamic Section       */}
-              <InputField
-                select
-                placeholder="Select Service"
-                options={serviceOptions}
-                value={values.service}
-                onChange={(option) => {
-                  setFieldValue("service", option.value);
-                  setSelectedService(option.value);
-                }}
-                disabled={!selectedJobTitle}
-              />
-
-              {/* Render Dynamic Section based on selected job title */}
-              {SelectedSection && selectedJobTitle && (
-                <SelectedSection
-                  values={values}
-                  handleChange={handleChange}
-                  handleBlur={handleBlur}
-                  setFieldValue={setFieldValue}
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col gap-4 mb-9"
+              >
+                <InputField
+                  label="Service Category"
+                  select
+                  options={jobTitles}
+                  value={values.title}
+                  placeholder="Select Category"
+                  onChange={(option) => {
+                    setFieldValue("title", option.value);
+                    setSelectedJobTitle(option.value);
+                    setFieldValue("service", "");
+                    setSelectedService("");
+                  }}
                 />
-              )}
+                {/* {selectedJobTitle && (
+                  <InputField
+                    label="I want to join as"
+                    select
+                    placeholder="Select Service"
+                    options={serviceOptions}
+                    value={values.service}
+                    onChange={(option) => {
+                      setFieldValue("service", option.value);
+                      setSelectedService(option.value);
+                    }}
+                  />
+                )} */}
 
-              {/* <InputField
+                {/* Render Dynamic Section based on selected job title */}
+                {SelectedSection && selectedJobTitle && (
+                  <SelectedSection
+                    values={values}
+                    handleChange={handleChange}
+                    handleBlur={handleBlur}
+                    setFieldValue={setFieldValue}
+                  />
+                )}
+
+                {selectedJobTitle && (
+                  <div className="flex flex-col gap-4 mt-2">
+                    <div className="flex gap-3">
+                      <h3 className="text-[16px] font-semibold text-[#231F20] mb-1">
+                        Vehicle Pictures
+                      </h3>
+                      <h4 className="text-[16px] text-[#231F2080] mb-3">
+                        (min 2, plates must be visible)
+                      </h4>
+                    </div>
+
+                    {/* Pictures */}
+                    <div>
+                      {workPictures.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {workPictures.map((item, i) => (
+                            <div
+                              key={i}
+                              className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200"
+                            >
+                              <img
+                                src={item.url}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeWorkPicture(i)}
+                                className="absolute top-0.5 right-0.5 bg-white rounded-full p-0.5 shadow text-gray-500 hover:text-red-500"
+                              >
+                                <LuX size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <input
+                        ref={pictureInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/jpg"
+                        multiple
+                        className="hidden"
+                        onChange={(e) =>
+                          handleWorkPicturesChange(e.target.files)
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => pictureInputRef.current?.click()}
+                        disabled={uploadingVisuals}
+                        className="w-full flex items-center justify-center gap-2 border-[1.5px] border-dashed border-gray-300 rounded-xl p-4 text-gray-500 hover:border-[#1D9E75] hover:text-[#1D9E75] transition-colors bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <LuUpload size={16} />
+                        <span className="text-sm">
+                          {uploadingVisuals
+                            ? "Uploading..."
+                            : "Click to add pictures"}
+                        </span>
+                        <span className="text-xs text-gray-400 ml-1">
+                          (JPG, PNG · max 5MB each)
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* <InputField
                 name="tagLine"
                 label="Tagline"
                 value={values.tagLine}
@@ -320,32 +478,32 @@ export default function SkillsVerification({ onNext, onBack }) {
                 <p className="text-green-600 text-sm mt-2">{successMessage}</p>
               )} */}
 
-              <div className="flex justify-end gap-3 mt-8">
-                {/* <button
+                <div className="flex justify-end gap-3 mt-8">
+                  {/* <button
                   type="button"
                   className="border border-[#005823BF] text-[#005823BF] px-6 py-2 rounded-lg hover:bg-[#005823BF]/10 transition"
                 >
                   Back
                 </button> */}
-                <button
-                  type="submit"
-                  className="bg-[#005823BF] text-white px-6 py-2 rounded-lg hover:bg-[#004e1a] transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading || !isFormComplete}
-                >
-                  {loading ? "Saving..." : "Save & Continue"}
-                </button>
-              </div>
+                  <button
+                    type="submit"
+                    className="bg-[#005823BF] text-white px-6 py-2 rounded-lg hover:bg-[#004e1a] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={loading || uploadingVisuals || !isFormComplete}
+                  >
+                    {loading ? "Saving..." : "Save & Continue"}
+                  </button>
+                </div>
 
-              <AddService
-                isOpen={addService}
-                onClose={() => {
-                  setAddService(false);
-                  setEditingService(null);
-                }}
-                onSave={handleSaveService}
-                editingService={editingService}
-              />
-            </form>
+                <AddService
+                  isOpen={addService}
+                  onClose={() => {
+                    setAddService(false);
+                    setEditingService(null);
+                  }}
+                  onSave={handleSaveService}
+                  editingService={editingService}
+                />
+              </form>
             );
           }}
         </Formik>

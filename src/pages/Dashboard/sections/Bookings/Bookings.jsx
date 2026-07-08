@@ -477,14 +477,14 @@ export default function Bookings() {
     }
   };
 
-  const promoTitle =
-    promoLoading
-      ? "Checking discount..."
-      : promoEligibility?.eligible && promoEligibility?.remaining > 0
-        ? `${promoEligibility.percent || 0}% first ride discount available`
-        : promoEligibility?.isNewUser
-          ? "Ride discount available"
-          : "Ride discount unavailable";
+  // const promoTitle =
+  //   promoLoading
+  //     ? "Checking discount..."
+  //     : promoEligibility?.eligible && promoEligibility?.remaining > 0
+  //       ? `${promoEligibility.percent || 0}% first ride discount available`
+  //       : promoEligibility?.isNewUser
+  //         ? "Ride discount available"
+  //         : "Ride discount unavailable";
 
   const promoDescription =
     promoLoading
@@ -879,7 +879,7 @@ export default function Bookings() {
                 </p>
               </div>
             )}
-            <div
+            {/* <div
               id="booking-first-ride-discount"
               className="rounded-2xl border border-[#005823]/10 bg-gradient-to-r from-[#F5FBF7] to-white p-4 sm:p-5 shadow-sm"
             >
@@ -888,9 +888,9 @@ export default function Bookings() {
                   <p className="text-sm font-semibold text-[#231F20]">
                     {promoTitle}
                   </p>
-                  {/* <p className="mt-1 text-sm leading-6 text-[#231F2080]">
+                  <p className="mt-1 text-sm leading-6 text-[#231F2080]">
                     {promoDescription}
-                  </p> */}
+                  </p>
                 </div>
 
                 <button
@@ -947,8 +947,8 @@ export default function Bookings() {
                     ? "Toggle this on to apply the promo to this booking."
                     : "The promo cannot be applied for this account right now."}
                 </span>
-              </div>
-            </div>
+              </div> */}
+            {/* </div> */}
             <div className="flex flex-col">
               <Button
                 variant="secondary"

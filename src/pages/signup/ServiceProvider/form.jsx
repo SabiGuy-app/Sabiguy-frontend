@@ -30,8 +30,8 @@ export default function Form() {
 
     const kycMap = {
       0: 1,  // Register
-      1: 4,  // PersonalInfoForm
-      2: 5,  // AccountTypeForm
+      2: 3,  // AccountTypeForm 
+      1: 2,  // PersonalInfoForm
       3: 6,  // FacialCapture
       4: 8,  // SkillsVerification
       5: 9, // UploadAutoMobile
@@ -71,20 +71,20 @@ export default function Form() {
     }
   }, []);
 
-  const forms = [                             
+  const forms = [                      
     <ConfirmKyc onNext={handleNext} />,
     <StepOne onNext={handleNext} email={formData.email} />, //KYC level 1
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
     <StepThree onNext={handleNext} onBack={handleBack} />,
-    <PersonalInfoForm onNext={handleNext} onBack={handleBack} />, //KYC level 2
     <AccountTypeForm
       onNext={handleNext}
       onBack={handleBack}
     />, //KYC level 3
+    <PersonalInfoForm onNext={handleNext} onBack={handleBack} />, //KYC level 2
     <FacialCapture onNext={handleNext} onBack={handleBack} />, //KYC level 4
     <FaceCapture onNext={handleNext} onBack={handleBack} />,
     <SkillsVerification onNext={handleNext} onBack={handleBack} />, //KYC level 5
-    <UploadAutoMobile onNext={handleNext} onBack={handleBack} />, //KYC level 6
+    // <UploadAutoMobile onNext={handleNext} onBack={handleBack} />, //KYC level 6
     // <BankAccountForm onNext={handleNext} onBack={handleBack} />, //KYC level completed
     <Congrats onNext={handleNext} onBack={handleBack} />,
   ];
