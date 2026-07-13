@@ -852,7 +852,7 @@ export default function Bookings() {
                   }
                 }}
                 className="w-4 h-4 rounded cursor-pointer accent-[#005823]"
-              /> */}
+              />
               {/* <label
                 htmlFor="auto-accept"
                 className="text-sm text-gray-500 cursor-pointer select-none"
