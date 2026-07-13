@@ -837,7 +837,7 @@ export default function Bookings() {
 
             {/* Auto-accept checkbox */}
             <div id="booking-auto-accept" className="flex items-center gap-3">
-              <input
+              {/* <input
                 type="checkbox"
                 id="auto-accept"
                 name="autoAcceptNearest"
@@ -852,7 +852,7 @@ export default function Bookings() {
                   }
                 }}
                 className="w-4 h-4 rounded cursor-pointer accent-[#005823]"
-              />
+              /> */}
               {/* <label
                 htmlFor="auto-accept"
                 className="text-sm text-gray-500 cursor-pointer select-none"
