@@ -16,6 +16,11 @@ import siren from "/siren.png";
 import new1 from "/new1.png";
 import new2 from "/new2.png";
 import new3 from "/new3.png";
+import new4 from "/new4.png";
+import new5 from "/new5.png";
+import new6 from "/new6.png";
+import new7 from "/new7.png";
+import new8 from "/new8.png";
 import { sendTestNotification } from "../../../api/fcm";
 import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import DashboardTour from "../../../components/tour/DashboardTour";
@@ -70,35 +75,35 @@ export default function DashboardHome() {
     {
       title: "Household Support",
       description: "Quick, dependable household assistance anytime.",
-      image: new1,
+      image: new4,
       bgColor: "#0054AE80",
       comingSoon: true,
     },
     {
       title: "Towing & Roadside",
       description: "Fast help for breakdowns and emergencies",
-      image: new2,
+      image: new5,
       bgColor: "#B100004D",
       comingSoon: true,
     },
     {
       title: "Legal & Financial",
       description: "Expert guidance for legal and financial needs",
-      image: new3,
+      image: new6,
       bgColor: "#4800D94D",
       comingSoon: true,
     },
     {
       title: "Plumbing",
       description: "Fast help for breakdowns and emergencies",
-      image: new1,
+      image: new7,
       bgColor: "#BF4A0B4D",
       comingSoon: true,
     },
     {
       title: "Digital Design",
       description: "Modern designs for web, brand, and media.",
-      image: new2,
+      image: new8,
       bgColor: "#A30B4B4D",
       comingSoon: true,
     },
