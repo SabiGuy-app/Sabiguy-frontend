@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -17,17 +17,15 @@ import LandingFooter from "../components/LandingFooter";
 import {
   fadeInUp,
   fadeInDown,
-  fadeInLeft,
-  fadeInRight,
-  scaleIn,
   staggerContainer,
-  slideIn,
-  float,
-  pulse,
 } from "../utils/animations";
 import { useNavigate } from "react-router-dom";
 import OptimizedImage from "../components/common/OptimizedImage";
 
+// Lazy-load the chatbot widget — not needed for initial render
+const LandingChatbotWidget = lazy(() =>
+  import("../components/LandingChatbotWidget")
+);
 
 // Animated Counter Component
 const AnimatedCounter = ({ from = 0, to, duration = 2, start = true, resetKey = 0 }) => {
@@ -80,6 +78,7 @@ const LandingPage = () => {
   const [active, setActive] = useState("providers");
   const content = tabs[active];
   const [current, setCurrent] = useState(0);
+
   const timerRef = useRef(null);
   const hasStartedStatsAnimation = useRef(false);
   const [openIndex, setOpenIndex] = useState(0);
@@ -801,6 +800,9 @@ const LandingPage = () => {
       </section>
 
       <LandingFooter />
+      <Suspense fallback={null}>
+        <LandingChatbotWidget />
+      </Suspense>
     </div>
   );
 };

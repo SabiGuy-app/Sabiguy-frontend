@@ -1,5 +1,10 @@
 import api from "./axios";
+import axios from "axios";
 import { trackEvent } from "../services/analytics";
+
+const publicApi = axios.create({
+  baseURL: import.meta.env.VITE_BASE_URL,
+});
 
 export const chatService = {
   // Get all chats
@@ -59,4 +64,20 @@ export const supportChatbotService = {
 
   getBookingContext: (bookingId) =>
     api.get(`/support-chatbot/booking/${bookingId}`),
+};
+
+export const publicChatbotService = {
+  sendMessage: async (message, conversationHistory, _bookingId, options = {}) => {
+    const response = await publicApi.post("/support-chatbot/public-chat", {
+      message,
+      visitorName: options.visitorName || "Website visitor",
+      conversationHistory,
+    });
+
+    trackEvent("public_chat_message_sent", {
+      has_conversation_history: Array.isArray(conversationHistory) && conversationHistory.length > 1,
+    });
+
+    return response;
+  },
 };

@@ -225,6 +225,9 @@ export default function SkillsVerification({ onNext, onBack }) {
             vehicleName: "",
             vehicleRegNo: "",
             vehicleColor: "",
+            vehicleTypes: "",
+            vehicleModel: "",
+            vehiclePictures: [],
 
             // Domestic fields
             fullName: "",

@@ -270,6 +270,23 @@ import { supportChatbotService } from "../../api/chat";
 
 const WHATSAPP_NUMBER = "+2349131425865"; // 👈 Replace with your actual WhatsApp Business number
 
+function normalizeChatbotResponse(response) {
+  const payload = response?.data ?? response ?? {};
+  const data = payload?.data ?? payload;
+
+  return {
+    response:
+      data?.response ||
+      data?.answer ||
+      data?.reply ||
+      data?.message ||
+      payload?.message ||
+      "I could not generate a response right now. Please try again.",
+    faqSuggestions: data?.faqSuggestions || payload?.faqSuggestions || [],
+    escalationTriggered: Boolean(data?.escalationTriggered || payload?.escalationTriggered),
+  };
+}
+
 function TypingIndicator() {
   return (
     <div className="flex items-end gap-2.5">
@@ -376,7 +393,15 @@ function ChatMessage({ msg, isLatest, isTyping, displayFAQs, actualFaqArray, onF
   );
 }
 
-export default function ChatBotUI({ userType = "user", bookingId = null }) {
+export default function ChatBotUI({
+  userType = "user",
+  bookingId = null,
+  chatbotService = supportChatbotService,
+  visitorName = "Website visitor",
+  initialFaqs = null,
+  greeting: greetingOverride = "",
+  showHumanSupport = true,
+}) {
   const [conversationHistory, setConversationHistory] = useState([]);
   const [faqs, setFaqs] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
@@ -385,6 +410,9 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
   const [showWhatsApp, setShowWhatsApp] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const activeChatbotService = chatbotService || supportChatbotService;
+  const hasBookingContext =
+    userType !== "public" && Boolean(bookingId && bookingId.trim() !== "");
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -393,19 +421,27 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
   useEffect(() => { scrollToBottom(); }, [conversationHistory, isTyping, showWhatsApp]);
 
   useEffect(() => {
-    supportChatbotService.getFAQs()
+    if (Array.isArray(initialFaqs)) {
+      setFaqs(initialFaqs);
+    }
+
+    if (!activeChatbotService.getFAQs) return;
+
+    activeChatbotService.getFAQs()
       .then((res) => setFaqs(res.data))
-      .catch(() => setFaqs([]));
-  }, []);
+      .catch(() => {
+        if (!Array.isArray(initialFaqs)) setFaqs([]);
+      });
+  }, [activeChatbotService, initialFaqs]);
 
   useEffect(() => {
-    if (bookingId && bookingId.trim() !== "") {
+    if (hasBookingContext && activeChatbotService.getBookingContext) {
       setIsLoadingContext(true);
-      supportChatbotService.getBookingContext(bookingId)
+      activeChatbotService.getBookingContext(bookingId)
         .catch(() => {})
         .finally(() => setIsLoadingContext(false));
     }
-  }, [bookingId]);
+  }, [activeChatbotService, bookingId, hasBookingContext]);
 
   const handleSendMessage = async (text) => {
     const messageToSend = typeof text === "string" ? text : currentMessage;
@@ -420,25 +456,26 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
     setShowWhatsApp(false); // Reset on new message
 
     try {
-      const res = await supportChatbotService.sendMessage(
+      const res = await activeChatbotService.sendMessage(
         messageToSend,
         updatedHistory,
-        bookingId && bookingId.trim() !== "" ? bookingId : null
+        hasBookingContext ? bookingId : null,
+        { userType, visitorName }
       );
 
-      const data = res.data.data;
+      const data = normalizeChatbotResponse(res);
 
       const botReply = { role: "assistant", content: data.response };
       setConversationHistory((prev) => [...prev, botReply]);
 
-      // 👇 WhatsApp escalation trigger from backend
-      if (data.escalationTriggered) {
+      // WhatsApp escalation trigger from backend
+      if (showHumanSupport && data.escalationTriggered) {
         setTimeout(() => setShowWhatsApp(true), 500); // slight delay for UX
       }
 
-      if (data.faqSuggestions?.length > 0) {
+      if (data.faqSuggestions?.length > 0 && activeChatbotService.getFAQs) {
         const ids = data.faqSuggestions.join(",");
-        supportChatbotService.getFAQs(ids)
+        activeChatbotService.getFAQs(ids)
           .then((r) => setFaqs(r.data))
           .catch(() => {});
       }
@@ -446,7 +483,11 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
       let errorMsg;
       if (!err.response) errorMsg = "Network error. Please check your connection.";
       else if (err.response?.status === 400) errorMsg = "Please type a message before sending.";
-      else if (err.response?.status === 401) errorMsg = "Please log in to continue.";
+      else if (err.response?.status === 401) {
+        errorMsg = userType === "public"
+          ? "The product assistant is unavailable right now. Please try again shortly."
+          : "Please log in to continue.";
+      }
       else if (err.response?.status === 500) errorMsg = "Something went wrong. Please try again.";
       else errorMsg = "An unexpected error occurred. Please try again.";
 
@@ -459,16 +500,20 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
 
   const fallbackFAQs = userType === "provider"
     ? ["How do I accept a booking?", "How do I manage my availability?", "How do I receive payments?", "How do I cancel a booking?", "How do I update my profile?"]
-    : ["How do I book a service?", "How does payment work?", "When will my provider arrive?", "How do I cancel a booking?", "How do I get a refund?"];
+    : userType === "public"
+      ? ["What services do you offer?", "How does SabiGuy work?", "How much does booking cost?", "How do I sign up?", "Can I become a provider?"]
+      : ["How do I book a service?", "How does payment work?", "When will my provider arrive?", "How do I cancel a booking?", "How do I get a refund?"];
 
   const actualFaqArray = Array.isArray(faqs) ? faqs : (faqs?.data || []);
-  const displayFAQs = actualFaqArray.length > 0 && (conversationHistory.length > 0 || userType === "user")
+  const displayFAQs = actualFaqArray.length > 0 && (conversationHistory.length > 0 || userType === "user" || userType === "public")
     ? actualFaqArray
     : fallbackFAQs;
 
-  const greeting = userType === "provider"
+  const greeting = greetingOverride || (userType === "provider"
     ? "What do you need help with?"
-    : "How may I help you today?";
+    : userType === "public"
+      ? "Ask me anything about SabiGuy services, pricing, or signing up."
+      : "How may I help you today?");
 
   return (
     <div className="flex flex-col h-full w-full relative overflow-hidden" style={{ background: "#f7f9f8", fontFamily: "'DM Sans', sans-serif" }}>
@@ -480,13 +525,13 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
       <div className="flex-1 overflow-y-auto px-4 pt-6 pb-4 space-y-5">
 
         {/* Booking context pill */}
-        {(isLoadingContext || (bookingId && bookingId.trim() !== "")) && (
+        {(isLoadingContext || hasBookingContext) && (
           <div className="flex justify-center">
             {isLoadingContext ? (
               <span className="text-[10px] text-gray-400 italic">Loading context...</span>
             ) : (
               <span className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-3 py-1.5 rounded-full border border-emerald-200 uppercase tracking-widest shadow-sm">
-                📋 Booking #{bookingId.slice(-6)}
+                Booking #{bookingId.slice(-6)}
               </span>
             )}
           </div>
@@ -501,7 +546,7 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
             <div className="bg-white border border-gray-100 shadow-sm px-4 py-4 rounded-2xl rounded-bl-sm max-w-[85%]">
               <div className="flex items-center gap-1.5 mb-1">
                 <Sparkles size={13} className="text-emerald-500" />
-                <p className="font-bold text-sm text-gray-800">Hi there! I'm SabiBot 👋</p>
+                <p className="font-bold text-sm text-gray-800">Hi there! I'm SabiBot</p>
               </div>
               <p className="text-sm text-gray-500 mb-4">{greeting}</p>
 
@@ -541,7 +586,7 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
       </div>
 
       {/* WhatsApp Banner */}
-      {showWhatsApp && (
+      {showHumanSupport && showWhatsApp && (
         <WhatsAppBanner onDismiss={() => setShowWhatsApp(false)} />
       )}
 
@@ -567,16 +612,17 @@ export default function ChatBotUI({ userType = "user", bookingId = null }) {
           </button>
         </div>
 
-        {/* Manual WhatsApp trigger */}
-        <div className="flex justify-center mt-2.5">
-          <button
-            onClick={() => setShowWhatsApp((prev) => !prev)}
-            className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-[#25D366] transition-colors"
-          >
-            <MessageCircle size={12} />
-            Speak to a human agent
-          </button>
-        </div>
+        {showHumanSupport && (
+          <div className="flex justify-center mt-2.5">
+            <button
+              onClick={() => setShowWhatsApp((prev) => !prev)}
+              className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-[#25D366] transition-colors"
+            >
+              <MessageCircle size={12} />
+              Speak to a human agent
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
