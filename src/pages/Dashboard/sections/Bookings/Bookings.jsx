@@ -853,12 +853,12 @@ export default function Bookings() {
                 }}
                 className="w-4 h-4 rounded cursor-pointer accent-[#005823]"
               />
-              <label
+              {/* <label
                 htmlFor="auto-accept"
                 className="text-sm text-gray-500 cursor-pointer select-none"
               >
                 Automatically accept the nearest provider
-              </label>
+              </label> */}
             </div>
             {formik.values.autoAcceptNearest && (
               <div className="flex items-start gap-2 p-3 bg-[#005823] border border-[#005823] rounded-lg">

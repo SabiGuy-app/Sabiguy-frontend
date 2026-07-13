@@ -371,7 +371,7 @@ export default function FaceCapture({ onNext, handleBack }) {
 
       // Save to backend
       const saveRes = await fetch(saveEndpoint, {
-        method: "PUT",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
