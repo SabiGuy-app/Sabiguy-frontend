@@ -25,7 +25,6 @@ export default function AccountTypeForm({ onNext, onBack }) {
       const accountType = values.accountType;
       let cacUrl = "";
 
-      // ? Upload CAC Certificate (if provided)
       if (values.cacFile) {
         const email = localStorage.getItem("email");
         const google_email = localStorage.getItem("google-email");
