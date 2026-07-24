@@ -19,6 +19,11 @@ import { listenForMessages } from "./services/fcmService";
 import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
 import { Analytics } from '@vercel/analytics/react';
+import AddDriverForm from "./business-transport/signup/ServiceProvider/BusinessSetup/AddDriverForm";
+import AddVehicleForm from "./business-transport/signup/ServiceProvider/BusinessSetup/AddVehicleForm";
+import BusinessInfo from "./business-transport/signup/ServiceProvider/BusinessSetup/BusinessInfo";
+import IncomeSplitForm from "./business-transport/signup/ServiceProvider/BusinessSetup/IncomeSplitForm";
+import BusinessForm from "./business-transport/signup/BusinessForm";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -259,6 +264,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/kyc-not-verified" element={<NotVerified />} />
+
+              <Route path="/business-provider/signup" element={<BusinessForm />} />
 
               {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
               <Route
