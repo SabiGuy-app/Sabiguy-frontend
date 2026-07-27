@@ -80,6 +80,8 @@ const NotVerified = lazy(() => import("./pages/signup/ServiceProvider/kyc-not-ve
 const NotificationTest = lazy(() => import("./services/testNotify"));
 const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
 const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
+const FleetOverview = lazy(() => import("./business-transport/dashboard/pages/FleetOverview"));
+const FleetComingSoon = lazy(() => import("./business-transport/dashboard/pages/ComingSoonPage"));
 
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -360,6 +362,52 @@ function App() {
                 <Route path="/bookings/summary" element={<BookingSummary2 />} />
                 <Route path="/bookings/trackrider" element={<TrackRider />} />
                 <Route path="/kyc-not-verified" element={<NotVerified />} />
+
+                {/* Business / fleet-operator dashboard */}
+                <Route
+                  path="/business-provider/dashboard"
+                  element={<FleetOverview />}
+                />
+                <Route
+                  path="/business-provider/dashboard/live-map"
+                  element={<FleetComingSoon title="Live Map" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/drivers"
+                  element={<FleetComingSoon title="Drivers" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/vehicles"
+                  element={<FleetComingSoon title="Vehicles" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/trips"
+                  element={<FleetComingSoon title="Trips" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/groups"
+                  element={<FleetComingSoon title="Groups" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/policies"
+                  element={<FleetComingSoon title="Policies" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/earnings"
+                  element={<FleetComingSoon title="Earnings & Payouts" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/performance"
+                  element={<FleetComingSoon title="Performance & Ratings" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/documents"
+                  element={<FleetComingSoon title="Documents" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/settings"
+                  element={<FleetComingSoon title="Settings" />}
+                />
               </Route>
             </Routes>
           </Suspense>

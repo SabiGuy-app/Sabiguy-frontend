@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState } from "react";
 import { publicChatbotService } from "../api/chat";
 import ChatBotDrawer from "./dashboard/ChatBoxDrawer";
-import ChatBotUI from "./dashboard/ChatBotUI";
+
+const ChatBotUI = lazy(() => import("./dashboard/ChatBotUI"));
 
 const publicFaqs = [
   "What services does SabiGuy offer?",
@@ -11,109 +12,100 @@ const publicFaqs = [
   "How do I become a provider?",
 ];
 
+function ChatbotLoading() {
+  return (
+    <div className="flex h-full flex-col bg-[#F7F9F8]">
+      <div className="flex-1 space-y-4 px-4 py-5">
+        <div className="flex items-end gap-2.5">
+          <div className="h-8 w-8 rounded-full bg-emerald-100" />
+          <div className="max-w-[78%] rounded-2xl rounded-bl-sm border border-gray-100 bg-white px-4 py-3 shadow-sm">
+            <div className="mb-2 h-3 w-24 rounded-full bg-gray-100" />
+            <div className="h-3 w-40 rounded-full bg-gray-100" />
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-gray-100 bg-white px-4 py-3">
+        <div className="h-11 rounded-2xl bg-gray-100" />
+      </div>
+    </div>
+  );
+}
+
+function ChatbotLauncher({ onClick }) {
+  return (
+    <button
+      type="button"
+      aria-label="Open SabiBot chat assistant"
+      onClick={onClick}
+      className="group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-[calc(0.75rem+env(safe-area-inset-right))] z-[60] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#8BC53F]/35 sm:bottom-6 sm:right-6 lg:bottom-7 lg:right-7"
+    >
+      <span className="relative flex h-[76px] w-[76px] items-center justify-center transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-105 sm:h-20 sm:w-20 lg:h-24 lg:w-24">
+        <video
+          width="100"
+          height="100"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="relative z-10 h-full w-full object-contain drop-shadow-xl"
+        >
+          <source src="/assets/animations/KhloeSAC.webm" type="video/webm" />
+          <img
+            src="/assets/animations/chatbot-green.gif"
+            alt=""
+            className="h-full w-full object-contain"
+          />
+        </video>
+        <span
+          className="absolute right-0 top-0 z-20 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-[#4ADE80] shadow-sm sm:h-4 sm:w-4"
+          aria-hidden="true"
+        >
+          <span className="block h-1.5 w-1.5 rounded-full bg-white sm:h-2 sm:w-2" />
+        </span>
+      </span>
+    </button>
+  );
+}
+
 export default function LandingChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  // Defer GIF load until browser is idle — avoids competing with page resources
-  const [gifReady, setGifReady] = useState(false);
-
-  useEffect(() => {
-    const load = () => setGifReady(true);
-    if ("requestIdleCallback" in window) {
-      const id = requestIdleCallback(load, { timeout: 3000 });
-      return () => cancelIdleCallback(id);
-    } else {
-      // Fallback for Safari: defer by 2.5s
-      const t = setTimeout(load, 2500);
-      return () => clearTimeout(t);
-    }
-  }, []);
 
   return (
     <>
-      {/* ─── Floating Action Button ─── */}
-      {!isOpen && (
-        <button
-          type="button"
-          title=""
-          aria-label="Open SabiBot chat assistant"
-          onClick={() => setIsOpen(true)}
-          className="group fixed bottom-5 right-4 z-[60] sm:bottom-6 sm:right-6"
-        >
-          {/* No background pulse ring, just the clean icon */}
+      {!isOpen && <ChatbotLauncher onClick={() => setIsOpen(true)} />}
 
-          {/* Bot icon wrapper — no background, just the animation */}
-          <span
-            className="relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-105"
-          >
-            {gifReady ? (
-              /* Video loads after browser is idle */
-              <video
-                src="/assets/animations/KhloeSAC.webm"
-                width="100"
-                height="100"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="relative z-10 h-full w-full object-contain drop-shadow-xl"
-              />
-            ) : (
-              /* Empty transparent placeholder to reserve space while waiting for idle */
-              <span
-                className="relative z-10 flex h-16 w-16 sm:h-20 sm:w-20"
-                aria-hidden="true"
-              />
-            )}
-
-            {/* Online indicator dot */}
-            <span
-              className="absolute right-0 top-0 flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full border-2 border-white shadow-sm z-20"
-              style={{ background: "#4ADE80" }}
-              aria-hidden="true"
-            >
-              <span className="block h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-white" />
-            </span>
-          </span>
-
-          {/* Tooltip — desktop only */}
-
-        </button>
-      )}
-
-      {/* ─── Chat Modal ─── */}
       <ChatBotDrawer
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="SabiBot"
         subtitle="Ask about services, pricing, and sign up."
         showOverlay
-        overlayClassName={`fixed inset-0 z-[65] bg-black/15 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        overlayClassName="fixed inset-0 z-[65] bg-transparent"
         panelClassName={[
-          /* Base — mobile bottom-sheet */
-          "fixed z-[70] flex flex-col bg-white shadow-2xl",
-          "bottom-0 left-1 right-1 rounded-t-2xl",
-          "h-[75vh] max-h-[520px]",
-          /* sm+ (≥640px) — floating widget bottom-right */
-          "sm:left-auto sm:bottom-6 sm:right-6",
-          "sm:w-[380px] sm:h-[520px] sm:max-h-[calc(100vh-3rem)]",
-          "sm:rounded-2xl",
-          /* Shared polish */
-          "border border-gray-200/60",
-          "ring-1 ring-black/[0.04]",
-          /* Visibility fix for closed state */
-          "transition-opacity duration-300",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          "fixed z-[70] flex flex-col overflow-hidden bg-white",
+          "bottom-[calc(1rem+env(safe-area-inset-bottom))] left-3 right-3 h-[min(76dvh,520px)] max-h-[calc(100dvh-2rem)] rounded-[24px]",
+          "border border-white/80 shadow-[0_24px_70px_rgba(0,0,0,0.22)] ring-1 ring-[#005823]/10",
+          "transition-all duration-300 ease-out",
+          "sm:left-auto sm:bottom-6 sm:right-6 sm:h-[min(72vh,540px)] sm:w-[380px] sm:max-h-[calc(100vh-3rem)] sm:rounded-[28px]",
+          "md:w-[390px] lg:bottom-7 lg:right-7 lg:h-[min(70vh,560px)] lg:w-[400px]",
+          isOpen
+            ? "translate-y-0 scale-100 opacity-100"
+            : "pointer-events-none translate-y-4 scale-[0.98] opacity-0",
         ].join(" ")}
-        headerClassName="flex items-center justify-between gap-3 border-b border-gray-100 bg-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-t-2xl sm:rounded-t-2xl"
+        headerClassName="flex shrink-0 items-center justify-between gap-3 border-b border-gray-100 bg-white px-4 py-3 sm:px-5"
+        contentClassName="flex-1 min-h-0 overflow-hidden"
       >
         {isOpen && (
-          <ChatBotUI
-            userType="public"
-            chatbotService={publicChatbotService}
-            visitorName="Website visitor"
-            initialFaqs={publicFaqs}
-            showHumanSupport={false}
-          />
+          <Suspense fallback={<ChatbotLoading />}>
+            <ChatBotUI
+              userType="public"
+              chatbotService={publicChatbotService}
+              visitorName="Website visitor"
+              initialFaqs={publicFaqs}
+              showHumanSupport
+            />
+          </Suspense>
         )}
       </ChatBotDrawer>
     </>
