@@ -51,6 +51,7 @@ function ChatbotLauncher({ onClick }) {
           className="relative z-10 h-full w-full object-contain drop-shadow-xl"
         >
           <source src="/assets/animations/KhloeSAC.webm" type="video/webm" />
+          <source src="/assets/animations/KhloeSAC.mp4" type="video/mp4" />
           <img
             src="/assets/animations/chatbot-green.gif"
             alt=""
