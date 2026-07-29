@@ -40,24 +40,16 @@ function ChatbotLauncher({ onClick }) {
       className="group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-[calc(0.75rem+env(safe-area-inset-right))] z-[60] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#8BC53F]/35 sm:bottom-6 sm:right-6 lg:bottom-7 lg:right-7"
     >
       <span className="relative flex h-[76px] w-[76px] items-center justify-center transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-105 sm:h-20 sm:w-20 lg:h-24 lg:w-24">
-        <video
+        <img
+          src="/assets/animations/sabibot-landing.webp"
+          alt=""
           width="100"
           height="100"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
+          loading="eager"
+          decoding="async"
+          draggable="false"
           className="relative z-10 h-full w-full object-contain drop-shadow-xl"
-        >
-          <source src="/assets/animations/KhloeSAC.webm" type="video/webm" />
-          <source src="/assets/animations/KhloeSAC.mp4" type="video/mp4" />
-          <img
-            src="/assets/animations/chatbot-green.gif"
-            alt=""
-            className="h-full w-full object-contain"
-          />
-        </video>
+        />
         <span
           className="absolute right-0 top-0 z-20 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-[#4ADE80] shadow-sm sm:h-4 sm:w-4"
           aria-hidden="true"
