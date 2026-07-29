@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { formatNaira } from "../utils/format";
-import { ArrowRightIcon } from "../icons/FleetIcons";
+import { FleetArrowRightIcon } from "../icons";
 
 const METRICS = [
   { key: "available", label: "Available" },
@@ -26,7 +26,7 @@ export default function FleetSnapshotCard({ snapshot = {} }) {
             className="flex items-center gap-1 text-xs font-medium text-[#005823] hover:underline sm:text-sm"
           >
             Live map
-            <ArrowRightIcon size={13} />
+            <FleetArrowRightIcon size={13} />
           </button>
         )}
       </div>
