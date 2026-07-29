@@ -1,12 +1,17 @@
 import { Info } from "lucide-react";
-import { TickIcon, CancelIcon, ErrorIcon, WarningIcon } from "../icons/FleetIcons";
+import {
+  FleetCancelIcon,
+  FleetErrorIcon,
+  FleetSuccessIcon,
+  FleetWarningIcon,
+} from "../icons";
 
 const TYPE_CONFIG = {
   info: { bgColor: "bg-blue-100", Icon: Info, iconColor: "text-blue-600" },
-  completed: { bgColor: "bg-green-100", Icon: TickIcon },
-  cancelled: { bgColor: "bg-red-100", Icon: CancelIcon },
-  policy: { bgColor: "bg-red-100", Icon: ErrorIcon },
-  warning: { bgColor: "bg-amber-100", Icon: WarningIcon },
+  completed: { bgColor: "bg-green-100", Icon: FleetSuccessIcon, iconColor: "text-green-600" },
+  cancelled: { bgColor: "bg-red-100", Icon: FleetCancelIcon, iconColor: "text-red-600" },
+  policy: { bgColor: "bg-red-100", Icon: FleetErrorIcon, iconColor: "text-red-600" },
+  warning: { bgColor: "bg-amber-100", Icon: FleetWarningIcon, iconColor: "text-amber-600" },
 };
 
 const defaultConfig = { bgColor: "bg-gray-100", Icon: Info, iconColor: "text-gray-600" };

@@ -1,16 +1,16 @@
 import {
-  DashboardGridIcon,
-  MapIcon,
-  DriversIcon,
-  VehicleIcon,
-  TripsIcon,
-  GroupsIcon,
-  PoliciesIcon,
-  WalletIcon,
-  StarOutlineIcon,
-  DocumentIcon,
-  SettingsGearIcon,
-} from "../icons/FleetIcons";
+  FleetDocumentsIcon,
+  FleetDriversIcon,
+  FleetEarningsIcon,
+  FleetGroupsIcon,
+  FleetLiveMapIcon,
+  FleetOverviewIcon,
+  FleetPerformanceIcon,
+  FleetPoliciesIcon,
+  FleetSettingsIcon,
+  FleetTripsIcon,
+  FleetVehiclesIcon,
+} from "../icons";
 
 const BASE = "/business-provider/dashboard";
 
@@ -21,31 +21,31 @@ export const fleetNavGroups = [
   {
     section: "OVERVIEW",
     items: [
-      { name: "Fleet Overview", path: BASE, icon: DashboardGridIcon },
-      { name: "Live Map", path: `${BASE}/live-map`, icon: MapIcon },
+      { name: "Fleet Overview", path: BASE, icon: FleetOverviewIcon },
+      { name: "Live Map", path: `${BASE}/live-map`, icon: FleetLiveMapIcon },
     ],
   },
   {
     section: "FLEET MANAGEMENT",
     items: [
-      { name: "Drivers", path: `${BASE}/drivers`, icon: DriversIcon },
-      { name: "Vehicles", path: `${BASE}/vehicles`, icon: VehicleIcon },
-      { name: "Trips", path: `${BASE}/trips`, icon: TripsIcon },
-      { name: "Groups", path: `${BASE}/groups`, icon: GroupsIcon },
-      { name: "Policies", path: `${BASE}/policies`, icon: PoliciesIcon },
+      { name: "Drivers", path: `${BASE}/drivers`, icon: FleetDriversIcon },
+      { name: "Vehicles", path: `${BASE}/vehicles`, icon: FleetVehiclesIcon },
+      { name: "Trips", path: `${BASE}/trips`, icon: FleetTripsIcon },
+      { name: "Groups", path: `${BASE}/groups`, icon: FleetGroupsIcon },
+      { name: "Policies", path: `${BASE}/policies`, icon: FleetPoliciesIcon },
     ],
   },
   {
     section: "FLEET MANAGEMENT",
     items: [
-      { name: "Earnings & Payouts", path: `${BASE}/earnings`, icon: WalletIcon },
-      { name: "Performance & Ratings", path: `${BASE}/performance`, icon: StarOutlineIcon },
-      { name: "Documents", path: `${BASE}/documents`, icon: DocumentIcon },
+      { name: "Earnings & Payouts", path: `${BASE}/earnings`, icon: FleetEarningsIcon },
+      { name: "Performance & Ratings", path: `${BASE}/performance`, icon: FleetPerformanceIcon },
+      { name: "Documents", path: `${BASE}/documents`, icon: FleetDocumentsIcon },
     ],
   },
   {
     section: "FLEET MANAGEMENT",
-    items: [{ name: "Settings", path: `${BASE}/settings`, icon: SettingsGearIcon }],
+    items: [{ name: "Settings", path: `${BASE}/settings`, icon: FleetSettingsIcon }],
   },
 ];
 
