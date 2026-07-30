@@ -63,8 +63,8 @@ export default function BusinessForm() {
     // <AccountTypeForm onNext={handleNext} onBack={handleBack} />, //KYC level 0
     <BusinessInfo onNext={handleNext} onBack={handleBack} />,
     <AddVehicleForm onNext={handleNext} onBack={handleBack} />,
-    <AddDriverForm onNext={handleNext} onBack={handleBack} />,
-    <IncomeSplitForm onNext={handleNext} onBack={handleBack} />,
+    // <AddDriverForm onNext={handleNext} onBack={handleBack} />,
+    // <IncomeSplitForm onNext={handleNext} onBack={handleBack} />,
     <BusinessCongrats onNext={handleNext} onBack={handleBack} />,
   ];
 

@@ -19,10 +19,6 @@ import { listenForMessages } from "./services/fcmService";
 import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
 import { Analytics } from '@vercel/analytics/react';
-import AddDriverForm from "./business-transport/signup/ServiceProvider/BusinessSetup/AddDriverForm";
-import AddVehicleForm from "./business-transport/signup/ServiceProvider/BusinessSetup/AddVehicleForm";
-import BusinessInfo from "./business-transport/signup/ServiceProvider/BusinessSetup/BusinessInfo";
-import IncomeSplitForm from "./business-transport/signup/ServiceProvider/BusinessSetup/IncomeSplitForm";
 import BusinessForm from "./business-transport/signup/BusinessForm";
 
 // Lazy-loaded components
