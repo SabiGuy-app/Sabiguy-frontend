@@ -6,8 +6,8 @@ export default function BusinessSetupLayout({ currentStep, children }) {
     "Account Type",
     "Business Info",
     "Vehicle Setup",
-    "Add Driver",
-    "Income Split",
+    // "Add Driver",
+    // "Income Split",
   ];
 
   return (

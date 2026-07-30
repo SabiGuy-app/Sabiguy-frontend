@@ -1,5 +1,13 @@
 import { useRef, useState } from "react";
-import { Car, Bike, Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  UploadCloud,
+  ChevronDown,
+  AlertTriangle,
+  X,
+  Car,
+} from "lucide-react";
 import InputField from "../../../../components/InputField";
 import BusinessSetupLayout from "../BusinessSetupLayout";
 import { IoIosArrowBack } from "react-icons/io";
@@ -7,36 +15,20 @@ import { Formik, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
 const VEHICLE_TYPES = [
-  { id: "car", label: "Car", icon: Car },
-  { id: "motorbike", label: "Motorbike", icon: Bike },
-  { id: "keke", label: "Keke (Tricycle)", icon: null },
+  { id: "car", label: "Car driver (2000 below)" },
+  { id: "car_premium", label: "Car driver (above 2000)" },
+  { id: "motorbike", label: "Motorbike driver" },
+  // { id: "keke", label: "Keke driver (Tricycle)" },
 ];
+
+const MIN_PICTURES = 2;
+const MAX_FILE_SIZE_MB = 5;
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
 const VehicleSchema = Yup.object().shape({
   name: Yup.string().trim().required("Vehicle name is required"),
   plate: Yup.string().trim().required("Plate number is required"),
 });
-
-function KekeIcon({ className }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="6" cy="18" r="2.5" />
-      <circle cx="18" cy="18" r="2.5" />
-      <path d="M6 18h6l3-9h3" />
-      <path d="M9 9h5" />
-    </svg>
-  );
-}
 
 export default function AddVehicleForm({ onBack, onNext }) {
   const [vehicles, setVehicles] = useState([]);
@@ -46,25 +38,87 @@ export default function AddVehicleForm({ onBack, onNext }) {
   const [listError, setListError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [pictures, setPictures] = useState([]);
+  const [pictureError, setPictureError] = useState("");
   const formikRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  const handleFiles = (fileList) => {
+    const incoming = Array.from(fileList || []);
+    if (incoming.length === 0) return;
+
+    const valid = [];
+    let rejection = "";
+
+    incoming.forEach((file) => {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        rejection = "Only JPEG, PNG or PDF files are allowed.";
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        rejection = `Each file must be under ${MAX_FILE_SIZE_MB}MB.`;
+        return;
+      }
+      valid.push({
+        id: `${Date.now()}-${file.name}-${Math.random()}`,
+        file,
+        name: file.name,
+        preview: file.type.startsWith("image/")
+          ? URL.createObjectURL(file)
+          : null,
+      });
+    });
+
+    if (rejection) setPictureError(rejection);
+    else setPictureError("");
+
+    if (valid.length > 0) {
+      setPictures((prev) => [...prev, ...valid]);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    handleFiles(e.dataTransfer.files);
+  };
+
+  const handleRemovePicture = (id) => {
+    setPictures((prev) => prev.filter((p) => p.id !== id));
+  };
 
   const handleAddVehicle = (values, { resetForm }) => {
+    if (pictures.length < MIN_PICTURES) {
+      setPictureError(
+        `Please upload at least ${MIN_PICTURES} pictures with plates visible.`,
+      );
+      return;
+    }
+
     if (editingId) {
       setVehicles((vs) =>
         vs.map((v) =>
           v.id === editingId
-            ? { ...v, name: values.name, plate: values.plate, type }
+            ? { ...v, name: values.name, plate: values.plate, type, pictures }
             : v,
         ),
       );
     } else {
       setVehicles((vs) => [
         ...vs,
-        { id: Date.now(), name: values.name, plate: values.plate, type },
+        {
+          id: Date.now(),
+          name: values.name,
+          plate: values.plate,
+          type,
+          pictures,
+          status: "pending",
+        },
       ]);
     }
     setEditingId(null);
     setType("car");
+    setPictures([]);
+    setPictureError("");
     setListError("");
     resetForm();
   };
@@ -72,12 +126,15 @@ export default function AddVehicleForm({ onBack, onNext }) {
   const handleEdit = (vehicle) => {
     setType(vehicle.type);
     setEditingId(vehicle.id);
+    setPictures(vehicle.pictures || []);
     formikRef.current?.setValues({ name: vehicle.name, plate: vehicle.plate });
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setType("car");
+    setPictures([]);
+    setPictureError("");
     formikRef.current?.resetForm();
   };
 
@@ -97,7 +154,6 @@ export default function AddVehicleForm({ onBack, onNext }) {
 
     setSubmitting(true);
     try {
-
       setListError("");
       setSuccessMessage("Vehicles saved successfully!");
       onNext();
@@ -130,36 +186,50 @@ export default function AddVehicleForm({ onBack, onNext }) {
         </div>
         <div className="w-full max-w-lg px-5 py-8">
           <h1 className="text-[20px] font-semibold text-[#231F20]">
-            Add your first Vehicle
+            Add Vehicle
           </h1>
           <p className="mt-1.5 text-[16px] leading-snug text-[#231F20BF]">
-            Add a few now to get going, you can manage the full fleet from your
-            dashboard.
+            Enter your vehicle details carefully. Once submitted, these details
+            cannot be edited.
           </p>
 
-          <div className="mt-6 space-y-3">
-            {vehicles.map((v) => {
-              const meta = VEHICLE_TYPES.find((t) => t.id === v.type);
-              const Icon = meta?.icon;
-              return (
+          {vehicles.length > 0 && (
+            <div className="mt-6 space-y-3">
+              {vehicles.map((v) => (
                 <div
                   key={v.id}
-                  className="flex justify-between rounded-lg border border-gray-200 px-4 py-3"
+                  className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-700">
-                      {Icon ? <Icon size={20} /> : <KekeIcon />}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600">
+                      <Car size={18} />
                     </div>
                     <div>
-                      <p className="text-[20px] font-medium text-gray-900">
+                      <p className="text-[16px] font-medium text-gray-900">
                         {v.name}
                       </p>
-                      <p className="text-[16px] font-medium text-[#005823]">
+                      <p className="text-[14px] font-medium text-[#005823]">
                         {v.plate}
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-3">
+
+                  <div className="flex items-center gap-3">
+                    {v.status === "pending" && (
+                      <span className="rounded-full bg-[#FEF3C7] px-3 py-1 text-[11px] font-medium text-[#92400E]">
+                        Pending review
+                      </span>
+                    )}
+                    {v.status === "approved" && (
+                      <span className="rounded-full bg-[#DCFCE7] px-3 py-1 text-[11px] font-medium text-[#166534]">
+                        Approved
+                      </span>
+                    )}
+                    {v.status === "rejected" && (
+                      <span className="rounded-full bg-[#FEE2E2] px-3 py-1 text-[11px] font-medium text-[#991B1B]">
+                        Rejected
+                      </span>
+                    )}
                     <button
                       type="button"
                       aria-label="Edit vehicle"
@@ -178,9 +248,9 @@ export default function AddVehicleForm({ onBack, onNext }) {
                     </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
 
           <Formik
             innerRef={formikRef}
@@ -193,10 +263,8 @@ export default function AddVehicleForm({ onBack, onNext }) {
               handleChange,
               handleBlur,
               handleSubmit: handleFormikSubmit,
-              isValid,
-              dirty,
             }) => (
-              <form onSubmit={handleFormikSubmit} className="mt-5 space-y-5">
+              <form onSubmit={handleFormikSubmit} className="mt-6 space-y-5">
                 <div>
                   <InputField
                     name="name"
@@ -229,46 +297,110 @@ export default function AddVehicleForm({ onBack, onNext }) {
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {VEHICLE_TYPES.map((vt) => {
-                    const Icon = vt.icon;
-                    const active = type === vt.id;
-                    return (
-                      <button
-                        key={vt.id}
-                        type="button"
-                        onClick={() => setType(vt.id)}
-                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-medium transition-colors ${
-                          active
-                            ? "bg-[#005823CC] text-white"
-                            : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-                        }`}
-                      >
-                        {Icon ? <Icon size={14} /> : <KekeIcon />}
-                        {vt.label}
-                      </button>
-                    );
-                  })}
+                <div>
+                  <label className="block text-[15px] font-medium text-[#231F20] mb-2">
+                    Vehicle type
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={type}
+                      onChange={(e) => setType(e.target.value)}
+                      className="w-full appearance-none rounded-lg border border-gray-200 bg-gray-50 px-4 py-3.5 text-[15px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#005823]/30"
+                    >
+                      {VEHICLE_TYPES.map((vt) => (
+                        <option key={vt.id} value={vt.id}>
+                          {vt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      size={18}
+                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-3 text-[13px] font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                <div>
+                  <label className="block text-[15px] font-medium text-[#231F20] mb-2">
+                    Vehicle pictures{" "}
+                    <span className="font-normal text-gray-500">
+                      (min {MIN_PICTURES}, plates must be visible)
+                    </span>
+                  </label>
+
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-10 text-center hover:bg-gray-50 transition-colors"
                   >
-                    <Plus size={15} />
-                    {editingId ? "Update Vehicle" : "Add Vehicle"}
-                  </button>
-                  {editingId && (
-                    <button
-                      type="button"
-                      onClick={handleCancelEdit}
-                      className="rounded-lg border border-gray-200 px-4 py-3 text-[13px] font-medium text-gray-500 hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
+                    <UploadCloud size={32} className="text-[#005823]" />
+                    <p className="text-[15px] text-gray-700">
+                      Upload pictures{" "}
+                      <span className="font-medium text-[#005823] underline">
+                        Browse
+                      </span>
+                    </p>
+                    <p className="text-[12px] text-gray-400">
+                      JPEG, PNG, PDF format, Max {MAX_FILE_SIZE_MB}MB each
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept={ACCEPTED_TYPES.join(",")}
+                      className="hidden"
+                      onChange={(e) => handleFiles(e.target.files)}
+                    />
+                  </div>
+
+                  {pictures.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {pictures.map((p) => (
+                        <div
+                          key={p.id}
+                          className="relative flex items-center gap-2 rounded-md border border-gray-200 px-2.5 py-1.5 text-[12px] text-gray-600"
+                        >
+                          <span className="max-w-[120px] truncate">
+                            {p.name}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Remove picture"
+                            onClick={() => handleRemovePicture(p.id)}
+                            className="hover:text-red-500"
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {pictureError && (
+                    <p className="mt-2 text-[12px] text-red-600">
+                      {pictureError}
+                    </p>
                   )}
                 </div>
+
+                <button
+                  type="submit"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#005823] py-3.5 text-[14px] font-medium text-[#005823] hover:bg-[#00582310] transition-colors"
+                >
+                  <span className="text-lg leading-none">+</span>
+                  {editingId ? "Update Vehicle" : "Add Vehicle"}
+                </button>
+
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="w-full rounded-lg border border-gray-200 py-3 text-[13px] font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel edit
+                  </button>
+                )}
               </form>
             )}
           </Formik>
@@ -277,12 +409,12 @@ export default function AddVehicleForm({ onBack, onNext }) {
             <p className="mt-3 text-[12px] text-red-600">{listError}</p>
           )}
 
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end gap-3 mt-8">
             <button
               type="button"
               onClick={handleSubmit}
               disabled={submitting || vehicles.length === 0}
-              className="p-3 rounded-md text-white bg-[#005823BF] hover:bg-[#005823] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-md bg-[#005823BF] px-6 py-3 text-[14px] font-medium text-white hover:bg-[#005823] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? "Saving..." : "Save & Continue"}
             </button>
@@ -294,6 +426,17 @@ export default function AddVehicleForm({ onBack, onNext }) {
           {successMessage && (
             <p className="text-green-600 text-sm mt-2">{successMessage}</p>
           )}
+
+          <div className="mt-6 flex items-start gap-2 rounded-lg border border-[#FDE68A] bg-[#FEF9E7] px-4 py-3">
+            <AlertTriangle
+              size={16}
+              className="mt-0.5 shrink-0 text-[#D97706]"
+            />
+            <p className="text-[12.5px] leading-snug text-[#92400E]">
+              Please ensure all details are accurate before submitting. Vehicle
+              information cannot be edited after registration.
+            </p>
+          </div>
         </div>
       </div>
     </BusinessSetupLayout>
