@@ -137,6 +137,9 @@ const FleetComingSoon = lazy(
 const FleetDrivers = lazy(
   () => import("./business-transport/dashboard/pages/Drivers"),
 );
+const AddVehicle = lazy(
+  () => import("./business-transport/components/AddVehicle"),
+);
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
 function URLNormalizer() {
