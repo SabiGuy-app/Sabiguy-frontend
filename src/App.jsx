@@ -18,7 +18,7 @@ import NotificationSoundService from "./services/notificationSoundService";
 import { listenForMessages } from "./services/fcmService";
 import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from "@vercel/analytics/react";
 import BusinessForm from "./business-transport/signup/BusinessForm";
 
 // Lazy-loaded components
@@ -134,8 +134,8 @@ const FleetOverview = lazy(
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
 );
-const AddVehicle = lazy(
-  () => import("./business-transport/components/AddVehicle"),
+const FleetDrivers = lazy(
+  () => import("./business-transport/dashboard/pages/Drivers"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -341,7 +341,6 @@ function App() {
                 element={<WalletCallback />}
               />
               <Route path="/payment/callback" element={<WalletCallback />} />
-
               <Route element={<ProtectedRoute />}>
                 <Route path="/kyc/nin" element={<BuyerNinUpload />} />
                 <Route path="/kyc/pending" element={<BuyerKycPending />} />
@@ -440,7 +439,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/drivers"
-                  element={<FleetComingSoon title="Drivers" />}
+                  element={<FleetDrivers />}
                 />
                 <Route
                   path="/business-provider/dashboard/vehicles"
