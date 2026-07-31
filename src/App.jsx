@@ -18,15 +18,7 @@ import NotificationSoundService from "./services/notificationSoundService";
 import { listenForMessages } from "./services/fcmService";
 import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
-<<<<<<< HEAD
-import { Analytics } from "@vercel/analytics/react";
-import AddDriverForm from "./business-transport/signup/ServiceProvider/BusinessSetup/AddDriverForm";
-import AddVehicleForm from "./business-transport/signup/ServiceProvider/BusinessSetup/AddVehicleForm";
-import BusinessInfo from "./business-transport/signup/ServiceProvider/BusinessSetup/BusinessInfo";
-import IncomeSplitForm from "./business-transport/signup/ServiceProvider/BusinessSetup/IncomeSplitForm";
-=======
 import { Analytics } from '@vercel/analytics/react';
->>>>>>> 8440e8442d306e3c499a5a656d1db9bf01a7d6b0
 import BusinessForm from "./business-transport/signup/BusinessForm";
 
 // Lazy-loaded components
