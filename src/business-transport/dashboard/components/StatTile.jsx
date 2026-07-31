@@ -1,4 +1,4 @@
-import { FleetTrendArrowIcon } from "../icons";
+import { FleetTrendArrowIcon } from "../layout/icons";
 
 const TONE_CLASSES = {
   green: "text-[#005823]",
@@ -6,7 +6,13 @@ const TONE_CLASSES = {
   red: "text-red-600",
 };
 
-export default function StatTile({ label, value, trendLabel, trendDirection = "up", trendTone = "green" }) {
+export default function StatTile({
+  label,
+  value,
+  trendLabel,
+  trendDirection = "up",
+  trendTone = "green",
+}) {
   const toneClass = TONE_CLASSES[trendTone] || TONE_CLASSES.green;
 
   return (
@@ -16,7 +22,9 @@ export default function StatTile({ label, value, trendLabel, trendDirection = "u
       </p>
       <p className="mt-2 text-2xl font-semibold text-gray-900">{value}</p>
       {trendLabel && (
-        <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${toneClass}`}>
+        <p
+          className={`mt-1 flex items-center gap-1 text-xs font-medium ${toneClass}`}
+        >
           <FleetTrendArrowIcon size={13} direction={trendDirection} />
           {trendLabel}
         </p>

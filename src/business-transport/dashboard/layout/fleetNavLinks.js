@@ -10,7 +10,7 @@ import {
   FleetSettingsIcon,
   FleetTripsIcon,
   FleetVehiclesIcon,
-} from "../icons";
+} from "./icons";
 
 const BASE = "/business-provider/dashboard";
 
@@ -38,14 +38,28 @@ export const fleetNavGroups = [
   {
     section: "FLEET MANAGEMENT",
     items: [
-      { name: "Earnings & Payouts", path: `${BASE}/earnings`, icon: FleetEarningsIcon },
-      { name: "Performance & Ratings", path: `${BASE}/performance`, icon: FleetPerformanceIcon },
-      { name: "Documents", path: `${BASE}/documents`, icon: FleetDocumentsIcon },
+      {
+        name: "Earnings & Payouts",
+        path: `${BASE}/earnings`,
+        icon: FleetEarningsIcon,
+      },
+      {
+        name: "Performance & Ratings",
+        path: `${BASE}/performance`,
+        icon: FleetPerformanceIcon,
+      },
+      {
+        name: "Documents",
+        path: `${BASE}/documents`,
+        icon: FleetDocumentsIcon,
+      },
     ],
   },
   {
     section: "FLEET MANAGEMENT",
-    items: [{ name: "Settings", path: `${BASE}/settings`, icon: FleetSettingsIcon }],
+    items: [
+      { name: "Settings", path: `${BASE}/settings`, icon: FleetSettingsIcon },
+    ],
   },
 ];
 

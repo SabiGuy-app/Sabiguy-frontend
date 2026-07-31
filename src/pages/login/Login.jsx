@@ -724,10 +724,10 @@ export default function Login() {
   };
 
   // ── Google login ───────────────────────────────────────────────────────────
-  const handleFieldChange = (handleChange) => (e) => {
-    if (errorMessage) setErrorMessage("");
-    handleChange(e);
-  };
+  // const handleFieldChange = (handleChange) => (e) => {
+  //   if (errorMessage) setErrorMessage("");
+  //   handleChange(e);
+  // };
 
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {

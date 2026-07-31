@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { formatNaira } from "../utils/format";
-import { FleetArrowRightIcon } from "../icons";
+import { FleetArrowRightIcon } from "../layout/icons";
 
 const METRICS = [
   { key: "available", label: "Available" },
@@ -37,14 +37,17 @@ export default function FleetSnapshotCard({ snapshot = {} }) {
             <p className="text-xl font-semibold text-gray-900">
               {snapshot[metric.key] ?? 0}
             </p>
-            <p className="mt-0.5 text-[10px] text-gray-500 sm:text-xs">{metric.label}</p>
+            <p className="mt-0.5 text-[10px] text-gray-500 sm:text-xs">
+              {metric.label}
+            </p>
           </div>
         ))}
       </div>
 
       <p className="mt-4 text-xs text-gray-500 sm:text-sm">
-        Today: {formatNaira(snapshot.todayEarnings)} · Completed {snapshot.completed ?? 0} ·
-        Cancelled {snapshot.cancelled ?? 0} · Owed: {formatNaira(snapshot.owed)}
+        Today: {formatNaira(snapshot.todayEarnings)} · Completed{" "}
+        {snapshot.completed ?? 0} · Cancelled {snapshot.cancelled ?? 0} · Owed:{" "}
+        {formatNaira(snapshot.owed)}
       </p>
     </div>
   );
