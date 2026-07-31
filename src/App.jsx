@@ -75,6 +75,8 @@ const NotVerified = lazy(() => import("./pages/signup/ServiceProvider/kyc-not-ve
 const NotificationTest = lazy(() => import("./services/testNotify"));
 const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
 const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
+//const Assign = lazy(() => import("./pages/Assign.jsx"));
+const Retrun = lazy(() => import("./pages/Return.jsx"));
 
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -300,8 +302,8 @@ function App() {
                 <Route
                   path="/dashboard/provider/track-delivery"
                   element={<TrackDelivery />}
-                />
-                <Route path="/dashboard/settings" element={<ProfilePage />} />
+                /> 
+                <Route path="/dashboard/settings" element={<ProfilePage />} /> 
                 {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
                 <Route path="/dashboard/help" element={<ContactPage />} />
                 <Route
@@ -353,7 +355,17 @@ function App() {
                 <Route path="/bookings/summary" element={<BookingSummary2 />} />
                 <Route path="/bookings/trackrider" element={<TrackRider />} />
                 <Route path="/kyc-not-verified" element={<NotVerified />} />
-              </Route>
+
+                  {/*<Route
+                    path="/components/Assign"
+                    element={<Assign />}
+                  />
+
+                  <Route
+                    path="/page/Return"
+                    element={<Return />}
+                  />*/}
+                </Route>
             </Routes>
           </Suspense>
         </div>

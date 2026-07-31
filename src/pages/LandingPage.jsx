@@ -21,6 +21,9 @@ import {
 } from "../utils/animations";
 import { useNavigate } from "react-router-dom";
 import OptimizedImage from "../components/common/OptimizedImage";
+//import Assign from "../components/Assign.jsx";
+//import Return from "./components/Return.jsx";
+//import Invite from "../components/Invite.jsx";
 
 // Lazy-load the chatbot widget — not needed for initial render
 const LandingChatbotWidget = lazy(() =>
@@ -798,7 +801,9 @@ const LandingPage = () => {
           </div>
         </motion.div>
       </section>
-
+     {/*<Assign/>
+       <Return/>
+      <Invite />*/}
       <LandingFooter />
       <Suspense fallback={null}>
         <LandingChatbotWidget />
@@ -997,3 +1002,5 @@ const faqs = [
       "Pricing is calculated based on factors like distance, service type, and task requirements. The estimated price is shown before the job starts, so you know what to expect. SabiGuy focuses on fair and transparent pricing with no hidden charges.",
   },
 ];
+
+
