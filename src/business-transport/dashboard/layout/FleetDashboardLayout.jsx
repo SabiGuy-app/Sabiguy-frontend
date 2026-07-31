@@ -34,13 +34,13 @@ export default function FleetDashboardLayout({ children }) {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F7F7F7]">
       <FleetTopbar onMenuClick={toggleSidebar} />
 
-      <div className="flex min-h-screen bg-gray-50 pt-16 sm:pt-20">
+      <div className="flex min-h-screen min-w-0 bg-[#F7F7F7] pt-16 sm:pt-20">
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-black/50 md:hidden"
+            className="fixed inset-0 z-30 bg-black/50 xl:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -49,9 +49,9 @@ export default function FleetDashboardLayout({ children }) {
           onClose={() => setSidebarOpen(false)}
           wallet={mockWallet}
         />
-        <div className="flex w-full flex-1 flex-col md:ml-64">
-          <main className="min-h-[calc(100vh-4rem)] w-full flex-1 p-3 sm:min-h-[calc(100vh-5rem)] sm:p-6">
-            <div className="mx-auto w-full max-w-7xl">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col xl:ml-[325px]">
+          <main className="min-h-[calc(100vh-4rem)] min-w-0 max-w-full flex-1 overflow-x-hidden p-3 sm:min-h-[calc(100vh-5rem)] sm:p-6 xl:p-8">
+            <div className="mx-auto min-w-0 max-w-[1440px]">{children}</div>
           </main>
         </div>
       </div>
