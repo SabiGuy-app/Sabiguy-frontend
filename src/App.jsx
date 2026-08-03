@@ -132,8 +132,14 @@ const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
   () => import("./business-transport/dashboard/pages/FleetOverview"),
 );
+const FleetTrips = lazy(
+  () => import("./business-transport/dashboard/pages/TripsPage"),
+);
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
+);
+const FleetDrivers = lazy(
+  () => import("./business-transport/dashboard/pages/Drivers"),
 );
 
 const AddYourVehicle = lazy(
@@ -446,14 +452,14 @@ function App() {
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                {/* <Route
+                <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                /> */}
+                /> 
 
                 <Route
                   path="/business-provider/dashboard/trips"
-                  element={<FleetComingSoon title="Trips" />}
+                  element={<FleetTrips />}
                 />
                 <Route
                   path="/business-provider/dashboard/groups"

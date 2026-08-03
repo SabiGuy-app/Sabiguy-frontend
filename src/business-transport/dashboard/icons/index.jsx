@@ -3,12 +3,14 @@ import {
   ArrowRight,
   Car,
   Check,
+  ChevronDown,
   CircleAlert,
   ClipboardList,
   FileText,
   Layers,
   LayoutDashboard,
   Map as LucideMap,
+  Plus,
   Route,
   Settings,
   Star,
@@ -38,6 +40,10 @@ export const FleetSuccessIcon = Check;
 export const FleetCancelIcon = X;
 export const FleetErrorIcon = CircleAlert;
 export const FleetWarningIcon = AlertTriangle;
+export const FleetLiveTripIcon = Route;
+export const FleetStarIcon = Star;
+export const FleetChevronDownIcon = ChevronDown;
+export const FleetExportIcon = Plus;
 
 export const ArrowLeftIcon = ArrowLeft;
 export const AddIcon = Plus;
