@@ -138,6 +138,10 @@ const FleetDrivers = lazy(
   () => import("./business-transport/dashboard/pages/Drivers"),
 );
 
+const AddYourVehicle = lazy(
+  () => import("./business-transport/components/AddVehicle"),
+);
+
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
 function URLNormalizer() {
   const location = useLocation();
@@ -472,6 +476,10 @@ function App() {
                 <Route
                   path="/business-provider/dashboard/settings"
                   element={<FleetComingSoon title="Settings" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/add-your-vehicle"
+                  element={<AddYourVehicle title="Vehicle" />}
                 />
               </Route>
             </Routes>
