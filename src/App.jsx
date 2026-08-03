@@ -18,52 +18,94 @@ import NotificationSoundService from "./services/notificationSoundService";
 import { listenForMessages } from "./services/fcmService";
 import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
-import { Analytics } from '@vercel/analytics/react';
-import AddDriverForm from "./business-transport/signup/ServiceProvider/BusinessSetup/AddDriverForm";
-import AddVehicleForm from "./business-transport/signup/ServiceProvider/BusinessSetup/AddVehicleForm";
-import BusinessInfo from "./business-transport/signup/ServiceProvider/BusinessSetup/BusinessInfo";
-import IncomeSplitForm from "./business-transport/signup/ServiceProvider/BusinessSetup/IncomeSplitForm";
+import { Analytics } from "@vercel/analytics/react";
 import BusinessForm from "./business-transport/signup/BusinessForm";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
 const Congrats = lazy(() => import("./pages/signup/ServiceProvider/congrats"));
-const ForgotPassword = lazy(() => import("./pages/Forgot-Password/ForgotPassword"));
+const ForgotPassword = lazy(
+  () => import("./pages/Forgot-Password/ForgotPassword"),
+);
 const OtpInput = lazy(() => import("./pages/Forgot-Password/OtpInput"));
-const ResetPassword = lazy(() => import("./pages/Forgot-Password/ResetPassword"));
+const ResetPassword = lazy(
+  () => import("./pages/Forgot-Password/ResetPassword"),
+);
 const Success = lazy(() => import("./pages/Forgot-Password/success"));
 const SignupPage = lazy(() => import("./pages/signup/ServiceUser"));
 const SignupForm = lazy(() => import("./pages/signup/ServiceProvider"));
 const Login = lazy(() => import("./pages/login/Login"));
 const DashboardHome = lazy(() => import("./pages/Dashboard/sections/Homepage"));
-const Bookings = lazy(() => import("./pages/Dashboard/sections/Bookings/Bookings"));
-const SavedProfile = lazy(() => import("./pages/Dashboard/sections/SavedProfile"));
+const Bookings = lazy(
+  () => import("./pages/Dashboard/sections/Bookings/Bookings"),
+);
+const SavedProfile = lazy(
+  () => import("./pages/Dashboard/sections/SavedProfile"),
+);
 const ChatPage = lazy(() => import("./pages/Dashboard/sections/Chat"));
 const ActivityPage = lazy(() => import("./pages/Dashboard/sections/Activity"));
 const ProfilePage = lazy(() => import("./pages/Dashboard/sections/Settings"));
 const ContactPage = lazy(() => import("./pages/Dashboard/sections/Help"));
 const Categories = lazy(() => import("./pages/Dashboard/sections/Categories"));
-const DynamicServicePage = lazy(() => import("./pages/Dashboard/Services/pages/ServicePage"));
-const AmbulanceServices = lazy(() => import("./pages/Dashboard/Services/pages/AmbulanceServices"));
-const ProviderDetails = lazy(() => import("./pages/Dashboard/sections/ProviderDetails"));
-const ProviderDashboard = lazy(() => import("./pages/ProviderDashboard/sections/Homepage"));
-const HireAlerts = lazy(() => import("./pages/ProviderDashboard/sections/HireAlerts/HireAlerts"));
-const StartNavigation = lazy(() => import("./pages/ProviderDashboard/sections/HireAlerts/StartNavigation"));
-const TrackDelivery = lazy(() => import("./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery"));
-const ProviderProfilePage = lazy(() => import("./pages/ProviderDashboard/sections/Settings"));
-const Notifications = lazy(() => import("./pages/ProviderDashboard/sections/Notification"));
+const DynamicServicePage = lazy(
+  () => import("./pages/Dashboard/Services/pages/ServicePage"),
+);
+const AmbulanceServices = lazy(
+  () => import("./pages/Dashboard/Services/pages/AmbulanceServices"),
+);
+const ProviderDetails = lazy(
+  () => import("./pages/Dashboard/sections/ProviderDetails"),
+);
+const ProviderDashboard = lazy(
+  () => import("./pages/ProviderDashboard/sections/Homepage"),
+);
+const HireAlerts = lazy(
+  () => import("./pages/ProviderDashboard/sections/HireAlerts/HireAlerts"),
+);
+const StartNavigation = lazy(
+  () => import("./pages/ProviderDashboard/sections/HireAlerts/StartNavigation"),
+);
+const TrackDelivery = lazy(
+  () => import("./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery"),
+);
+const ProviderProfilePage = lazy(
+  () => import("./pages/ProviderDashboard/sections/Settings"),
+);
+const Notifications = lazy(
+  () => import("./pages/ProviderDashboard/sections/Notification"),
+);
 const SearchingLoader = lazy(() => import("./components/dashboard/Searching"));
-const AvailableProviders = lazy(() => import("./pages/Dashboard/sections/Bookings/AvailableProviders"));
-const BookingSummary = lazy(() => import("./pages/Dashboard/sections/Bookings/BookingSummary"));
-const PickupLocation = lazy(() => import("./pages/Dashboard/sections/Bookings/PickupLocation"));
-const ProviderHelp = lazy(() => import("./pages/ProviderDashboard/sections/ProviderHelp"));
-const ProviderActivity = lazy(() => import("./pages/ProviderDashboard/sections/ProviderActivity"));
-const ProviderChat = lazy(() => import("./pages/ProviderDashboard/sections/ProviderChat"));
+const AvailableProviders = lazy(
+  () => import("./pages/Dashboard/sections/Bookings/AvailableProviders"),
+);
+const BookingSummary = lazy(
+  () => import("./pages/Dashboard/sections/Bookings/BookingSummary"),
+);
+const PickupLocation = lazy(
+  () => import("./pages/Dashboard/sections/Bookings/PickupLocation"),
+);
+const ProviderHelp = lazy(
+  () => import("./pages/ProviderDashboard/sections/ProviderHelp"),
+);
+const ProviderActivity = lazy(
+  () => import("./pages/ProviderDashboard/sections/ProviderActivity"),
+);
+const ProviderChat = lazy(
+  () => import("./pages/ProviderDashboard/sections/ProviderChat"),
+);
 const WalletCallback = lazy(() => import("./pages/WalletCallback"));
-const VehicleType = lazy(() => import("./pages/Dashboard/sections/Bookings/VehicleType"));
-const AvailableRiders = lazy(() => import("./pages/Dashboard/sections/Bookings/AvailableRiders"));
-const BookingSummary2 = lazy(() => import("./pages/Dashboard/sections/Bookings/BookingSummary2"));
-const TrackRider = lazy(() => import("./pages/Dashboard/sections/Bookings/TrackRider"));
+const VehicleType = lazy(
+  () => import("./pages/Dashboard/sections/Bookings/VehicleType"),
+);
+const AvailableRiders = lazy(
+  () => import("./pages/Dashboard/sections/Bookings/AvailableRiders"),
+);
+const BookingSummary2 = lazy(
+  () => import("./pages/Dashboard/sections/Bookings/BookingSummary2"),
+);
+const TrackRider = lazy(
+  () => import("./pages/Dashboard/sections/Bookings/TrackRider"),
+);
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const PolicyPage = lazy(() => import("./pages/Policies/PrivacyPolicy"));
 const TermsOfUse = lazy(() => import("./pages/Policies/TermsOfUse"));
@@ -71,16 +113,30 @@ const PaymentPolicy = lazy(() => import("./pages/Policies/Payment&Refunds"));
 const SafetyPolicy = lazy(() => import("./pages/Policies/Safety&Trust"));
 const RideServicesPolicy = lazy(() => import("./pages/Policies/RideServices"));
 const DispatchPolicy = lazy(() => import("./pages/Policies/Dispatch&Delivery"));
-const WebsiteDisclaimer = lazy(() => import("./pages/Policies/WebsiteDisclaimer"));
+const WebsiteDisclaimer = lazy(
+  () => import("./pages/Policies/WebsiteDisclaimer"),
+);
 const CookiePolicy = lazy(() => import("./pages/Policies/Cookie"));
-const CommunityGuidelines = lazy(() => import("./pages/Policies/CommunityGuidelines"));
+const CommunityGuidelines = lazy(
+  () => import("./pages/Policies/CommunityGuidelines"),
+);
 const ProtectedRoute = lazy(() => import("./components/routes/ProtectedRoute"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
-const NotVerified = lazy(() => import("./pages/signup/ServiceProvider/kyc-not-verified"));
+const NotVerified = lazy(
+  () => import("./pages/signup/ServiceProvider/kyc-not-verified"),
+);
 const NotificationTest = lazy(() => import("./services/testNotify"));
 const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
 const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
-
+const FleetOverview = lazy(
+  () => import("./business-transport/dashboard/pages/FleetOverview"),
+);
+const FleetComingSoon = lazy(
+  () => import("./business-transport/dashboard/pages/ComingSoonPage"),
+);
+const FleetDrivers = lazy(
+  () => import("./business-transport/dashboard/pages/Drivers"),
+);
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
 function URLNormalizer() {
@@ -117,11 +173,11 @@ function ScrollToTopOnRouteChange() {
   useEffect(() => {
     // If there's a hash and an element exists, let the existing handlers handle it.
     if (hash) {
-      const id = hash.replace('#', '');
+      const id = hash.replace("#", "");
       const el = document.getElementById(id);
       if (el) {
         // scroll to the element smoothly
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
     }
@@ -249,11 +305,20 @@ function App() {
               <Route path="/policies/terms" element={<TermsOfUse />} />
               <Route path="/policies/payment" element={<PaymentPolicy />} />
               <Route path="/policies/safety" element={<SafetyPolicy />} />
-              <Route path="/policies/ride-services" element={<RideServicesPolicy />} />
-              <Route path="/policies/dispatch-delivery" element={<DispatchPolicy />} />
+              <Route
+                path="/policies/ride-services"
+                element={<RideServicesPolicy />}
+              />
+              <Route
+                path="/policies/dispatch-delivery"
+                element={<DispatchPolicy />}
+              />
               <Route path="/policies/website" element={<WebsiteDisclaimer />} />
               <Route path="/policies/cookies" element={<CookiePolicy />} />
-              <Route path="/policies/community" element={<CommunityGuidelines />} />
+              <Route
+                path="/policies/community"
+                element={<CommunityGuidelines />}
+              />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/service-provider/signup" element={<SignupForm />} />
               <Route path="/congrats" element={<Congrats />} />
@@ -265,7 +330,10 @@ function App() {
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/kyc-not-verified" element={<NotVerified />} />
 
-              <Route path="/business-provider/signup" element={<BusinessForm />} />
+              <Route
+                path="/business-provider/signup"
+                element={<BusinessForm />}
+              />
 
               {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
               <Route
@@ -273,7 +341,6 @@ function App() {
                 element={<WalletCallback />}
               />
               <Route path="/payment/callback" element={<WalletCallback />} />
-
               <Route element={<ProtectedRoute />}>
                 <Route path="/kyc/nin" element={<BuyerNinUpload />} />
                 <Route path="/kyc/pending" element={<BuyerKycPending />} />
@@ -360,6 +427,52 @@ function App() {
                 <Route path="/bookings/summary" element={<BookingSummary2 />} />
                 <Route path="/bookings/trackrider" element={<TrackRider />} />
                 <Route path="/kyc-not-verified" element={<NotVerified />} />
+
+                {/* Business / fleet-operator dashboard */}
+                <Route
+                  path="/business-provider/dashboard"
+                  element={<FleetOverview />}
+                />
+                <Route
+                  path="/business-provider/dashboard/live-map"
+                  element={<FleetComingSoon title="Live Map" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/drivers"
+                  element={<FleetDrivers />}
+                />
+                <Route
+                  path="/business-provider/dashboard/vehicles"
+                  element={<FleetComingSoon title="Vehicles" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/trips"
+                  element={<FleetComingSoon title="Trips" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/groups"
+                  element={<FleetComingSoon title="Groups" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/policies"
+                  element={<FleetComingSoon title="Policies" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/earnings"
+                  element={<FleetComingSoon title="Earnings & Payouts" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/performance"
+                  element={<FleetComingSoon title="Performance & Ratings" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/documents"
+                  element={<FleetComingSoon title="Documents" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/settings"
+                  element={<FleetComingSoon title="Settings" />}
+                />
               </Route>
             </Routes>
           </Suspense>
