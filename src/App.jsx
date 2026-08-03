@@ -129,19 +129,18 @@ const NotVerified = lazy(
 const NotificationTest = lazy(() => import("./services/testNotify"));
 const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
 const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
-<<<<<<< HEAD
-const FleetOverview = lazy(() => import("./business-transport/dashboard/pages/FleetOverview"));
-const FleetTrips = lazy(() => import("./business-transport/dashboard/pages/TripsPage"));
-const FleetComingSoon = lazy(() => import("./business-transport/dashboard/pages/ComingSoonPage"));
-
-=======
 const FleetOverview = lazy(
   () => import("./business-transport/dashboard/pages/FleetOverview"),
+);
+const FleetTrips = lazy(
+  () => import("./business-transport/dashboard/pages/TripsPage"),
 );
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
 );
->>>>>>> 27bbec3e2d67186420a68bd46734ae644f92080a
+const FleetDrivers = lazy(
+  () => import("./business-transport/dashboard/pages/Drivers"),
+);
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
 function URLNormalizer() {
@@ -449,10 +448,10 @@ function App() {
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                {/* <Route
+                <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                /> */}
+                /> 
 
                 <Route
                   path="/business-provider/dashboard/trips"
