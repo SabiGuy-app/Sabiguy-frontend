@@ -444,7 +444,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/drivers"
-                  element={<FleetComingSoon title="Drivers" />}
+                  element={<FleetDrivers />}
                 />
 
                 <Route
