@@ -46,28 +46,36 @@ export default function FleetSidebar({ open = false, onClose, wallet = {} }) {
       )}
 
       <aside
-        className={`fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] w-3/4 transform flex-col border-r border-gray-200 bg-white p-4 shadow-xl transition-transform duration-300 sm:top-20 sm:h-[calc(100vh-5rem)] sm:p-6 md:w-64 md:shadow-none ${
-          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] w-[min(86vw,325px)] transform flex-col border-r border-[#DDDADB] bg-white p-4 shadow-xl transition-transform duration-300 sm:top-20 sm:h-[calc(100vh-5rem)] sm:p-6 xl:top-0 xl:h-screen xl:w-[325px] xl:px-10 xl:py-8 xl:shadow-none ${
+          open ? "translate-x-0" : "-translate-x-full xl:translate-x-0"
         }`}
       >
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="text-sm font-medium text-gray-500">
-            Wallet: <span className="font-semibold text-gray-900">{formatNaira(wallet.balance)}</span>
+        <button
+          type="button"
+          onClick={() => navigate("/business-provider/dashboard")}
+          className="mb-9 hidden w-fit xl:block"
+        >
+          <img src="/logo.jpg" alt="SabiGuy Logo" className="h-10 w-auto" />
+        </button>
+
+        <div className="rounded-xl border border-[#88B99E] bg-[#F4FAF7] px-4 py-3">
+          <p className="text-base font-medium text-[#2D2A2B]">
+            Wallet: <span className="font-semibold">{formatNaira(wallet.balance)}</span>
           </p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-sm text-[#656263]">
             Owed to drivers: {formatNaira(wallet.owedToDrivers)}
           </p>
         </div>
 
-        <nav className="mt-5 flex-1 space-y-5 overflow-y-auto">
+        <nav className="mt-7 flex-1 space-y-6 overflow-y-auto">
           {fleetNavGroups.map((group, groupIndex) => (
             <div key={`${group.section || "primary"}-${groupIndex}`}>
               {group.section && (
-                <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[#8C898A]">
                   {group.section}
                 </p>
               )}
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {group.items.map((link) => {
                   const isActive = pathname === link.path;
                   const Icon = link.icon;
@@ -76,7 +84,7 @@ export default function FleetSidebar({ open = false, onClose, wallet = {} }) {
                       key={link.path}
                       to={link.path}
                       onClick={() => onClose?.()}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#231F20] hover:bg-[#005823]/10 ${
+                      className={`flex items-center gap-4 rounded-lg px-4 py-3 text-base text-[#5F5C5D] hover:bg-[#005823]/10 ${
                         isActive ? "bg-[#005823] font-medium text-white" : ""
                       }`}
                     >

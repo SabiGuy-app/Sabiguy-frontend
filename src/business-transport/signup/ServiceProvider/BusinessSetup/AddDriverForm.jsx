@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Plus, Contact } from "lucide-react";
+import { Plus, IdCard } from "lucide-react";
 import InputField from "../../../../components/InputField";
 import BusinessSetupLayout from "../BusinessSetupLayout";
 import { IoIosArrowBack } from "react-icons/io";
 
+const DRIVER_ID_REGEX = /^[A-Za-z]{2,5}-\d{4,8}$/;
+
 export default function AddDriverForm({ onNext, onBack }) {
   const [invites, setInvites] = useState([]);
-  const [phone, setPhone] = useState("");
+  const [driverId, setDriverId] = useState("");
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
@@ -14,26 +16,26 @@ export default function AddDriverForm({ onNext, onBack }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const validatePhone = (value) => {
-    if (!value.trim()) return "Driver phone number is required";
-    if (!/^\+?\d{10,14}$/.test(value.trim().replace(/\s/g, ""))) {
-      return "Enter a valid phone number";
+  const validateDriverId = (value) => {
+    if (!value.trim()) return "Driver ID is required";
+    if (!DRIVER_ID_REGEX.test(value.trim())) {
+      return "Enter a valid driver ID, e.g. SGD-284961";
     }
     return "";
   };
 
   const handleChange = (e) => {
-    setPhone(e.target.value);
-    if (touched) setError(validatePhone(e.target.value));
+    setDriverId(e.target.value);
+    if (touched) setError(validateDriverId(e.target.value));
   };
 
   const handleBlur = () => {
     setTouched(true);
-    setError(validatePhone(phone));
+    setError(validateDriverId(driverId));
   };
 
   const handleSendInvite = async () => {
-    const err = validatePhone(phone);
+    const err = validateDriverId(driverId);
     if (err) {
       setTouched(true);
       setError(err);
@@ -45,9 +47,9 @@ export default function AddDriverForm({ onNext, onBack }) {
 
     setInvites((list) => [
       ...list,
-      { id: Date.now(), phone: phone.trim(), status: "invited" },
+      { id: Date.now(), driverId: driverId.trim(), status: "invited" },
     ]);
-    setPhone("");
+    setDriverId("");
     setTouched(false);
     setError("");
   };
@@ -58,9 +60,8 @@ export default function AddDriverForm({ onNext, onBack }) {
 
     setSubmitting(true);
     try {
-
       setSuccessMessage("Drivers saved successfully!");
-      goNext({ invites });
+      onNext({ invites });
     } catch (error) {
       console.error("AddDriverForm submit error:", error);
       if (error.response) {
@@ -90,11 +91,11 @@ export default function AddDriverForm({ onNext, onBack }) {
         </div>
         <div className="w-full max-w-lg px-5 py-8">
           <h1 className="text-[20px] font-semibold text-[#231F20]">
-            Invite your drivers
+            Invite drivers
           </h1>
-          <p className="mt-1.5 text-[16px] text-[#231F20BF]">
-            Send an SMS invite. Drivers complete their own signup and link to
-            your fleet.
+          <p className="mt-1.5 text-[16px] leading-snug text-[#231F20BF]">
+            Enter a registered driver&rsquo;s ID to send a fleet invitation.
+            They&rsquo;ll need to accept before joining your fleet.
           </p>
 
           {invites.length > 0 && (
@@ -106,10 +107,10 @@ export default function AddDriverForm({ onNext, onBack }) {
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md text-black">
-                      <Contact size={20} />
+                      <IdCard size={20} />
                     </div>
-                    <span className="text-[20px] text-[#231F20]">
-                      {inv.phone}
+                    <span className="text-[16px] font-medium text-[#231F20]">
+                      {inv.driverId}
                     </span>
                   </div>
                   <span className="rounded-full bg-[#FEF3C7] border border-[#FFC107] px-4 py-1 text-[12px] font-medium text-[#92400E]">
@@ -129,14 +130,13 @@ export default function AddDriverForm({ onNext, onBack }) {
           >
             <div>
               <InputField
-                name="phone"
-                label="Driver phone"
-                placeholder="+2348136000002"
-                value={phone}
+                name="driverId"
+                label="Driver ID"
+                placeholder="e.g. SGD-284961"
+                value={driverId}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={touched ? error : ""}
-                inputMode="tel"
               />
               {touched && error && (
                 <p className="mt-1.5 text-[12px] text-red-600">{error}</p>
@@ -147,7 +147,7 @@ export default function AddDriverForm({ onNext, onBack }) {
               type="button"
               onClick={handleSendInvite}
               disabled={sending}
-              className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-3 text-[13px] font-medium text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-[#005823] py-3.5 text-[14px] font-medium text-[#005823] hover:bg-[#00582310] transition-colors disabled:opacity-60"
             >
               <Plus size={15} />
               {sending ? "Sending..." : "Send Invite"}

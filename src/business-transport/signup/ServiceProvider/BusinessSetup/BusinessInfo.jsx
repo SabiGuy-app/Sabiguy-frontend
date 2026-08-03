@@ -11,14 +11,15 @@ export default function BusinessInfo({ onNext, onBack }) {
     cacNumber: "",
     address: "",
     city: "",
-    nin: "",
   });
   const [file, setFile] = useState(null);
+  const [ninFile, setNinFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const fileInputRef = useRef(null);
+  const ninFileInputRef = useRef(null);
 
   const handleChange = (field) => (e) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -38,6 +39,19 @@ export default function BusinessInfo({ onNext, onBack }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleNinFileSelect = (e) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      setNinFile(f);
+      if (errors.ninFile) setErrors((er) => ({ ...er, ninFile: undefined }));
+    }
+  };
+
+  const removeNinFile = () => {
+    setNinFile(null);
+    if (ninFileInputRef.current) ninFileInputRef.current.value = "";
+  };
+
   const validate = () => {
     const next = {};
     if (!form.businessName.trim())
@@ -47,9 +61,7 @@ export default function BusinessInfo({ onNext, onBack }) {
     if (!form.address.trim()) next.address = "Business address is required";
     if (!form.city.trim()) next.city = "City of operation is required";
     if (!file) next.file = "Please upload your CAC certificate";
-    if (!form.nin.trim()) next.nin = "NIN is required";
-    else if (!/^\d{11}$/.test(form.nin.trim()))
-      next.nin = "NIN must be 11 digits";
+    if (!ninFile) next.ninFile = "Please upload your NIN slip";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -71,9 +83,8 @@ export default function BusinessInfo({ onNext, onBack }) {
 
     setSubmitting(true);
     try {
-
       setSuccessMessage("Business information saved successfully!");
-      onNext({ ...form, file });
+      onNext({ ...form, file, ninFile });
     } catch (error) {
       console.error("BusinessInfo submit error:", error);
       if (error.response) {
@@ -93,9 +104,7 @@ export default function BusinessInfo({ onNext, onBack }) {
 
   return (
     <BusinessSetupLayout currentStep={1}>
-      <div
-        style={{ background: "#fff", minHeight: "100vh" }}
-      >
+      <div style={{ background: "#fff", minHeight: "100vh" }}>
         <Link
           to={"/service-provider/signup"}
           className="flex items-center gap-2 w-fit cursor-pointer"
@@ -233,17 +242,56 @@ export default function BusinessInfo({ onNext, onBack }) {
             </div>
 
             <div>
-              <InputField
-                name="nin"
-                label="NIN"
-                placeholder="Enter your NIN number"
-                value={form.nin}
-                onChange={handleChange("nin")}
-                error={errors.nin}
-                inputMode="numeric"
+              <label className="block text-[13px] font-medium text-gray-900">
+                Upload NIN Slip
+              </label>
+              <p className="mt-1 text-[12.5px] leading-snug text-gray-500">
+                Kindly upload a picture of your NIN slip (make sure all details
+                are readable)
+              </p>
+
+              <input
+                ref={ninFileInputRef}
+                type="file"
+                accept="image/*,.pdf"
+                className="hidden"
+                onChange={handleNinFileSelect}
               />
-              {errors.nin && (
-                <p className="mt-1.5 text-[12px] text-red-600">{errors.nin}</p>
+
+              {!ninFile ? (
+                <button
+                  type="button"
+                  onClick={() => ninFileInputRef.current?.click()}
+                  className="mt-3 w-full flex items-center justify-center gap-2 rounded-lg bg-gray-100 py-3.5 text-[13px] font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+                >
+                  <Upload size={15} strokeWidth={2} />
+                  Upload file
+                </button>
+              ) : (
+                <div className="mt-3 w-full flex items-center justify-between gap-2 rounded-lg bg-gray-100 py-3 px-4">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileCheck2
+                      size={16}
+                      className="text-emerald-700 shrink-0"
+                    />
+                    <span className="text-[13px] text-gray-700 truncate">
+                      {ninFile.name}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeNinFile}
+                    aria-label="Remove file"
+                    className="shrink-0 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              )}
+              {errors.ninFile && (
+                <p className="mt-1.5 text-[12px] text-red-600">
+                  {errors.ninFile}
+                </p>
               )}
             </div>
           </form>
@@ -266,26 +314,5 @@ export default function BusinessInfo({ onNext, onBack }) {
         </div>
       </div>
     </BusinessSetupLayout>
-  );
-}
-
-function Field({ label, placeholder, value, onChange, error, inputMode }) {
-  return (
-    <div>
-      <label className="block text-[13px] font-medium text-gray-900">
-        {label}
-      </label>
-      <input
-        type="text"
-        inputMode={inputMode}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`mt-2 w-full rounded-lg bg-gray-100 px-4 py-3.5 text-[13.5px] text-gray-800 placeholder:text-gray-400 outline-none focus:ring-2 transition-shadow ${
-          error ? "ring-2 ring-red-300" : "focus:ring-emerald-700/40"
-        }`}
-      />
-      {error && <p className="mt-1.5 text-[12px] text-red-600">{error}</p>}
-    </div>
   );
 }
