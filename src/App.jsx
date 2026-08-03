@@ -81,6 +81,7 @@ const NotificationTest = lazy(() => import("./services/testNotify"));
 const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
 const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(() => import("./business-transport/dashboard/pages/FleetOverview"));
+const FleetTrips = lazy(() => import("./business-transport/dashboard/pages/TripsPage"));
 const FleetComingSoon = lazy(() => import("./business-transport/dashboard/pages/ComingSoonPage"));
 
 
@@ -382,7 +383,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/trips"
-                  element={<FleetComingSoon title="Trips" />}
+                  element={<FleetTrips />}
                 />
                 <Route
                   path="/business-provider/dashboard/groups"

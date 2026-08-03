@@ -3,12 +3,14 @@ import {
   ArrowRight,
   Car,
   Check,
+  ChevronDown,
   CircleAlert,
   ClipboardList,
   FileText,
   Layers,
   LayoutDashboard,
   Map as LucideMap,
+  Plus,
   Route,
   Settings,
   Star,
@@ -35,6 +37,10 @@ export const FleetSuccessIcon = Check;
 export const FleetCancelIcon = X;
 export const FleetErrorIcon = CircleAlert;
 export const FleetWarningIcon = AlertTriangle;
+export const FleetLiveTripIcon = Route;
+export const FleetStarIcon = Star;
+export const FleetChevronDownIcon = ChevronDown;
+export const FleetExportIcon = Plus;
 
 export function FleetTrendArrowIcon({ size = 16, className = "", direction = "up", ...props }) {
   const rotationClass = direction === "down" ? "rotate-180" : "";
