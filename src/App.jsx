@@ -20,6 +20,7 @@ import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
 import { Analytics } from "@vercel/analytics/react";
 import BusinessForm from "./business-transport/signup/BusinessForm";
+import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -131,6 +132,9 @@ const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
   () => import("./business-transport/dashboard/pages/FleetOverview"),
 );
+const FleetTrips = lazy(
+  () => import("./business-transport/dashboard/pages/TripsPage"),
+);
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
 );
@@ -142,6 +146,10 @@ const FleetPerformance = lazy(
 );
 const FleetDocuments = lazy(
   () => import("./business-transport/dashboard/pages/Documents"),
+);
+
+const AddYourVehicle = lazy(
+  () => import("./business-transport/components/AddVehicle"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -347,6 +355,17 @@ function App() {
                 element={<WalletCallback />}
               />
               <Route path="/payment/callback" element={<WalletCallback />} />
+
+              <Route
+                path="/business-provider/dashboard"
+                element={<FleetOverview />}
+              />
+
+              <Route
+                path="/business-provider/dashboard/vehicles"
+                element={<VehiclesPage title="Vehicles" />}
+              />
+
               <Route element={<ProtectedRoute />}>
                 <Route path="/kyc/nin" element={<BuyerNinUpload />} />
                 <Route path="/kyc/pending" element={<BuyerKycPending />} />
@@ -436,24 +455,17 @@ function App() {
 
                 {/* Business / fleet-operator dashboard */}
                 <Route
-                  path="/business-provider/dashboard"
-                  element={<FleetOverview />}
-                />
-                <Route
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
                 <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                />
-                <Route
-                  path="/business-provider/dashboard/vehicles"
-                  element={<FleetComingSoon title="Vehicles" />}
-                />
+                /> 
+
                 <Route
                   path="/business-provider/dashboard/trips"
-                  element={<FleetComingSoon title="Trips" />}
+                  element={<FleetTrips />}
                 />
                 <Route
                   path="/business-provider/dashboard/groups"
@@ -478,6 +490,10 @@ function App() {
                 <Route
                   path="/business-provider/dashboard/settings"
                   element={<FleetComingSoon title="Settings" />}
+                />
+                <Route
+                  path="/business-provider/dashboard/add-your-vehicle"
+                  element={<AddYourVehicle title="Vehicle" />}
                 />
               </Route>
             </Routes>
