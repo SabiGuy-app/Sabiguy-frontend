@@ -11,8 +11,10 @@ export default function SidebarProgress({ steps, currentStep }) {
     >
       {/* <div className="flex items-center justify-center"> */}
       <h1 className="text-2xl font-bold text-[#005823BF] mt-8">SabiGuy</h1>
-      <h2 className="text-base font-semibold text-gray-900 mt-10 mb-8">Account Setup</h2>
-{/* </div> */}
+      <h2 className="text-base font-semibold text-gray-900 mt-10 mb-8">
+        Account Setup
+      </h2>
+      {/* </div> */}
       <div className="flex flex-col relative gap-6">
         {steps.map((step, index) => {
           const isActive = currentStep === index;
@@ -37,8 +39,8 @@ export default function SidebarProgress({ steps, currentStep }) {
                     isCompleted
                       ? "bg-[#005823BF] border-[#005823BF] text-white"
                       : isActive
-                      ? "border-[#005823BF] text-[#005823BF]"
-                      : "border-gray-300 text-gray-400"
+                        ? "border-[#005823BF] text-[#005823BF]"
+                        : "border-gray-300 text-gray-400"
                   }`}
               >
                 {isCompleted ? "✓" : index + 1}
@@ -49,8 +51,8 @@ export default function SidebarProgress({ steps, currentStep }) {
                   isActive
                     ? "text-[#005823BF]"
                     : isCompleted
-                    ? "text-gray-700"
-                    : "text-gray-500"
+                      ? "text-gray-700"
+                      : "text-gray-500"
                 }`}
               >
                 {step}
