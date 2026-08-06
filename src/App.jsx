@@ -443,10 +443,10 @@ function App() {
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                {/* <Route
+                 <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                /> */}
+                /> 
 
                 <Route
                   path="/business-provider/dashboard/trips"
@@ -476,7 +476,6 @@ function App() {
                   path="/business-provider/dashboard/settings"
                   element={<FleetComingSoon title="Settings" />}
                 />
-              </Route>
             </Routes>
           </Suspense>
         </div>
