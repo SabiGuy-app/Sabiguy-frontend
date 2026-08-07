@@ -141,6 +141,12 @@ const FleetComingSoon = lazy(
 const FleetDrivers = lazy(
   () => import("./business-transport/dashboard/pages/Drivers"),
 );
+const FleetPerformance = lazy(
+  () => import("./business-transport/dashboard/pages/Performance"),
+);
+const FleetDocuments = lazy(
+  () => import("./business-transport/dashboard/pages/Documents"),
+);
 
 const AddYourVehicle = lazy(
   () => import("./business-transport/components/AddVehicle"),
@@ -475,11 +481,11 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/performance"
-                  element={<FleetComingSoon title="Performance & Ratings" />}
+                  element={<FleetPerformance />}
                 />
                 <Route
                   path="/business-provider/dashboard/documents"
-                  element={<FleetComingSoon title="Documents" />}
+                  element={<FleetDocuments />}
                 />
                 <Route
                   path="/business-provider/dashboard/settings"

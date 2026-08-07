@@ -20,7 +20,6 @@ import {
   X,
   ArrowLeft,
   CloudUpload,
-  Plus,
 } from "lucide-react";
 
 export const FleetOverviewIcon = LayoutDashboard;

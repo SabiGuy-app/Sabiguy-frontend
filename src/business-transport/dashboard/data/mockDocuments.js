@@ -1,0 +1,60 @@
+export const mockDocuments = [
+  {
+    id: "doc-1",
+    title: "Roadworthiness cert",
+    owner: "OY-003-IBD",
+    category: "vehicle",
+    detail: "Vehicle document · expired 4 days ago",
+    status: "expired",
+  },
+  {
+    id: "doc-2",
+    title: "Driver's licence",
+    owner: "Fatima Kuti",
+    category: "driver",
+    detail: "Driver document · 17 days left",
+    status: "expiring",
+  },
+  {
+    id: "doc-3",
+    title: "Vehicle insurance",
+    owner: "OY-002-IBD",
+    category: "vehicle",
+    detail: "Vehicle document · in review",
+    status: "review",
+  },
+  {
+    id: "doc-4",
+    title: "Driver's licence",
+    owner: "Emeka Obi",
+    category: "driver",
+    detail: "Driver document · 140 days left",
+    status: "active",
+  },
+  {
+    id: "doc-5",
+    title: "Vehicle papers",
+    owner: "OY-001-IBD",
+    category: "vehicle",
+    detail: "Vehicle document · 200 days left",
+    status: "active",
+  },
+  {
+    id: "doc-6",
+    title: "Rider permit",
+    owner: "Tunde Adeyemi",
+    category: "driver",
+    detail: "Driver document · 290 days left",
+    status: "active",
+  },
+  {
+    id: "doc-7",
+    title: "CAC certificate",
+    owner: "Adewale Fleet Services",
+    category: "business",
+    detail: "Business document · 320 days left",
+    status: "active",
+  },
+];
+
+export default mockDocuments;
