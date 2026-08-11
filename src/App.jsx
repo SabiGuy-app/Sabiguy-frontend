@@ -132,24 +132,8 @@ const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
   () => import("./business-transport/dashboard/pages/FleetOverview"),
 );
-const FleetTrips = lazy(
-  () => import("./business-transport/dashboard/pages/TripsPage"),
-);
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
-);
-const FleetDrivers = lazy(
-  () => import("./business-transport/dashboard/pages/Drivers"),
-);
-const FleetPerformance = lazy(
-  () => import("./business-transport/dashboard/pages/Performance"),
-);
-const FleetDocuments = lazy(
-  () => import("./business-transport/dashboard/pages/Documents"),
-);
-
-const AddYourVehicle = lazy(
-  () => import("./business-transport/components/AddVehicle"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -399,8 +383,8 @@ function App() {
                 <Route
                   path="/dashboard/provider/track-delivery"
                   element={<TrackDelivery />}
-                />
-                <Route path="/dashboard/settings" element={<ProfilePage />} />
+                /> 
+                <Route path="/dashboard/settings" element={<ProfilePage />} /> 
                 {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
                 <Route path="/dashboard/help" element={<ContactPage />} />
                 <Route
@@ -453,19 +437,20 @@ function App() {
                 <Route path="/bookings/trackrider" element={<TrackRider />} />
                 <Route path="/kyc-not-verified" element={<NotVerified />} />
 
+                </Route>
                 {/* Business / fleet-operator dashboard */}
                 <Route
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                <Route
+                 <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
                 /> 
 
                 <Route
                   path="/business-provider/dashboard/trips"
-                  element={<FleetTrips />}
+                  element={<FleetComingSoon title="Trips" />}
                 />
                 <Route
                   path="/business-provider/dashboard/groups"
@@ -481,21 +466,16 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/performance"
-                  element={<FleetPerformance />}
+                  element={<FleetComingSoon title="Performance & Ratings" />}
                 />
                 <Route
                   path="/business-provider/dashboard/documents"
-                  element={<FleetDocuments />}
+                  element={<FleetComingSoon title="Documents" />}
                 />
                 <Route
                   path="/business-provider/dashboard/settings"
                   element={<FleetComingSoon title="Settings" />}
                 />
-                <Route
-                  path="/business-provider/dashboard/add-your-vehicle"
-                  element={<AddYourVehicle title="Vehicle" />}
-                />
-              </Route>
             </Routes>
           </Suspense>
         </div>
