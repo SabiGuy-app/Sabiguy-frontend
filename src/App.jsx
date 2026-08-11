@@ -147,6 +147,9 @@ const FleetPerformance = lazy(
 const FleetDocuments = lazy(
   () => import("./business-transport/dashboard/pages/Documents"),
 );
+const FleetSettings = lazy(
+  () => import("./business-transport/dashboard/pages/Settings"),
+);
 
 const AddYourVehicle = lazy(
   () => import("./business-transport/components/AddVehicle"),
@@ -489,7 +492,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/settings"
-                  element={<FleetComingSoon title="Settings" />}
+                  element={<FleetSettings />}
                 />
                 <Route
                   path="/business-provider/dashboard/add-your-vehicle"

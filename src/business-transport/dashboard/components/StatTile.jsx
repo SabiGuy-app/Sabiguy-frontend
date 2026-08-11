@@ -6,8 +6,6 @@ const TONE_CLASSES = {
   red: "text-red-600",
 };
 
-// Figma "Completed Green"/"Red Color" variables — distinct from brand #005823,
-// used when the stat's own value (not just its trend line) needs a color.
 const VALUE_TONE_CLASSES = {
   default: "text-gray-900",
   green: "text-[#28A745]",
