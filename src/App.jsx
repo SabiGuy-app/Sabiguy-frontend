@@ -333,6 +333,8 @@ function App() {
                 element={<BusinessForm />}
               />
 
+                
+
               {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
               <Route
                 path="/wallet/funding/callback"
