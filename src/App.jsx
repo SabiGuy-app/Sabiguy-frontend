@@ -23,6 +23,7 @@ import BusinessForm from "./business-transport/signup/BusinessForm";
 import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
 import GroupsManagement from "./business-transport/dashboard/pages/GroupsPage";
 import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
+import Earnings from "./business-transport/dashboard/pages/Earnings";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -452,10 +453,10 @@ function App() {
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                 <Route
+                 {/* <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                /> 
+                />  */}
 
                 <Route
                   path="/business-provider/dashboard/trips"
@@ -468,7 +469,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/earnings"
-                  element={<FleetComingSoon title="Earnings & Payouts" />}
+                  element={<Earnings title="Earnings & Payouts" />}
                 />
                 <Route
                   path="/business-provider/dashboard/performance"
