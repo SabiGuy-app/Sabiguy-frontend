@@ -35,6 +35,9 @@ const ResetPassword = lazy(
   () => import("./pages/Forgot-Password/ResetPassword"),
 );
 const Success = lazy(() => import("./pages/Forgot-Password/success"));
+const FleetDrivers = lazy(
+  () => import("./business-transport/dashboard/pages/Drivers"),
+);
 const SignupPage = lazy(() => import("./pages/signup/ServiceUser"));
 const SignupForm = lazy(() => import("./pages/signup/ServiceProvider"));
 const Login = lazy(() => import("./pages/login/Login"));
