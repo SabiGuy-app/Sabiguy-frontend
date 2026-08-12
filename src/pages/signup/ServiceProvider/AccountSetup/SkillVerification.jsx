@@ -225,8 +225,7 @@ export default function SkillsVerification({ onNext, onBack }) {
             vehicleName: "",
             vehicleRegNo: "",
             vehicleColor: "",
-            vehicleTypes: "",
-            vehicleModel: "",
+            vehicleType: "",
             vehiclePictures: [],
 
             // Domestic fields
@@ -245,12 +244,6 @@ export default function SkillsVerification({ onNext, onBack }) {
             // Freelance fields
             portfolioUrl: "",
             freelanceExperience: "",
-
-            // Transport fields
-            vehicleTypes: "",
-            vehicleModel: "",
-            vehicleRegNo: "",
-            vehiclePictures: [],
           }}
           onSubmit={handleSubmit}
         >

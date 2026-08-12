@@ -485,6 +485,7 @@ export default function BookingSummary2() {
                   </button>
                 )}
               </div>
+              </div>
             </div>
 
             {/* Sidebar Column */}
@@ -665,7 +666,6 @@ export default function BookingSummary2() {
                 </div>
               </div>
             </div>
-          </div>
         </div>
         {showSuccessModal && <SuccessModal />}
       </div>

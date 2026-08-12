@@ -21,6 +21,9 @@ import Loader from "./components/Loader";
 import { Analytics } from "@vercel/analytics/react";
 import BusinessForm from "./business-transport/signup/BusinessForm";
 import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
+import GroupsManagement from "./business-transport/dashboard/pages/GroupsPage";
+import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
+import Earnings from "./business-transport/dashboard/pages/Earnings";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -33,6 +36,9 @@ const ResetPassword = lazy(
   () => import("./pages/Forgot-Password/ResetPassword"),
 );
 const Success = lazy(() => import("./pages/Forgot-Password/success"));
+const FleetDrivers = lazy(
+  () => import("./business-transport/dashboard/pages/Drivers"),
+);
 const SignupPage = lazy(() => import("./pages/signup/ServiceUser"));
 const SignupForm = lazy(() => import("./pages/signup/ServiceProvider"));
 const Login = lazy(() => import("./pages/login/Login"));
@@ -333,6 +339,8 @@ function App() {
                 element={<BusinessForm />}
               />
 
+                
+
               {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
               <Route
                 path="/wallet/funding/callback"
@@ -348,6 +356,11 @@ function App() {
               <Route
                 path="/business-provider/dashboard/vehicles"
                 element={<VehiclesPage title="Vehicles" />}
+              />
+
+              <Route
+                path="/business-provider/dashboard/groups"
+                element={<GroupsManagement title="Groups" />}
               />
 
               <Route element={<ProtectedRoute />}>
@@ -383,8 +396,8 @@ function App() {
                 <Route
                   path="/dashboard/provider/track-delivery"
                   element={<TrackDelivery />}
-                />
-                <Route path="/dashboard/settings" element={<ProfilePage />} />
+                /> 
+                <Route path="/dashboard/settings" element={<ProfilePage />} /> 
                 {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
                 <Route path="/dashboard/help" element={<ContactPage />} />
                 <Route
@@ -437,31 +450,29 @@ function App() {
                 <Route path="/bookings/trackrider" element={<TrackRider />} />
                 <Route path="/kyc-not-verified" element={<NotVerified />} />
 
+                </Route>
                 {/* Business / fleet-operator dashboard */}
                 <Route
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                {/* <Route
+                 {/* <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                /> */}
+                />  */}
 
                 <Route
                   path="/business-provider/dashboard/trips"
                   element={<FleetComingSoon title="Trips" />}
                 />
-                <Route
-                  path="/business-provider/dashboard/groups"
-                  element={<FleetComingSoon title="Groups" />}
-                />
+
                 <Route
                   path="/business-provider/dashboard/policies"
-                  element={<FleetComingSoon title="Policies" />}
+                  element={<PoliciesPage title="Policies" />}
                 />
                 <Route
                   path="/business-provider/dashboard/earnings"
-                  element={<FleetComingSoon title="Earnings & Payouts" />}
+                  element={<Earnings title="Earnings & Payouts" />}
                 />
                 <Route
                   path="/business-provider/dashboard/performance"
@@ -475,7 +486,6 @@ function App() {
                   path="/business-provider/dashboard/settings"
                   element={<FleetComingSoon title="Settings" />}
                 />
-              </Route>
             </Routes>
           </Suspense>
         </div>
