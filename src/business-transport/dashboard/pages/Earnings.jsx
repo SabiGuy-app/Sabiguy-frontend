@@ -1,13 +1,11 @@
-import DriverBalances from "../components/earningComponents/DriverBalances";
 import EarningsSummary from "../components/earningComponents/EarningsSummary";
-import EarningTabs from "../components/earningComponents/EarningTabs";
-import IncomeChart from "../components/earningComponents/IncomeChart";
-import Reconciliation from "../components/earningComponents/Reconciliation";
 import WalletCard from "../components/earningComponents/WalletCard";
-import WalletLedger from "../components/earningComponents/WalletLedger";
-import TopUpModal from "../components/earningComponents/TopUpModal";
-import WithdrawModal from "../components/earningComponents/WithdrawModal";
+import IncomeChart from "../components/earningComponents/IncomeChart";
 import { paymentWarning } from "../data/mockEarnings";
+import DriverBalances from "../components/earningComponents/DriverBalances";
+import Reconciliation from "../components/earningComponents/Reconciliation";
+import EarningTabs from "../components/earningComponents/EarningTabs";
+import WalletLedger from "../components/earningComponents/WalletLedger";
 import FleetDashboardLayout from "../layout/FleetDashboardLayout";
 
 const Earnings = ({ title }) => {
@@ -29,7 +27,6 @@ const Earnings = ({ title }) => {
           <WalletCard />
           <IncomeChart />
         </div>
-        {/* <WithdrawModal /> */}
         <div className="w-full flex gap-2 items-center rounded-2xl border-[0.5px] bg-[#FFFBEB] border-[#FDE68A] py-5 px-4 my-5">
           <TriangleAlertIcon className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
           <span className="text-sm font-semibold text-[#991B1BB2]">
