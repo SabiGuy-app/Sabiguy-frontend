@@ -21,6 +21,7 @@ import Loader from "./components/Loader";
 import { Analytics } from "@vercel/analytics/react";
 import BusinessForm from "./business-transport/signup/BusinessForm";
 import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
+import Earnings from "./business-transport/dashboard/pages/Earnings";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -461,7 +462,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/earnings"
-                  element={<FleetComingSoon title="Earnings & Payouts" />}
+                  element={<Earnings title="Earnings & Payouts" />}
                 />
                 <Route
                   path="/business-provider/dashboard/performance"
