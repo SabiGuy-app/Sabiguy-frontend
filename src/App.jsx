@@ -21,6 +21,8 @@ import Loader from "./components/Loader";
 import { Analytics } from "@vercel/analytics/react";
 import BusinessForm from "./business-transport/signup/BusinessForm";
 import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
+import GroupsManagement from "./business-transport/dashboard/pages/GroupsPage";
+import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -352,6 +354,11 @@ function App() {
                 element={<VehiclesPage title="Vehicles" />}
               />
 
+              <Route
+                path="/business-provider/dashboard/groups"
+                element={<GroupsManagement title="Groups" />}
+              />
+
               <Route element={<ProtectedRoute />}>
                 <Route path="/kyc/nin" element={<BuyerNinUpload />} />
                 <Route path="/kyc/pending" element={<BuyerKycPending />} />
@@ -454,13 +461,10 @@ function App() {
                   path="/business-provider/dashboard/trips"
                   element={<FleetComingSoon title="Trips" />}
                 />
-                <Route
-                  path="/business-provider/dashboard/groups"
-                  element={<FleetComingSoon title="Groups" />}
-                />
+
                 <Route
                   path="/business-provider/dashboard/policies"
-                  element={<FleetComingSoon title="Policies" />}
+                  element={<PoliciesPage title="Policies" />}
                 />
                 <Route
                   path="/business-provider/dashboard/earnings"
