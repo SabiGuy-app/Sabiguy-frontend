@@ -22,6 +22,9 @@ import {
 } from "../utils/animations";
 import { useNavigate } from "react-router-dom";
 import OptimizedImage from "../components/common/OptimizedImage";
+//import Assign from "../components/Assign.jsx";
+//import Return from "../components/Return.jsx";
+//import Invite from "../components/Invite.jsx";
 
 // Animated Counter Component
 const AnimatedCounter = ({ from = 0, to, duration = 2, start = true, resetKey = 0 }) => {
@@ -794,7 +797,9 @@ const LandingPage = () => {
           </div>
         </motion.div>
       </section>
-
+     {/*<Assign/>
+       <Return/>
+      <Invite />*/}
       <LandingFooter />
       <LandingChatbotWidget />
     </div>
@@ -991,3 +996,5 @@ const faqs = [
       "Pricing is calculated based on factors like distance, service type, and task requirements. The estimated price is shown before the job starts, so you know what to expect. SabiGuy focuses on fair and transparent pricing with no hidden charges.",
   },
 ];
+
+
