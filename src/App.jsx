@@ -23,6 +23,7 @@ import BusinessForm from "./business-transport/signup/BusinessForm";
 import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
 import GroupsManagement from "./business-transport/dashboard/pages/GroupsPage";
 import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
+import NotFound from "./pages/NotFound";
 import Earnings from "./business-transport/dashboard/pages/Earnings";
 
 // Lazy-loaded components
@@ -375,6 +376,8 @@ function App() {
                 path="/business-provider/dashboard/groups"
                 element={<GroupsManagement title="Groups" />}
               />
+
+              <Route path="*" element={<NotFound />} />
 
               <Route element={<ProtectedRoute />}>
                 <Route path="/kyc/nin" element={<BuyerNinUpload />} />
