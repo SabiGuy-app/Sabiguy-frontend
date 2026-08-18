@@ -23,6 +23,7 @@ import BusinessForm from "./business-transport/signup/BusinessForm";
 import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
 import GroupsManagement from "./business-transport/dashboard/pages/GroupsPage";
 import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
+import NotFound from "./pages/NotFound";
 import Earnings from "./business-transport/dashboard/pages/Earnings";
 
 // Lazy-loaded components
@@ -140,6 +141,19 @@ const FleetOverview = lazy(
 );
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
+);
+const FleetPerformance = lazy(
+  () => import("./business-transport/dashboard/pages/Performance"),
+);
+const FleetDocuments = lazy(
+  () => import("./business-transport/dashboard/pages/Documents"),
+);
+const FleetSettings = lazy(
+  () => import("./business-transport/dashboard/pages/Settings"),
+);
+
+const AddYourVehicle = lazy(
+  () => import("./business-transport/components/AddVehicle"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -363,6 +377,8 @@ function App() {
                 element={<GroupsManagement title="Groups" />}
               />
 
+              <Route path="*" element={<NotFound />} />
+
               <Route element={<ProtectedRoute />}>
                 <Route path="/kyc/nin" element={<BuyerNinUpload />} />
                 <Route path="/kyc/pending" element={<BuyerKycPending />} />
@@ -484,7 +500,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/settings"
-                  element={<FleetComingSoon title="Settings" />}
+                  element={<FleetSettings />}
                 />
             </Routes>
           </Suspense>
