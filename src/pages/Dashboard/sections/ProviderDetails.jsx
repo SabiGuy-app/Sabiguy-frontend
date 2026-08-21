@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProviderStore } from "../../../stores/provider.store";
-import { 
-  ArrowLeft, 
-  CheckCircle, 
-  Briefcase, 
-  Clock, 
-  Star, 
+import {
+  ArrowLeft,
+  CheckCircle,
+  Briefcase,
+  Clock,
+  Star,
   MapPin,
   Globe,
   Award,
   ShieldAlert,
   ShieldCheck,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { useEffect } from "react";
 import { getProviderReviews } from "../../../api/provider";
@@ -30,22 +30,28 @@ export default function ProviderDetails() {
   const [reviewsError, setReviewsError] = useState(null);
 
   // Find the provider by ID
-  const provider = providers.find(p => p._id === providerId || p.id === providerId);
+  const provider = providers.find(
+    (p) => p._id === providerId || p.id === providerId,
+  );
+
+  // if (!provider) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <p className="text-xl text-gray-600 mb-4">Provider not found</p>
+  //         <button
+  //           onClick={() => navigate("/dashboard/categories")}
+  //           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+  //         >
+  //           Back to Categories
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (!provider) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl text-gray-600 mb-4">Provider not found</p>
-          <button
-            onClick={() => navigate("/dashboard/categories")}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Back to Categories
-          </button>
-        </div>
-      </div>
-    );
+    return <ProviderNotFound />;
   }
 
   const handleServiceSelect = (service) => {
@@ -76,21 +82,21 @@ export default function ProviderDetails() {
     }
   }, [providerId]);
 
- const getStatusConfig = (status) => {
-  const configs = {
-     verified: {
-      icon: <ShieldCheck className="w-3 h-3" />,
-      style: "bg-gray-100 text-green-600 border-green-300",
-    },
-    unverified: {
-      icon: <ShieldAlert className="w-3 h-3" />,
-      style: "bg-red-100 text-red-600 border-red-300",
-    },
-  }
-    
-    return configs[status] || configs['verified'];
+  const getStatusConfig = (status) => {
+    const configs = {
+      verified: {
+        icon: <ShieldCheck className="w-3 h-3" />,
+        style: "bg-gray-100 text-green-600 border-green-300",
+      },
+      unverified: {
+        icon: <ShieldAlert className="w-3 h-3" />,
+        style: "bg-red-100 text-red-600 border-red-300",
+      },
+    };
+
+    return configs[status] || configs["verified"];
   };
-const { icon, style } = getStatusConfig(provider.status);
+  const { icon, style } = getStatusConfig(provider.status);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -122,19 +128,25 @@ const { icon, style } = getStatusConfig(provider.status);
                 />
                 <div className="flex flex-col ">
                   <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-semibold">{provider.fullName}</h1>
-<span
-  className={`flex items-center gap-1 ml-4 px-3 text-xs font-medium rounded-full border ${style}`}
->
-  {icon}
-  {provider.status || "verified"}
-</span>            
-                 </div>
-                  <p className="text-gray-600 mb-2">{provider.job?.[0]?.title || provider.skill}</p>
+                    <h1 className="text-2xl font-semibold">
+                      {provider.fullName}
+                    </h1>
+                    <span
+                      className={`flex items-center gap-1 ml-4 px-3 text-xs font-medium rounded-full border ${style}`}
+                    >
+                      {icon}
+                      {provider.status || "verified"}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 mb-2">
+                    {provider.job?.[0]?.title || provider.skill}
+                  </p>
                   <div className="flex items-center gap-1 mb-2">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium">{provider.rating}</span>
-                    <span className="text-gray-500">({provider.reviews} reviews)</span>
+                    <span className="text-gray-500">
+                      ({provider.reviews} reviews)
+                    </span>
                   </div>
                   <div className="flex items-center gap-1 text-gray-600">
                     <MapPin className="w-4 h-4" />
@@ -142,38 +154,41 @@ const { icon, style } = getStatusConfig(provider.status);
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-9  pt-6">
-                <div className="text-center">
-                  <Award className="w-5 h-5 mx-auto mb-1 text-[#005823]" />
-                  <p className="text font-semibold">{provider.jobsCompleted || 25}</p>
-                  <p className="text-sm text-gray-600">Jobs Done</p>
-                </div>
-                <div className="text-center">
-                  <Clock className="w-5 h-5 mx-auto mb-1 text-gray-600" />
-                  <p className="font-semibold">&lt; 2 hours</p>
-                  <p className="text-sm text-gray-600">Response Time</p>
-                </div>
-                <div className="text-center">
-                  <Star className="w-5 h-5 mx-auto mb-1 text-yellow-400 fill-yellow-400" />
-                  <p className=" font-semibold">{provider.rating}</p>
-                  <p className="text-sm text-gray-600">Rating</p>
+                  <div className="text-center">
+                    <Award className="w-5 h-5 mx-auto mb-1 text-[#005823]" />
+                    <p className="text font-semibold">
+                      {provider.jobsCompleted || 25}
+                    </p>
+                    <p className="text-sm text-gray-600">Jobs Done</p>
+                  </div>
+                  <div className="text-center">
+                    <Clock className="w-5 h-5 mx-auto mb-1 text-gray-600" />
+                    <p className="font-semibold">&lt; 2 hours</p>
+                    <p className="text-sm text-gray-600">Response Time</p>
+                  </div>
+                  <div className="text-center">
+                    <Star className="w-5 h-5 mx-auto mb-1 text-yellow-400 fill-yellow-400" />
+                    <p className=" font-semibold">{provider.rating}</p>
+                    <p className="text-sm text-gray-600">Rating</p>
+                  </div>
                 </div>
               </div>
             </div>
-              </div>
-
-            
 
             {/* About Section */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold mb-4">About</h2>
               <p className="text-gray-600 leading-relaxed mb-6">
-                {provider.bio || "Lorem ipsum tellus dolor nulla consequat quis elementum sollicitudin cum amet dis eget sociis magna auctor quisque sit rhoncus vulputate cursus ac consectetur sit consectetur."}
+                {provider.bio ||
+                  "Lorem ipsum tellus dolor nulla consequat quis elementum sollicitudin cum amet dis eget sociis magna auctor quisque sit rhoncus vulputate cursus ac consectetur sit consectetur."}
               </p>
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <h3 className="font-semibold mb-2">Experience</h3>
-                  <p className="text-gray-600">{provider.experience || "5+ Years"}</p>
+                  <p className="text-gray-600">
+                    {provider.experience || "5+ Years"}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-semibold mb-2">Specialties</h3>
@@ -192,7 +207,9 @@ const { icon, style } = getStatusConfig(provider.status);
                   <h3 className="font-semibold mb-2">Availability</h3>
                   <div className="flex items-center gap-1 text-gray-600">
                     <Clock className="w-4 h-4" />
-                    <span>{provider.availability || "Mon-Sat, 8 AM - 6 PM"}</span>
+                    <span>
+                      {provider.availability || "Mon-Sat, 8 AM - 6 PM"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -211,8 +228,8 @@ const { icon, style } = getStatusConfig(provider.status);
                       <div>
                         <h3 className="font-medium">{service.serviceName}</h3>
                         <p className="text-sm font-semibold text-[#005823]">
-                            
-                          ₦{service.price.toLocaleString()} • Per {service.pricingModel || "Per service"}
+                          ₦{service.price.toLocaleString()} • Per{" "}
+                          {service.pricingModel || "Per service"}
                         </p>
                       </div>
                       <button
@@ -221,11 +238,8 @@ const { icon, style } = getStatusConfig(provider.status);
                       >
                         Book
                       </button>
-
                     </div>
-                    
                   ))
-                  
                 ) : (
                   <div className="text-center py-4 text-gray-500">
                     No services available
@@ -236,8 +250,6 @@ const { icon, style } = getStatusConfig(provider.status);
                 </button>
               </div>
             </div>
-          
-
 
             {/* Recent Reviews */}
             <div className="bg-white rounded-lg shadow p-6">
@@ -258,7 +270,10 @@ const { icon, style } = getStatusConfig(provider.status);
                   </div>
                 ) : (
                   reviewsList.map((review, idx) => (
-                    <div key={idx} className="flex gap-4 pb-4 border-b last:border-b-0">
+                    <div
+                      key={idx}
+                      className="flex gap-4 pb-4 border-b last:border-b-0"
+                    >
                       <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
                         <img
                           src={review.user?.profilePicture || "/avatar.png"}
@@ -272,18 +287,23 @@ const { icon, style } = getStatusConfig(provider.status);
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold">{review.user?.fullName || "Anonymous"}</h3>
+                          <h3 className="font-semibold">
+                            {review.user?.fullName || "Anonymous"}
+                          </h3>
                           <StarRating rating={review.score || 0} />
                         </div>
                         <p className="text-gray-600 text-sm leading-relaxed">
                           {review.review || "No feedback provided."}
                         </p>
                         <p className="text-xs text-gray-500 mt-2">
-                          {new Date(review.createdAt).toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
+                          {new Date(review.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )}
                         </p>
                       </div>
                     </div>
@@ -291,63 +311,60 @@ const { icon, style } = getStatusConfig(provider.status);
                 )}
               </div>
             </div>
-              {/* WORK VISUALS SECTION */}
-<div className="bg-white rounded-lg shadow p-6 mt-6">
-  <h2 className="text-2xl font-semibold mb-4">Work Gallery</h2>
+            {/* WORK VISUALS SECTION */}
+            <div className="bg-white rounded-lg shadow p-6 mt-6">
+              <h2 className="text-2xl font-semibold mb-4">Work Gallery</h2>
 
-  {provider.workVisuals && provider.workVisuals.length > 0 ? (
-    provider.workVisuals.map((visual, idx) => (
-      <div key={idx} className="space-y-4">
-         {/* VIDEOS */}
-        {visual.videos && visual.videos.length > 0 && (
-          <div>
-            <h3 className="text-lg font-medium mb-2">Videos</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {visual.videos.map((vid, i) => (
-                <video
-                  key={i}
-                  controls
-                  className="w-full rounded-lg border"
-                >
-                  <source src={vid} type="video/mp4" />
-                </video>
-              ))}
+              {provider.workVisuals && provider.workVisuals.length > 0 ? (
+                provider.workVisuals.map((visual, idx) => (
+                  <div key={idx} className="space-y-4">
+                    {/* VIDEOS */}
+                    {visual.videos && visual.videos.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">Videos</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {visual.videos.map((vid, i) => (
+                            <video
+                              key={i}
+                              controls
+                              className="w-full rounded-lg border"
+                            >
+                              <source src={vid} type="video/mp4" />
+                            </video>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* PICTURES */}
+                    {visual.pictures && visual.pictures.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">Pictures</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {visual.pictures.map((pic, i) => (
+                            <img
+                              key={i}
+                              src={pic}
+                              alt="Work"
+                              className="w-full h-40 object-cover rounded-lg border"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">No work visuals available.</p>
+              )}
             </div>
-          </div>
-        )}
-        
-        {/* PICTURES */}
-        {visual.pictures && visual.pictures.length > 0 && (
-          <div>
-            <h3 className="text-lg font-medium mb-2">Pictures</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {visual.pictures.map((pic, i) => (
-                <img
-                  key={i}
-                  src={pic}
-                  alt="Work"
-                  className="w-full h-40 object-cover rounded-lg border"
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-       
-
-      </div>
-    ))
-  ) : (
-    <p className="text-gray-500">No work visuals available.</p>
-  )}
-</div>
           </div>
 
           {/* Right Column - Booking Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-6 sticky top-6">
               <h2 className="text-xl font-semibold mb-4">Booking summary</h2>
-              
+
               {showBookingSummary && selectedService ? (
                 <>
                   <div className="space-y-3 mb-6">
@@ -363,7 +380,9 @@ const { icon, style } = getStatusConfig(provider.status);
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Provider's Offer</span>
-                      <span className="font-medium">₦{selectedService.price.toLocaleString()}</span>
+                      <span className="font-medium">
+                        ₦{selectedService.price.toLocaleString()}
+                      </span>
                     </div>
                   </div>
 
@@ -376,38 +395,43 @@ const { icon, style } = getStatusConfig(provider.status);
                 </>
               ) : (
                 <div className="rounded-lg">
-                <div className="flex items-start gap-4">
-  <img
-                  src={provider.profilePicture || "/avatar.png"}
-                  alt={provider.name}
-                  className="w-20 h-20 rounded-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/avatar.png";
-                  }}
-                />
-                <div className="flex flex-col ">
-                    <h1 className="text-xs">{provider.fullName}</h1>
-                     <p className="text-gray-600  font-semibold">{provider.job?.[0]?.title || provider.skill}</p>
-<div className="flex items-center gap-1 mb-2 text-xs">
-                    <Star className="w-2 h-2 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">{provider.rating}</span>
-                    <span className="text-gray-500">({provider.reviews} reviews)</span>
+                  <div className="flex items-start gap-4">
+                    <img
+                      src={provider.profilePicture || "/avatar.png"}
+                      alt={provider.name}
+                      className="w-20 h-20 rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/avatar.png";
+                      }}
+                    />
+                    <div className="flex flex-col ">
+                      <h1 className="text-xs">{provider.fullName}</h1>
+                      <p className="text-gray-600  font-semibold">
+                        {provider.job?.[0]?.title || provider.skill}
+                      </p>
+                      <div className="flex items-center gap-1 mb-2 text-xs">
+                        <Star className="w-2 h-2 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{provider.rating}</span>
+                        <span className="text-gray-500">
+                          ({provider.reviews} reviews)
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                </div>
-                 <h2 className="mt-3 ">Range</h2>
-                 <p className="font-semibold text-lg">$50,000 - $100,000/month</p>
- <button
-                    className="w-full mt-10 bg-[#005823CC] text-white py-3 rounded-lg hover:bg-green-700 font-medium"
-                  >
-Book Now                  </button>
+                  <h2 className="mt-3 ">Range</h2>
+                  <p className="font-semibold text-lg">
+                    $50,000 - $100,000/month
+                  </p>
+                  <button className="w-full mt-10 bg-[#005823CC] text-white py-3 rounded-lg hover:bg-green-700 font-medium">
+                    Book Now{" "}
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </div>
-        </div>
       </div>
+    </div>
   );
 }

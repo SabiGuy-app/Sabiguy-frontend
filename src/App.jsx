@@ -23,7 +23,9 @@ import BusinessForm from "./business-transport/signup/BusinessForm";
 import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
 import GroupsManagement from "./business-transport/dashboard/pages/GroupsPage";
 import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
-import NotFound from "./pages/NotFound";
+import NotFound from "./pages/Not-found/NotFound";
+import ProviderNotFound from "./pages/Not-found/ProviderNotFound";
+import UserNotFound from "./pages/Not-found/UserNotFound";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -330,32 +332,9 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/kyc-not-verified" element={<NotVerified />} />
-
               <Route
                 path="/business-provider/signup"
                 element={<BusinessForm />}
-              />
-
-              {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
-              <Route
-                path="/wallet/funding/callback"
-                element={<WalletCallback />}
-              />
-              <Route path="/payment/callback" element={<WalletCallback />} />
-
-              <Route
-                path="/business-provider/dashboard"
-                element={<FleetOverview />}
-              />
-
-              <Route
-                path="/business-provider/dashboard/vehicles"
-                element={<VehiclesPage title="Vehicles" />}
-              />
-
-              <Route
-                path="/business-provider/dashboard/groups"
-                element={<GroupsManagement title="Groups" />}
               />
 
               <Route path="*" element={<NotFound />} />
@@ -364,19 +343,40 @@ function App() {
                 <Route path="/kyc/nin" element={<BuyerNinUpload />} />
                 <Route path="/kyc/pending" element={<BuyerKycPending />} />
                 <Route path="/dashboard" element={<DashboardHome />} />
+                <Route path="/bookings" element={<Bookings />} />
+                <Route path="/dashboard/saved" element={<SavedProfile />} />
+                <Route path="/dashboard/test" element={<NotificationTest />} />
+                <Route path="/dashboard/chat" element={<ChatPage />} />
+                <Route path="/dashboard/help" element={<ContactPage />} />
+                <Route path="/dashboard/settings" element={<ProfilePage />} />
+                <Route path="/dashboard/categories" element={<Categories />} />
+                <Route path="/bookings/vehicletype" element={<VehicleType />} />
+                <Route
+                  path="/bookings/availableriders"
+                  element={<AvailableRiders />}
+                />
+                <Route path="/bookings/summary" element={<BookingSummary2 />} />
+                <Route path="/bookings/trackrider" element={<TrackRider />} />
+                {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
+                <Route
+                  path="/wallet/funding/callback"
+                  element={<WalletCallback />}
+                />
+                <Route path="/payment/callback" element={<WalletCallback />} />
+                <Route path="/dashboard/*" element={<UserNotFound />} />
+
+
+
+
                 <Route
                   path="/dashboard/provider"
                   element={<ProviderDashboard />}
                 />
-                <Route path="/bookings" element={<Bookings />} />
-                <Route path="/dashboard/saved" element={<SavedProfile />} />
-                <Route path="/dashboard/chat" element={<ChatPage />} />
                 <Route
                   path="/dashboard/provider/chat"
                   element={<ProviderChat />}
                 />
                 <Route path="/dashboard/activity" element={<ActivityPage />} />
-                <Route path="/dashboard/test" element={<NotificationTest />} />
 
                 <Route
                   path="/dashboard/provider/activity"
@@ -394,14 +394,11 @@ function App() {
                   path="/dashboard/provider/track-delivery"
                   element={<TrackDelivery />}
                 />
-                <Route path="/dashboard/settings" element={<ProfilePage />} />
                 {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
-                <Route path="/dashboard/help" element={<ContactPage />} />
                 <Route
                   path="/dashboard/provider/help"
                   element={<ProviderHelp />}
                 />
-                <Route path="/dashboard/categories" element={<Categories />} />
                 <Route
                   path="/dashboard/categories/:serviceSlug"
                   element={<DynamicServicePage />}
@@ -438,14 +435,15 @@ function App() {
                   path="/dashboard/provider/summary"
                   element={<BookingSummary />}
                 />
-                <Route path="/bookings/vehicletype" element={<VehicleType />} />
-                <Route
-                  path="/bookings/availableriders"
-                  element={<AvailableRiders />}
-                />
-                <Route path="/bookings/summary" element={<BookingSummary2 />} />
-                <Route path="/bookings/trackrider" element={<TrackRider />} />
                 <Route path="/kyc-not-verified" element={<NotVerified />} />
+                <Route
+                  path="/dashboard/provider/*"
+                  element={<ProviderNotFound />}
+                />
+
+
+
+
 
                 {/* Business / fleet-operator dashboard */}
                 <Route
@@ -460,6 +458,21 @@ function App() {
                 <Route
                   path="/business-provider/dashboard/trips"
                   element={<FleetComingSoon title="Trips" />}
+                />
+
+                <Route
+                  path="/business-provider/dashboard"
+                  element={<FleetOverview />}
+                />
+
+                <Route
+                  path="/business-provider/dashboard/vehicles"
+                  element={<VehiclesPage title="Vehicles" />}
+                />
+
+                <Route
+                  path="/business-provider/dashboard/groups"
+                  element={<GroupsManagement title="Groups" />}
                 />
 
                 <Route
@@ -482,6 +495,7 @@ function App() {
                   path="/business-provider/dashboard/settings"
                   element={<FleetComingSoon title="Settings" />}
                 />
+                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
           </Suspense>
