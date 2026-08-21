@@ -38,6 +38,9 @@ const ResetPassword = lazy(
   () => import("./pages/Forgot-Password/ResetPassword"),
 );
 const Success = lazy(() => import("./pages/Forgot-Password/success"));
+const FleetDrivers = lazy(
+  () => import("./business-transport/dashboard/pages/Drivers"),
+);
 const SignupPage = lazy(() => import("./pages/signup/ServiceUser"));
 const SignupForm = lazy(() => import("./pages/signup/ServiceProvider"));
 const Login = lazy(() => import("./pages/login/Login"));
@@ -139,6 +142,19 @@ const FleetOverview = lazy(
 );
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
+);
+const FleetPerformance = lazy(
+  () => import("./business-transport/dashboard/pages/Performance"),
+);
+const FleetDocuments = lazy(
+  () => import("./business-transport/dashboard/pages/Documents"),
+);
+const FleetSettings = lazy(
+  () => import("./business-transport/dashboard/pages/Settings"),
+);
+
+const AddYourVehicle = lazy(
+  () => import("./business-transport/components/AddVehicle"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -337,6 +353,16 @@ function App() {
                 element={<BusinessForm />}
               />
 
+                
+
+              {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
+              <Route
+                path="/wallet/funding/callback"
+                element={<WalletCallback />}
+              />
+              <Route path="/payment/callback" element={<WalletCallback />} />
+
+
               <Route path="*" element={<NotFound />} />
 
               <Route element={<ProtectedRoute />}>
@@ -357,12 +383,6 @@ function App() {
                 />
                 <Route path="/bookings/summary" element={<BookingSummary2 />} />
                 <Route path="/bookings/trackrider" element={<TrackRider />} />
-                {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
-                <Route
-                  path="/wallet/funding/callback"
-                  element={<WalletCallback />}
-                />
-                <Route path="/payment/callback" element={<WalletCallback />} />
                 <Route path="/dashboard/*" element={<UserNotFound />} />
 
 
@@ -393,7 +413,8 @@ function App() {
                 <Route
                   path="/dashboard/provider/track-delivery"
                   element={<TrackDelivery />}
-                />
+                /> 
+                <Route path="/dashboard/settings" element={<ProfilePage />} /> 
                 {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
                 <Route
                   path="/dashboard/provider/help"
@@ -450,10 +471,10 @@ function App() {
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                {/* <Route
+                 {/* <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                /> */}
+                />  */}
 
                 <Route
                   path="/business-provider/dashboard/trips"
@@ -481,7 +502,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/earnings"
-                  element={<FleetComingSoon title="Earnings & Payouts" />}
+                  element={<Earnings title="Earnings & Payouts" />}
                 />
                 <Route
                   path="/business-provider/dashboard/performance"
@@ -493,7 +514,7 @@ function App() {
                 />
                 <Route
                   path="/business-provider/dashboard/settings"
-                  element={<FleetComingSoon title="Settings" />}
+                  element={<FleetSettings />}
                 />
                  <Route path="*" element={<NotFound />} />
               </Route>

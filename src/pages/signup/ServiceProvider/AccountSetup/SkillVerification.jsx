@@ -112,11 +112,14 @@ export default function SkillsVerification({ onNext, onBack }) {
         dynamicFields.freelanceExperience = values.freelanceExperience;
       }
 
+      const jobTitle =
+        selectedJobTitle === "transport" ? values.vehicleType : values.service;
+
       const payload = {
         job: [
           {
             service: values.title,
-            title: values.service,
+            title: jobTitle,
             tagLine: values.tagLine,
           },
         ],
@@ -148,7 +151,7 @@ export default function SkillsVerification({ onNext, onBack }) {
           role: "provider",
           step: "skill_verification",
           service_category: selectedJobTitle,
-          service: selectedService,
+          service: jobTitle || selectedService,
         });
         setSuccessMessage("Registration successful");
         onNext();
@@ -225,8 +228,7 @@ export default function SkillsVerification({ onNext, onBack }) {
             vehicleName: "",
             vehicleRegNo: "",
             vehicleColor: "",
-            vehicleTypes: "",
-            vehicleModel: "",
+            vehicleType: "",
             vehiclePictures: [],
 
             // Domestic fields
@@ -245,12 +247,6 @@ export default function SkillsVerification({ onNext, onBack }) {
             // Freelance fields
             portfolioUrl: "",
             freelanceExperience: "",
-
-            // Transport fields
-            vehicleTypes: "",
-            vehicleModel: "",
-            vehicleRegNo: "",
-            vehiclePictures: [],
           }}
           onSubmit={handleSubmit}
         >
