@@ -34,8 +34,8 @@ export default function Form() {
       1: 2,  // PersonalInfoForm
       3: 6,  // FacialCapture
       4: 8,  // SkillsVerification
-      5: 9, // UploadAutoMobile
-      6: 10, // BankAccountForm
+      // 5: 9, // UploadAutoMobile
+      // 6: 10, // BankAccountForm
     };
     
 
