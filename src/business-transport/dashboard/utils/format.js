@@ -15,3 +15,13 @@ export const formatNairaCompact = (amount) => {
   }
   return `₦${value.toLocaleString("en-NG", { maximumFractionDigits: 0 })}`;
 };
+
+export const formatNairaTrip = (amount) => {
+  if (amount >= 1_000_000) {
+    return `₦${(amount / 1_000_000).toFixed(1)}m`;
+  }
+  if (amount >= 1_000) {
+    return `₦${(amount / 1_000).toFixed(1)}k`;
+  }
+  return `₦${amount.toLocaleString("en-NG")}`;
+};

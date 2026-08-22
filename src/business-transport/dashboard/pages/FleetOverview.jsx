@@ -6,9 +6,7 @@ import FleetSnapshotCard from "../components/FleetSnapshotCard";
 import LiveActivityFeed from "../components/LiveActivityFeed";
 import { mockFleetOverview } from "../data/mockFleetOverview";
 
-// Single data-sourcing point for this page — swap the import below for a
-// real fetch (e.g. useEffect + useState, or a query hook) once a
-// business/fleet API exists. No leaf component needs to change.
+
 export default function FleetOverview() {
   const { business, alert, stats, earnings7Day, earningsSummary, fleetSnapshot, activities } =
     mockFleetOverview;
