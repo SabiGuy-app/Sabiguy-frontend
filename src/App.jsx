@@ -140,6 +140,9 @@ const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
   () => import("./business-transport/dashboard/pages/FleetOverview"),
 );
+const Earnings = lazy(
+  () => import("./business-transport/dashboard/pages/Earnings"),
+);
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
 );
