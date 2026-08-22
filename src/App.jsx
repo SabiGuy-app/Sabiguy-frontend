@@ -143,6 +143,9 @@ const FleetOverview = lazy(
 const FleetComingSoon = lazy(
   () => import("./business-transport/dashboard/pages/ComingSoonPage"),
 );
+const Earnings = lazy(
+  () => import("./business-transport/dashboard/pages/Earnings"),
+);
 const FleetPerformance = lazy(
   () => import("./business-transport/dashboard/pages/Performance"),
 );
