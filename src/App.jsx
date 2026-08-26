@@ -336,7 +336,10 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/service-provider/signup" element={<SignupForm />} />
               <Route path="/congrats" element={<Congrats />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route
+                path="/forgot-password"
+                element={<ForgotPassword accountType="business" />}
+              />
               <Route path="/otp-input" element={<OtpInput />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/success" element={<Success />} />

@@ -4,8 +4,40 @@ import useNotificationStore from "../stores/notification.store";
 import { useUIStore } from "../stores/ui.store";
 import { useProviderStore } from "../stores/provider.store";
 import { removeFCMToken } from "./fcm";
-import { useNavigate } from "react-router-dom";
 import { trackEvent } from "../services/analytics";
+
+// BUSINESS PASSWORD RESET
+// These endpoints are public, but use the shared API client so the base URL
+// continues to come from VITE_BASE_URL.
+export const requestBusinessPasswordReset = async (email) => {
+  const { data } = await api.post("/business/auth/forgot-password", { email });
+  return data;
+};
+
+export const resendBusinessPasswordResetOtp = async (email) => {
+  const { data } = await api.post(
+    "/business/auth/resend-forgot-password-otp",
+    { email },
+  );
+  return data;
+};
+
+export const verifyBusinessPasswordResetOtp = async ({ email, otp }) => {
+  const { data } = await api.post("/business/auth/verify-reset-otp", {
+    email,
+    otp,
+  });
+  return data;
+};
+
+export const resetBusinessPassword = async ({ email, otp, newPassword }) => {
+  const { data } = await api.post("/business/auth/reset-password", {
+    email,
+    otp,
+    newPassword,
+  });
+  return data;
+};
 
 // LOGIN (email + password)
 export const login = async (payload) => {
