@@ -18,7 +18,7 @@ export function DriverInfoSection({
   return (
     <div className="flex flex-col gap-4">
       <InputField
-        label="Vehicle Type"
+        label="I want to join as"
         select
         options={vehicleTypes}
         value={values.vehicleType}
@@ -31,7 +31,7 @@ export function DriverInfoSection({
           setFieldValue("vehicleRegNo", "");
           setFieldValue("vehiclePictures", []);
         }}
-        placeholder="Select vehicle type"
+        placeholder="Select role"
       />
 
       {/* ── Car Driver Fields ── */}
