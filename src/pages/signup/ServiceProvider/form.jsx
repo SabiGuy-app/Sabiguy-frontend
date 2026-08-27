@@ -4,7 +4,6 @@ import StepThree from "./step-three";
 import ConfirmKyc from "./confirm-kyc";
 import PersonalInfoForm from "./AccountSetup/PersonalInfo";
 import Identity from "./AccountSetup/Identity";
-import AccountTypeForm from "./AccountSetup/AccountType";
 import SkillsVerification from "./AccountSetup/SkillVerification";
 import BankAccountForm from "./AccountSetup/BankAccount";
 import { AnimatePresence } from "framer-motion";
@@ -29,13 +28,13 @@ export default function Form() {
     if (Number.isNaN(normalized)) return null;
 
     const kycMap = {
-      0: 1,  // Register
-      2: 3,  // AccountTypeForm 
-      1: 2,  // PersonalInfoForm
-      3: 6,  // FacialCapture
-      4: 8,  // SkillsVerification
-      // 5: 9, // UploadAutoMobile
-      // 6: 10, // BankAccountForm
+      0: 1,  // StepOne
+      1: 2,  // StepTwo
+      2: 3,  // StepThree
+      3: 5,  // FacialCapture (nested)
+      4: 7,  // SkillsVerification
+      // 5: 8, // UploadAutoMobile
+      // 6: 9, // BankAccountForm
     };
     
 
@@ -76,10 +75,6 @@ export default function Form() {
     <StepOne onNext={handleNext} email={formData.email} />, //KYC level 1
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
     <StepThree onNext={handleNext} onBack={handleBack} />,
-    <AccountTypeForm
-      onNext={handleNext}
-      onBack={handleBack}
-    />, //KYC level 3
     <PersonalInfoForm onNext={handleNext} onBack={handleBack} />, //KYC level 2
     <FacialCapture onNext={handleNext} onBack={handleBack} />, //KYC level 4
     <FaceCapture onNext={handleNext} onBack={handleBack} />,
