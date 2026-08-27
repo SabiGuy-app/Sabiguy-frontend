@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 
 export default function AccountSetupLayout({ currentStep, children }) {
   const steps = [
-    "Account Type",       
     "Personal Info",
     'Face Capture',
     "Verification",

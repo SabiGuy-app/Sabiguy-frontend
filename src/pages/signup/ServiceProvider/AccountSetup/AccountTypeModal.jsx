@@ -21,7 +21,7 @@ const AccountTypeModal = ({ isOpen, setIsOpen }) => {
       icon: business,
       name: "Business",
       text: "Built for companies and service teams that want to coordinate staff, manage operations, and serve more customers efficiently.",
-      path: "/",
+      path: "/business-provider/signup",
     },
   ];
 
