@@ -38,3 +38,4 @@ export default function AccountSetupLayout({ currentStep, children }) {
   );
 
 }
+// commit 1: Added framer-motion animations to the AccountSetupLayout component for smoother transitions between steps.
