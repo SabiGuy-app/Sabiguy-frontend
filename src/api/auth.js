@@ -70,6 +70,62 @@ export const login = async (payload) => {
   }
 };
 
+// LOGIN (business account — separate endpoint from the buyer/provider one above)
+export const businessLogin = async (payload) => {
+  try {
+    const { data } = await api.post("/business/auth/login", payload);
+
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      useAuthStore.getState().setToken(data.token);
+    }
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      useAuthStore.getState().setRefreshToken(data.refreshToken);
+    }
+
+    trackEvent("login_success", { method: "password", role: "business" });
+
+    return data;
+  } catch (error) {
+    trackEvent("login_failed", {
+      method: "password",
+      role: "business",
+      status: error?.response?.status,
+    });
+    throw error;
+  }
+};
+
+// GOOGLE LOGIN (business account)
+export const businessGoogleLogin = async (accessToken) => {
+  try {
+    const { data } = await api.post("/business/auth/google-login", {
+      token: accessToken,
+    });
+
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      useAuthStore.getState().setToken(data.token);
+    }
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      useAuthStore.getState().setRefreshToken(data.refreshToken);
+    }
+
+    trackEvent("login_success", { method: "google", role: "business" });
+
+    return data;
+  } catch (error) {
+    trackEvent("login_failed", {
+      method: "google",
+      role: "business",
+      status: error?.response?.status,
+    });
+    throw error;
+  }
+};
+
 // GET USER BY EMAIL
 export const getUserByEmail = async (email) => {
   const token = localStorage.getItem("token");

@@ -477,10 +477,10 @@ function App() {
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                 {/* <Route
+                 <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                />  */}
+                />  
 
                 <Route
                   path="/business-provider/dashboard/trips"
