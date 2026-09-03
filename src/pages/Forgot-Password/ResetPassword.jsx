@@ -1,14 +1,14 @@
 import { FaChevronLeft } from "react-icons/fa";
 import InputField from "../../components/InputField";
 import Button from "../../components/button";
-import { Link } from "react-router-dom";
 import Modal from "../../components/Modal";
 import { useState } from "react";
 import Success from "./success";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
+import { resetBusinessPassword } from "../../api/auth";
 
-export default function ResetPassword({ isOpen, onClose }) {
+export default function ResetPassword({ isOpen, onClose, accountType = "user" }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,18 +32,20 @@ export default function ResetPassword({ isOpen, onClose }) {
     }
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/auth/reset`,
-        { newPassword, otp: savedOtp, email },
-      );
+      const data = accountType === "business"
+        ? await resetBusinessPassword({ email, otp: savedOtp, newPassword })
+        : (await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/auth/reset`,
+            { newPassword, otp: savedOtp, email },
+          )).data;
 
-      setMessage(res.data?.message);
-      if (res.data) {
+      setMessage(data?.message);
+      if (data) {
         onClose();
         setShowSuccess(true);
+        localStorage.removeItem("resetOtp");
+        localStorage.removeItem("passwordEmail");
       }
-      localStorage.removeItem("resetOtp");
-      localStorage.removeItem("passwordEmail");
     } catch (error) {
       console.error("Reset password error:", error);
       if (error.response) {
