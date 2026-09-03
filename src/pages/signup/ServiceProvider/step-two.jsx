@@ -4,11 +4,10 @@ import Button from "../../../components/button";
 import { FaChevronLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useState, useRef, useEffect} from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
-
-export default function StepTwo({onNext, email}) {
+export default function StepTwo({ onNext, email }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -17,10 +16,10 @@ export default function StepTwo({onNext, email}) {
   const [countdown, setCountdown] = useState(60); // 10 minutes in seconds
   const [canResend, setCanResend] = useState(false);
 
-  const inputRefs = useRef ([]); 
-  const google_email =   localStorage.getItem("google-email")
+  const inputRefs = useRef([]);
+  const google_email = localStorage.getItem("google-email");
 
- // Countdown timer
+  // Countdown timer
   useEffect(() => {
     if (countdown > 0) {
       const timer = setInterval(() => {
@@ -41,7 +40,7 @@ export default function StepTwo({onNext, email}) {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const handleChange = (index, value) => {
@@ -53,6 +52,29 @@ export default function StepTwo({onNext, email}) {
       // Auto move to next input
       if (value && index < 5) inputRefs.current[index + 1].focus();
     }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+
+    const pastedData = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+
+    if (!pastedData) return;
+
+    const newOtp = [...otp];
+
+    pastedData.split("").forEach((digit, index) => {
+      newOtp[index] = digit;
+    });
+
+    setOtp(newOtp);
+
+    // Focus the next empty input, or the last input
+    const nextIndex = Math.min(pastedData.length, 5);
+    inputRefs.current[nextIndex]?.focus();
   };
 
   const handleKeyDown = (index, e) => {
@@ -86,7 +108,7 @@ export default function StepTwo({onNext, email}) {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.status === 200 || response.status === 201) {
@@ -97,7 +119,9 @@ export default function StepTwo({onNext, email}) {
       }
     } catch (error) {
       console.error(error);
-      setErrorMessage(error.response?.data?.message || "Invalid or expired code.");
+      setErrorMessage(
+        error.response?.data?.message || "Invalid or expired code.",
+      );
     } finally {
       setLoading(false);
     }
@@ -115,15 +139,15 @@ export default function StepTwo({onNext, email}) {
         return;
       }
 
-     const response = await axios.post(
-  `${import.meta.env.VITE_BASE_URL}/auth/resend-otp`,
-  { email: email || google_email },
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/auth/resend-otp`,
+        { email: email || google_email },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       if (response.status === 200 || response.status === 201) {
         setSuccessMessage("Verification code resent successfully!");
         setCountdown(60); // Reset countdown to 10 minutes
@@ -135,7 +159,9 @@ export default function StepTwo({onNext, email}) {
       }
     } catch (error) {
       console.error(error);
-      setErrorMessage(error.response?.data?.message || "Failed to resend verification code.");
+      setErrorMessage(
+        error.response?.data?.message || "Failed to resend verification code.",
+      );
     } finally {
       setResending(false);
     }
@@ -144,12 +170,12 @@ export default function StepTwo({onNext, email}) {
   const isOtpComplete = otp.every((digit) => digit !== "");
 
   return (
-    <div className="h-screen"> 
-      <Navbar/>
+    <div className="h-screen">
+      <Navbar />
       <AuthLayout
         title="Let's Get Started!"
         // description="Sign up, get verified, and get a 5% credit bonus on every ride!"
-        description= "Join us to connect customers with your services anytime, anywhere."
+        description="Join us to connect customers with your services anytime, anywhere."
       >
         <motion.div
           key="step-two"
@@ -162,10 +188,10 @@ export default function StepTwo({onNext, email}) {
             Verify your email address
           </h2>
           <p className="text-gray-500 text-center mb-6">
-            We've sent a verification code to your email: {" "} 
+            We've sent a verification code to your email:{" "}
             <span className="font-bold">{email || google_email}</span>
           </p>
-          
+
           <div className="flex flex-col gap-4 items-center">
             <div className="flex justify-center gap-1.5 sm:gap-2">
               {otp.map((digit, index) => (
@@ -177,6 +203,7 @@ export default function StepTwo({onNext, email}) {
                   autoComplete="one-time-code"
                   maxLength="1"
                   value={digit}
+                  onPaste={handlePaste}
                   ref={(el) => (inputRefs.current[index] = el)}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
@@ -186,10 +213,14 @@ export default function StepTwo({onNext, email}) {
             </div>
 
             {successMessage && (
-              <p className="text-center text-sm text-[#005823] mt-2">{successMessage}</p>
+              <p className="text-center text-sm text-[#005823] mt-2">
+                {successMessage}
+              </p>
             )}
             {errorMessage && (
-              <p className="text-center text-sm text-red-500 mt-2">{errorMessage}</p>
+              <p className="text-center text-sm text-red-500 mt-2">
+                {errorMessage}
+              </p>
             )}
 
             <Button
@@ -205,10 +236,12 @@ export default function StepTwo({onNext, email}) {
               <p className="text-gray-500 text-center text-sm">
                 Didn't receive an email? Please check your spam folder
               </p>
-              
+
               {!canResend ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Request new code in</span>
+                  <span className="text-sm text-gray-500">
+                    Request new code in
+                  </span>
                   <span className="text-sm font-semibold text-[#005823] bg-[#8BC53F1A] px-3 py-1 rounded-md">
                     {formatTime(countdown)}
                   </span>
@@ -226,9 +259,7 @@ export default function StepTwo({onNext, email}) {
 
             <div className="inline-flex mt-2">
               <Link to="/login">
-                <button
-                  className="w-90 text-sm px-2 py-2 font-medium text-[#005823] hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-3 rounded-md"
-                >
+                <button className="w-90 text-sm px-2 py-2 font-medium text-[#005823] hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-3 rounded-md">
                   <FaChevronLeft size={20} className="text-[#005823]" />
                   <span>Back to sign in</span>
                 </button>
@@ -236,7 +267,7 @@ export default function StepTwo({onNext, email}) {
             </div>
           </div>
         </motion.div>
-      </AuthLayout> 
+      </AuthLayout>
     </div>
   );
 }
