@@ -34,7 +34,9 @@ const vehicleOptions = (service) => {
       label: isRide ? "Car Rider" : "Car Delivery",
       icon: <Car color="black" size={30} />,
       capacity: 4,
-      description: isRide ? "Comfortable rides for groups" : "Medium sized delivery",
+      description: isRide
+        ? "Comfortable rides for groups"
+        : "Medium sized delivery",
     },
   ];
 };
@@ -199,11 +201,15 @@ export default function Bookings() {
           serviceType: values.jobTitle,
           subCategory: values.service,
           pickupAddress: values.pickupAddress,
-          pickupLatitude: pickupCoords?.latitude || values.pickupLatitude || undefined,
-          pickupLongitude: pickupCoords?.longitude || values.pickupLongitude || undefined,
+          pickupLatitude:
+            pickupCoords?.latitude || values.pickupLatitude || undefined,
+          pickupLongitude:
+            pickupCoords?.longitude || values.pickupLongitude || undefined,
           dropoffAddress: values.dropoffAddress,
-          dropoffLatitude: dropoffCoords?.latitude || values.dropoffLatitude || undefined,
-          dropoffLongitude: dropoffCoords?.longitude || values.dropoffLongitude || undefined,
+          dropoffLatitude:
+            dropoffCoords?.latitude || values.dropoffLatitude || undefined,
+          dropoffLongitude:
+            dropoffCoords?.longitude || values.dropoffLongitude || undefined,
           scheduleType: values.serviceType,
           // vehicle: values.modeOfDelivery,
           modeOfDelivery: values.modeOfDelivery,
@@ -486,15 +492,14 @@ export default function Bookings() {
   //         ? "Ride discount available"
   //         : "Ride discount unavailable";
 
-  const promoDescription =
-    promoLoading
-      ? "We’re checking your promo status."
-      : promoEligibility?.eligible && promoEligibility?.canApplyAtPayment
-        ? `You have ${promoEligibility.remaining || 0} promo use(s) left.`
-        : promoEligibility?.eligible
-          ? "You qualify for a promo, and it can be applied at payment."
-          : promoError ||
-            "You are not currently eligible for the first ride discount.";
+  const promoDescription = promoLoading
+    ? "We’re checking your promo status."
+    : promoEligibility?.eligible && promoEligibility?.canApplyAtPayment
+      ? `You have ${promoEligibility.remaining || 0} promo use(s) left.`
+      : promoEligibility?.eligible
+        ? "You qualify for a promo, and it can be applied at payment."
+        : promoError ||
+          "You are not currently eligible for the first ride discount.";
 
   return (
     <DashboardLayout>
@@ -625,7 +630,7 @@ export default function Bookings() {
                   </button>
                 </div>
                 {pickupMode === "current" ? (
-                <InputField
+                  <InputField
                     name="pickupAddress"
                     label="Pickup location"
                     placeholder="24 Palm Avenue, Lagos"
@@ -639,23 +644,25 @@ export default function Bookings() {
                     label="Pickup location"
                     placeholder="24 Palm Avenue, Lagos"
                     value={formik.values.pickupAddress}
-                    onChange={(value) =>
-                      {
-                        formik.setFieldValue("pickupAddress", value);
-                        formik.setFieldValue("pickupLatitude", "");
-                        formik.setFieldValue("pickupLongitude", "");
-                      }
-                    }
-                    onSelect={(location) =>
-                      {
-                        formik.setFieldValue(
-                          "pickupAddress",
-                          location.displayAddress || location.address || "",
-                        );
-                        formik.setFieldValue("pickupLatitude", location.latitude || "");
-                        formik.setFieldValue("pickupLongitude", location.longitude || "");
-                      }
-                    }
+                    onChange={(value) => {
+                      formik.setFieldValue("pickupAddress", value);
+                      formik.setFieldValue("pickupLatitude", "");
+                      formik.setFieldValue("pickupLongitude", "");
+                    }}
+                    onSelect={(location) => {
+                      formik.setFieldValue(
+                        "pickupAddress",
+                        location.displayAddress || location.address || "",
+                      );
+                      formik.setFieldValue(
+                        "pickupLatitude",
+                        location.latitude || "",
+                      );
+                      formik.setFieldValue(
+                        "pickupLongitude",
+                        location.longitude || "",
+                      );
+                    }}
                     onBlur={() => formik.setFieldTouched("pickupAddress", true)}
                   />
                 )}
@@ -672,23 +679,25 @@ export default function Bookings() {
                   label="Dropoff location"
                   placeholder="24 Palm Avenue, Lagos"
                   value={formik.values.dropoffAddress}
-                  onChange={(value) =>
-                    {
-                      formik.setFieldValue("dropoffAddress", value);
-                      formik.setFieldValue("dropoffLatitude", "");
-                      formik.setFieldValue("dropoffLongitude", "");
-                    }
-                  }
-                  onSelect={(location) =>
-                    {
-                      formik.setFieldValue(
-                        "dropoffAddress",
-                        location.displayAddress || location.address || "",
-                      );
-                      formik.setFieldValue("dropoffLatitude", location.latitude || "");
-                      formik.setFieldValue("dropoffLongitude", location.longitude || "");
-                    }
-                  }
+                  onChange={(value) => {
+                    formik.setFieldValue("dropoffAddress", value);
+                    formik.setFieldValue("dropoffLatitude", "");
+                    formik.setFieldValue("dropoffLongitude", "");
+                  }}
+                  onSelect={(location) => {
+                    formik.setFieldValue(
+                      "dropoffAddress",
+                      location.displayAddress || location.address || "",
+                    );
+                    formik.setFieldValue(
+                      "dropoffLatitude",
+                      location.latitude || "",
+                    );
+                    formik.setFieldValue(
+                      "dropoffLongitude",
+                      location.longitude || "",
+                    );
+                  }}
                   onBlur={() => formik.setFieldTouched("dropoffAddress", true)}
                 />
                 {formik.touched.dropoffAddress &&
@@ -947,8 +956,8 @@ export default function Bookings() {
                     ? "Toggle this on to apply the promo to this booking."
                     : "The promo cannot be applied for this account right now."}
                 </span>
-              </div> */}
-            {/* </div> */}
+              </div>
+             </div> */}
             <div className="flex flex-col">
               <Button
                 variant="secondary"
