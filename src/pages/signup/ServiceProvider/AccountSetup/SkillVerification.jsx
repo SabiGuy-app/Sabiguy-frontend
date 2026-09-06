@@ -417,65 +417,71 @@ export default function SkillsVerification({ onNext, onBack }) {
                   </div>
                 )}
 
-                {/* <InputField
-                name="tagLine"
-                label="Tagline"
-                value={values.tagLine}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="e.g Trusted electrician for home and office wiring."
-                italicPlaceholder
-              />
+                {/* <div>
+                  <InputField
+                    name="tagLine"
+                    label="Tagline"
+                    value={values.tagLine}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="e.g Trusted electrician for home and office wiring."
+                    italicPlaceholder
+                  />
 
-              <p className="font-semibold text-xl">
-                Add your Services & Pricing
-              </p>
-              <p>
-                List the services you offer and set fair prices so customers
-                know what to expect.
-              </p>
-              <div className="flex flex-col gap-3 mt-3">
-                {services.map((service, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between border border-gray-300 rounded-lg p-3 shadow-sm bg-white"
-                  >
-                    <div>
-                      <h3 className="font-semibold text-lg">{service.name}</h3>
-                      <p className="text-green-700 font-semibold">
-                        ₦{service.price}
-                        <span className="text-gray-500 font-normal ml-2">
-                          • {service.pricingModelLabel}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-500">
-                      <Pencil
-                        className="w-4 h-4 cursor-pointer hover:text-gray-700"
-                        onClick={() => handleEditService(service, index)}
-                      />
-                      <Trash2
-                        className="w-4 h-4 cursor-pointer hover:text-red-600"
-                        onClick={() => handleDeleteService(index)}
-                      />
-                    </div>
+                  <p className="font-semibold text-xl">
+                    Add your Services & Pricing
+                  </p>
+                  <p>
+                    List the services you offer and set fair prices so customers
+                    know what to expect.
+                  </p>
+                  <div className="flex flex-col gap-3 mt-3">
+                    {services.map((service, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between border border-gray-300 rounded-lg p-3 shadow-sm bg-white"
+                      >
+                        <div>
+                          <h3 className="font-semibold text-lg">
+                            {service.name}
+                          </h3>
+                          <p className="text-green-700 font-semibold">
+                            ₦{service.price}
+                            <span className="text-gray-500 font-normal ml-2">
+                              • {service.pricingModelLabel}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-500">
+                          <Pencil
+                            className="w-4 h-4 cursor-pointer hover:text-gray-700"
+                            onClick={() => handleEditService(service, index)}
+                          />
+                          <Trash2
+                            className="w-4 h-4 cursor-pointer hover:text-red-600"
+                            onClick={() => handleDeleteService(index)}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="flex items-center gap-1 border border-gray-300 rounded-md w-40 py-1 font-semibold text-gray-700 bg-white hover:bg-[#8BC53FBF] transition"
-                onClick={() => setAddService(true)}
-              >
-                <IoIosAdd size={25} className="text-gray-600" />
-                <span>Add New Service</span>
-              </button>
-              {errorMessage && (
-                <p className="text-red-600 text-sm mt-2">{errorMessage}</p>
-              )}
-              {successMessage && (
-                <p className="text-green-600 text-sm mt-2">{successMessage}</p>
-              )} */}
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 border border-gray-300 rounded-md w-40 py-1 font-semibold text-gray-700 bg-white hover:bg-[#8BC53FBF] transition"
+                    onClick={() => setAddService(true)}
+                  >
+                    <IoIosAdd size={25} className="text-gray-600" />
+                    <span>Add New Service</span>
+                  </button>
+                  {errorMessage && (
+                    <p className="text-red-600 text-sm mt-2">{errorMessage}</p>
+                  )}
+                  {successMessage && (
+                    <p className="text-green-600 text-sm mt-2">
+                      {successMessage}
+                    </p>
+                  )}
+                </div> */}
 
                 <div className="flex justify-end gap-3 mt-8">
                   {/* <button
