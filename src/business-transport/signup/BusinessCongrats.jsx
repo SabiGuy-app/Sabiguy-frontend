@@ -14,7 +14,7 @@ export default function BusinessCongrats() {
       localStorage.getItem("email") || localStorage.getItem("google-email");
 
     if (!token || !email) {
-      navigate("/dashboard/provider");
+      navigate("/business-provider/dashboard");
       return;
     }
 
@@ -27,16 +27,14 @@ export default function BusinessCongrats() {
       console.error("Failed to load user profile:", err);
     } finally {
       setLoading(false);
-      navigate("/dashboard/provider");
+      navigate("/business-provider/dashboard");
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen justify-center items-center">
-      {/* <div className="  justify-center items-center"> */}
       <h2 className="font-semibold text-3xl mb-6">All Done!</h2>
       <img src="/Group.svg" alt="Group" className="w-full max-w-md" />
-      {/* </div> */}
       <p className="text-2xl mb-5 mt-5">
         We’re reviewing your documents and will notify you once you’re verified.
       </p>

@@ -5,8 +5,8 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import { trackEvent } from "../../../../services/analytics";
-import individual from "../../../../../public/individual.png";
-import business from "../../../../../public/business.png";
+import individual from "/public/individual.png";
+import business from "/public/business.png";
 
 const ACCOUNT_TYPE_PAYLOAD = {
   Individual: "personal",

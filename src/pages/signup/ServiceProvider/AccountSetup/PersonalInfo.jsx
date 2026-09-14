@@ -134,7 +134,7 @@ export default function PersonalInfoForm({ onBack, onNext }) {
   };
 
   return (
-    <AccountSetupLayout currentStep={1}>
+    <AccountSetupLayout currentStep={0}>
       <motion.div
         key="step-one"
         initial={{ opacity: 0, x: 50 }}

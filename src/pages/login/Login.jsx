@@ -15,7 +15,13 @@ import { LoginSchema } from "./schema";
 import ForgotPassword from "../Forgot-Password/ForgotPassword";
 import { useAuthStore } from "../../stores/auth.store";
 import Loader from "../../components/Loader";
-import { login, googleLogin, getUserByEmail } from "../../api/auth";
+import {
+  login,
+  googleLogin,
+  businessLogin,
+  businessGoogleLogin,
+  getUserByEmail,
+} from "../../api/auth";
 import { requestNotificationPermission } from "../../services/fcmService";
 import { registerUserFCMToken } from "../../api/fcm";
 
@@ -156,9 +162,15 @@ export default function Login() {
       useAuthStore.getState().setToken(token);
     }
 
-    // Fetch & store full user profile
-    const fullUser = await getUserByEmail(email);
-    useAuthStore.getState().setUser(fullUser);
+    // Fetch & store full user profile (best-effort — must not block
+    // navigation if this account type isn't in the /users lookup yet)
+    let fullUser = null;
+    try {
+      fullUser = await getUserByEmail(email);
+      useAuthStore.getState().setUser(fullUser);
+    } catch (err) {
+      console.warn("Could not fetch full user profile:", err.message);
+    }
     const userRole =
       role ||
       fullUser?.role ||
@@ -172,6 +184,12 @@ export default function Login() {
     if (userRole === "buyer") {
       setRedirecting(true);
       navigate("/dashboard", { replace: true });
+      return;
+    }
+
+    if (userRole === "business") {
+      setRedirecting(true);
+      navigate("/business-provider/dashboard", { replace: true });
       return;
     }
 
@@ -197,8 +215,9 @@ export default function Login() {
     clearMessages();
     setLoading(true);
 
+    const email = values.email.trim().toLowerCase();
+
     try {
-      const email = values.email.trim().toLowerCase();
       const res = await login({ email, password: values.password });
 
       if (!res?.token) {
@@ -213,13 +232,30 @@ export default function Login() {
         message: res.message,
       });
     } catch (error) {
-      console.error("Login error:", error);
+      // Not a buyer/provider account — try the business login before giving up.
+      try {
+        const bizRes = await businessLogin({ email, password: values.password });
 
-      if (error.request && !error.response) {
-        setErrorMessage("No response from server. Please check your connection.");
-      } else {
-        const raw = extractErrorMessage(error);
-        setErrorMessage(normaliseMessage(raw, "Login failed. Try again."));
+        if (!bizRes?.token) {
+          setErrorMessage("Login failed. Please try again.");
+          return;
+        }
+
+        await finaliseLogin({
+          role: "business",
+          email: bizRes.email || email,
+          token: bizRes.token,
+          message: bizRes.message,
+        });
+      } catch (bizError) {
+        console.error("Login error:", error, bizError);
+
+        if (error.request && !error.response) {
+          setErrorMessage("No response from server. Please check your connection.");
+        } else {
+          const raw = extractErrorMessage(error);
+          setErrorMessage(normaliseMessage(raw, "Login failed. Try again."));
+        }
       }
     } finally {
       // Always reset loading — this was the primary bug causing infinite loading
@@ -260,9 +296,37 @@ export default function Login() {
           token: data.token,
         });
       } catch (err) {
-        console.error("Google login error:", err);
-        const raw = extractErrorMessage(err);
-        setErrorMessage(normaliseMessage(raw, "Google login failed."));
+        // Not a buyer/provider account — try the business Google login before giving up.
+        try {
+          const bizData = await businessGoogleLogin(tokenResponse.access_token);
+
+          if (!bizData?.token) {
+            const msg =
+              typeof bizData === "string"
+                ? bizData
+                : bizData?.message || bizData?.error;
+            setErrorMessage(normaliseMessage(msg, "Google login failed."));
+            return;
+          }
+
+          // The business endpoint only returns a token, no email — read it
+          // straight from Google since we already have the access token.
+          const userInfo = await fetch(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } },
+          );
+          const profile = await userInfo.json();
+
+          await finaliseLogin({
+            role: "business",
+            email: bizData.email || profile?.email || "",
+            token: bizData.token,
+          });
+        } catch (bizErr) {
+          console.error("Google login error:", err, bizErr);
+          const raw = extractErrorMessage(err);
+          setErrorMessage(normaliseMessage(raw, "Google login failed."));
+        }
       } finally {
         setGoogleLoading(false);
       }

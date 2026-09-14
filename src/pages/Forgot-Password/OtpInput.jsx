@@ -4,8 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import Modal from "../../components/Modal";
 import ResetPassword from "./ResetPassword";
 import axios from "axios";
+import {
+  resendBusinessPasswordResetOtp,
+  verifyBusinessPasswordResetOtp,
+} from "../../api/auth";
 
-export default function OtpInput ({ isOpen, onClose})  {
+export default function OtpInput ({ isOpen, onClose, accountType = "user"})  {
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [showResetModal, setShowResetModal] = useState(false)
     const [loading, setLoading] = useState(false);
@@ -76,12 +80,14 @@ const email = localStorage.getItem("passwordEmail");
         setError("");
         setSuccessMessage("");
         try {
-             const res = await axios.post(
-               `${import.meta.env.VITE_BASE_URL}/auth/verify-reset-otp`,
-               { email, otp: otpCode },
-             );
+             const data = accountType === "business"
+               ? await verifyBusinessPasswordResetOtp({ email, otp: otpCode })
+               : (await axios.post(
+                   `${import.meta.env.VITE_BASE_URL}/auth/verify-reset-otp`,
+                   { email, otp: otpCode },
+                 )).data;
 
-             if (res.data) {
+             if (data) {
                localStorage.setItem("resetOtp", otpCode);
                onClose();
                setShowResetModal(true);
@@ -110,12 +116,14 @@ const email = localStorage.getItem("passwordEmail");
       setError("");
       setSuccessMessage("");
 
-      const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/auth/resend-forgot-password-otp`,
-        { email },
-      );
+      const data = accountType === "business"
+        ? await resendBusinessPasswordResetOtp(email)
+        : (await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/auth/resend-forgot-password-otp`,
+            { email },
+          )).data;
 
-      if (res.status === 200 || res.status === 201 || res.data) {
+      if (data) {
         setSuccessMessage("OTP resent successfully!");
         setCountdown(60);
         setCanResend(false);
@@ -211,7 +219,7 @@ const email = localStorage.getItem("passwordEmail");
 <ResetPassword
 isOpen={showResetModal}
 onClose={() => setShowResetModal(false)}
-
+accountType={accountType}
 />
 </>
     )

@@ -13,6 +13,7 @@ import BusinessSetupLayout from "../BusinessSetupLayout";
 import { IoIosArrowBack } from "react-icons/io";
 import { Formik, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import axios from "axios";
 
 const VEHICLE_TYPES = [
   { id: "car", label: "Car driver (2000 below)" },
@@ -40,10 +41,32 @@ export default function AddVehicleForm({ onBack, onNext }) {
   const [successMessage, setSuccessMessage] = useState("");
   const [pictures, setPictures] = useState([]);
   const [pictureError, setPictureError] = useState("");
+  const [uploadingPictures, setUploadingPictures] = useState(false);
   const formikRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const handleFiles = (fileList) => {
+  const token = localStorage.getItem("token");
+  const email = localStorage.getItem("email");
+
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/file/${email}/work_visuals`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    return response.data.file.url;
+  };
+
+  const handleFiles = async (fileList) => {
     const incoming = Array.from(fileList || []);
     if (incoming.length === 0) return;
 
@@ -59,21 +82,31 @@ export default function AddVehicleForm({ onBack, onNext }) {
         rejection = `Each file must be under ${MAX_FILE_SIZE_MB}MB.`;
         return;
       }
-      valid.push({
-        id: `${Date.now()}-${file.name}-${Math.random()}`,
-        file,
-        name: file.name,
-        preview: file.type.startsWith("image/")
-          ? URL.createObjectURL(file)
-          : null,
-      });
+      valid.push(file);
     });
 
-    if (rejection) setPictureError(rejection);
-    else setPictureError("");
+    setPictureError(rejection);
 
-    if (valid.length > 0) {
-      setPictures((prev) => [...prev, ...valid]);
+    if (valid.length === 0) return;
+
+    setUploadingPictures(true);
+    try {
+      const uploaded = await Promise.all(
+        valid.map(async (file) => ({
+          id: `${Date.now()}-${file.name}-${Math.random()}`,
+          file,
+          name: file.name,
+          url: await uploadFile(file),
+        })),
+      );
+      setPictures((prev) => [...prev, ...uploaded]);
+    } catch (err) {
+      setPictureError(
+        err.response?.data?.message ||
+          "Failed to upload picture(s). Please try again.",
+      );
+    } finally {
+      setUploadingPictures(false);
     }
   };
 
@@ -87,6 +120,10 @@ export default function AddVehicleForm({ onBack, onNext }) {
   };
 
   const handleAddVehicle = (values, { resetForm }) => {
+    if (uploadingPictures) {
+      setPictureError("Please wait for pictures to finish uploading.");
+      return;
+    }
     if (pictures.length < MIN_PICTURES) {
       setPictureError(
         `Please upload at least ${MIN_PICTURES} pictures with plates visible.`,
@@ -155,8 +192,32 @@ export default function AddVehicleForm({ onBack, onNext }) {
     setSubmitting(true);
     try {
       setListError("");
-      setSuccessMessage("Vehicles saved successfully!");
-      onNext();
+
+      const payload = {
+        vehicles: vehicles.map((v) => ({
+          vehicleName: v.name,
+          plateNumber: v.plate,
+          vehicleType: v.type,
+          vehiclePictureUrl: v.pictures[0]?.url,
+        })),
+      };
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/businesses/vehicle-details`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        setSuccessMessage("Vehicles saved successfully!");
+        onNext();
+      } else {
+        setErrorMessage("Something went wrong");
+      }
     } catch (error) {
       console.error("AddVehicle submit error:", error);
       if (error.response) {
@@ -331,15 +392,27 @@ export default function AddVehicleForm({ onBack, onNext }) {
                   <div
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-10 text-center hover:bg-gray-50 transition-colors"
+                    onClick={() =>
+                      !uploadingPictures && fileInputRef.current?.click()
+                    }
+                    className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-10 text-center transition-colors ${
+                      uploadingPictures
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer hover:bg-gray-50"
+                    }`}
                   >
                     <UploadCloud size={32} className="text-[#005823]" />
                     <p className="text-[15px] text-gray-700">
-                      Upload pictures{" "}
-                      <span className="font-medium text-[#005823] underline">
-                        Browse
-                      </span>
+                      {uploadingPictures ? (
+                        "Uploading..."
+                      ) : (
+                        <>
+                          Upload pictures{" "}
+                          <span className="font-medium text-[#005823] underline">
+                            Browse
+                          </span>
+                        </>
+                      )}
                     </p>
                     <p className="text-[12px] text-gray-400">
                       JPEG, PNG, PDF format, Max {MAX_FILE_SIZE_MB}MB each
@@ -350,6 +423,7 @@ export default function AddVehicleForm({ onBack, onNext }) {
                       multiple
                       accept={ACCEPTED_TYPES.join(",")}
                       className="hidden"
+                      disabled={uploadingPictures}
                       onChange={(e) => handleFiles(e.target.files)}
                     />
                   </div>
@@ -386,7 +460,8 @@ export default function AddVehicleForm({ onBack, onNext }) {
 
                 <button
                   type="submit"
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#005823] py-3.5 text-[14px] font-medium text-[#005823] hover:bg-[#00582310] transition-colors"
+                  disabled={uploadingPictures}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#005823] py-3.5 text-[14px] font-medium text-[#005823] hover:bg-[#00582310] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="text-lg leading-none">+</span>
                   {editingId ? "Update Vehicle" : "Add Vehicle"}

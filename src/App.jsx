@@ -140,11 +140,11 @@ const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
   () => import("./business-transport/dashboard/pages/FleetOverview"),
 );
-const FleetComingSoon = lazy(
-  () => import("./business-transport/dashboard/pages/ComingSoonPage"),
-);
 const Earnings = lazy(
   () => import("./business-transport/dashboard/pages/Earnings"),
+);
+const FleetComingSoon = lazy(
+  () => import("./business-transport/dashboard/pages/ComingSoonPage"),
 );
 const FleetPerformance = lazy(
   () => import("./business-transport/dashboard/pages/Performance"),
@@ -344,7 +344,10 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/service-provider/signup" element={<SignupForm />} />
               <Route path="/congrats" element={<Congrats />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route
+                path="/forgot-password"
+                element={<ForgotPassword accountType="business" />}
+              />
               <Route path="/otp-input" element={<OtpInput />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/success" element={<Success />} />
@@ -474,10 +477,10 @@ function App() {
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                 {/* <Route
+                 <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                />  */}
+                />  
 
                 <Route
                   path="/business-provider/dashboard/trips"

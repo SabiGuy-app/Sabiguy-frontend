@@ -1,5 +1,9 @@
 import { AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import ConfirmKyc from "./AccountSetup/ConfirmKyc";
+import StepOne from "./AccountSetup/StepOne";
+import StepTwo from "./AccountSetup/StepTwo";
+import StepThree from "./AccountSetup/StepThree";
 import BusinessInfo from "./ServiceProvider/BusinessSetup/BusinessInfo";
 import AddVehicleForm from "./ServiceProvider/BusinessSetup/AddVehicleForm";
 import AddDriverForm from "./ServiceProvider/BusinessSetup/AddDriverForm";
@@ -14,29 +18,10 @@ export default function BusinessForm() {
     accountType: "",
   });
 
-  const getStepForKycLevel = (level) => {
-    const normalized = Number(level);
-    if (Number.isNaN(normalized)) return null;
-
-    const kycMap = {
-      0: 0, // AccountTypeForm
-      1: 1, // BusinessInfo
-      2: 2, // AddVehicleForm
-      3: 3, // AddDriverForm
-      4: 4, // IncomeSplitForm
-      5: 5, // Congrats
-    };
-
-    return kycMap[normalized] ?? null;
-  };
-
   const handleNext = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
     setStep((prev) => {
-      if (data?.kycLevel !== undefined && data?.kycLevel !== null) {
-        const mappedStep = getStepForKycLevel(data.kycLevel);
-        if (mappedStep !== null) return mappedStep;
-      }
+      // Google sign-up verifies the email up front, so skip the OTP step.
       if (prev === 0 && data?.skipOtp) return prev + 2;
       if (prev === 1 && data?.skipOtp) return prev + 2;
       return prev + 1;
@@ -44,23 +29,11 @@ export default function BusinessForm() {
   };
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
-  useEffect(() => {
-    const storedKycLevel = localStorage.getItem("kycLevel");
-    const storedEmail = localStorage.getItem("email");
-    if (storedKycLevel) {
-      const mappedStep = getStepForKycLevel(storedKycLevel);
-      if (mappedStep !== null) {
-        setStep(mappedStep);
-      }
-      if (storedEmail) {
-        setFormData((prev) => ({ ...prev, email: storedEmail }));
-      }
-      localStorage.removeItem("kycLevel");
-    }
-  }, []);
-
   const forms = [
-    // <AccountTypeForm onNext={handleNext} onBack={handleBack} />, //KYC level 0
+    <ConfirmKyc onNext={handleNext} />,
+    <StepOne onNext={handleNext} email={formData.email} />,
+    <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
+    <StepThree onNext={handleNext} onBack={handleBack} />,
     <BusinessInfo onNext={handleNext} onBack={handleBack} />,
     <AddVehicleForm onNext={handleNext} onBack={handleBack} />,
     // <AddDriverForm onNext={handleNext} onBack={handleBack} />,
