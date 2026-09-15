@@ -29,7 +29,7 @@ export default function Form() {
 
     const kycMap = {
       0: 1,  // StepOne
-      1: 2,  // StepTwo
+      1: 4,  // PersonalInfoForm
       2: 3,  // StepThree
       3: 5,  // FacialCapture (nested)
       4: 7,  // SkillsVerification

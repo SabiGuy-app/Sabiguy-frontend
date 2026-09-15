@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ProviderDashboardLayout from "../../../components/layouts/ProviderDashboardLayout";
 import DashboardCard from "../../../components/dashboard/DashboardCard";
-import { Wallet, Bookmark, Star, CheckCircle } from "lucide-react";
+import { Wallet, Bookmark, Star, CheckCircle, MapPin } from "lucide-react";
 import RevenueOverview from "../../../components/provider-dashboard/RevenueOverview";
 import AverageResponseTime from "../../../components/provider-dashboard/AverageResponseTime";
 import PeakHourAnalysis from "../../../components/provider-dashboard/Analysis";
@@ -9,9 +9,12 @@ import BookingsByDayOfWeek from "../../../components/provider-dashboard/Bookings
 import WalletCard from "../../../components/provider-dashboard/WalletCard";
 import RevenueByServiceType from "../../../components/provider-dashboard/RevenueByService";
 import RecentTransactions from "../../../components/provider-dashboard/RecentTransactions";
-import { getDashboardStats, formatCurrency } from "../../../api/provider";
+import {
+  getDashboardStats,
+  formatCurrency,
+  updateProviderLocation,
+} from "../../../api/provider";
 import { useAuthStore } from "../../../stores/auth.store";
-
 
 export default function ProviderDashboard() {
   const user = useAuthStore((state) => state.user);
@@ -19,6 +22,7 @@ export default function ProviderDashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [location, setLocation] = useState(null);
 
   // ── Fetch dashboard stats ──────────────────────────────────────────────
   useEffect(() => {
@@ -40,16 +44,16 @@ export default function ProviderDashboard() {
 
         setDashboardData({
           // Stat cards
-          totalEarnings:     raw?.totalEarnings     ?? 0,
-          activeBookings:    raw?.activeBookings     ?? 0,
-          completedBookings: raw?.completedBookings  ?? 0,
+          totalEarnings: raw?.totalEarnings ?? 0,
+          activeBookings: raw?.activeBookings ?? 0,
+          completedBookings: raw?.completedBookings ?? 0,
 
           // Revenue Overview — pass object { last7Days, last30Days, total }
           revenueData: raw?.revenueOverview
             ? {
-                last7Days:  raw.revenueOverview.last7Days  || 0,
+                last7Days: raw.revenueOverview.last7Days || 0,
                 last30Days: raw.revenueOverview.last30Days || 0,
-                total:      raw.revenueOverview.total      || 0,
+                total: raw.revenueOverview.total || 0,
               }
             : null,
 
@@ -58,13 +62,13 @@ export default function ProviderDashboard() {
 
           // Bookings by Day — normalise to { day, bookings }
           bookingsByDay: (raw?.bookingsByDayOfWeek || []).map((d) => ({
-            day:      (d.day || "").slice(0, 3),
+            day: (d.day || "").slice(0, 3),
             bookings: d.count ?? d.bookings ?? 0,
           })),
 
           // Peak Hour Analysis — pass buckets [{ hour, count }]
           peakHoursData: (raw?.peakHourAnalysis?.buckets || []).map((b) => ({
-            hour:     b.hour,
+            hour: b.hour,
             bookings: b.count ?? b.bookings ?? 0,
           })),
 
@@ -73,7 +77,9 @@ export default function ProviderDashboard() {
         });
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
-        setError(err.response?.data?.message || "Failed to load dashboard data");
+        setError(
+          err.response?.data?.message || "Failed to load dashboard data",
+        );
         setDashboardData({});
       } finally {
         setIsLoading(false);
@@ -81,6 +87,27 @@ export default function ProviderDashboard() {
     };
 
     fetchDashboardStats();
+  }, []);
+
+  useEffect(() => {
+    const displayLocation = async () => {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const data = await updateProviderLocation({ latitude, longitude });
+          const address = data?.data?.currentLocation?.address;
+          if (address) {
+            setLocation(address);
+          }
+        } catch (error) {
+          console.error("Error updating location:", error);
+        }
+      });
+    };
+    displayLocation();
   }, []);
 
   // ── Guard: wait for zustand hydration ─────────────────────────────────
@@ -99,20 +126,26 @@ export default function ProviderDashboard() {
   }
 
   const Job = user?.data?.job;
-  const totalRevenue  = dashboardData?.totalEarnings     || 0;
-  const activeJobs    = dashboardData?.activeBookings     || 0;
-  const completedJobs = dashboardData?.completedBookings  || 0;
+  const totalRevenue = dashboardData?.totalEarnings || 0;
+  const activeJobs = dashboardData?.activeBookings || 0;
+  const completedJobs = dashboardData?.completedBookings || 0;
 
   return (
     <ProviderDashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold mb-1">
-            Welcome Back, {user?.data?.fullName?.split(" ")[0]} 👋</h2>
+            Welcome Back, {user?.data?.fullName?.split(" ")[0]} 👋
+          </h2>
+          <p className="text-sm text-[#005823] mb-1 flex items-center gap-1">
+            <MapPin size={16} />
+            {isLoading
+              ? "Location loading..."
+              : location || "Updating your location..."}
+          </p>
           <p className="mb-2 text-sm">
             Here's a quick look at your business performance today.
           </p>
-         
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
