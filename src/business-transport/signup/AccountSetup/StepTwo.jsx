@@ -84,14 +84,18 @@ export default function StepTwo({ onNext, email }) {
         if (token) {
           localStorage.setItem("token", token);
         }
-        setSuccessMessage(response.data?.message || "Email verified successfully!");
+        setSuccessMessage(
+          response.data?.message || "Email verified successfully!",
+        );
         setTimeout(() => onNext(), 1000);
       } else {
         setErrorMessage("Verification failed. Please try again.");
       }
     } catch (error) {
       console.error(error);
-      setErrorMessage(error.response?.data?.message || "Invalid or expired code.");
+      setErrorMessage(
+        error.response?.data?.message || "Invalid or expired code.",
+      );
     } finally {
       setLoading(false);
     }
@@ -108,7 +112,9 @@ export default function StepTwo({ onNext, email }) {
         { email: email || googleEmail },
       );
       if (response.status === 200 || response.status === 201) {
-        setSuccessMessage(response.data?.message || "Verification code resent successfully!");
+        setSuccessMessage(
+          response.data?.message || "Verification code resent successfully!",
+        );
         setCountdown(60); // Reset countdown to 10 minutes
         setCanResend(false);
         setOtp(["", "", "", "", "", ""]); // Clear OTP inputs
@@ -118,10 +124,35 @@ export default function StepTwo({ onNext, email }) {
       }
     } catch (error) {
       console.error(error);
-      setErrorMessage(error.response?.data?.message || "Failed to resend verification code.");
+      setErrorMessage(
+        error.response?.data?.message || "Failed to resend verification code.",
+      );
     } finally {
       setResending(false);
     }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+
+    const pastedData = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+
+    if (!pastedData) return;
+
+    const newOtp = [...otp];
+
+    pastedData.split("").forEach((digit, index) => {
+      newOtp[index] = digit;
+    });
+
+    setOtp(newOtp);
+
+    // Focus the next empty input, or the last input
+    const nextIndex = Math.min(pastedData.length, 5);
+    inputRefs.current[nextIndex]?.focus();
   };
 
   const isOtpComplete = otp.every((digit) => digit !== "");
@@ -156,6 +187,7 @@ export default function StepTwo({ onNext, email }) {
                   type="tel"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  onPaste={handlePaste}
                   autoComplete="one-time-code"
                   maxLength="1"
                   value={digit}
@@ -168,10 +200,14 @@ export default function StepTwo({ onNext, email }) {
             </div>
 
             {successMessage && (
-              <p className="text-center text-sm text-[#005823] mt-2">{successMessage}</p>
+              <p className="text-center text-sm text-[#005823] mt-2">
+                {successMessage}
+              </p>
             )}
             {errorMessage && (
-              <p className="text-center text-sm text-red-500 mt-2">{errorMessage}</p>
+              <p className="text-center text-sm text-red-500 mt-2">
+                {errorMessage}
+              </p>
             )}
 
             <Button
@@ -190,7 +226,9 @@ export default function StepTwo({ onNext, email }) {
 
               {!canResend ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Request new code in</span>
+                  <span className="text-sm text-gray-500">
+                    Request new code in
+                  </span>
                   <span className="text-sm font-semibold text-[#005823] bg-[#8BC53F1A] px-3 py-1 rounded-md">
                     {formatTime(countdown)}
                   </span>

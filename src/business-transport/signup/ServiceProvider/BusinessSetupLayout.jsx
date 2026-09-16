@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 
 export default function BusinessSetupLayout({ currentStep, children }) {
   const steps = [
-    "Account Type",
+    // "Account Type",
     "Business Info",
-    "Vehicle Setup",
+    "Business Verification",
+    "Business Setup",
     // "Add Driver",
     // "Income Split",
   ];

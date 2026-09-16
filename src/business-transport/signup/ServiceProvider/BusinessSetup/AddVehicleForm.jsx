@@ -254,6 +254,17 @@ export default function AddVehicleForm({ onBack, onNext }) {
             cannot be edited.
           </p>
 
+          <div className="mt-6 flex items-start gap-2 rounded-lg border border-[#FDE68A] bg-[#FEF9E7] px-4 py-3">
+            <AlertTriangle
+              size={16}
+              className="mt-0.5 shrink-0 text-[#D97706]"
+            />
+            <p className="text-[12.5px] leading-snug text-[#92400E]">
+              Please ensure all details are accurate before submitting. Vehicle
+              information cannot be edited after registration.
+            </p>
+          </div>
+
           {vehicles.length > 0 && (
             <div className="mt-6 space-y-3">
               {vehicles.map((v) => (
@@ -501,17 +512,6 @@ export default function AddVehicleForm({ onBack, onNext }) {
           {successMessage && (
             <p className="text-green-600 text-sm mt-2">{successMessage}</p>
           )}
-
-          <div className="mt-6 flex items-start gap-2 rounded-lg border border-[#FDE68A] bg-[#FEF9E7] px-4 py-3">
-            <AlertTriangle
-              size={16}
-              className="mt-0.5 shrink-0 text-[#D97706]"
-            />
-            <p className="text-[12.5px] leading-snug text-[#92400E]">
-              Please ensure all details are accurate before submitting. Vehicle
-              information cannot be edited after registration.
-            </p>
-          </div>
         </div>
       </div>
     </BusinessSetupLayout>

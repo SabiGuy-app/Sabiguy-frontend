@@ -84,7 +84,7 @@ export default function FleetSidebar({ open = false, onClose, wallet = {} }) {
                       key={link.path}
                       to={link.path}
                       onClick={() => onClose?.()}
-                      className={`flex items-center gap-4 rounded-lg px-4 py-3 text-base text-[#5F5C5D] hover:bg-[#005823]/10 ${
+                      className={`flex items-center gap-4 rounded-lg px-4 py-3 text-base text-[#5F5C5D] hover:text-white hover:bg-[#005823]/80 ${
                         isActive ? "bg-[#005823] font-medium text-white" : ""
                       }`}
                     >

@@ -12,6 +12,7 @@ import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
 import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
+import PasswordRequirements from "../../../components/PasswordRequirements";
 
 const MotionDiv = motion.div;
 
@@ -246,10 +247,7 @@ export default function StepOne({ onNext, email }) {
                     component="span"
                     className="text-[#db3a3a]"
                   />
-                  <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                    Password must be at least 8 characters long and include a
-                    letter, number, and special character
-                  </p>
+                  <PasswordRequirements password={values.password} />
                   {showPassword ? (
                     <BsEye
                       onClick={handleShowPassword}

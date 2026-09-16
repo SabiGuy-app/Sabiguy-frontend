@@ -5,23 +5,73 @@ import { FaChevronLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import axios from "axios";
 import InputField from "../../../components/InputField";
 
-// TODO: UI-only until the business email-lookup endpoint is ready
-// (should work like the individual flow's /provider/kyc-level).
+const BUSINESS_KYC_ENDPOINT = "/businesses/kyc-level";
+
 export default function ConfirmKyc({ onNext }) {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim()) {
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
       setErrorMessage("Please enter your email address.");
       return;
     }
-    setErrorMessage("");
-    localStorage.setItem("email", email.trim());
-    onNext?.({ email: email.trim() });
+
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}${BUSINESS_KYC_ENDPOINT}`,
+        { email: normalizedEmail },
+      );
+      const data = response.data;
+
+      const token =
+        data?.token || data?.data?.token || data?.accessToken;
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+
+      localStorage.setItem("email", normalizedEmail);
+
+      const message = String(data?.message || "").toLowerCase();
+      const isNewBusiness =
+        message.includes("new customer") || message.includes("new business");
+      const level =
+        data?.kycLevel ??
+        data?.data?.kycLevel ??
+        data?.level;
+
+      if (isNewBusiness) {
+        localStorage.setItem("kycLevel", "0");
+        onNext?.({ kycLevel: 0, email: normalizedEmail });
+        return;
+      }
+
+      if (level === undefined || level === null) {
+        setErrorMessage("Unable to determine your onboarding progress. Please try again.");
+        return;
+      }
+
+      localStorage.setItem("kycLevel", String(level));
+      onNext?.({ kycLevel: level, email: normalizedEmail });
+    } catch (error) {
+      console.error("Unable to retrieve business KYC level:", error);
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to check your onboarding progress. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,8 +110,8 @@ export default function ConfirmKyc({ onNext }) {
               <p className="text-center text-sm text-red-500 mt-2">{errorMessage}</p>
             )}
 
-            <Button variant="secondary" type="submit">
-              Next
+            <Button variant="secondary" type="submit" disabled={loading}>
+              {loading ? "Checking..." : "Next"}
             </Button>
           </form>
           <div className="inline-flex mt-4 justify-center w-full">

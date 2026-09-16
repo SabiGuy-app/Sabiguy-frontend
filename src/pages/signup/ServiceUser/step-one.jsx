@@ -130,6 +130,8 @@ export default function StepOne({ onNext }) {
     onSuccess: async (tokenResponse) => {
       try {
         setGoogleLoading(true);
+        setErrorMessage("");
+        setSuccessMessage("");
         trackEvent("signup_started", { role: "buyer", method: "google" });
 
         // Get Google user info
@@ -159,10 +161,6 @@ export default function StepOne({ onNext }) {
         const data = await res.json();
         console.log("Server response:", data);
 
-        if (data?.token) {
-          localStorage.setItem("token", data.token);
-        }
-
         const googleEmail =
           data?.email || data?.newUser?.email || profile?.email || "";
 
@@ -183,19 +181,29 @@ export default function StepOne({ onNext }) {
           return;
         }
 
-        if (data?.newUser?.email) {
-          trackEvent("signup_completed", { role: "buyer", method: "google" });
-          localStorage.setItem("google-email", data.newUser.email);
-          setGoogleLoading(false);
-          onNext({ email: data.newUser.email, skipOtp: true });
-        } else if (data.message === "Email already in use") {
+        if (!res.ok) {
           trackEvent("signup_failed", { role: "buyer", method: "google" });
           setGoogleLoading(false);
-          setErrorMessage(data.message);
-        } else {
-          setGoogleLoading(false);
-          setErrorMessage("An error occurred. Please try again.");
+          setErrorMessage(data?.message || "An error occurred. Please try again.");
+          return;
         }
+
+        if (data?.token) {
+          localStorage.setItem("token", data.token);
+        }
+
+        if (!googleEmail) {
+          trackEvent("signup_failed", { role: "buyer", method: "google" });
+          setErrorMessage("Google did not return an email address for this account.");
+          setGoogleLoading(false);
+          return;
+        }
+
+        trackEvent("signup_completed", { role: "buyer", method: "google" });
+        localStorage.setItem("google-email", googleEmail);
+        localStorage.setItem("email", googleEmail);
+        setGoogleLoading(false);
+        onNext({ email: googleEmail, skipOtp: true });
       } catch (error) {
         console.error("Google login failed:", error);
         trackEvent("signup_failed", { role: "buyer", method: "google" });

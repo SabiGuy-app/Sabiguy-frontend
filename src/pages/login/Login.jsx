@@ -132,6 +132,44 @@ const getProviderKycStatus = async (email) => {
   return "done";
 };
 
+const getBusinessKycStatus = async (email) => {
+  try {
+    const { data } = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/businesses/kyc-level`,
+      { email },
+    );
+
+    const token = data?.token || data?.data?.token || data?.accessToken;
+    if (token) localStorage.setItem("token", token);
+
+    const message = String(data?.message || "").toLowerCase();
+    const isNewBusiness =
+      message.includes("new customer") || message.includes("new business");
+    const rawLevel =
+      data?.kycLevel ??
+      data?.data?.kycLevel ??
+      data?.level;
+    const level = Number(rawLevel);
+
+    if (isNewBusiness) {
+      localStorage.setItem("kycLevel", "0");
+      localStorage.setItem("email", email);
+      return "incomplete";
+    }
+
+    // Business onboarding maps level 3 to the completed/congrats step.
+    if (level < 3) {
+      localStorage.setItem("kycLevel", String(level));
+      localStorage.setItem("email", email);
+      return "incomplete";
+    }
+  } catch {
+    // KYC lookup failure should not block login.
+  }
+
+  return "done";
+};
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Login() {
@@ -188,6 +226,17 @@ export default function Login() {
     }
 
     if (userRole === "business") {
+      const kycStatus = await getBusinessKycStatus(email);
+
+      if (kycStatus === "incomplete") {
+        setRedirecting(true);
+        setErrorMessage(
+          "You are yet to complete your onboarding process. You will be redirected to where you stopped..."
+        );
+        setTimeout(() => navigate("/business-provider/signup"), 2000);
+        return;
+      }
+
       setRedirecting(true);
       navigate("/business-provider/dashboard", { replace: true });
       return;
