@@ -45,7 +45,7 @@ export default function PasswordTab() {
 
     setIsSubmitting(true);
     try {
-      await api.put("/auth/change-password", {
+      await api.put("/business/auth/change-password", {
         oldPassword: formData.oldPassword,
         newPassword: formData.newPassword,
       });
