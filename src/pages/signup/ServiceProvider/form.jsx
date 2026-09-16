@@ -13,30 +13,29 @@ import UploadDocumnet from "./AccountSetup/UploadDoc";
 import UploadAutoMobile from "./AccountSetup/UploadAutomobile";
 import Congrats from "./congrats";
 import { useEffect, useState } from "react";
+import BeautyAndPersonalCare from "./AccountSetup/BeautyAndPersonalCare";
 
 export default function Form() {
-    const [step , setStep] = useState(0)
-    const [formData, setFormData] = useState({
-        gender: '',
-        city: '',
-        accountType: '',
-    });
-      
+  const [step, setStep] = useState(0);
+  const [formData, setFormData] = useState({
+    gender: "",
+    city: "",
+    accountType: "",
+  });
 
   const getStepForKycLevel = (level) => {
     const normalized = Number(level);
     if (Number.isNaN(normalized)) return null;
 
     const kycMap = {
-      0: 1,  // StepOne
-      1: 4,  // PersonalInfoForm
-      2: 3,  // StepThree
-      3: 5,  // FacialCapture (nested)
-      4: 7,  // SkillsVerification
+      0: 1, // StepOne
+      1: 4, // PersonalInfoForm
+      2: 3, // StepThree
+      3: 5, // FacialCapture (nested)
+      4: 7, // SkillsVerification
       // 5: 8, // UploadAutoMobile
       // 6: 9, // BankAccountForm
     };
-    
 
     return kycMap[normalized] ?? null;
   };
@@ -70,7 +69,7 @@ export default function Form() {
     }
   }, []);
 
-  const forms = [                      
+  const forms = [
     <ConfirmKyc onNext={handleNext} />,
     <StepOne onNext={handleNext} email={formData.email} />, //KYC level 1
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
