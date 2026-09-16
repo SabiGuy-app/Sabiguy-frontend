@@ -110,21 +110,26 @@ const getProviderKycStatus = async (email) => {
     if (token) localStorage.setItem("token", token);
 
     const kycCompleted = data?.kycCompleted ?? data?.data?.kycCompleted;
-    const kycVerified = data?.kycVerified ?? data?.data?.kycVerified;
 
-    if (kycCompleted && !kycVerified) return "verified"; // allow in, show limited UI
+    // Completion is authoritative. A completed provider must not be sent back
+    // to onboarding merely because its historic KYC level is below 5.
+    if (kycCompleted) return "done";
+
     if (data?.message === "This is a new customer") {
       localStorage.setItem("kycLevel", "0");
       localStorage.setItem("email", email);
       return "incomplete";
     }
 
-    const level = Number(data?.kycLevel || data?.data?.kycLevel || data?.level);
-    if (!Number.isNaN(level) && level < 5) {
+    const level = data?.kycLevel ?? data?.data?.kycLevel ?? data?.level;
+    if (level !== undefined && level !== null) {
+      // The level is kept only to resume an incomplete onboarding form; it
+      // never determines whether the provider is considered complete.
       localStorage.setItem("kycLevel", String(level));
       localStorage.setItem("email", email);
-      return "incomplete";
     }
+
+    return "incomplete";
   } catch {
     // KYC lookup failure should not block login
   }
