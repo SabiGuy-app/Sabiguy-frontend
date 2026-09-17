@@ -319,11 +319,6 @@ export default function Login() {
   };
 
   // ── Google login ───────────────────────────────────────────────────────────
-  const handleFieldChange = (handleChange) => (e) => {
-    if (errorMessage) setErrorMessage("");
-    handleChange(e);
-  };
-
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       clearMessages();
@@ -545,6 +540,7 @@ export default function Login() {
       <ForgotPassword
         isOpen={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}
+        accountType="auto"
       />
     </div>
   );
