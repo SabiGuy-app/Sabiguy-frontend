@@ -2,17 +2,17 @@ import { FaChevronLeft } from "react-icons/fa";
 import InputField from "../../components/InputField";
 import Button from "../../components/button";
 import Modal from "../../components/Modal";
-import axios from "axios";
 import { useState } from "react";
 import { Formik, ErrorMessage } from "formik";
 import { ForgotPasswordSchema } from "./schema";
 import OtpInput from "./OtpInput";
-import { requestBusinessPasswordReset } from "../../api/auth";
+import { requestPasswordReset } from "../../api/auth";
 
 export default function ForgotPassword({ isOpen = true, onClose = () => {}, accountType = "user" }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [resetAccountType, setResetAccountType] = useState(accountType);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setLoading(true);
@@ -20,11 +20,8 @@ export default function ForgotPassword({ isOpen = true, onClose = () => {}, acco
 
     try {
       const normalizedEmail = values.email.trim().toLowerCase();
-      const data = accountType === "business"
-        ? await requestBusinessPasswordReset(normalizedEmail)
-        : (await axios.post(`${import.meta.env.VITE_BASE_URL}/auth/password`, {
-            email: normalizedEmail,
-          })).data;
+      const resetRequest = await requestPasswordReset(normalizedEmail, accountType);
+      const { data, accountType: resolvedAccountType } = resetRequest;
 
       localStorage.setItem("passwordEmail", normalizedEmail);
 
@@ -32,6 +29,7 @@ export default function ForgotPassword({ isOpen = true, onClose = () => {}, acco
       if (data) {
         onClose(); // Close forgot password modal
         setShowOtpModal(true); // Open OTP modal
+        setResetAccountType(resolvedAccountType);
       }
     } catch (error) {
       console.error("Forgot password error:", error);
@@ -102,7 +100,7 @@ export default function ForgotPassword({ isOpen = true, onClose = () => {}, acco
       <OtpInput
         isOpen={showOtpModal}
         onClose={() => setShowOtpModal(false)}
-        accountType={accountType}
+        accountType={resetAccountType}
       />
     </>
 

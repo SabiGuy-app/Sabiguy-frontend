@@ -14,6 +14,33 @@ export const requestBusinessPasswordReset = async (email) => {
   return data;
 };
 
+export const requestPasswordReset = async (email, accountType = "user") => {
+  if (accountType === "business") {
+    return {
+      data: await requestBusinessPasswordReset(email),
+      accountType: "business",
+    };
+  }
+
+  if (accountType === "auto") {
+    try {
+      return {
+        data: await requestBusinessPasswordReset(email),
+        accountType: "business",
+      };
+    } catch (error) {
+      // A shared login screen can serve both account types. If the email is
+      // not a business account, let the regular account endpoint handle it.
+      if (![400, 404].includes(error.response?.status)) {
+        throw error;
+      }
+    }
+  }
+
+  const { data } = await api.post("/auth/password", { email });
+  return { data, accountType: "user" };
+};
+
 export const resendBusinessPasswordResetOtp = async (email) => {
   const { data } = await api.post(
     "/business/auth/resend-forgot-password-otp",
