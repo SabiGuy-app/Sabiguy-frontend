@@ -26,6 +26,7 @@ import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
 import NotFound from "./pages/Not-found/NotFound";
 import ProviderNotFound from "./pages/Not-found/ProviderNotFound";
 import UserNotFound from "./pages/Not-found/UserNotFound";
+import BeautyOverview from "./beauty-care/dashboard/pages/BeautyOverview";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -359,8 +360,6 @@ function App() {
                 element={<BusinessForm />}
               />
 
-                
-
               {/* Payment callbacks — outside ProtectedRoute so they work after Paystack redirect */}
               <Route
                 path="/wallet/funding/callback"
@@ -368,8 +367,37 @@ function App() {
               />
               <Route path="/payment/callback" element={<WalletCallback />} />
 
-
               <Route path="*" element={<NotFound />} />
+
+              <Route
+                path="/beauty-provider/dashboard"
+                element={<BeautyOverview />}
+              />
+
+              <Route
+                path="/beauty-provider/dashboard/bookings"
+                element={<BeautyOverview />}
+              />
+
+              <Route
+                path="/beauty-provider/dashboard/chat"
+                element={<BeautyOverview />}
+              />
+
+              <Route
+                path="/beauty-provider/dashboard/activity"
+                element={<BeautyOverview />}
+              />
+
+              <Route
+                path="/beauty-provider/dashboard/settings"
+                element={<BeautyOverview />}
+              />
+
+              <Route
+                path="/beauty-provider/dashboard/help"
+                element={<BeautyOverview />}
+              />
 
               <Route element={<ProtectedRoute />}>
                 <Route path="/kyc/nin" element={<BuyerNinUpload />} />
@@ -390,9 +418,6 @@ function App() {
                 <Route path="/bookings/summary" element={<BookingSummary2 />} />
                 <Route path="/bookings/trackrider" element={<TrackRider />} />
                 <Route path="/dashboard/*" element={<UserNotFound />} />
-
-
-
 
                 <Route
                   path="/dashboard/provider"
@@ -419,8 +444,8 @@ function App() {
                 <Route
                   path="/dashboard/provider/track-delivery"
                   element={<TrackDelivery />}
-                /> 
-                <Route path="/dashboard/settings" element={<ProfilePage />} /> 
+                />
+                <Route path="/dashboard/settings" element={<ProfilePage />} />
                 {/* Wallet/payment callbacks moved outside ProtectedRoute above */}
                 <Route
                   path="/dashboard/provider/help"
@@ -468,19 +493,15 @@ function App() {
                   element={<ProviderNotFound />}
                 />
 
-
-
-
-
                 {/* Business / fleet-operator dashboard */}
                 <Route
                   path="/business-provider/dashboard/live-map"
                   element={<FleetComingSoon title="Live Map" />}
                 />
-                 <Route
+                <Route
                   path="/business-provider/dashboard/drivers"
                   element={<FleetDrivers />}
-                />  
+                />
 
                 <Route
                   path="/business-provider/dashboard/trips"
@@ -522,7 +543,7 @@ function App() {
                   path="/business-provider/dashboard/settings"
                   element={<FleetSettings />}
                 />
-                 <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
           </Suspense>
