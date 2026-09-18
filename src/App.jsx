@@ -27,6 +27,9 @@ import NotFound from "./pages/Not-found/NotFound";
 import ProviderNotFound from "./pages/Not-found/ProviderNotFound";
 import UserNotFound from "./pages/Not-found/UserNotFound";
 import BeautyOverview from "./beauty-care/dashboard/pages/BeautyOverview";
+import BeautyProfilePage from "./beauty-care/dashboard/pages/BeautySettings";
+import BeautyContactPage from "./beauty-care/dashboard/pages/BeautyHelp";
+import BeautyActivityPage from "./beauty-care/dashboard/pages/BeautyActivity";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -386,17 +389,17 @@ function App() {
 
               <Route
                 path="/beauty-provider/dashboard/activity"
-                element={<BeautyOverview />}
+                element={<BeautyActivityPage />}
               />
 
               <Route
                 path="/beauty-provider/dashboard/settings"
-                element={<BeautyOverview />}
+                element={<BeautyProfilePage />}
               />
 
               <Route
                 path="/beauty-provider/dashboard/help"
-                element={<BeautyOverview />}
+                element={<BeautyContactPage />}
               />
 
               <Route element={<ProtectedRoute />}>
