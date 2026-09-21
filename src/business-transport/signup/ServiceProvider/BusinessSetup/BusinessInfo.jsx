@@ -175,6 +175,7 @@ export default function BusinessInfo({ onNext, onBack }) {
         setSuccessMessage("Business information saved successfully!");
         onNext({
           businessCategory: categoryLabel,
+          businessCategoryId: form.category,
           businessName: form.businessName,
           address: form.address,
           city: form.city,
