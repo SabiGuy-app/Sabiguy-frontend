@@ -1,6 +1,5 @@
 import { IoIosArrowBack } from "react-icons/io";
 import AccountSetupLayout from "./layout";
-import InputField from "../../../../components/InputField";
 import { useState } from "react";
 import { Check, ChevronDown, CloudUpload, Plus } from "lucide-react";
 

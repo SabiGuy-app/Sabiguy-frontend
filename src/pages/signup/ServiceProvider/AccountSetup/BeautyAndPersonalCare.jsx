@@ -3,9 +3,11 @@ import AccountSetupLayout from "./layout";
 import InputField from "../../../../components/InputField";
 import { useState } from "react";
 import { Check, ChevronDown, CloudUpload, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const BeautyAndPersonalCare = ({ onBack }) => {
   const [experience, setExperience] = useState("");
+  const [isRegistered, setIsRegistered] = useState(false);
 
   const services = [
     { id: 1, name: "Braiding" },
@@ -78,15 +80,15 @@ const BeautyAndPersonalCare = ({ onBack }) => {
     photos: [],
   };
 
-  const [scheduleType, setScheduleType] = useState(
-    businessData.businessHours.type,
-  );
-  const [openingTime, setOpeningTime] = useState(
-    businessData.businessHours.openingTime,
-  );
-  const [closingTime, setClosingTime] = useState(
-    businessData.businessHours.closingTime,
-  );
+  // const [scheduleType, setScheduleType] = useState(
+  //   businessData.businessHours.type,
+  // );
+  // const [openingTime, setOpeningTime] = useState(
+  //   businessData.businessHours.openingTime,
+  // );
+  // const [closingTime, setClosingTime] = useState(
+  //   businessData.businessHours.closingTime,
+  // );
   const [selectedDays, setSelectedDays] = useState([]);
 
   const timeOptions = [
@@ -122,8 +124,17 @@ const BeautyAndPersonalCare = ({ onBack }) => {
     });
   };
 
+  const navigate = useNavigate();
+
+  const handleSaveAndContinue = () => {
+    if (isRegistered) {
+      // check name, address and certificate are filled first
+    }
+    navigate("/next-page");
+  };
+
   return (
-    <AccountSetupLayout currentStep={0}>
+    <AccountSetupLayout>
       <div>
         <div
           onClick={onBack}
@@ -219,8 +230,7 @@ const BeautyAndPersonalCare = ({ onBack }) => {
 
                 {/* Business Hours */}
                 <div className="flex flex-col gap-5 mt-2">
-                  <div className="flex items-center gap-6">
-                    {/* Every day Radio */}
+                  {/* <div className="flex items-center gap-6">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <div
                         className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
@@ -241,7 +251,6 @@ const BeautyAndPersonalCare = ({ onBack }) => {
                       </span>
                     </label>
 
-                    {/* 24/7 Radio */}
                     <label className="flex items-center gap-2 cursor-pointer">
                       <div
                         className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
@@ -261,7 +270,7 @@ const BeautyAndPersonalCare = ({ onBack }) => {
                         24/7
                       </span>
                     </label>
-                  </div>
+                  </div> */}
 
                   {/* Times */}
                   <div className="flex w-full items-end gap-3">
@@ -271,11 +280,10 @@ const BeautyAndPersonalCare = ({ onBack }) => {
                       </label>
                       <div className="relative w-full">
                         <select
-                          disabled={scheduleType === "24_7"}
-                          value={
-                            scheduleType === "24_7" ? "12:00 AM" : openingTime
-                          }
-                          onChange={(e) => setOpeningTime(e.target.value)}
+                          // value={
+                          //   scheduleType === "24_7" ? "12:00 AM" : openingTime
+                          // }
+                          // onChange={(e) => setOpeningTime(e.target.value)}
                           className="w-full appearance-none rounded-lg border border-[#231F2040] bg-white px-4 py-2.5 text-[15px] text-gray-700 outline-none transition-all focus:border-[#3B82F6] disabled:bg-gray-100 disabled:opacity-70 cursor-pointer"
                         >
                           {timeOptions.map((time) => (
@@ -298,11 +306,11 @@ const BeautyAndPersonalCare = ({ onBack }) => {
                       </label>
                       <div className="relative w-full">
                         <select
-                          disabled={scheduleType === "24_7"}
-                          value={
-                            scheduleType === "24_7" ? "11:59 PM" : closingTime
-                          }
-                          onChange={(e) => setClosingTime(e.target.value)}
+                          // disabled={scheduleType === "24_7"}
+                          // value={
+                          //   scheduleType === "24_7" ? "11:59 PM" : closingTime
+                          // }
+                          // onChange={(e) => setClosingTime(e.target.value)}
                           className="w-full appearance-none rounded-lg border border-[#231F2040] bg-white px-4 py-2.5 text-[15px] text-gray-700 outline-none transition-all focus:border-[#3B82F6] disabled:bg-gray-100 disabled:opacity-70 cursor-pointer"
                         >
                           {timeOptions.map((time) => (
@@ -330,7 +338,7 @@ const BeautyAndPersonalCare = ({ onBack }) => {
                           <button
                             key={day}
                             type="button"
-                            disabled={scheduleType === "24_7"}
+                            // disabled={scheduleType === "24_7"}
                             onClick={() => toggleDay(day)}
                             className={`min-w-[52px] rounded-full px-2.5 py-1 text-[14px] transition-all disabled:opacity-60 ${
                               isSelected
@@ -428,6 +436,11 @@ const BeautyAndPersonalCare = ({ onBack }) => {
                     </div>
                   </div>
 
+                  <BusinessForm
+                    isRegistered={isRegistered}
+                    setIsRegistered={setIsRegistered}
+                  />
+
                   {/* Bottom Action Buttons */}
                   <div className="mt-12 flex justify-end gap-4 border-t border-gray-100 pt-6">
                     <button
@@ -439,6 +452,7 @@ const BeautyAndPersonalCare = ({ onBack }) => {
                     </button>
                     <button
                       type="button"
+                      onClick={handleSaveAndContinue}
                       className="rounded-lg bg-[#34805A] px-8 py-2.5 font-semibold text-white transition-all hover:bg-[#296647]"
                     >
                       Save & Continue
@@ -455,3 +469,97 @@ const BeautyAndPersonalCare = ({ onBack }) => {
 };
 
 export default BeautyAndPersonalCare;
+
+function BusinessForm({ setIsRegistered, isRegistered }) {
+  // Shared pill styles so Yes and No stay identical except for the selected state
+  const pill = "rounded-full border px-3 py-0.5 text-xs transition-colors";
+  const pillSelected = "border-green-800 bg-green-800 text-white";
+  const pillIdle = "border-neutral-300 bg-neutral-100 text-neutral-700";
+
+  return (
+    <div className="w-ful  rounded-lg p-6 px-0">
+      {/* Yes / No toggle */}
+      <div className="mb-5">
+        <p className="mb-1.5 text-sm text-neutral-700">
+          Are you a registered business
+        </p>
+        <div className="flex gap-1.5">
+          <button
+            type="button"
+            onClick={() => setIsRegistered(true)}
+            className={`${pill} ${isRegistered ? pillSelected : pillIdle}`}
+          >
+            Yes
+          </button>
+
+          {/* TODO: your turn. Same as Yes, but what should onClick set,
+              and what should the selected condition be? */}
+          <button
+            type="button"
+            onClick={() => setIsRegistered(false)}
+            className={`${pill} ${isRegistered === false ? pillSelected : pillIdle}`}
+          >
+            No
+          </button>
+        </div>
+      </div>
+
+      {/* Everything below only renders when the answer is Yes */}
+      {isRegistered && (
+        <div className="space-y-5">
+          <div>
+            <label
+              htmlFor="business-name"
+              className="mb-2 block text-sm font-semibold"
+            >
+              Business Name
+            </label>
+            <input
+              id="business-name"
+              type="text"
+              placeholder="e.g Adewale Salon & Spa"
+              className="w-full rounded-lg bg-neutral-200 px-4 py-3 text-sm outline-none border border-[#231F2040] placeholder:text-neutral-400"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="business-address"
+              className="mb-2 block text-sm font-semibold"
+            >
+              Business Address
+            </label>
+            <input
+              id="business-address"
+              type="text"
+              placeholder="Address"
+              className="w-full rounded-lg bg-neutral-200 px-4 py-3 text-sm outline-none border border-[#231F2040] placeholder:text-neutral-400"
+            />
+          </div>
+
+          <div>
+            <p className="mb-1 text-sm font-semibold">Business Certificate</p>
+            <p className="mb-3 text-sm text-neutral-600">
+              Upload a valid certificate showing your relevant training or
+              qualification.
+            </p>
+
+            {/* Hidden native input, opened by the styled button below */}
+            <input
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg"
+              className="hidden"
+            />
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-neutral-200 py-3 text-sm font-medium transition-colors hover:bg-neutral-300"
+            >
+              <Plus size={16} />
+              Upload file
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

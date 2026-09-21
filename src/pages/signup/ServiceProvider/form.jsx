@@ -13,7 +13,7 @@ import UploadDocumnet from "./AccountSetup/UploadDoc";
 import UploadAutoMobile from "./AccountSetup/UploadAutomobile";
 import Congrats from "./congrats";
 import { useEffect, useState } from "react";
-import BeautyAndPersonalCare from "./AccountSetup/BeautyAndPersonalCare";
+// import BeautyAndPersonalCare from "./AccountSetup/BeautyAndPersonalCare";
 
 export default function Form() {
   const [step, setStep] = useState(0);
