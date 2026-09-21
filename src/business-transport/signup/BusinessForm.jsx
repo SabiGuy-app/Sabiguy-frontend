@@ -10,7 +10,7 @@ import AddDriverForm from "./ServiceProvider/BusinessSetup/AddDriverForm";
 import IncomeSplitForm from "./ServiceProvider/BusinessSetup/IncomeSplitForm";
 import BusinessCongrats from "./BusinessCongrats";
 import BusinessVerification from "./ServiceProvider/BusinessSetup/BusinessVerification";
-import ServicesForm from "./ServiceProvider/BusinessSetup/ServicesForm";
+import BeautyAndPersonalCare from "./AccountSetup/BeautyAndPersonalCare";
 
 const BUSINESS_STEPS = {
   CONFIRM_KYC: 0,
@@ -28,6 +28,13 @@ const BUSINESS_KYC_LEVEL_TO_STEP = {
   2: BUSINESS_STEPS.VEHICLE_SETUP,
   3: BUSINESS_STEPS.CONGRATS,
 };
+
+const BUSINESS_SETUP_STEP_BY_CATEGORY = {
+  transport: AddVehicleForm,
+  beauty: BeautyAndPersonalCare,
+};
+
+const DEFAULT_BUSINESS_SETUP_STEP = AddVehicleForm;
 
 function getStepForBusinessKycLevel(level) {
   const normalized = Number(level);
@@ -61,12 +68,9 @@ export default function BusinessForm() {
   };
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
-  const businessSetupStep =
-    formData.businessCategory === "Beauty & Personal Care" ? (
-      <ServicesForm onNext={handleNext} onBack={handleBack} />
-    ) : (
-      <AddVehicleForm onNext={handleNext} onBack={handleBack} />
-    );
+  const BusinessSetupStep =
+    BUSINESS_SETUP_STEP_BY_CATEGORY[formData.businessCategoryId] ??
+    DEFAULT_BUSINESS_SETUP_STEP;
   useEffect(() => {
     const storedKycLevel = localStorage.getItem("kycLevel");
     const storedEmail = localStorage.getItem("email");
@@ -89,7 +93,7 @@ export default function BusinessForm() {
     <StepThree onNext={handleNext} onBack={handleBack} />,
     <BusinessInfo onNext={handleNext} onBack={handleBack} />,
     <BusinessVerification onNext={handleNext} onBack={handleBack} />,
-    businessSetupStep,
+    <BusinessSetupStep onNext={handleNext} onBack={handleBack} />,
     <BusinessCongrats onNext={handleNext} onBack={handleBack} />,
   ];
 

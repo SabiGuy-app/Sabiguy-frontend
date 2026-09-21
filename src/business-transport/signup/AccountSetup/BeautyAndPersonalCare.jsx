@@ -1,10 +1,10 @@
 import { IoIosArrowBack } from "react-icons/io";
-import AccountSetupLayout from "./layout";
-import InputField from "../../../../components/InputField";
+import BusinessSetupLayout from "../ServiceProvider/BusinessSetupLayout";
+import InputField from "../../../components/InputField";
 import { useState } from "react";
 import { Check, ChevronDown, CloudUpload, Plus } from "lucide-react";
 
-const BeautyAndPersonalCare = ({ onBack }) => {
+const BeautyAndPersonalCare = ({ onBack, onNext }) => {
   const [experience, setExperience] = useState("");
 
   const services = [
@@ -123,7 +123,7 @@ const BeautyAndPersonalCare = ({ onBack }) => {
   };
 
   return (
-    <AccountSetupLayout currentStep={0}>
+    <BusinessSetupLayout currentStep={2}>
       <div>
         <div
           onClick={onBack}
@@ -439,6 +439,13 @@ const BeautyAndPersonalCare = ({ onBack }) => {
                     </button>
                     <button
                       type="button"
+                      onClick={() =>
+                        onNext?.({
+                          services: selectedServices,
+                          experience,
+                          serviceLocations: selectedLocations,
+                        })
+                      }
                       className="rounded-lg bg-[#34805A] px-8 py-2.5 font-semibold text-white transition-all hover:bg-[#296647]"
                     >
                       Save & Continue
@@ -450,7 +457,7 @@ const BeautyAndPersonalCare = ({ onBack }) => {
           </div>
         </div>
       </div>
-    </AccountSetupLayout>
+    </BusinessSetupLayout>
   );
 };
 
