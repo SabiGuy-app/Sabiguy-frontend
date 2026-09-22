@@ -4,12 +4,16 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationDrawer from "../dashboard/Notification";
 import NotificationToast from "../NotificationToast";
+import BookingRequestModal from "../BookingRequestModal";
+import ActivityDetailsModal from "../dashboard/ActivityDetailsModal";
 import { useAuthStore } from "../../stores/auth.store";
 import locationService from "../../services/locationService";
 import notificationSoundService from "../../services/notificationSoundService";
-import { io } from "socket.io-client";
+import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import { notificationService } from "../../api/notifications";
+import { getAllBookings } from "../../api/bookings";
 import { toggleAvailability as apiToggleAvailability } from "../../api/provider";
+import KycVerificationModal from "./KycVerificationModal";
 
 export default function ProviderNavbar({ onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
@@ -23,8 +27,16 @@ export default function ProviderNavbar({ onMenuClick }) {
   const [socket, setSocket] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
+  const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
+  const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
+  const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
   const navigate = useNavigate();
   const isAvailable = user?.data?.availability?.isAvailable ?? false;
+  const bookingRequestNotificationTypes = [
+    "new_booking_request",
+    "booking_selected",
+  ];
 
   // Don't render until store is hydrated
   if (!hydrated) {
@@ -69,11 +81,11 @@ export default function ProviderNavbar({ onMenuClick }) {
     try {
       const res = await notificationService.markAsRead(id);
 
-      if (res.data.success) {
+      if (res.success || res.data?.success) {
         // Update local state
         setNotifications((prev) =>
           prev.map((notif) =>
-            notif._id === id ? { ...notif, read: true } : notif,
+            notif._id === id ? { ...notif, isRead: true } : notif,
           ),
         );
         // Refresh unread count
@@ -87,10 +99,10 @@ export default function ProviderNavbar({ onMenuClick }) {
   const markAllAsRead = async () => {
     try {
       const res = await notificationService.markAllAsRead();
-      if (res.data.success) {
+      if (res.success || res.data?.success) {
         // Update local state
         setNotifications((prev) =>
-          prev.map((notif) => ({ ...notif, read: true })),
+          prev.map((notif) => ({ ...notif, isRead: true })),
         );
         setUnreadCount(0);
       }
@@ -102,7 +114,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   const deleteNotification = async (id) => {
     try {
       const res = await notificationService.deleteNotification(id);
-      if (res.data.success) {
+      if (res.success || res.data?.success) {
         // Remove from local state
         setNotifications((prev) => prev.filter((notif) => notif._id !== id));
         // Refresh unread count
@@ -115,14 +127,16 @@ export default function ProviderNavbar({ onMenuClick }) {
 
   // Show toast notification
   const showNotificationToast = (notification) => {
-    console.log("ðŸ”” showNotificationToast called with:", notification);
+    console.log("🔔 showNotificationToast called with:", notification);
 
-    // Play sound
-    console.log("ðŸ”Š Playing notification sound...");
-    notificationSoundService.play();
+    // Play sound - play() method handles initialization internally
+    console.log("🔊 Playing notification sound...");
+    notificationSoundService.play().catch((err) => {
+      console.warn("⚠️ Sound playback failed:", err);
+    });
 
     // Show toast
-    console.log("ðŸ“¢ Displaying toast notification...");
+    console.log("📢 Displaying toast notification...");
     toast.custom(
       (t) => (
         <NotificationToast
@@ -145,43 +159,63 @@ export default function ProviderNavbar({ onMenuClick }) {
     );
   };
 
-  // Initialize socket connection
+  // Initialize socket connection — Fix 2.4/2.5: use shared socket manager
   useEffect(() => {
     // Initialize sound service
     notificationSoundService.init();
 
-    const token = localStorage.getItem("token");
+    // Fix 2.5: Read token from Zustand store instead of localStorage
+    const token = useAuthStore.getState().token;
     if (!token) return;
 
-    const newSocket = io(
-      import.meta.env.VITE_WS_URL || "http://localhost:3000",
-      {
-        auth: { token },
-        transports: ["websocket", "polling"],
-      },
-    );
+    // Fix 2.4: Use shared socket instead of creating a new one
+    const newSocket = getSharedSocket();
+    if (!newSocket) return;
 
-    newSocket.on("connect", () => {
-      console.log("âœ… Provider socket connected");
-    });
+    const onConnect = () => {
+      console.log("✅ Provider socket connected");
+    };
 
-    newSocket.on("connect_error", (error) => {
-      console.error("âŒ Socket connection error:", error);
-    });
+    const onConnectError = (error) => {
+      console.error("❌ Socket connection error:", error);
+    };
 
     // Listen for new notifications via socket
-    newSocket.on("new_notification", (notification) => {
-      console.log("ðŸ“¬ New notification received:", notification);
+    const onNewNotification = (notification) => {
+      console.log("📬 New notification received:", notification);
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
+      if (bookingRequestNotificationTypes.includes(notification?.type)) {
+        notificationSoundService.play().catch((err) => {
+          console.warn("âš ï¸ Sound playback failed:", err);
+        });
+        setBookingRequestNotification(notification);
+        setShowBookingRequestModal(true);
+        return;
+      }
+      if (notification?.type === "job_completed_confirmed") {
+        notificationSoundService.play().catch((err) => {
+          console.warn("âš ï¸ Sound playback failed:", err);
+        });
+        setJobCompletedNotification(notification);
+        return;
+      }
       showNotificationToast(notification);
-    });
+    };
+
+    newSocket.on("connect", onConnect);
+    newSocket.on("connect_error", onConnectError);
+    newSocket.on("new_notification", onNewNotification);
 
     setSocket(newSocket);
 
+    // Cleanup: remove listeners and release shared socket
     return () => {
       locationService.stopTracking();
-      newSocket.disconnect();
+      newSocket.off("connect", onConnect);
+      newSocket.off("connect_error", onConnectError);
+      newSocket.off("new_notification", onNewNotification);
+      releaseSocket();
     };
   }, []);
 
@@ -196,6 +230,25 @@ export default function ProviderNavbar({ onMenuClick }) {
     }, 30000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Unlock audio on first user interaction to enable autoplay
+  useEffect(() => {
+    const handleUserInteraction = async () => {
+      console.log("👆 User interaction detected - unlocking audio");
+      await notificationSoundService.unlock();
+      // Remove listener after first interaction
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
+
+    document.addEventListener("click", handleUserInteraction);
+    document.addEventListener("touchstart", handleUserInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
   }, []);
 
   // Sync location tracking with availability
@@ -256,6 +309,52 @@ export default function ProviderNavbar({ onMenuClick }) {
     fetchNotifications();
   };
 
+  const handleBookingRequestView = async (notification) => {
+    if (!notification) return;
+
+    setShowBookingRequestModal(false);
+    setBookingRequestNotification(null);
+
+    try {
+      const serviceType = notification.data?.serviceType;
+      const modeOfDelivery = notification.data?.modeOfDelivery;
+
+      const bookingResponse = await getAllBookings({
+        status: "awaiting_provider_acceptance",
+        serviceType: serviceType
+          ? String(serviceType).trim().toLowerCase()
+          : undefined,
+        modeOfDelivery: modeOfDelivery
+          ? String(modeOfDelivery).trim()
+          : undefined,
+        page: 1,
+        limit: 20,
+      });
+
+      const bookingData = bookingResponse.data || bookingResponse;
+
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          fetchedAlerts: bookingData,
+          tab: "alert",
+        },
+      });
+    } catch (err) {
+      console.error("Error preparing booking request navigation:", err);
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          tab: "alert",
+        },
+      });
+    }
+  };
+
+  const isKycVerificationError = (message) =>
+    typeof message === "string" &&
+    message.toLowerCase().includes("kyc verification required");
+
   const toggleAvailability = async () => {
     const newAvailability = !isAvailable;
 
@@ -303,6 +402,14 @@ export default function ProviderNavbar({ onMenuClick }) {
         console.log(
           `âœ… Availability ${newAvailability ? "enabled" : "disabled"}`,
         );
+      } else if (isKycVerificationError(data.message)) {
+        setShowKycModal(true);
+
+        // Roll back location tracking if the backend blocks the toggle
+        if (newAvailability) {
+          locationService.stopTracking();
+          setLocationEnabled(false);
+        }
       } else {
         console.error("Failed to update availability:", data.message);
         alert("Failed to update availability. Please try again.");
@@ -315,7 +422,17 @@ export default function ProviderNavbar({ onMenuClick }) {
       }
     } catch (error) {
       console.error("Error updating availability:", error);
-      alert("Error updating availability. Please check your connection.");
+      const apiMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "";
+
+      if (isKycVerificationError(apiMessage)) {
+        setShowKycModal(true);
+      } else {
+        alert("Error updating availability. Please check your connection.");
+      }
 
       // Rollback location tracking on error
       if (newAvailability) {
@@ -329,11 +446,33 @@ export default function ProviderNavbar({ onMenuClick }) {
 
   return (
     <>
+      <KycVerificationModal
+        isOpen={showKycModal}
+        onClose={() => setShowKycModal(false)}
+      />
+      <BookingRequestModal
+        isOpen={showBookingRequestModal}
+        onClose={() => {
+          setShowBookingRequestModal(false);
+          setBookingRequestNotification(null);
+        }}
+        onViewBooking={() =>
+          handleBookingRequestView(bookingRequestNotification)
+        }
+        notification={bookingRequestNotification}
+      />
+      <ActivityDetailsModal
+        isOpen={!!jobCompletedNotification}
+        onClose={() => setJobCompletedNotification(null)}
+        notification={jobCompletedNotification}
+      />
       <Toaster position="top-right" />
-      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-40 shadow-sm h-16 sm:h-20">
-
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 sm:h-20 items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 shadow-sm">
         {/* Mobile Menu Button (toggles sidebar) */}
-        <button className="md:hidden p-2 text-gray-600 hover:text-gray-800" onClick={onMenuClick}>
+        <button
+          className="md:hidden p-2 text-gray-600 hover:text-gray-800"
+          onClick={onMenuClick}
+        >
           <Menu size={26} className="text-gray-600" />
         </button>
 
@@ -342,7 +481,11 @@ export default function ProviderNavbar({ onMenuClick }) {
           className="block text-xl sm:text-2xl md:text-3xl font-bold text-[#005823] flex-shrink-0"
           onClick={() => navigate("/dashboard/provider")}
         >
-          <img src="/logo.jpg" alt="SabiGuy Logo" className="h-6 sm:h-8 w-auto" />
+          <img
+            src="/logo.jpg"
+            alt="SabiGuy Logo"
+            className="h-6 sm:h-8 w-auto"
+          />
         </button>
 
         {/* Desktop Search */}
@@ -372,15 +515,19 @@ export default function ProviderNavbar({ onMenuClick }) {
           <div className="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center justify-center gap-1 sm:gap-2">
               {locationEnabled && (
-                <MapPin size={10} className="sm:size-3 text-green-500 animate-pulse" />
+                <MapPin
+                  size={10}
+                  className="sm:size-3 text-green-500 animate-pulse"
+                />
               )}
               <span
-                className={`text-[10px] sm:text-xs font-semibold transition-colors ${isAvailable ? "text-gray-700" : "text-gray-400"
-                  }`}
+                className={`text-[10px] sm:text-xs font-semibold transition-colors ${
+                  isAvailable ? "text-gray-700" : "text-gray-400"
+                }`}
               >
                 {isAvailable
                   ? locationEnabled
-                    ? "Available" 
+                    ? "Available"
                     : "Available"
                   : "Offline"}
               </span>
@@ -389,8 +536,9 @@ export default function ProviderNavbar({ onMenuClick }) {
             <button
               onClick={toggleAvailability}
               disabled={updatingAvailability}
-              className={`relative w-5 h-2 rounded-full transition-all duration-300 ${isAvailable ? "bg-green-500" : "bg-gray-300"
-                } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`relative w-5 h-2 rounded-full transition-all duration-300 ${
+                isAvailable ? "bg-green-500" : "bg-gray-300"
+              } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label="Toggle availability and location"
               title={
                 isAvailable
@@ -404,8 +552,9 @@ export default function ProviderNavbar({ onMenuClick }) {
                 </div>
               ) : (
                 <div
-                  className={`absolute top-0 w-2 h-2 bg-white rounded-full shadow-md transition-transform duration-300 ${isAvailable ? "translate-x-3" : "translate-x-0.5"
-                    }`}
+                  className={`absolute top-0 w-2 h-2 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                    isAvailable ? "translate-x-3" : "translate-x-0.5"
+                  }`}
                 />
               )}
             </button>
@@ -442,11 +591,17 @@ export default function ProviderNavbar({ onMenuClick }) {
                 src={user.data.profilePicture}
                 alt="Profile"
                 className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/avatar.png";
+                }}
               />
             ) : (
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
-                {user?.data?.name?.charAt(0) || 'U'}
-              </div>
+              <img
+                src="/avatar.png"
+                alt="Profile"
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
+              />
             )}
           </button>
         </div>
@@ -466,7 +621,6 @@ export default function ProviderNavbar({ onMenuClick }) {
           </div>
         )} 
         */}
-
 
         <NotificationDrawer
           isOpen={showNotifications}

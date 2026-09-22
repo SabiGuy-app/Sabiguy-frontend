@@ -1,5 +1,5 @@
 import {
-  Phone,
+  PhoneCall,
   MessageCircle,
   Star,
   MapPin,
@@ -11,9 +11,11 @@ import {
 import { FiChevronLeft } from "react-icons/fi";
 import distance from "/distance.png";
 import { useNavigate } from "react-router-dom";
+import { useCallContext } from "../../../components/shared/CallContext";
 
 export default function ServiceDetailsModal({ isOpen, onClose, request }) {
   const navigate = useNavigate();
+  const callContext = useCallContext();
   if (!isOpen) return null;
   console.log(request);
   const bookingId = request?.id;
@@ -22,6 +24,24 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
   const handleMessageProvider = () => {
     if (!bookingId) return;
     navigate(`/dashboard/chat?bookingId=${bookingId}`);
+  };
+
+  const getStatusStyles = (status) => {
+    const styles = {
+      pending: "bg-yellow-100 text-[#FFC107] border-yellow-200",
+      paid_escrow: "bg-[#007BFF1A] text-[#007BFF] border-[#007BFF]",
+      cancelled: "bg-red-100 text-red-700 border-red-200",
+      active: "bg-blue-100 text-blue-600 border-blue-200",
+      "enroute to pickup": "bg-blue-100 text-blue-800 border-blue-200",
+      "arrived at pickup": "bg-blue-100 text-blue-800 border-blue-200",
+      "enroute to dropoff": "bg-blue-100 text-blue-800 border-blue-200",
+      "arrived at dropoff": "bg-blue-100 text-blue-800 border-blue-200",
+      "waiting confirmation": "bg-orange-200 text-orange-800 border-orange-200",
+      completed: "bg-green-100 text-green-700 border-green-200",
+      user_accepted_completion: "bg-green-100 text-green-700 border-green-200",
+      "funds released": "bg-green-100 text-green-700 border-green-200",
+    };
+    return styles[status.toLowerCase()] || styles.pending;
   };
 
   return (
@@ -37,11 +57,23 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
           <h2 className="text-xl font-semibold text-gray-900">
             Service Details
           </h2>
-          {request.orderId && (
-            <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-md border border-[#0058234D] w-fit">
-              {request.orderId}
-            </span>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {request.orderId && (
+              <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-full border border-[#0058234D] w-fit">
+                {request.orderId}
+              </span>
+            )}
+
+            {request.status && (
+              <span
+                className={`text-[12px] font-medium px-3 py-1 rounded-full capitalize border ${getStatusStyles(
+                  request.status,
+                )}`}
+              >
+                {request.status.replace(/_/g, " ")}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
@@ -79,7 +111,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   <div className="flex justify-center lg:justify-start items-center gap-1 text-[14px] text-gray-600">
                     <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium text-gray-900">
-                      {request.providerRating ?? "New"}
+                      {request.providerRating ?? ""}
                     </span>
                     <span className="text-gray-500 ">
                       ({request.providerReviews ?? 0} reviews)
@@ -121,17 +153,38 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                {/* <button className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Phone className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-700">Call</span>
-                </button> */}
                 <button
-                  onClick={handleMessageProvider}
+                  onClick={() =>
+                    callContext?.openCall?.({
+                      booking: request?.originalData || request,
+                      targetOverride: {
+                        targetId:
+                          request?.originalData?.providerId?._id ||
+                          request?.originalData?.providerId ||
+                          request?.providerId?._id ||
+                          request?.providerId,
+                        targetType: "provider",
+                        targetName:
+                          request?.providerName ||
+                          request?.originalData?.providerId?.fullName ||
+                          "Provider",
+                      },
+                    })
+                  }
                   className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <MessageCircle className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-700">Message</span>
+                  <PhoneCall className="w-4 h-4 text-gray-600" />
+                  <span className="font-medium text-gray-700">Call</span>
                 </button>
+                {request.status?.toLowerCase() !== "cancelled" && (
+                  <button
+                    onClick={handleMessageProvider}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4 text-gray-600" />
+                    <span className="font-medium text-gray-700">Message</span>
+                  </button>
+                )}
                 {/* <button
                   onClick={onClose}
                   className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors whitespace-nowrap"

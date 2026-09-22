@@ -22,9 +22,9 @@ export default function ContactSection({ openChat }) {
               Feel free to reach our operators on this line
             </p>
 
-            <p className="text-base sm:text-lg font-semibold">+234 816 778 3930</p>
+            <p className="text-base sm:text-lg font-semibold">+234 913 142 5865</p>
 
-            <p className="text-xs sm:text-sm mt-4">Monday – Friday (7AM – 7PM)</p>
+            <p className="text-xs sm:text-sm mt-4">Monday – Saturday (7AM – 7PM)</p>
           </div>
 
           {/* Divider */}

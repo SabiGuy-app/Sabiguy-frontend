@@ -16,6 +16,7 @@ export default function NotificationDrawer({
   onMarkAsRead,
   onMarkAllAsRead,
   onDelete,
+  onBookingCompleted,
 }) {
   const navigate = useNavigate();
   const [markingAsRead, setMarkingAsRead] = useState(null); // Track which notification is being marked as read
@@ -25,6 +26,10 @@ export default function NotificationDrawer({
   const user = useAuthStore((state) => state.user);
   const isProvider = user?.data?.role === "provider";
   const chatBase = isProvider ? "/dashboard/provider/chat" : "/dashboard/chat";
+  const completionNotificationTypes = [
+    "booking_completed",
+    "booking_completed_awaiting_acceptance",
+  ];
 
   // Filter to only show UNREAD notifications
   const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -68,6 +73,11 @@ export default function NotificationDrawer({
       ),
       new_message: <FiMessageSquare className="text-orange-500" size={20} />,
       counter_offer: <FiBell className="text-blue-500" size={20} />,
+      booking_disputed: <FiBell className="text-red-500" size={20} />,
+      booking_auto_completed: <FiCalendar className="text-green-500" size={20} />,
+      booking_completed_awaiting_acceptance: (
+        <FiCalendar className="text-green-500" size={20} />
+      ),
       job_completed_confirmed: (
         <FiCalendar className="text-green-500" size={20} />
       ),
@@ -84,6 +94,12 @@ export default function NotificationDrawer({
     await onMarkAsRead(notification._id);
 
     onClose();
+
+    if (completionNotificationTypes.includes(notification.type)) {
+      onBookingCompleted?.(notification);
+      setMarkingAsRead(null);
+      return;
+    }
 
     // Route to hire alert page for new_booking_request type
     if (
@@ -154,8 +170,61 @@ export default function NotificationDrawer({
 
   const handleViewDetails = async (e, notification) => {
     e.stopPropagation();
-    // Close the drawer first so modal is fully visible
+
+    // If it's a booking request, route to hire alert page instead of opening modal
+    if (
+      notification.type === "new_booking_request" ||
+      notification.type === "booking_selected"
+    ) {
+      onClose();
+      try {
+        setFetchingBookings(true);
+        const serviceType = notification.data?.serviceType;
+        const modeOfDelivery = notification.data?.modeOfDelivery;
+
+        const bookingResponse = await getAllBookings({
+          status: "awaiting_provider_acceptance",
+          serviceType: serviceType
+            ? String(serviceType).trim().toLowerCase()
+            : undefined,
+          modeOfDelivery: modeOfDelivery
+            ? String(modeOfDelivery).trim()
+            : undefined,
+          page: 1,
+          limit: 20,
+        });
+
+        const bookingData = bookingResponse.data || bookingResponse;
+
+        navigate("/dashboard/provider/hire-alert", {
+          state: {
+            bookingData: notification.data,
+            fetchedAlerts: bookingData,
+            tab: "alert",
+          },
+        });
+      } catch (err) {
+        console.error("Error fetching bookings from notification:", err);
+        navigate("/dashboard/provider/hire-alert", {
+          state: {
+            bookingData: notification.data,
+            tab: "alert",
+          },
+        });
+      } finally {
+        setFetchingBookings(false);
+      }
+      return;
+    }
+
+    // For other types, close drawer and open the details modal
     onClose();
+
+    if (completionNotificationTypes.includes(notification.type)) {
+      onBookingCompleted?.(notification);
+      return;
+    }
+
     // Open the details modal (do NOT mark as read — let user do that explicitly)
     setSelectedNotification(notification);
   };

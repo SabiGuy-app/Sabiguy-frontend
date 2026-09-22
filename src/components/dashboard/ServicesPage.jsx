@@ -1,3 +1,4 @@
+import DashboardLayout from "../layouts/DashboardLayout";
 import Navbar from "./Navbar";
 import ProviderCard from "./ProviderCard";
 import Breadcrumbs from "./BreadCrumbs";
@@ -10,10 +11,8 @@ export default function ServicesPage({
   breadcrumbs,
 }) {
   return (
-    <>
-      <Navbar />
-
-      <div className="px-9 py-8">
+    <DashboardLayout>
+      <div className="py-4">
         {/* Use reusable Breadcrumbs */}
         <Breadcrumbs paths={breadcrumbs} />
 
@@ -42,6 +41,6 @@ export default function ServicesPage({
           ))}
         </div>
       </div>
-    </>
+    </DashboardLayout>
   );
 }

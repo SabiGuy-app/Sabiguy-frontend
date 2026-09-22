@@ -214,12 +214,6 @@ export async function requestNotificationPermission() {
     console.log("🎵 Initializing audio service during user permission...");
     await NotificationSoundService.init();
 
-    // Test the audio right after init to ensure it's working
-    console.log("🔊 Testing audio playback after permission...");
-    await NotificationSoundService.play().catch((error) => {
-      console.warn("⚠️ Audio test play warning (this is okay):", error);
-    });
-
     // Ensure Service Worker is registered and ready
     await ensureServiceWorkerReady();
 
@@ -268,7 +262,7 @@ export function listenForMessages(callback) {
         console.error("❌ Failed to play notification sound:", soundError);
         // Try fallback: simple HTML5 audio as last resort
         try {
-          const fallback = new Audio("/notify.mp3");
+          const fallback = new Audio("/notifyy.mp3");
           fallback.volume = 1.0;
           fallback
             .play()

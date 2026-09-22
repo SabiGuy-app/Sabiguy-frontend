@@ -12,6 +12,8 @@ import {
   Check,
 } from "lucide-react";
 import { useState } from "react";
+import { canMessage } from "../../../../utils/chat.utils";
+import { useCallContext } from "../../../../components/shared/CallContext";
 
 export default function JobDetailsModal({
   isOpen,
@@ -20,6 +22,7 @@ export default function JobDetailsModal({
   onMessageCustomer,
 }) {
   const [copied, setCopied] = useState(false);
+  const callContext = useCallContext();
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
@@ -112,17 +115,38 @@ export default function JobDetailsModal({
                 </span>
               </div>
               <div className="flex mt-3 gap-3 w-full">
-                {/* <button className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                <button
+                  onClick={() =>
+                    callContext?.openCall?.({
+                      booking: job?.originalData || job,
+                      targetOverride: {
+                        targetId:
+                          job?.originalData?.userId?._id ||
+                          job?.originalData?.userId ||
+                          job?.userId?._id ||
+                          job?.userId,
+                        targetType: "buyer",
+                        targetName:
+                          job?.originalData?.userId?.fullName ||
+                          job?.originalData?.customerName ||
+                          "Customer",
+                      },
+                    })
+                  }
+                  className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                >
                   <PhoneCall className="w-4 h-4" />
                   Call
-                </button> */}
-                <button
-                  className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                  onClick={() => onMessageCustomer?.(job)}
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Message
                 </button>
+                {canMessage(job?.status || job?.originalData?.status) && (
+                  <button
+                    className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    onClick={() => onMessageCustomer?.(job)}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Message
+                  </button>
+                )}
               </div>
             </div>
 

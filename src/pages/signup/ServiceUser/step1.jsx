@@ -10,7 +10,7 @@ export default function Step() {
     <div className="h-screen">
       <Navbar />
       <AuthLayout
-        title="Welcome Back!"
+        title="Let's Get Started!"
         description="Join us to discover reliable professionals
 anytime, anywhere."
 

@@ -9,7 +9,6 @@ export default function ProtectedRoute() {
 
   const storedToken = localStorage.getItem("token");
   const isAuthed = Boolean(isAuthenticated || token || storedToken);
-
   if (!hydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-600">

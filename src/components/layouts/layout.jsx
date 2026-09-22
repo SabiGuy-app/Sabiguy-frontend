@@ -7,7 +7,7 @@ export default function AuthLayout({ title, description, children }) {
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">
             {title}
           </h1>
-          <p className="font-medium sm:font-semibold leading-relaxed">
+          <p className="font-medium text-lg sm:text-xl sm:font-semibold leading-relaxed">
             {description}
           </p>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Navbar from "../../../../components/dashboard/Navbar";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import location from "/location.png";
 import motorbike from "/motorbike.png";
 import corolla from "/corolla.png";
@@ -31,9 +32,8 @@ export default function VehicleType() {
   ];
 
   return (
-    <>
-      <Navbar />
-      <div className=" bg-gray-50 grid grid-cols-2 gap-10 p-6">
+    <DashboardLayout>
+      <div className="bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-10 py-4">
         <div>
           <h1 className="text-[28px] font-semibold text-[#231F20] mb-6">
             Choose a ride
@@ -114,6 +114,6 @@ export default function VehicleType() {
           <img src={location} alt="" className="w-[700px] h-[660px]" />
         </div>
       </div>
-    </>
+    </DashboardLayout>
   );
 }

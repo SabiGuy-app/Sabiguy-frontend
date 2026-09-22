@@ -4,13 +4,153 @@ import useNotificationStore from "../stores/notification.store";
 import { useUIStore } from "../stores/ui.store";
 import { useProviderStore } from "../stores/provider.store";
 import { removeFCMToken } from "./fcm";
-import { useNavigate } from "react-router-dom";
+import { trackEvent } from "../services/analytics";
+
+// BUSINESS PASSWORD RESET
+// These endpoints are public, but use the shared API client so the base URL
+// continues to come from VITE_BASE_URL.
+export const requestBusinessPasswordReset = async (email) => {
+  const { data } = await api.post("/business/auth/forgot-password", { email });
+  return data;
+};
+
+export const requestPasswordReset = async (email, accountType = "user") => {
+  if (accountType === "business") {
+    return {
+      data: await requestBusinessPasswordReset(email),
+      accountType: "business",
+    };
+  }
+
+  if (accountType === "auto") {
+    try {
+      return {
+        data: await requestBusinessPasswordReset(email),
+        accountType: "business",
+      };
+    } catch (error) {
+      // A shared login screen can serve both account types. If the email is
+      // not a business account, let the regular account endpoint handle it.
+      if (![400, 404].includes(error.response?.status)) {
+        throw error;
+      }
+    }
+  }
+
+  const { data } = await api.post("/auth/password", { email });
+  return { data, accountType: "user" };
+};
+
+export const resendBusinessPasswordResetOtp = async (email) => {
+  const { data } = await api.post(
+    "/business/auth/resend-forgot-password-otp",
+    { email },
+  );
+  return data;
+};
+
+export const verifyBusinessPasswordResetOtp = async ({ email, otp }) => {
+  const { data } = await api.post("/business/auth/verify-reset-otp", {
+    email,
+    otp,
+  });
+  return data;
+};
+
+export const resetBusinessPassword = async ({ email, otp, newPassword }) => {
+  const { data } = await api.post("/business/auth/reset-password", {
+    email,
+    otp,
+    newPassword,
+  });
+  return data;
+};
 
 // LOGIN (email + password)
 export const login = async (payload) => {
-  const { data } = await api.post("/auth", payload);
-  useAuthStore.getState().setId(data.id);
-  return data;
+  try {
+    const { data } = await api.post("/auth", payload);
+    useAuthStore.getState().setId(data.id);
+
+    // Store tokens in both store and localStorage
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      useAuthStore.getState().setToken(data.token);
+    }
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      useAuthStore.getState().setRefreshToken(data.refreshToken);
+    }
+
+    trackEvent("login_success", {
+      method: "password",
+      role: data.role || data.user?.role,
+    });
+
+    return data;
+  } catch (error) {
+    trackEvent("login_failed", {
+      method: "password",
+      status: error?.response?.status,
+    });
+    throw error;
+  }
+};
+
+// LOGIN (business account — separate endpoint from the buyer/provider one above)
+export const businessLogin = async (payload) => {
+  try {
+    const { data } = await api.post("/business/auth/login", payload);
+
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      useAuthStore.getState().setToken(data.token);
+    }
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      useAuthStore.getState().setRefreshToken(data.refreshToken);
+    }
+
+    trackEvent("login_success", { method: "password", role: "business" });
+
+    return data;
+  } catch (error) {
+    trackEvent("login_failed", {
+      method: "password",
+      role: "business",
+      status: error?.response?.status,
+    });
+    throw error;
+  }
+};
+
+// GOOGLE LOGIN (business account)
+export const businessGoogleLogin = async (accessToken) => {
+  try {
+    const { data } = await api.post("/business/auth/google-login", {
+      token: accessToken,
+    });
+
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      useAuthStore.getState().setToken(data.token);
+    }
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      useAuthStore.getState().setRefreshToken(data.refreshToken);
+    }
+
+    trackEvent("login_success", { method: "google", role: "business" });
+
+    return data;
+  } catch (error) {
+    trackEvent("login_failed", {
+      method: "google",
+      role: "business",
+      status: error?.response?.status,
+    });
+    throw error;
+  }
 };
 
 // GET USER BY EMAIL
@@ -28,10 +168,34 @@ export const getUserByEmail = async (email) => {
 
 // GOOGLE LOGIN
 export const googleLogin = async (accessToken) => {
-  const { data } = await api.post(`/auth/google-login`, {
-    token: accessToken,
-  });
-  return data;
+  try {
+    const { data } = await api.post(`/auth/google-login`, {
+      token: accessToken,
+    });
+
+    // Store tokens in both store and localStorage
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      useAuthStore.getState().setToken(data.token);
+    }
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      useAuthStore.getState().setRefreshToken(data.refreshToken);
+    }
+
+    trackEvent("login_success", {
+      method: "google",
+      role: data.role || data.user?.role,
+    });
+
+    return data;
+  } catch (error) {
+    trackEvent("login_failed", {
+      method: "google",
+      status: error?.response?.status,
+    });
+    throw error;
+  }
 };
 
 export async function handleLogout() {
@@ -43,10 +207,11 @@ export async function handleLogout() {
 
   try {
     // ✅ Save tour keys before clearing
-    const tourKeys = Object.keys(localStorage).filter(key =>
-      key.startsWith("tourSeen_") || key.startsWith("bookingTourSeen_")
+    const tourKeys = Object.keys(localStorage).filter(
+      (key) =>
+        key.startsWith("tourSeen_") || key.startsWith("bookingTourSeen_"),
     );
-    const savedTours = tourKeys.map(key => [key, localStorage.getItem(key)]);
+    const savedTours = tourKeys.map((key) => [key, localStorage.getItem(key)]);
 
     // Clear everything
     localStorage.clear();

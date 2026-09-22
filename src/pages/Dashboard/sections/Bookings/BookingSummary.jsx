@@ -1,5 +1,6 @@
 import BookingSummaryScreen from "../../../../components/dashboard/BookingSummary";
 import Navbar from "../../../../components/dashboard/Navbar";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 
 export default function BookingSummary() {
 
@@ -7,7 +8,7 @@ const bookingData = {
     service: "Electrical Installation",
     provider: {
       name: "Phil Crook",
-      avatar: 'https://i.pravatar.cc/80'
+      avatar: '/avatar.png'
     },
     status: "Pending Confirmation",
     startDate: "Oct 18, 2025 - 10 AM",
@@ -20,17 +21,14 @@ const bookingData = {
   };
 
   return(
-    <>
-    <Navbar/>
-
-    <div className="">
+    <DashboardLayout>
+    <div className="py-4">
         <BookingSummaryScreen
         bookingData={bookingData}
 
         
         />
     </div>
-    
-    </>
+    </DashboardLayout>
   )
 }

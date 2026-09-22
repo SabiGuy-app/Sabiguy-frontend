@@ -12,6 +12,7 @@ export default function WithdrawStep1({
   withdrawalInfo,
   setWithdrawalInfo,
   hasBankDetails,
+  onAddBankDetails,
   onClose,
 }) {
   const [amount, setAmount] = useState("");
@@ -47,11 +48,18 @@ export default function WithdrawStep1({
       {!hasBankDetails && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
           <FiAlertCircle className="text-red-500 mt-0.5 flex-shrink-0" size={18} />
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-medium text-red-800">Bank details not set up</p>
             <p className="text-xs text-red-600 mt-1">
-              Please go to your Service Profile tab and add your bank account details before withdrawing.
+              Add your bank account details to continue with withdrawals.
             </p>
+            <button
+              type="button"
+              onClick={onAddBankDetails}
+              className="mt-3 inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-700"
+            >
+              Add Bank Details
+            </button>
           </div>
         </div>
       )}

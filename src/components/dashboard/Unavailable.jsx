@@ -19,11 +19,7 @@ export default function ProviderUnavailableModal({ isOpen, onClose, provider }) 
         <div className="p-8">
             <div className="flex items-start gap-4 mb-6">
                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-            {provider?.avatar ? (
-              <img src={provider.avatar} alt={provider.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600" />
-            )}
+            <img src={provider?.avatar || "/avatar.png"} alt={provider?.name} className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "/avatar.png"; }} />
           </div>
           <div>
              <h2 className="text-2xl font-semibold text-gray-900 mb-1">

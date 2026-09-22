@@ -1,21 +1,25 @@
-import { Calendar, MapPin, Clock, Star, MessageCircle, Copy, Check } from "lucide-react";
+import { MapPin, Clock, Star, MessageCircle, Copy, Check, PhoneCall } from "lucide-react";
 import { useState } from "react";
+import { canMessage, canProviderCancel } from "../../utils/chat.utils";
+import { useCallContext } from "../shared/CallContext";
 
-// Reusable Request Card Component
 export default function JobsCard({
   job,
   onViewDetails,
   onMarkAsCompleted,
   onShowNavigation,
   onMessageCustomer,
+  onCancel,
 }) {
   const [copied, setCopied] = useState(false);
+  const callContext = useCallContext();
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
   const normalizedStatus = String(job?.status || "")
     .trim()
     .toLowerCase()
@@ -59,6 +63,7 @@ export default function JobsCard({
       cancelled: "bg-red-100 text-red-700 border-red-200",
       pending: "bg-gray-100 text-gray-700 border-gray-200",
     };
+
     const normalized = String(status || "")
       .trim()
       .toLowerCase()
@@ -74,7 +79,10 @@ export default function JobsCard({
     job?.dropoffLocation?.address ||
     job?.originalData?.dropoffLocation?.address ||
     "N/A";
-  const amount = job?.agreedPrice ?? job?.calculatedPrice ?? job?.price ?? 0;
+  const amount = job?.BookingPrice || job?.originalData?.BookingPrice || 0;
+  const platformFee =
+    job?.originalData?.pricingBreakdown?.driverCommission || job?.originalData?.pricingBreakdown?.originalProviderCommission || 0;
+  const riderReceives = job?.RiderReceives || job?.originalData?.RiderReceives || 0;
   const shouldShowNavigation =
     normalizedStatus === "paid_escrow" ||
     normalizedStatus === "in_progress" ||
@@ -86,126 +94,158 @@ export default function JobsCard({
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_");
-  const shouldShowMessageButton = [
-    "paid_escrow",
-    "in_progress",
-    "arrived_at_pickup",
-    "enroute_to_dropoff",
-    "arrived_at_dropoff",
-  ].includes(bookingStatus);
+  const shouldShowMessageButton =
+    bookingStatus !== "funds_released" && canMessage(bookingStatus);
+  const shouldShowCancelButton = canProviderCancel(
+    job?.originalData?.status || job?.status,
+  );
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
       <div className="flex flex-col sm:flex-row items-start gap-4">
         <div className="flex-1 w-full">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px] items-start">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
                 <h3 className="text-xl font-semibold text-gray-900">
                   {formatTitle(job?.title)}
                 </h3>
               </div>
-              <div className="text-sm text-gray-600 flex items-center gap-2">
-                <span>User: {job?.originalData?.userId?.fullName || "Customer"}</span>
+
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                <span className="font-medium">
+                  User: {job?.originalData?.userId?.fullName || "Customer"}
+                </span>
                 {job?.orderId && (
-                  <div className="flex items-center gap-1.5 ml-2">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-gray-500">#{job.orderId}</span>
                     <button
                       onClick={() => handleCopy(job.fullOrderId)}
                       className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
                     >
-                      {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                      {copied ? (
+                        <Check size={12} className="text-green-500" />
+                      ) : (
+                        <Copy size={12} />
+                      )}
                     </button>
                   </div>
                 )}
               </div>
-            </div>
-            <div className="sm:text-right w-full sm:w-auto flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2">
-              <span
-                className={`px-3 py-1 text-xs font-medium rounded-full border h-fit ${getStatusStyles(
-                  job?.status,
-                )}`}
-              >
-                {job?.status || "Pending"}
-              </span>
-              <div className="text-xl sm:text-2xl font-bold text-[#2D6A3E]">
-                ₦{Number(amount).toLocaleString()}
-              </div>
-              <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
-                Delivery:{" "}
-                {formatTitle(job?.originalData?.scheduleType || "N/A")}
-              </p>
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-3 mb-4 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#2D6A3E]" />
-              <span>
-                {formatDateTime(job?.createdAt || job?.originalData?.createdAt)}
-              </span>
-            </div>
-
-            {/* Pickup and Dropoff Section with Connecting Line */}
-            <div className="relative mt-2 mb-4">
-              {/* Vertical Connecting Line */}
-              <div className="absolute left-[15px] top-[16px] bottom-[16px] w-[1.5px] bg-[#00582326] z-0"></div>
-
-              {/* Pickup Row */}
-              <div className="flex items-start gap-4 mb-4 relative z-10">
-                <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
-                  <div className="w-2.5 h-2.5 bg-[#005823] rounded-full shadow-inner"></div>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#2D6A3E]" />
+                  <span>{formatDateTime(job?.createdAt || job?.originalData?.createdAt)}</span>
                 </div>
-                <div className="flex-1 mt-0.5">
-                  <span className="text-[#231F2080] text-xs font-bold uppercase tracking-wider">Pickup</span>
-                  <p className="text-[#231F20BF] text-base sm:text-[17px] font-medium leading-snug">
-                    {pickupAddress}
-                  </p>
-                </div>
-              </div>
-
-              {/* Dropoff Row */}
-              <div className="flex items-start gap-4 relative z-10">
-                <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
-                  <MapPin className="w-3.5 h-3.5 text-[#005823]" />
-                </div>
-                <div className="flex-1 mt-0.5">
-                  <span className="text-[#231F2080] text-xs font-bold uppercase tracking-wider">Dropoff</span>
-                  <p className="text-[#231F20BF] text-base sm:text-[17px] font-medium leading-snug">
-                    {dropoffAddress}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {normalizedStatus === "in_progress" && (
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">
-                  Est. Completion: {job?.est_completion || "N/A"}
+                <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
+                  Delivery: {formatTitle(job?.originalData?.scheduleType || "N/A")}
                 </span>
               </div>
-            )}
 
-            {normalizedStatus === "pending" && (
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">
-                  Starts in: {job?.startsIn || "N/A"}
-                </span>
-              </div>
-            )}
+              <div className="relative pl-0 pt-2">
+                <div className="absolute left-4 top-[16px] bottom-[16px] w-[1.5px] bg-[#00582326] z-0" />
 
-            {(normalizedStatus === "waiting_confirmation" ||
-              normalizedStatus === "completed" ||
-              normalizedStatus === "awaiting_confirmation") && (
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">
-                   Job Completed On: {formatDateTime(job?.completedAt || job?.originalData?.completedAt)}
-                </span>
+                <div className="flex items-start gap-4 mb-4 relative z-10">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
+                    <div className="w-2.5 h-2.5 bg-[#005823] rounded-full shadow-inner" />
+                  </div>
+                  <div className="flex-1 mt-0.5">
+                    <span className="text-[#231F2080] text-xs font-bold uppercase tracking-wider">
+                      Pickup
+                    </span>
+                    <p className="text-[#231F20BF] text-base sm:text-[17px] font-medium leading-snug">
+                      {pickupAddress}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
+                    <MapPin className="w-3.5 h-3.5 text-[#005823]" />
+                  </div>
+                  <div className="flex-1 mt-0.5">
+                    <span className="text-[#231F2080] text-xs font-bold uppercase tracking-wider">
+                      Dropoff
+                    </span>
+                    <p className="text-[#231F20BF] text-base sm:text-[17px] font-medium leading-snug">
+                      {dropoffAddress}
+                    </p>
+                  </div>
+                </div>
               </div>
-            )}
+
+              {normalizedStatus === "in_progress" && (
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-yellow-500" />
+                  <span className="font-medium">
+                    Est. Completion: {job?.est_completion || "N/A"}
+                  </span>
+                </div>
+              )}
+
+              {normalizedStatus === "pending" && (
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-yellow-500" />
+                  <span className="font-medium">
+                    Starts in: {job?.startsIn || "N/A"}
+                  </span>
+                </div>
+              )}
+
+              {(normalizedStatus === "waiting_confirmation" ||
+                normalizedStatus === "completed" ||
+                normalizedStatus === "awaiting_confirmation") && (
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-yellow-500" />
+                  <span className="font-medium">
+                    Job Completed On:{" "}
+                    {formatDateTime(job?.completedAt || job?.originalData?.completedAt)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full rounded-2xl border border-green-100 bg-gradient-to-br from-[#F8FCF9] to-white p-4 shadow-sm lg:w-1/4 lg:min-w-[260px]">
+              <div className="flex flex-col gap-3 sm:text-right">
+                <span
+                  className={`inline-flex w-fit px-3 py-1 text-xs font-medium rounded-full border h-fit sm:ml-auto ${getStatusStyles(
+                    job?.status,
+                  )}`}
+                >
+                  {job?.status || "Pending"}
+                </span>
+
+                <div className="space-y-2">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                      Booking Price
+                    </span>
+                    <span className="text-xl sm:text-2xl font-bold text-[#2D6A3E] leading-none">
+                      ₦{Number(amount).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                      Platform Fee
+                    </span>
+                    <span className="text-lg sm:text-xl font-semibold text-[#2D6A3E] leading-none">
+                      ₦{Number(platformFee).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                      Rider Receives
+                    </span>
+                    <span className="text-lg sm:text-xl font-semibold text-[#2D6A3E] leading-none">
+                      ₦{Number(riderReceives).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2 sm:gap-3 border-t pt-3 mt-2">
@@ -244,6 +284,7 @@ export default function JobsCard({
                 </p>
               </div>
             )}
+
             {normalizedStatus === "in_progress" && (
               <button
                 onClick={() => onMarkAsCompleted(job)}
@@ -283,8 +324,36 @@ export default function JobsCard({
                 Message Customer
               </button>
             )}
-            {normalizedStatus === "awaiting_payment" && (
-              <button className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95">
+
+            <button
+              onClick={() =>
+                callContext?.openCall?.({
+                  booking: job?.originalData || job,
+                  targetOverride: {
+                    targetId:
+                      job?.originalData?.userId?._id ||
+                      job?.originalData?.userId ||
+                      job?.userId?._id ||
+                      job?.userId,
+                    targetType: "buyer",
+                    targetName:
+                      job?.originalData?.userId?.fullName ||
+                      job?.originalData?.customerName ||
+                      "Customer",
+                  },
+                })
+              }
+              className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
+            >
+              <PhoneCall className="w-4 h-4" />
+              Call Customer
+            </button>
+
+            {shouldShowCancelButton && (
+              <button
+                onClick={() => onCancel?.(job)}
+                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95"
+              >
                 Cancel
               </button>
             )}

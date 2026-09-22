@@ -53,9 +53,17 @@ export default function BookingSummaryScreen({
                   src={bookingData.provider.avatar}
                   alt={bookingData.provider.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/avatar.png";
+                  }}
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600" />
+                <img
+                  src="/avatar.png"
+                  alt="Default avatar"
+                  className="w-full h-full object-cover"
+                />
               )}
             </div>
             <div className="flex-1">

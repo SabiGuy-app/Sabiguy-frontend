@@ -170,9 +170,17 @@ export default function ProviderProfilePage() {
                     src={previewAvatar || profile.avatar}
                     alt={profile.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/avatar.png";
+                    }}
                   />
                 ) : (
-                  <FiUser size={32} className="text-gray-500" />
+                  <img
+                    src="/avatar.png"
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 )}
 
                 <input

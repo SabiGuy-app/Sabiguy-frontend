@@ -47,9 +47,17 @@ export default function ProviderCard({
             src={profilePicture}
             alt={fullName}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/avatar.png";
+            }}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />
+          <img
+            src="/avatar.png"
+            alt={fullName}
+            className="w-full h-full object-cover"
+          />
         )}
         
         {/* Favorite Button */}

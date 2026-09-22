@@ -1,23 +1,26 @@
-// RequestCard.jsx
 import {
   Calendar,
   MapPin,
   Send,
   Clock,
   Star,
+  PhoneCall,
   MessageCircle,
   Copy,
   Check,
-  CreditCard, // ← new
+  CreditCard,
 } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ← new
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import distance from "/distance.png";
-import { acceptCompletion } from "../../api/bookings";
+import { acceptCompletion, disputeCompletion } from "../../api/bookings";
+import { getWalletBalance } from "../../api/provider";
 import ReviewModal from "./ReviewModal";
+import DisputeCompletionModal from "./DisputeCompletionModal";
 import CancelRequestButton from "../CancelRequestButton";
 import useBookingStore from "../../stores/booking.store";
+import { useCallContext } from "../shared/CallContext";
 
 export default function RequestCard({
   request,
@@ -32,9 +35,38 @@ export default function RequestCard({
   const [apiError, setApiError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false);
+  const [disputeLoading, setDisputeLoading] = useState(false);
+  const [disputeApiError, setDisputeApiError] = useState(null);
+
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState(false);
 
   const navigate = useNavigate();
   const setBooking = useBookingStore((s) => s.setBooking);
+  const callContext = useCallContext();
+
+  // Fetch wallet balance whenever the review modal opens
+  useEffect(() => {
+    if (!modalOpen) return;
+
+    const fetchBalance = async () => {
+      setWalletLoading(true);
+      setWalletError(false);
+      try {
+        const res = await getWalletBalance({ bustCache: true });
+        setWalletBalance(res.data.available);
+      } catch (err) {
+        console.error("Failed to fetch wallet balance:", err);
+        setWalletError(true);
+      } finally {
+        setWalletLoading(false);
+      }
+    };
+
+    fetchBalance();
+  }, [modalOpen]);
 
   const handleMakePayment = () => {
     if (request.rawBooking) {
@@ -95,9 +127,7 @@ export default function RequestCard({
         message =
           "Invalid rating score or tip amount. Please check your inputs.";
       else if (status === 401) message = "Unauthorized. Please log in again.";
-      else if (status === 409)
-        message =
-          "This booking has not been marked as completed by the provider yet.";
+      else if (status === 409) message = "Job completion already accepted.";
       setApiError(message);
       toast.error(message);
     } finally {
@@ -105,10 +135,44 @@ export default function RequestCard({
     }
   };
 
-  const isCompleted =
-    request.status.toLowerCase() === "completed" ||
-    request.status.toLowerCase() === "waiting confirmation" ||
-    request.status.toLowerCase() === "user_accepted_completion";
+  const handleDisputeSubmit = async ({ reason }) => {
+    setDisputeLoading(true);
+    setDisputeApiError(null);
+
+    try {
+      const response = await disputeCompletion(request.id, { reason });
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion disputed successfully";
+      toast.success(successMsg);
+      setDisputeModalOpen(false);
+      if (onStatusUpdate) onStatusUpdate();
+    } catch (err) {
+      console.error("Failed to dispute completion:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+
+      if (status === 400) {
+        message = "Please provide a valid dispute reason.";
+      } else if (status === 401) {
+        message = "Unauthorized. Please log in again.";
+      } else if (status === 409) {
+        message = "This job completion has already been processed.";
+      } else {
+        message =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          message;
+      }
+
+      setDisputeApiError(message);
+      toast.error(message);
+    } finally {
+      setDisputeLoading(false);
+    }
+  };
 
   return (
     <>
@@ -121,8 +185,23 @@ export default function RequestCard({
         onSubmit={handleReviewSubmit}
         loading={submitLoading}
         apiError={apiError}
+        providerName={request.providerName}
+        walletBalance={walletBalance}
+        walletLoading={walletLoading}
+        walletError={walletError}
       />
 
+      <DisputeCompletionModal
+        isOpen={disputeModalOpen}
+        onClose={() => {
+          setDisputeModalOpen(false);
+          setDisputeApiError(null);
+        }}
+        onSubmit={handleDisputeSubmit}
+        loading={disputeLoading}
+        apiError={disputeApiError}
+        providerName={request.providerName}
+      />
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
         <div className="flex-1">
@@ -140,17 +219,17 @@ export default function RequestCard({
             <div className="w-full">
               <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2 w-full">
                 <div>
-                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <h3 className="text-xl font-semibold text-gray-900">
                       {request.title}
                     </h3>
-                   <span
-  className={`inline-flex items-center justify-center text-center px-1 py-1 text-xs font-medium rounded-full border max-w-full sm:max-w-none break-words ${getStatusStyles(request.status)}`}
->
-  {request.status}
-</span>
+                    <span
+                      className={`inline-flex items-center justify-center text-center px-1 py-1 text-xs font-medium rounded-full border max-w-30 break-words ${getStatusStyles(request.status)}`}
+                    >
+                      {request.status}
+                    </span>
                   </div>
-                 <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <p className="text-[16px] text-[#231F20BF]">
                       {request.providerName}
                     </p>
@@ -217,7 +296,6 @@ export default function RequestCard({
             )}
           </div>
 
-          {/* ── locations ────────────────────────────────────────────────── */}
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
@@ -254,96 +332,138 @@ export default function RequestCard({
             </div>
           </div>
 
-          <div className="space-y-3 md:space-y-0 md:flex md:items-center md:gap-3 mt-5">
-            <button
-  onClick={() => onViewDetails(request)}
-className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base">
-  View Details
-</button>
-<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 w-full md:w-auto md:flex md:items-center md:gap-3">
-            {["provider selected", "payment pending"].includes(
-              request.status.toLowerCase(),
-            ) && (
+          <div className="mt-5">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:flex md:items-center md:gap-3">
               <button
-                onClick={handleMakePayment}
-className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base">  
-                <CreditCard className="w-4 h-4" />
-                Make Payment
+                onClick={() => onViewDetails(request)}
+                className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base"
+              >
+                View Details
               </button>
-            )}
+              {["provider selected", "payment pending"].includes(
+                request.status.toLowerCase(),
+              ) && (
+                <button
+                  onClick={handleMakePayment}
+                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  Make Payment
+                </button>
+              )}
 
-            {[
-              "pending providers",
-              "provider selected",
-              "payment pending",
-              "awaiting provider acceptance",
-            ].includes(request.status.toLowerCase()) && (
-              <CancelRequestButton
-                bookingId={request.id}
-                onSuccess={onBookingCancelled}
-              />
-            )}
+              {[
+                "pending providers",
+                "provider selected",
+                "payment pending",
+                "awaiting provider acceptance",
+              ].includes(request.status.toLowerCase()) && (
+                <CancelRequestButton
+                  bookingId={request.id}
+                  onSuccess={onBookingCancelled}
+                />
+              )}
 
-            {[
-              "provider selected",
-              "in progress",
-              "enroute to pickup",
-              "arrived at pickup",
-              "enroute to dropoff",
-              "arrived at dropoff",
-              "completed",
-            ].includes(request.status.toLowerCase()) && (
-              <button
-                onClick={() => onTrackProvider(request.id)}
-className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base">                <Send className="w-4 h-4" />
-                Track provider
-              </button>
-            )}
+              {[
+                "in progress",
+                "enroute to pickup",
+                "arrived at pickup",
+                "enroute to dropoff",
+                "arrived at dropoff",
+                "completed",
+              ].includes(request.status.toLowerCase()) && (
+                <button
+                  onClick={() => onTrackProvider(request.id)}
+                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base"
+                >
+                  <Send className="w-4 h-4" />
+                  Track provider
+                </button>
+              )}
 
-            {[
-              "provider selected",
-              "paid escrow",
-              "enroute to pickup",
-              "arrived at pickup",
-              "enroute to dropoff",
-              "arrived at dropoff",
-            ].includes(request.status.toLowerCase()) && (
-              <button
-                onClick={() => onMessageProvider?.(request)}
-className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base">                <MessageCircle className="w-4 h-4" />
-                Message Provider
-              </button>
-            )}
+              {[
+                "paid escrow",
+                "enroute to pickup",
+                "arrived at pickup",
+                "enroute to dropoff",
+                "arrived at dropoff",
+              ].includes(request.status.toLowerCase()) && (
+                <button
+                  onClick={() => onMessageProvider?.(request)}
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Message Provider
+                </button>
+              )}
 
-            {isCompleted && (
-              <>
-                {request.ratings || submitted ? (
-                  <div className="px-3 py-1 mt-3 flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.round(request.ratings)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "fill-gray-300 text-gray-300"
-                        }`}
-                      />
-                    ))}
-                    <span className="text-sm font-bold ml-2">
-                      {request.ratings}.0
-                    </span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setModalOpen(true)}
-                    className="w-full sm:w-auto px-3 py-1 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    Accept Job Completion
-                  </button>
+              {[ 
+                "paid escrow",
+                "enroute to pickup",
+                "arrived at pickup",
+                "enroute to dropoff",
+                "arrived at dropoff",
+              ].includes(request.status.toLowerCase()) && (
+                <button
+                  onClick={() =>
+                    callContext?.openCall?.({
+                      booking: request.rawBooking || request,
+                      targetOverride: {
+                        targetId:
+                          request.fullProviderId ||
+                          request.originalData?.providerId?._id ||
+                          request.originalData?.providerId,
+                        targetType: "provider",
+                        targetName: request.providerName || "Provider",
+                      },
+                    })
+                  }
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+                >
+                  <PhoneCall className="w-4 h-4" />
+                  Call Provider
+                </button>
+              )}
+
+              {request.status.toLowerCase() === "completed" &&
+                !request.ratings &&
+                !submitted && (
+                  <>
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      <button
+                        onClick={() => setDisputeModalOpen(true)}
+                        className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        Dispute Job Completion
+                      </button>
+                      <button
+                        onClick={() => setModalOpen(true)}
+                        className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        Accept Job Completion
+                      </button>
+                    </div>
+                  </>
                 )}
-              </>
-            )}
-          </div>
+
+              {(request.ratings || submitted) && (
+                <div className="px-3 py-1 mt-3 flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${
+                        i < Math.round(request.ratings)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "fill-gray-300 text-gray-300"
+                      }`}
+                    />
+                  ))}
+                  <span className="text-sm font-bold ml-2">
+                    {request.ratings}.0
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

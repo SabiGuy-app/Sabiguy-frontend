@@ -12,9 +12,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import DeliveryMap from "../../../../components/dashboard/Map";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
-import { startJob, cancelBooking } from "../../../../api/bookings";
+import { startJob } from "../../../../api/bookings";
+import { cancelBooking as cancelProviderBooking } from "../../../../api/provider";
+import {
+  canMessage,
+  canProviderCancel,
+  normalizeStatus,
+} from "../../../../utils/chat.utils";
 import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
-import CancelModal from "../../../../components/CancelModal";
+import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
+import ProviderCancellationModal from "../../../../components/provider-dashboard/ProviderCancellationModal";
 
 // Error Boundary for Map Component
 class MapErrorBoundary extends React.Component {
@@ -23,7 +30,7 @@ class MapErrorBoundary extends React.Component {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
@@ -61,9 +68,7 @@ export default function StartNavigation() {
   const user = useAuthStore((state) => state.user);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
-  const [riderLocation, setRiderLocation] = useState(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
@@ -107,31 +112,40 @@ export default function StartNavigation() {
     }
   };
 
+  const bookingId = alert?.id || alert?.originalData?._id || bookingDetails?._id;
+  const statusForCancel =
+    alert?.originalData?.status || bookingDetails?.status || alert?.status;
+  const isAcceptedUnpaidRoute =
+    normalizeStatus(alert?.status) === "new" &&
+    normalizeStatus(alert?.originalData?.status) ===
+      "awaiting_provider_acceptance";
+  const shouldShowCancelRequest =
+    canProviderCancel(statusForCancel) ||
+    canProviderCancel(alert?.status) ||
+    isAcceptedUnpaidRoute;
+
   const handleCancel = async (reason) => {
-    setCancelLoading(true);
-    try {
-      await cancelBooking(bookingDetails._id, reason);
-      setCancelModalOpen(false);
-      toast.success("Booking cancelled successfully.");
-      navigate("/bookings");
-    } catch (err) {
-      console.error("Failed to cancel booking:", err);
-      toast.error(err.response?.data?.message || "Failed to cancel booking.");
-    } finally {
-      setCancelLoading(false);
+    if (!bookingId) {
+      throw new Error("Booking details are unavailable for cancellation.");
     }
+
+    await cancelProviderBooking(bookingId, reason);
+  };
+
+  const handleCancelComplete = () => {
+    navigate("/dashboard/provider/hire-alert");
   };
 
   const customer = alert?.originalData?.userId || {};
 
   return (
-    <>
-      <ProviderNavbar />
-      <CancelModal
+    <ProviderDashboardLayout>
+      <div className="py-4">
+      <ProviderCancellationModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
-        onConfirm={handleCancel}
-        loading={cancelLoading}
+        onSubmit={handleCancel}
+        onComplete={handleCancelComplete}
       />
 
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
@@ -211,22 +225,26 @@ export default function StartNavigation() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              {/* <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Phone className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Call</span>
-              </button> */}
-              {/* <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <MessageCircle className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">
-                  Message
-                </span>
-              </button> */}
-              <button
-                onClick={() => setCancelModalOpen(true)}
-                className="text-[#E90000] font-medium text-[16px] px-3 py-3 rounded-[10px] hover:text-red-600 transition-colors hover:bg-red-200"
-              >
-                Cancel Request
               </button>
+              {canMessage(alert?.status || bookingDetails?.status) && (
+                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <MessageCircle className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Message
+                  </span>
+                </button>
+              )}
+              {shouldShowCancelRequest && (
+                <button
+                  onClick={() => setCancelModalOpen(true)}
+                  className="text-[#E90000] font-medium text-[16px] px-3 py-3 rounded-[10px] hover:text-red-600 transition-colors hover:bg-red-200"
+                >
+                  Cancel Request
+                </button>
+              )}
             </div>
           </div>
 
@@ -241,7 +259,7 @@ export default function StartNavigation() {
             <h3 className="text-[16px] font-semibold text-[#231F20]">Fare</h3>
             <div className="flex items-center gap-2">
               <span className="text-[20px] font-bold text-[#231F20]">
-                ₦{Number(alert?.price || 0).toLocaleString()}
+                ₦{Number(alert?.RiderReceives || 0).toLocaleString()}
               </span>
             </div>
           </div>
@@ -265,6 +283,7 @@ export default function StartNavigation() {
           </MapErrorBoundary>
         </div>
       </div>
-    </>
+      </div>
+    </ProviderDashboardLayout>
   );
 }

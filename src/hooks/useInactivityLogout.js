@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// Default timeouts: 10 minutes for regular users, 1 hour for providers
 const DEFAULT_INACTIVITY_MS = 10 * 60 * 1000;
+const PROVIDER_INACTIVITY_MS = 60 * 60 * 1000; // 1 hour
 const DEFAULT_WARNING_GRACE_MS = 5 * 60 * 1000;
+const PROVIDER_WARNING_GRACE_MS = 5 * 60 * 1000; // 5 minutes warning before logout
 
 export default function useInactivityLogout({
   enabled = true,
@@ -106,3 +109,9 @@ export default function useInactivityLogout({
 
   return { showWarning, extendSession, logoutNow };
 }
+
+export {
+  DEFAULT_INACTIVITY_MS,
+  PROVIDER_INACTIVITY_MS,
+  PROVIDER_WARNING_GRACE_MS,
+};

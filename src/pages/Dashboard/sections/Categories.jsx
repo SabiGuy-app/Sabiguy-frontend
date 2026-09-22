@@ -1,3 +1,4 @@
+import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import Navbar from "../../../components/dashboard/Navbar";
 import Card from "../../../components/dashboard/CategoriesPageCard";
 import Breadcrumbs from "../../../components/dashboard/BreadCrumbs";
@@ -52,10 +53,8 @@ export default function Categories() {
   };
 
   return (
-    <>
-      <Navbar />
-
-      <div className="px-9 py-8">
+    <DashboardLayout>
+      <div className="py-4">
         <Breadcrumbs
           paths={[
             { label: "", to: "/dashboard", icon: Home },
@@ -63,7 +62,7 @@ export default function Categories() {
           ]}
         />
 
-        <h1 className="font-semibold text-3xl mb-7">Explore Categories</h1>
+        <h1 className="font-semibold text-3xl mb-7">Categories</h1>
 
         {categories.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
@@ -84,6 +83,6 @@ export default function Categories() {
           </div>
         )}
       </div>
-    </>
+    </DashboardLayout>
   );
 }

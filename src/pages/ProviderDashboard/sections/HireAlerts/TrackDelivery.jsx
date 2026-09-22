@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Phone,
   MessageCircle,
@@ -8,6 +9,10 @@ import {
   Star,
   Shield,
   ArrowLeft,
+  CheckCircle2,
+  Sparkles,
+  Clock3,
+  X,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DeliveryMap from "../../../../components/dashboard/Map";
@@ -15,6 +20,7 @@ import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
 import { updateBookingStatus, markAsComplete } from "../../../../api/bookings";
 import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
+import { useCallContext } from "../../../../components/shared/CallContext";
 
 // Error Boundary for Map Component
 class MapErrorBoundary extends React.Component {
@@ -80,6 +86,45 @@ const STEPS_COMPLETED_BY_STATUS = {
   completed: [1, 2, 3, 4, 5],
 };
 
+function TrackDeliveryCallButton({ booking, bookingDetails, alert, customer }) {
+  const callContext = useCallContext();
+  const targetId =
+    customer?._id ||
+    bookingDetails?.userId?._id ||
+    bookingDetails?.userId ||
+    alert?.originalData?.userId?._id ||
+    alert?.originalData?.userId;
+
+  const handleCallCustomer = () => {
+    if (!targetId) return;
+
+    callContext?.openCall?.({
+      booking: alert?.originalData || bookingDetails || booking,
+      targetOverride: {
+        targetId,
+        targetType: "buyer",
+        targetName:
+          customer?.fullName ||
+          bookingDetails?.userId?.fullName ||
+          alert?.originalData?.userId?.fullName ||
+          "Customer",
+      },
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCallCustomer}
+      disabled={!targetId}
+      className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <Phone className="w-5 h-5 text-gray-600" />
+      <span className="text-sm">Call</span>
+    </button>
+  );
+}
+
 export default function TrackDelivery() {
   const routeLocation = useLocation();
   const navigate = useNavigate();
@@ -100,9 +145,12 @@ export default function TrackDelivery() {
     useState(true);
   const [updating, setUpdating] = useState(false);
   const [riderLocation, setRiderLocation] = useState(null);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
+  console.log(bookingDetails);
+  
   const selectedProviderId = useBookingStore(
     (state) => state.selectedProviderId,
   );
@@ -161,7 +209,7 @@ export default function TrackDelivery() {
     bookingDetails?.dropoffLocation?.address ||
     "N/A";
   const serviceCost =
-    alert?.price ||
+    alert?.RiderReceives ||
     alert?.originalData?.calculatedPrice ||
     bookingDetails?.calculatedPrice ||
     0;
@@ -261,6 +309,7 @@ export default function TrackDelivery() {
         await markAsComplete(bookingId);
         // await updateBookingStatus(bookingId, "completed"); // replace with markAsComplete(bookingId) when ready
         setBookingStatus("completed");
+        setShowCompletionModal(true);
       } else {
         const nextStatus = STATUS_FLOW[bookingStatus];
         if (!nextStatus) return;
@@ -284,13 +333,30 @@ export default function TrackDelivery() {
   const buttonLabel = BUTTON_LABELS[bookingStatus] || "Arrived at Pickup";
 
   const isFullyComplete = bookingStatus === "completed";
+  const completionMessage =
+    "Well done! Do inform the customer to accept completion so you can get ratings and your payment. Please note that you will only be able to withdraw the payment by tomorrow.";
 
   const estimatedDuration =
     alert?.originalData?.estimatedDuration || bookingDetails?.estimatedDuration;
-  const arrivalText =
-    estimatedDuration?.value && estimatedDuration?.unit
-      ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
-      : "Tracking delivery";
+  const getArrivalText = () => {
+    switch (bookingStatus) {
+      case "enroute_to_pickup":
+      case "in_progress":
+        return estimatedDuration?.value
+          ? `Arrival in ${estimatedDuration.value} ${estimatedDuration.unit}`
+          : "On the way to pickup";
+      case "arrived_at_pickup":
+        return "Arrived at pickup location";
+      case "enroute_to_dropoff":
+        return "En route to delivery";
+      case "arrived_at_dropoff":
+        return "Arrived at destination";
+      case "completed":
+        return "Delivery Completed";
+      default:
+        return "Tracking delivery";
+    }
+  };
 
   useEffect(() => {
     if (
@@ -404,13 +470,13 @@ export default function TrackDelivery() {
 
             <div className="hidden lg:block mb-6">
               <h1 className="text-[28px] font-semibold text-[#231F20]">
-                {arrivalText}
+                {getArrivalText()}
               </h1>
             </div>
 
             <div className="lg:hidden mb-2">
               <h2 className="text-2xl font-bold text-[#231F20] leading-tight">
-                {arrivalText}
+                {getArrivalText()}
               </h2>
             </div>
 
@@ -456,14 +522,14 @@ export default function TrackDelivery() {
                       <Shield className="w-3 h-3" /> Verified
                     </span>
                   </div>
-                  <div className="text-[#231F20BF] text-[16px] mb-1">
+                  {/* <div className="text-[#231F20BF] text-[16px] mb-1">
                     <div>
                       {user?.data?.services?.[0]?.title?.replace(/_/g, " ") ||
                         bookingDetails?.subCategory?.replace(/_/g, " ") ||
                         "N/A"}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
+                  </div> */}
+                  {/* <div className="flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm font-medium text-gray-900">
                       {user?.data?.rating?.average > 0
@@ -473,22 +539,26 @@ export default function TrackDelivery() {
                     <span className="text-xs text-gray-500">
                       ({user?.data?.rating?.count ?? 0} reviews)
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-                {/* <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95">
-                  <Phone className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm">Call</span>
-                </button> */}
-                <button
-                  onClick={handleMessageCustomer}
-                  className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95"
-                >
-                  <MessageCircle className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm">Message</span>
-                </button>
+                <TrackDeliveryCallButton
+                  booking={booking}
+                  bookingDetails={bookingDetails}
+                  alert={alert}
+                  customer={customer}
+                />
+                {bookingStatus?.toLowerCase() !== "cancelled" && (
+                  <button
+                    onClick={handleMessageCustomer}
+                    className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold active:scale-95"
+                  >
+                    <MessageCircle className="w-5 h-5 text-gray-600" />
+                    <span className="text-sm">Message</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -496,7 +566,7 @@ export default function TrackDelivery() {
               Pickup note
             </h3>
             <p className="bg-[#007BFF08] rounded-lg text-[#231F2080] border border-[#231F201A] p-4 mb-4">
-              {bookingDetails?.pickupNote || "No pickup note provided."}
+              {alert?.pickupNote || "No pickup note provided."}
             </p>
 
             <div className="mb-4">
@@ -607,16 +677,119 @@ export default function TrackDelivery() {
           </div>
 
           <div className="h-[400px] sm:h-[500px] lg:h-[660px] rounded-2xl overflow-hidden shadow-inner lg:shadow-lg lg:sticky lg:top-24">
-          <MapErrorBoundary>
-            <DeliveryMap
-              pickup={pickupCoords}
-              dropoff={dropoffCoords}
-              bookingDetails={bookingDetails}
-            />
-          </MapErrorBoundary>
-        </div>
+            <MapErrorBoundary>
+              <DeliveryMap
+                pickup={pickupCoords}
+                dropoff={dropoffCoords}
+                bookingDetails={bookingDetails}
+              />
+            </MapErrorBoundary>
+          </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showCompletionModal && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCompletionModal(false)}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: 28, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 280, damping: 24 }}
+              className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.28)]"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,88,35,0.14),_transparent_42%),linear-gradient(135deg,_rgba(230,239,233,0.92),_rgba(255,255,255,1))]" />
+              <div className="relative p-6 sm:p-8">
+                <button
+                  onClick={() => setShowCompletionModal(false)}
+                  aria-label="Close modal"
+                  className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                >
+                  <X size={18} />
+                </button>
+
+                <div className="flex flex-col items-center text-center">
+                  <motion.div
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 18 }}
+                    className="relative mb-6"
+                  >
+                    <div className="absolute inset-0 rounded-full bg-[#005823]/10 blur-2xl" />
+                    <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-[#005823] text-white shadow-[0_18px_40px_rgba(0,88,35,0.35)]">
+                      <CheckCircle2 className="h-12 w-12" />
+                    </div>
+                    <motion.div
+                      className="absolute -right-2 -top-2 rounded-full bg-[#8BC53F] p-2 text-white shadow-lg"
+                      animate={{ rotate: [0, 12, 0], scale: [1, 1.08, 1] }}
+                      transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </motion.div>
+                  </motion.div>
+
+                  <span className="mb-3 inline-flex items-center rounded-full border border-[#005823]/15 bg-[#005823]/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#005823]">
+                    Trip completed
+                  </span>
+
+                  <h2 className="text-3xl font-semibold text-[#231F20] sm:text-[34px]">
+                    Well done!
+                  </h2>
+
+                  <p className="mt-4 max-w-md text-[15px] leading-7 text-[#231F20BF] sm:text-base">
+                    {completionMessage}
+                  </p>
+
+                  <div className="mt-6 w-full rounded-2xl border border-[#005823]/10 bg-white/80 p-4 text-left shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 rounded-full bg-[#005823]/10 p-2 text-[#005823]">
+                        <Clock3 className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[#231F20]">
+                          Withdrawal note
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-[#231F2080]">
+                          The payment will be available for withdrawal from
+                          tomorrow.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row">
+                    <button
+                      onClick={() => setShowCompletionModal(false)}
+                      className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#231F201A] bg-white px-5 py-3 text-sm font-semibold text-[#231F20] transition hover:bg-[#F7F8F7]"
+                    >
+                      Got it
+                    </button>
+                    <button
+                      onClick={() => setShowCompletionModal(false)}
+                      className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#005823] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#005823]/25 transition hover:bg-[#00461d]"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </ProviderDashboardLayout>
   );
 }

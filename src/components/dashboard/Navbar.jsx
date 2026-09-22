@@ -3,12 +3,18 @@ import { Bell, Search, Menu, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
+import NotificationCompletionModal from "../NotificationCompletionModal";
+import BookingRequestModal from "../BookingRequestModal";
+import ActivityDetailsModal from "./ActivityDetailsModal";
+import ReviewModal from "./ReviewModal";
+import DisputeCompletionModal from "./DisputeCompletionModal";
 import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
+import { acceptCompletion, disputeCompletion, getAllBookings } from "../../api/bookings";
 import { handleLogout } from "../../api/auth";
-import { io } from "socket.io-client";
+import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
 
 export default function Navbar({ onMenuClick }) {
@@ -19,10 +25,29 @@ export default function Navbar({ onMenuClick }) {
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completionNotification, setCompletionNotification] = useState(null);
+  const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
+  const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
+  const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewApiError, setReviewApiError] = useState(null);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeLoading, setDisputeLoading] = useState(false);
+  const [disputeApiError, setDisputeApiError] = useState(null);
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
+  const completionNotificationTypes = [
+    "booking_completed",
+    "booking_completed_awaiting_acceptance",
+  ];
+  const bookingRequestNotificationTypes = [
+    "new_booking_request",
+    "booking_selected",
+  ];
 
   // Don't render until store is hydrated
   if (!hydrated) {
@@ -71,7 +96,7 @@ export default function Navbar({ onMenuClick }) {
         // Update local state
         setNotifications((prev) =>
           prev.map((notif) =>
-            notif._id === id ? { ...notif, read: true } : notif,
+            notif._id === id ? { ...notif, isRead: true } : notif,
           ),
         );
         // Refresh unread count
@@ -88,7 +113,7 @@ export default function Navbar({ onMenuClick }) {
       if (res.success) {
         // Update local state
         setNotifications((prev) =>
-          prev.map((notif) => ({ ...notif, read: true })),
+          prev.map((notif) => ({ ...notif, isRead: true })),
         );
         setUnreadCount(0);
       }
@@ -113,8 +138,33 @@ export default function Navbar({ onMenuClick }) {
 
   // Show toast notification
   const showNotificationToast = (notification) => {
-    // Play sound
-    notificationSoundService.play();
+    console.log(
+      "🔔 showNotificationToast called for type:",
+      notification?.type,
+    );
+
+    // Play sound for all notifications
+    // play() method handles initialization internally
+    notificationSoundService.play().catch((err) => {
+      console.warn("⚠️ Sound playback failed:", err);
+    });
+
+    if (completionNotificationTypes.includes(notification?.type)) {
+      setCompletionNotification(notification);
+      setShowCompletionModal(true);
+      return;
+    }
+
+    if (bookingRequestNotificationTypes.includes(notification?.type)) {
+      setBookingRequestNotification(notification);
+      setShowBookingRequestModal(true);
+      return;
+    }
+
+    if (notification?.type === "job_completed_confirmed") {
+      setJobCompletedNotification(notification);
+      return;
+    }
 
     // Show toast
     toast.custom(
@@ -136,35 +186,32 @@ export default function Navbar({ onMenuClick }) {
       },
     );
   };
-  // Initialize socket connection
+  // Initialize socket connection — Fix 2.4/2.5: use shared socket manager
   useEffect(() => {
     // Initialize sound service
     notificationSoundService.init();
 
-    const token = localStorage.getItem("token");
+    // Fix 2.5: Read token from Zustand store instead of localStorage
+    const token = useAuthStore.getState().token;
     if (!token) return;
 
     // Track seen notification IDs to prevent duplicate toasts
     const seenNotifications = new Set();
 
-    const newSocket = io(
-      import.meta.env.VITE_WS_URL || "http://localhost:3000",
-      {
-        auth: { token },
-        transports: ["websocket", "polling"],
-      },
-    );
+    // Fix 2.4: Use shared socket instead of creating a new one
+    const newSocket = getSharedSocket();
+    if (!newSocket) return;
 
-    newSocket.on("connect", () => {
+    const onConnect = () => {
       console.log("✅ User socket connected");
-    });
+    };
 
-    newSocket.on("connect_error", (error) => {
+    const onConnectError = (error) => {
       console.error("❌ Socket connection error:", error);
-    });
+    };
 
     // Listen for new notifications via socket
-    newSocket.on("new_notification", (notification) => {
+    const onNewNotification = (notification) => {
       const notifId = notification._id || notification.id;
 
       // Skip if we already showed a toast for this notification
@@ -179,14 +226,21 @@ export default function Navbar({ onMenuClick }) {
       setUnreadCount((prev) => prev + 1);
       // Show toast with sound
       showNotificationToast(notification);
-    });
+    };
+
+    newSocket.on("connect", onConnect);
+    newSocket.on("connect_error", onConnectError);
+    newSocket.on("new_notification", onNewNotification);
 
     setSocket(newSocket);
 
-    // Cleanup: disconnect socket on unmount to prevent duplicates
+    // Cleanup: remove listeners and release shared socket
     return () => {
       userLocationService.stopTracking();
-      newSocket.disconnect();
+      newSocket.off("connect", onConnect);
+      newSocket.off("connect_error", onConnectError);
+      newSocket.off("new_notification", onNewNotification);
+      releaseSocket();
     };
   }, []);
 
@@ -203,9 +257,197 @@ export default function Navbar({ onMenuClick }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Unlock audio on first user interaction to enable autoplay
+  useEffect(() => {
+    const handleUserInteraction = async () => {
+      console.log("👆 User interaction detected - unlocking audio");
+      await notificationSoundService.unlock();
+      // Remove listener after first interaction
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
+
+    document.addEventListener("click", handleUserInteraction);
+    document.addEventListener("touchstart", handleUserInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
+  }, []);
+
   const handleNotificationClick = () => {
     setShowNotifications(true);
     fetchNotifications();
+  };
+
+  const handleBookingCompletedNotification = (notification) => {
+    setCompletionNotification(notification);
+    setShowCompletionModal(true);
+  };
+
+  const handleBookingRequestNotification = async (notification) => {
+    if (!notification) return;
+
+    setShowBookingRequestModal(false);
+    setBookingRequestNotification(null);
+
+    try {
+      const serviceType = notification.data?.serviceType;
+      const modeOfDelivery = notification.data?.modeOfDelivery;
+
+      const bookingResponse = await getAllBookings({
+        status: "awaiting_provider_acceptance",
+        serviceType: serviceType
+          ? String(serviceType).trim().toLowerCase()
+          : undefined,
+        modeOfDelivery: modeOfDelivery
+          ? String(modeOfDelivery).trim()
+          : undefined,
+        page: 1,
+        limit: 20,
+      });
+
+      const bookingData = bookingResponse.data || bookingResponse;
+
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          fetchedAlerts: bookingData,
+          tab: "alert",
+        },
+      });
+    } catch (err) {
+      console.error("Error preparing booking request navigation:", err);
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          tab: "alert",
+        },
+      });
+    }
+  };
+
+  const completionBookingId =
+    completionNotification?.data?.bookingId ||
+    completionNotification?.data?.booking?._id ||
+    completionNotification?.bookingId ||
+    completionNotification?.data?._id ||
+    null;
+
+  const completionProviderName =
+    completionNotification?.data?.providerName ||
+    completionNotification?.data?.provider?.fullName ||
+    null;
+
+  const handleAcceptCompletion = () => {
+    if (!completionBookingId) {
+      toast.error("Booking details are unavailable for this notification.");
+      return;
+    }
+
+    setShowCompletionModal(false);
+    setShowDisputeModal(false);
+    setReviewApiError(null);
+    setShowReviewModal(true);
+  };
+
+  const handleDisputeCompletion = () => {
+    if (!completionBookingId) {
+      toast.error("Booking details are unavailable for this notification.");
+      return;
+    }
+
+    setShowCompletionModal(false);
+    setShowReviewModal(false);
+    setDisputeApiError(null);
+    setShowDisputeModal(true);
+  };
+
+  const handleReviewSubmit = async ({ score, review, tipAmount }) => {
+    if (!completionBookingId) {
+      setReviewApiError("Booking details are unavailable.");
+      return;
+    }
+
+    setReviewLoading(true);
+    setReviewApiError(null);
+
+    try {
+      const payload = { score, review };
+      const tipIsEmpty =
+        tipAmount === undefined ||
+        tipAmount === null ||
+        tipAmount === "" ||
+        tipAmount === 0;
+      if (!tipIsEmpty) payload.tipAmount = tipAmount;
+
+      const response = await acceptCompletion(completionBookingId, payload);
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion accepted successfully";
+      toast.success(successMsg);
+      setShowReviewModal(false);
+      setCompletionNotification(null);
+    } catch (err) {
+      console.error("Failed to submit completion review:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+      if (status === 400)
+        message =
+          "Invalid rating score or tip amount. Please check your inputs.";
+      else if (status === 401) message = "Unauthorized. Please log in again.";
+      else if (status === 409) message = "Job completion already accepted.";
+
+      setReviewApiError(message);
+      toast.error(message);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const handleDisputeSubmit = async ({ reason }) => {
+    if (!completionBookingId) {
+      setDisputeApiError("Booking details are unavailable.");
+      return;
+    }
+
+    setDisputeLoading(true);
+    setDisputeApiError(null);
+
+    try {
+      const response = await disputeCompletion(completionBookingId, { reason });
+      const successMsg =
+        response?.message ||
+        response?.data?.message ||
+        "Job completion disputed successfully";
+      toast.success(successMsg);
+      setShowDisputeModal(false);
+      setCompletionNotification(null);
+    } catch (err) {
+      console.error("Failed to dispute completion:", err);
+      const status = err.response?.status;
+      let message = "Something went wrong. Please try again later.";
+      if (status === 400) {
+        message = "Please provide a valid dispute reason.";
+      } else if (status === 401) {
+        message = "Unauthorized. Please log in again.";
+      } else if (status === 409) {
+        message = "This job completion has already been processed.";
+      } else {
+        message =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          message;
+      }
+
+      setDisputeApiError(message);
+      toast.error(message);
+    } finally {
+      setDisputeLoading(false);
+    }
   };
 
   const startLocationTracking = async () => {
@@ -283,10 +525,12 @@ export default function Navbar({ onMenuClick }) {
   return (
     <>
       <Toaster position="top-right" />
-<header className="flex items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-4 sticky top-0 z-50 shadow-sm">
-
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 sm:h-20 items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-4 shadow-sm">
         {/* Mobile Menu Button (toggles sidebar) */}
-        <button className="md:hidden p-2 text-gray-600 hover:text-gray-800 mr-0.5" onClick={onMenuClick}>
+        <button
+          className="md:hidden p-2 text-gray-600 hover:text-gray-800 mr-0.5"
+          onClick={onMenuClick}
+        >
           <Menu size={26} className="text-gray-600" />
         </button>
 
@@ -295,7 +539,11 @@ export default function Navbar({ onMenuClick }) {
           className="text-2xl md:text-3xl font-bold text-[#005823]"
           onClick={() => navigate("/dashboard")}
         >
-          <img src="/logo.jpg" alt="SabiGuy Logo" className="h-6 sm:h-8 w-auto" />
+          <img
+            src="/logo.jpg"
+            alt="SabiGuy Logo"
+            className="h-6 sm:h-8 w-auto"
+          />
         </button>
 
         {/* Desktop Search */}
@@ -319,7 +567,7 @@ export default function Navbar({ onMenuClick }) {
         {/* Right Icons */}
         <div className="flex items-center space-x-4">
           {/* Location Indicator (user) */}
-          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+          {/* <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
             {locationEnabled ? (
               <>
                 <MapPin size={12} className="text-green-500 animate-pulse" />
@@ -335,7 +583,7 @@ export default function Navbar({ onMenuClick }) {
                 </span>
               </>
             )}
-          </div>
+          </div> */}
 
           {/* Test Button (remove after debugging) */}
           {/* <button
@@ -346,7 +594,11 @@ export default function Navbar({ onMenuClick }) {
           </button> */}
 
           {/* Bell */}
-          <button id="notification-bell" onClick={handleNotificationClick} className="relative">
+          <button
+            id="notification-bell"
+            onClick={handleNotificationClick}
+            className="relative"
+          >
             <Bell size={24} />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[20px] h-4 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1">
@@ -368,9 +620,11 @@ export default function Navbar({ onMenuClick }) {
                 className="w-8 h-8 rounded-full border"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full border bg-[#8BC53F] flex items-center justify-center text-white font-semibold text-sm">
-                {user?.data?.fullName?.[0] || user?.data?.name?.[0] || "U"}
-              </div>
+              <img
+                src="/avatar.png"
+                alt="Profile"
+                className="w-8 h-8 rounded-full border"
+              />
             )}
           </button>
         </div>
@@ -398,6 +652,57 @@ export default function Navbar({ onMenuClick }) {
           onMarkAsRead={markAsRead}
           onMarkAllAsRead={markAllAsRead}
           onDelete={deleteNotification}
+          onBookingCompleted={handleBookingCompletedNotification}
+        />
+        <NotificationCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => {
+            setShowCompletionModal(false);
+            setCompletionNotification(null);
+          }}
+          onAcceptCompletion={handleAcceptCompletion}
+          onDisputeCompletion={handleDisputeCompletion}
+          providerName={completionProviderName}
+          notification={completionNotification}
+        />
+        <BookingRequestModal
+          isOpen={showBookingRequestModal}
+          onClose={() => {
+            setShowBookingRequestModal(false);
+            setBookingRequestNotification(null);
+          }}
+          onViewBooking={() =>
+            handleBookingRequestNotification(bookingRequestNotification)
+          }
+          notification={bookingRequestNotification}
+        />
+        <ActivityDetailsModal
+          isOpen={!!jobCompletedNotification}
+          onClose={() => setJobCompletedNotification(null)}
+          notification={jobCompletedNotification}
+        />
+
+        <DisputeCompletionModal
+          isOpen={showDisputeModal}
+          onClose={() => {
+            setShowDisputeModal(false);
+            setDisputeApiError(null);
+          }}
+          onSubmit={handleDisputeSubmit}
+          loading={disputeLoading}
+          apiError={disputeApiError}
+          providerName={completionProviderName}
+        />
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => {
+            setShowReviewModal(false);
+            setReviewApiError(null);
+          }}
+          onSubmit={handleReviewSubmit}
+          loading={reviewLoading}
+          apiError={reviewApiError}
+          providerName={completionProviderName}
         />
       </header>
     </>

@@ -1,7 +1,8 @@
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
+import LocationAutocomplete from "../../../../components/LocationAutocomplete";
 import { useState, useEffect } from "react";
-import { Bike } from "lucide-react";
+import { Bike, Car } from "lucide-react";
 import Button from "../../../../components/button";
 import RequestCard from "../../../../components/dashboard/RequestsCard";
 import ServiceDetailsModal from "../ServiceDetailsModal";
@@ -14,41 +15,31 @@ import {
   getBookingsDetails,
 } from "../../../../api/bookings";
 import { allowSystem } from "../../../../api/bookings";
+import { getPromoEligibility } from "../../../../api/payment";
 import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
-import { useAuthStore } from "../../../../stores/auth.store";
 
-const vehicleOptions = [
-  {
-    value: "Bike",
-    label: "Bike Delivery",
-    icon: <Bike color="black" size={30} />,
-    // eta: "15 min",
-    capacity: 2,
-    description: "Best for small packages",
-  },
-  {
-    value: "Car",
-    label: "Car Delivery",
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className="w-7 h-7"
-        stroke="currentColor"
-        strokeWidth={1.6}
-      >
-        <rect x="2" y="9" width="20" height="9" rx="2" />
-        <path d="M5 9l2-4h10l2 4" />
-        <circle cx="7" cy="18" r="1.5" fill="currentColor" stroke="none" />
-        <circle cx="17" cy="18" r="1.5" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-    // eta: "21 min",
-    capacity: 4,
-    description: "Medium sized delivery",
-  },
-];
+const vehicleOptions = (service) => {
+  const isRide = service === "book a ride";
+  return [
+    {
+      value: "Bike",
+      label: isRide ? "Bike Rider" : "Bike Delivery",
+      icon: <Bike color="black" size={30} />,
+      capacity: 2,
+      description: isRide ? "Quick rides for one" : "Best for small packages",
+    },
+    {
+      value: "Car",
+      label: isRide ? "Car Rider" : "Car Delivery",
+      icon: <Car color="black" size={30} />,
+      capacity: 4,
+      description: isRide
+        ? "Comfortable rides for groups"
+        : "Medium sized delivery",
+    },
+  ];
+};
 
 export default function Bookings() {
   const [activeTab, setActiveTab] = useState("request");
@@ -62,8 +53,10 @@ export default function Bookings() {
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
+  const [promoEligibility, setPromoEligibility] = useState(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
   const setBooking = useBookingStore((state) => state.setBooking);
-  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -86,6 +79,25 @@ export default function Bookings() {
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    const fetchPromoEligibility = async () => {
+      setPromoLoading(true);
+      setPromoError("");
+
+      try {
+        const res = await getPromoEligibility();
+        setPromoEligibility(res?.data?.promo || res?.promo || null);
+      } catch (err) {
+        console.error("Failed to fetch promo eligibility:", err);
+        setPromoError("Unable to load discount eligibility right now.");
+      } finally {
+        setPromoLoading(false);
+      }
+    };
+
+    fetchPromoEligibility();
+  }, []);
+
   const location = useLocation();
   const preselectedService =
     new URLSearchParams(location.search).get("service") ?? "";
@@ -93,18 +105,47 @@ export default function Bookings() {
     localStorage.getItem("currentLocationAddress") || "";
   const hasCurrentLocation = !!currentLocationValue;
 
+  const geocodeAddress = async (address) => {
+    if (!address || !window.google?.maps?.Geocoder) return null;
+
+    const geocoder = new window.google.maps.Geocoder();
+    const result = await new Promise((resolve, reject) => {
+      geocoder.geocode(
+        { address, componentRestrictions: { country: "NG" } },
+        (results, status) => {
+          if (status === "OK" && results?.[0]) {
+            resolve(results[0]);
+          } else {
+            reject(new Error(`Geocoding failed: ${status}`));
+          }
+        },
+      );
+    });
+
+    const location = result?.geometry?.location;
+    return {
+      latitude: typeof location?.lat === "function" ? location.lat() : "",
+      longitude: typeof location?.lng === "function" ? location.lng() : "",
+    };
+  };
+
   const formik = useFormik({
     initialValues: {
       jobTitle: "transport",
       service: preselectedService,
       pickupAddress: "",
+      pickupLatitude: "",
+      pickupLongitude: "",
       dropoffAddress: "",
+      dropoffLatitude: "",
+      dropoffLongitude: "",
       serviceType: "",
       scheduleDate: "",
       scheduleTime: "",
       // vehicle: "",
       modeOfDelivery: "",
       autoAcceptNearest: false,
+      applyRideDiscount: false,
     },
     validationSchema: Yup.object().shape({
       jobTitle: Yup.string().required("Work category is required"),
@@ -132,19 +173,47 @@ export default function Bookings() {
     }),
     onSubmit: async (values) => {
       console.log("Submitting booking with values:", values);
-      setLoading(true);
       setSuccessMessage("");
       setErrorMessage("");
 
+      setLoading(true);
+
       try {
+        const pickupCoords =
+          values.pickupLatitude && values.pickupLongitude
+            ? {
+                address: values.pickupAddress,
+                latitude: values.pickupLatitude,
+                longitude: values.pickupLongitude,
+              }
+            : await geocodeAddress(values.pickupAddress);
+
+        const dropoffCoords =
+          values.dropoffLatitude && values.dropoffLongitude
+            ? {
+                address: values.dropoffAddress,
+                latitude: values.dropoffLatitude,
+                longitude: values.dropoffLongitude,
+              }
+            : await geocodeAddress(values.dropoffAddress);
+
         const payload = {
           serviceType: values.jobTitle,
           subCategory: values.service,
           pickupAddress: values.pickupAddress,
+          pickupLatitude:
+            pickupCoords?.latitude || values.pickupLatitude || undefined,
+          pickupLongitude:
+            pickupCoords?.longitude || values.pickupLongitude || undefined,
           dropoffAddress: values.dropoffAddress,
+          dropoffLatitude:
+            dropoffCoords?.latitude || values.dropoffLatitude || undefined,
+          dropoffLongitude:
+            dropoffCoords?.longitude || values.dropoffLongitude || undefined,
           scheduleType: values.serviceType,
           // vehicle: values.modeOfDelivery,
           modeOfDelivery: values.modeOfDelivery,
+          applyRideDiscount: values.applyRideDiscount,
           scheduleDate:
             values.serviceType === "scheduled"
               ? `${values.scheduleDate}T${values.scheduleTime}:00`
@@ -248,7 +317,7 @@ export default function Bookings() {
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
     return (
-        <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
+      <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (
           <button
             key={filter}
@@ -263,7 +332,6 @@ export default function Bookings() {
           </button>
         ))}
       </div>
-     
     );
   };
 
@@ -296,7 +364,6 @@ export default function Bookings() {
 
     orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
     fullOrderId: booking._id || "",
-    providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     fullProviderId: booking.providerId?._id || "",
     price: booking.calculatedPrice || booking.agreedPrice || 0,
     totalAmount: booking.totalAmount || 0,
@@ -308,8 +375,8 @@ export default function Bookings() {
       ? `${booking.distance.value} ${booking.distance.unit}`
       : "—",
 
-    description: booking.description || null,
-    notes: null,
+    // description: booking.description || null,
+    notes: booking.pickupNote,
     modeOfDelivery: booking.modeOfDelivery || "—",
 
     scheduledDate: booking.createdAt
@@ -339,25 +406,24 @@ export default function Bookings() {
       if (statusFilter === "all") return true;
       if (statusFilter === "active")
         return [
+          "in progress",
           "enroute to pickup",
-          "paid escrow",
-          "provider selected",
-          "completed",
           "arrived at pickup",
           "enroute to dropoff",
           "arrived at dropoff",
+          "completed",
         ].includes(status);
       if (statusFilter === "pending")
         return [
-          "pending providers",
           "payment pending",
-          // "awaiting provider acceptance",
+          "awaiting provider acceptance",
+          "provider selected",
         ].includes(status);
       if (statusFilter === "completed")
         return [
           // "completed",
-          // "funds_released",
-          "user_accepted_completion",
+          "funds released",
+          "user accepted completion",
         ].includes(status);
       return false;
     });
@@ -399,8 +465,41 @@ export default function Bookings() {
     setPickupMode(mode);
     if (mode === "current") {
       formik.setFieldValue("pickupAddress", currentLocationValue);
+      formik.setFieldValue("pickupLatitude", "");
+      formik.setFieldValue("pickupLongitude", "");
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            formik.setFieldValue("pickupLatitude", position.coords.latitude);
+            formik.setFieldValue("pickupLongitude", position.coords.longitude);
+          },
+          (error) => {
+            console.warn("Geolocation failed:", error);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        );
+      }
     }
   };
+
+  // const promoTitle =
+  //   promoLoading
+  //     ? "Checking discount..."
+  //     : promoEligibility?.eligible && promoEligibility?.remaining > 0
+  //       ? `${promoEligibility.percent || 0}% first ride discount available`
+  //       : promoEligibility?.isNewUser
+  //         ? "Ride discount available"
+  //         : "Ride discount unavailable";
+
+  const promoDescription = promoLoading
+    ? "We’re checking your promo status."
+    : promoEligibility?.eligible && promoEligibility?.canApplyAtPayment
+      ? `You have ${promoEligibility.remaining || 0} promo use(s) left.`
+      : promoEligibility?.eligible
+        ? "You qualify for a promo, and it can be applied at payment."
+        : promoError ||
+          "You are not currently eligible for the first ride discount.";
 
   return (
     <DashboardLayout>
@@ -424,7 +523,7 @@ export default function Bookings() {
             }`}
           >
             <span className="flex items-center justify-center gap-2">
-              Request a service
+              Request A Service
             </span>
             {activeTab === "request" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
@@ -440,7 +539,7 @@ export default function Bookings() {
             }`}
           >
             <span className="flex items-center justify-center gap-2">
-              My requests
+              My Requests
             </span>
             {activeTab === "requests" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#005823]" />
@@ -530,17 +629,43 @@ export default function Bookings() {
                     Enter manually
                   </button>
                 </div>
-                <InputField
-                  name="pickupAddress"
-                  label="Pickup location"
-                  placeholder="24 Palm Avenue, Lagos"
-                  value={formik.values.pickupAddress}
-                  onChange={
-                    pickupMode === "manual" ? formik.handleChange : undefined
-                  }
-                  onBlur={formik.handleBlur}
-                  readOnly={pickupMode === "current"}
-                />
+                {pickupMode === "current" ? (
+                  <InputField
+                    name="pickupAddress"
+                    label="Pickup location"
+                    placeholder="24 Palm Avenue, Lagos"
+                    value={formik.values.pickupAddress}
+                    onBlur={formik.handleBlur}
+                    readOnly
+                  />
+                ) : (
+                  <LocationAutocomplete
+                    name="pickupAddress"
+                    label="Pickup location"
+                    placeholder="24 Palm Avenue, Lagos"
+                    value={formik.values.pickupAddress}
+                    onChange={(value) => {
+                      formik.setFieldValue("pickupAddress", value);
+                      formik.setFieldValue("pickupLatitude", "");
+                      formik.setFieldValue("pickupLongitude", "");
+                    }}
+                    onSelect={(location) => {
+                      formik.setFieldValue(
+                        "pickupAddress",
+                        location.displayAddress || location.address || "",
+                      );
+                      formik.setFieldValue(
+                        "pickupLatitude",
+                        location.latitude || "",
+                      );
+                      formik.setFieldValue(
+                        "pickupLongitude",
+                        location.longitude || "",
+                      );
+                    }}
+                    onBlur={() => formik.setFieldTouched("pickupAddress", true)}
+                  />
+                )}
                 {formik.touched.pickupAddress &&
                   formik.errors.pickupAddress && (
                     <p className="mt-1 text-sm text-red-600">
@@ -549,13 +674,31 @@ export default function Bookings() {
                   )}
               </div>
               <div>
-                <InputField
+                <LocationAutocomplete
                   name="dropoffAddress"
                   label="Dropoff location"
                   placeholder="24 Palm Avenue, Lagos"
                   value={formik.values.dropoffAddress}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+                  onChange={(value) => {
+                    formik.setFieldValue("dropoffAddress", value);
+                    formik.setFieldValue("dropoffLatitude", "");
+                    formik.setFieldValue("dropoffLongitude", "");
+                  }}
+                  onSelect={(location) => {
+                    formik.setFieldValue(
+                      "dropoffAddress",
+                      location.displayAddress || location.address || "",
+                    );
+                    formik.setFieldValue(
+                      "dropoffLatitude",
+                      location.latitude || "",
+                    );
+                    formik.setFieldValue(
+                      "dropoffLongitude",
+                      location.longitude || "",
+                    );
+                  }}
+                  onBlur={() => formik.setFieldTouched("dropoffAddress", true)}
                 />
                 {formik.touched.dropoffAddress &&
                   formik.errors.dropoffAddress && (
@@ -646,7 +789,7 @@ export default function Bookings() {
                 Choose Vehicle
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {vehicleOptions.map((vehicle) => {
+                {vehicleOptions(formik.values.service).map((vehicle) => {
                   const isSelected =
                     formik.values.modeOfDelivery === vehicle.value;
                   return (
@@ -703,7 +846,7 @@ export default function Bookings() {
 
             {/* Auto-accept checkbox */}
             <div id="booking-auto-accept" className="flex items-center gap-3">
-              <input
+              {/* <input
                 type="checkbox"
                 id="auto-accept"
                 name="autoAcceptNearest"
@@ -719,16 +862,16 @@ export default function Bookings() {
                 }}
                 className="w-4 h-4 rounded cursor-pointer accent-[#005823]"
               />
-              <label
+              {/* <label
                 htmlFor="auto-accept"
                 className="text-sm text-gray-500 cursor-pointer select-none"
               >
                 Automatically accept the nearest provider
-              </label>
+              </label> */}
             </div>
             {formik.values.autoAcceptNearest && (
               <div className="flex items-start gap-2 p-3 bg-[#005823] border border-[#005823] rounded-lg">
-                <svg
+                {/* <svg
                   className="w-5 h-5 text-white mt-0.5 flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
@@ -738,13 +881,83 @@ export default function Bookings() {
                     d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
                     clipRule="evenodd"
                   />
-                </svg>
+                </svg> */}
                 <p className="text-sm text-white">
                   The system will automatically assign the nearest available
                   provider to your request.
                 </p>
               </div>
             )}
+            {/* <div
+              id="booking-first-ride-discount"
+              className="rounded-2xl border border-[#005823]/10 bg-gradient-to-r from-[#F5FBF7] to-white p-4 sm:p-5 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#231F20]">
+                    {promoTitle}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#231F2080]">
+                    {promoDescription}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={formik.values.applyRideDiscount}
+                  disabled={
+                    !promoEligibility?.eligible ||
+                    !promoEligibility?.canApplyAtPayment
+                  }
+                  onClick={() =>
+                    formik.setFieldValue(
+                      "applyRideDiscount",
+                      !formik.values.applyRideDiscount,
+                    )
+                  }
+                  className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full border transition-colors duration-300 ${
+                    formik.values.applyRideDiscount &&
+                    promoEligibility?.eligible &&
+                    promoEligibility?.canApplyAtPayment
+                      ? "border-[#005823] bg-[#005823]"
+                      : "border-gray-300 bg-gray-200"
+                  } ${
+                    !promoEligibility?.eligible ||
+                    !promoEligibility?.canApplyAtPayment
+                      ? "cursor-not-allowed opacity-60"
+                      : ""
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                      formik.values.applyRideDiscount &&
+                      promoEligibility?.eligible &&
+                      promoEligibility?.canApplyAtPayment
+                        ? "translate-x-7"
+                        : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3 text-sm">
+                <span className="text-xs font-medium text-[#005823] bg-white border border-[#005823]/10 px-3 py-1.5 rounded-full">
+                  {promoEligibility?.eligible &&
+                  promoEligibility?.canApplyAtPayment
+                    ? formik.values.applyRideDiscount
+                      ? "Enabled"
+                      : "Available"
+                    : "Unavailable"}
+                </span>
+                <span className="text-[#231F2080]">
+                  {promoEligibility?.eligible &&
+                  promoEligibility?.canApplyAtPayment
+                    ? "Toggle this on to apply the promo to this booking."
+                    : "The promo cannot be applied for this account right now."}
+                </span>
+              </div>
+             </div> */}
             <div className="flex flex-col">
               <Button
                 variant="secondary"

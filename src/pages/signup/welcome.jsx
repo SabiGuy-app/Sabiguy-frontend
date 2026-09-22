@@ -3,15 +3,18 @@ import SignupNavbar from "../../components/layouts/navbar";
 import { FaArrowRight, FaSearch, FaWrench } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import AccountTypeModal from "./ServiceProvider/AccountSetup/AccountTypeModal";
 
 export default function Welcome() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="h-screen">
       <SignupNavbar />
       <AuthLayout
-        title="Welcome Back!"
-        description="Join us to discover reliable professionals
-anytime, anywhere."
+        title="Get Help. Get It Done."
+        description="Reliable professionals at your fingertips — anytime, anywhere."
       >
         <motion.div
           key="step-one"
@@ -21,12 +24,11 @@ anytime, anywhere."
           transition={{ duration: 0.3 }}
         >
           <h2 className="text-2xl mt-4 font-semibold text-center mb-1">
-            Welcome to SabiGuy
+            Join SabiGuy Now
           </h2>
           <p className="text-gray-500 text-center mb-6">
-            How do you want to use SabiGuy?
+            Choose how you want to get started.
           </p>
-
           <div className="p-6 flex flex-col items-center justify-center space-y-6">
             {/* Card 1 */}
             <Link to="/signup" className="block w-full max-w-md">
@@ -38,44 +40,52 @@ anytime, anywhere."
 
                 {/* Text */}
                 <h2 className="text-xl font-semibold text-gray-800 mb-1">
-                  I need a service
+                  Book a Service Now
                 </h2>
-                <p className="text-gray-600 text-lg">
-                  Find skilled professionals for your needs.
+                <p className="text-gray-600">
+                  Stop waiting. Find trusted drivers and logistics professionals
+                  ready to move you — right now.
                 </p>
-                <p className="text-gray-600 text-sm">
+                {/* <p className="text-gray-600 text-sm">
                   Connect with plumbers, electricians, tutors, tech experts and
                   more.
-                </p>
+                </p> */}
               </div>
             </Link>
 
             {/* Card 2 */}
-            <Link
+            <div
+              onClick={() => setIsOpen(true)}
+              className="bg-white border-2 border-gray-400 rounded-xl shadow-lg p-6 transition hover:shadow-xl hover:border-[#FF791A] cursor-pointer text-center"
+            >
+              {/* Icon Circle */}
+              <div className="w-16 h-16 mx-auto rounded-full bg-orange-100 flex items-center justify-center mb-4">
+                <FaWrench className="text-[#FF791A]" size={28} />
+              </div>
+
+              {/* Text */}
+              <h2 className="text-xl font-semibold text-gray-800 mb-1">
+                Start Earning Today
+              </h2>
+              <p className="text-gray-600">
+                Turn your skills into income. Get Hired for jobs in your area —
+                your next client is waiting.
+              </p>
+              {/* <p className="text-gray-600 text-sm">
+                  Showcase your skills and get hired for jobs in your area.
+                </p> */}
+            </div>
+            <AccountTypeModal isOpen={isOpen} setIsOpen={setIsOpen} />
+
+            {/* <Link
               to="/service-provider/signup"
               className="block w-full max-w-md"
             >
-              <div className="bg-white border-2 border-gray-400 rounded-xl shadow-lg p-6 transition hover:shadow-xl hover:border-[#FF791A] cursor-pointer text-center">
-                {/* Icon Circle */}
-                <div className="w-16 h-16 mx-auto rounded-full bg-orange-100 flex items-center justify-center mb-4">
-                  <FaWrench className="text-[#FF791A]" size={28} />
-                </div>
-
-                {/* Text */}
-                <h2 className="text-xl font-semibold text-gray-800 mb-1">
-                  I provide a service
-                </h2>
-                <p className="text-gray-600 text-lg">
-                  Grow your business and find new clients.
-                </p>
-                <p className="text-gray-600 text-sm">
-                  Showcase your skills and get hired for jobs in your area.
-                </p>
-              </div>
-            </Link>
+             
+            </Link> */}
           </div>
 
-          <div className="text-center text-sm mt-4">
+          <div className="text-center text-sm mt-4 mb-5">
             Already have an account?
             <div className="group inline-flex">
               {/* Arrow icon that appears on hover */}

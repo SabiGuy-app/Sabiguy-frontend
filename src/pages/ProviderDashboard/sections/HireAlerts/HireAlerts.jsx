@@ -6,9 +6,13 @@ import AlertsCard from "../../../../components/provider-dashboard/AlertsCard";
 import AlertDetailsModal from "./AlertDetails";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
-import { getProviderBookings } from "../../../../api/provider";
+import {
+  cancelBooking as cancelProviderBooking,
+  getProviderBookings,
+} from "../../../../api/provider";
 import { getAllBookings, acceptBookings } from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
+import ProviderCancellationModal from "../../../../components/provider-dashboard/ProviderCancellationModal";
 
 export default function HireAlerts() {
   const navigate = useNavigate();
@@ -20,6 +24,8 @@ export default function HireAlerts() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [isMarkOpen, setIsMarkOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const [jobs, setJobs] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -128,8 +134,12 @@ export default function HireAlerts() {
           formattedSubCategory ||
           booking.serviceType ||
           "Untitled job",
-        price:
-          booking.agreedPrice || booking.calculatedPrice || booking.budget || 0,
+        BookingPrice:
+          booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || booking.agreedPrice || 0,
+        platformFee:
+          booking?.pricingBreakdown?.originalProviderCommission || booking?.pricing?.fees?.driverCommission || 0,
+        RiderReceives:
+          booking?.driverReceives || booking?.breakdown?.providerReceives || 0,
         calculatedPrice:
           booking.calculatedPrice || booking.agreedPrice || booking.budget || 0,
         agreedPrice:
@@ -245,7 +255,7 @@ export default function HireAlerts() {
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
       pending_customer: "Awaiting Response",
-      user_accepted_completion: "Job Confirmed",
+      waiting_confirmation: "Job Confirmed",
       funds_released: "Funds Released",
       paid_escrow: "Paid Escrow",
       payment_pending: "Payment Pending",
@@ -387,6 +397,34 @@ export default function HireAlerts() {
     fetchBookings();
   };
 
+  const getBookingId = (booking) =>
+    booking?.id || booking?.originalData?._id || booking?._id || "";
+
+  const handleOpenCancel = (job) => {
+    setCancelTarget(job);
+    setIsCancelModalOpen(true);
+  };
+
+  const handleCloseCancel = () => {
+    setIsCancelModalOpen(false);
+    setCancelTarget(null);
+  };
+
+  const handleCancelComplete = () => {
+    handleCloseCancel();
+    fetchBookings();
+  };
+
+  const handleCancelSubmit = async (reason) => {
+    const bookingId = getBookingId(cancelTarget);
+
+    if (!bookingId) {
+      throw new Error("Booking details are unavailable for cancellation.");
+    }
+
+    await cancelProviderBooking(bookingId, reason);
+  };
+
   const handleShowNavigation = (job) => {
     const rawStatus = String(job?.status || "")
       .trim()
@@ -499,6 +537,13 @@ export default function HireAlerts() {
         onRefresh={handleRefresh}
       />
 
+      <ProviderCancellationModal
+        isOpen={isCancelModalOpen}
+        onClose={handleCloseCancel}
+        onSubmit={handleCancelSubmit}
+        onComplete={handleCancelComplete}
+      />
+
       <div className="flex border-b mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           onClick={() => setActiveTab("alert")}
@@ -581,6 +626,7 @@ export default function HireAlerts() {
                   onMarkAsCompleted={handleMark}
                   onShowNavigation={handleShowNavigation}
                   onMessageCustomer={handleMessageCustomer}
+                  onCancel={handleOpenCancel}
                 />
               ))
             ) : (

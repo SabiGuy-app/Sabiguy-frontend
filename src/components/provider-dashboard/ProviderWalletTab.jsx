@@ -340,7 +340,7 @@ export default function ProviderWalletTab() {
       </div>
 
       {/* Platform Fee Notice */}
-      <div className="bg-blue-50 border border-gray-200 rounded-lg p-2">
+      {/* <div className="bg-blue-50 border border-gray-200 rounded-lg p-2">
         <h4 className=" text-sm font-semibold text-gray-900 mb-2">
           Platform service fee
         </h4>
@@ -348,7 +348,7 @@ export default function ProviderWalletTab() {
           Note: A 10% platform fee applies to all completed transactions. For
           example, if you earn ₦10,000, your payout will be ₦9,000.
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }

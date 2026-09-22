@@ -2,6 +2,7 @@ import UploadBox from "../../../../components/uploadBox";
 import AccountSetupLayout from "./layout";
 import { IoIosArrowBack } from "react-icons/io";
 import { useState, useEffect } from "react";
+import { trackEvent } from "../../../../services/analytics";
 
 export default function UploadAutoMobile({ onNext, onBack }) {
 //   const [videos, setVideos] = useState([]);
@@ -54,13 +55,26 @@ export default function UploadAutoMobile({ onNext, onBack }) {
       const data = await res.json();
 
       if (data.success) {
+        trackEvent("kyc_step_completed", {
+          role: "provider",
+          step: "work_visuals",
+          visual_count: pictures.length,
+        });
         onNext?.();
       } else {
+        trackEvent("kyc_step_failed", {
+          role: "provider",
+          step: "work_visuals",
+        });
         console.error(data);
         alert("Failed to save visuals");
       }
     } catch (err) {
       console.error("Save failed:", err);
+      trackEvent("kyc_step_failed", {
+        role: "provider",
+        step: "work_visuals",
+      });
       alert("Something went wrong while saving. Try again.");
     }
   };

@@ -10,8 +10,10 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
-import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
-import Loader from "../../../components/Loader";
+import { useGoogleLogin } from "@react-oauth/google";
+import { trackEvent } from "../../../services/analytics";
+
+const MotionDiv = motion.div;
 
 export default function StepOne({ onNext, email }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -36,14 +38,16 @@ export default function StepOne({ onNext, email }) {
 
     setLoading(true);
     setSuccessMessage("");
+    trackEvent("signup_started", { role: "provider", method: "password" });
+    const effectiveEmail = (email || values.email || "").trim();
+
     try {
-      const effectiveEmail = (email || values.email || "").trim();
       const payload = {
         fullName: values.fullName,
         phoneNumber: values.phoneNumber,
         email: effectiveEmail,
         password: values.password,
-        term: values.term,
+        term: termAccepted,
       };
 
       const response = await axios.post(
@@ -58,8 +62,9 @@ export default function StepOne({ onNext, email }) {
           "Email not verified. OTP sent to email",
         )
       ) {
+        trackEvent("signup_otp_sent", { role: "provider", method: "password" });
         setErrorMessage(
-          "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
+          "Your email is registered but not verified yet, you have however recieved another OTP. You will be redirected to the otp input page in a moment...",
         );
         localStorage.setItem("email", effectiveEmail);
         setTimeout(() => {
@@ -69,6 +74,7 @@ export default function StepOne({ onNext, email }) {
       }
 
       if (response.status === 200 || response.status === 201) {
+        trackEvent("signup_completed", { role: "provider", method: "password" });
         const token = response.data?.token;
         if (token) {
           localStorage.setItem("token", token);
@@ -91,14 +97,20 @@ export default function StepOne({ onNext, email }) {
       if (error.response) {
         const apiMessage = error.response.data?.message;
         if (apiMessage?.startsWith("Email not verified. OTP sent to email")) {
+          trackEvent("signup_otp_sent", { role: "provider", method: "password" });
           setSuccessMessage(
-            "Your email is registered but not verified yet, you have however received another otp. You will be redirected to the otp input page in a moment...",
+            "Your email is registered but not verified yet, you have however received another OTP. You will be redirected to the otp input page in a moment...",
           );
           localStorage.setItem("email", effectiveEmail);
           setTimeout(() => {
             onNext?.({ email: effectiveEmail });
           }, 5000);
         } else {
+          trackEvent("signup_failed", {
+            role: "provider",
+            method: "password",
+            status: error.response.status,
+          });
           setErrorMessage(apiMessage || "An error occurred");
         }
       } else if (error.request) {
@@ -116,6 +128,9 @@ export default function StepOne({ onNext, email }) {
     onSuccess: async (tokenResponse) => {
       try {
         setGoogleLoading(true);
+        setErrorMessage("");
+        setSuccessMessage("");
+        trackEvent("signup_started", { role: "provider", method: "google" });
 
         // Get Google user info
         const userInfo = await fetch(
@@ -145,20 +160,15 @@ export default function StepOne({ onNext, email }) {
         const data = await res.json();
         console.log("Server response:", data);
 
-        if (data?.token) {
-          localStorage.setItem("token", data.token);
-        }
-
         const googleEmail =
           data?.email || data?.newUser?.email || profile?.email || "";
 
         if (
-          data?.message?.startsWith(
-            "Email not verified. OTP sent to email",
-          )
+          data?.message?.startsWith("Email not verified. OTP sent to email")
         ) {
+          trackEvent("signup_otp_sent", { role: "provider", method: "google" });
           setSuccessMessage(
-            "Your email is registered but not verified yet, you have however recieved another otp. You will be redirected to the otp input page in a moment...",
+            "Your email is registered but not verified yet, you have however recieved another OTP. You will be redirected to the otp input page in a moment...",
           );
           localStorage.setItem("email", googleEmail);
           setTimeout(() => {
@@ -168,25 +178,39 @@ export default function StepOne({ onNext, email }) {
           return;
         }
 
-        if (data?.newUser?.email) {
-          localStorage.setItem("google-email", data.newUser.email);
+        if (!res.ok) {
+          trackEvent("signup_failed", { role: "provider", method: "google" });
           setGoogleLoading(false);
-          onNext({ email: data.newUser.email, skipOtp: true });
-        } else if (data.message === "Email already in use") {
-          setGoogleLoading(false);
-          setErrorMessage(data.message);
-        } else {
-          setGoogleLoading(false);
-          setErrorMessage("An error occurred. Please try again.");
+          setErrorMessage(data?.message || "An error occurred. Please try again.");
+          return;
         }
+
+        if (data?.token) {
+          localStorage.setItem("token", data.token);
+        }
+
+        if (!googleEmail) {
+          trackEvent("signup_failed", { role: "provider", method: "google" });
+          setErrorMessage("Google did not return an email address for this account.");
+          setGoogleLoading(false);
+          return;
+        }
+
+        trackEvent("signup_completed", { role: "provider", method: "google" });
+        localStorage.setItem("google-email", googleEmail);
+        localStorage.setItem("email", googleEmail);
+        setGoogleLoading(false);
+        onNext({ email: googleEmail, skipOtp: true });
       } catch (err) {
         console.error(err);
+        trackEvent("signup_failed", { role: "provider", method: "google" });
         setGoogleLoading(false);
         setErrorMessage("Google login failed");
       }
     },
 
     onError: () => {
+      trackEvent("signup_failed", { role: "provider", method: "google" });
       setErrorMessage("Google login failed.");
       setGoogleLoading(false);
     },
@@ -197,11 +221,10 @@ export default function StepOne({ onNext, email }) {
     <div className="h-screen">
       <Navbar />
       <AuthLayout
-        title="Welcome Back!"
-        description="Connect with trusted providers, verified professionals,
-        and manage bookings in real time."
+        title="Let's Get Started!"
+        description="Join us to connect customers with your services anytime, anywhere."
       >
-        <motion.div
+        <MotionDiv
           key="step-one"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -209,9 +232,8 @@ export default function StepOne({ onNext, email }) {
           transition={{ duration: 0.3 }}
         >
           <h2 className="text-2xl font-semibold text-center mt-7 mb-1">
- Please enter your details          </h2>
-          
-
+            Please enter your details{" "}
+          </h2>
           <Formik
             initialValues={{
               fullName: "",
@@ -284,8 +306,9 @@ export default function StepOne({ onNext, email }) {
                     component="span"
                     className="text-[#db3a3a]"
                   />
-                   <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                    Password must be at least 8 characters long and include a letter, number, and special character
+                  <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+                    Password must be at least 8 characters long and include a
+                    letter, number, and special character
                   </p>
                   {showPassword ? (
                     <BsEye
@@ -329,13 +352,27 @@ export default function StepOne({ onNext, email }) {
                       className="text-sm text-gray-600"
                     >
                       I agree to the{" "}
-                      <a href="#" className="text-[#005823BF] font-medium">
+                      <Link
+                        to="/policies/privacy"
+                        className="text-[#005823BF] font-medium"
+                      >
                         Privacy Policy
-                      </a>{" "}
-                      and{" "}
-                      <a href="#" className="text-[#005823BF] font-medium">
-                        Terms of Services
-                      </a>
+                      </Link>
+                      ,{" "}
+                      <Link
+                        to="/policies/terms"
+                        className="text-[#005823BF] font-medium"
+                      >
+                        Terms of Use
+                      </Link>
+                      , and{" "}
+                      <Link
+                        to="/policies"
+                        className="text-[#005823BF] font-medium"
+                      >
+                        related policies
+                      </Link>
+                      .
                     </label>
                   </div>
                   {termError && (
@@ -343,21 +380,20 @@ export default function StepOne({ onNext, email }) {
                   )}
                 </div>
 
-        
-                               <Button
-                                 type="submit"
-                                disabled={
-                                   !(
-                                  values.fullName.trim() &&
-                                  (email || values.email).trim() &&
-                                     values.phoneNumber.trim() &&
-                                     values.password.trim() &&
-                                termAccepted
-                                   )
-                                 }
-                               >
-                                 {loading ? "Loading..." : "Continue"}
-                               </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    !(
+                      values.fullName.trim() &&
+                      (email || values.email).trim() &&
+                      values.phoneNumber.trim() &&
+                      values.password.trim() &&
+                      termAccepted
+                    )
+                  }
+                >
+                  {loading ? "Loading..." : "Continue"}
+                </Button>
 
                 <div className="flex items-center my-4">
                   <div className="flex-grow border-t border-gray-300"></div>
@@ -373,7 +409,9 @@ export default function StepOne({ onNext, email }) {
                 >
                   <img src="/Google.svg" alt="Google" className="w-5 h-5" />
                   <span className="text-gray-700 font-medium">
-                    {googleLoading ? "Just a moment..." : "Continue with Google"}
+                    {googleLoading
+                      ? "Just a moment..."
+                      : "Continue with Google"}
                   </span>
                 </button>
 
@@ -393,7 +431,7 @@ export default function StepOne({ onNext, email }) {
               </form>
             )}
           </Formik>
-        </motion.div>
+        </MotionDiv>
       </AuthLayout>
     </div>
   );
