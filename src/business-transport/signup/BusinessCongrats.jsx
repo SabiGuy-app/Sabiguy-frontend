@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Button from "../../components/button";
 import { useNavigate } from "react-router-dom";
 import { getUserByEmail } from "../../api/auth";
@@ -7,6 +7,11 @@ import { useAuthStore } from "../../stores/auth.store";
 export default function BusinessCongrats() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.removeItem("business-onboarding-draft");
+    localStorage.removeItem("business-service-details-draft");
+  }, []);
 
   const handleGoToDashboard = async () => {
     const token = localStorage.getItem("token");

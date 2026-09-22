@@ -19,7 +19,7 @@ const BUSINESS_STEPS = {
   ACCOUNT_CREATED: 3,
   BUSINESS_INFO: 4,
   VEHICLE_SETUP: 5,
-  CONGRATS: 6,
+  CONGRATS: 7,
 };
 
 const BUSINESS_KYC_LEVEL_TO_STEP = {
@@ -35,6 +35,16 @@ const BUSINESS_SETUP_STEP_BY_CATEGORY = {
 };
 
 const DEFAULT_BUSINESS_SETUP_STEP = AddVehicleForm;
+const BUSINESS_WIZARD_DRAFT_KEY = "business-onboarding-draft";
+
+function readBusinessWizardDraft() {
+  try {
+    const stored = localStorage.getItem(BUSINESS_WIZARD_DRAFT_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
 
 function getStepForBusinessKycLevel(level) {
   const normalized = Number(level);
@@ -43,12 +53,32 @@ function getStepForBusinessKycLevel(level) {
 }
 
 export default function BusinessForm() {
-  const [step, setStep] = useState(BUSINESS_STEPS.CONFIRM_KYC);
-  const [formData, setFormData] = useState({
-    gender: "",
-    city: "",
-    accountType: "",
+  const [step, setStep] = useState(() => {
+    const draft = readBusinessWizardDraft();
+    return Number.isInteger(draft?.step)
+      ? draft.step
+      : BUSINESS_STEPS.CONFIRM_KYC;
   });
+  const [formData, setFormData] = useState(() => {
+    const draft = readBusinessWizardDraft();
+    return {
+      gender: "",
+      city: "",
+      accountType: "",
+      ...(draft?.formData || {}),
+    };
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        BUSINESS_WIZARD_DRAFT_KEY,
+        JSON.stringify({ step, formData }),
+      );
+    } catch {
+      // Ignore storage quota or privacy-mode errors.
+    }
+  }, [step, formData]);
 
   const handleNext = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
