@@ -13,7 +13,6 @@ export function DriverInfoSection({
 }) {
   const isCarDriver = values.vehicleType === "car_driver";
   const isBikeRider = values.vehicleType === "motorbike_rider";
-  const hasVehicleType = isCarDriver || isBikeRider;
 
   return (
     <div className="flex flex-col gap-4">
@@ -89,6 +88,170 @@ export function DriverInfoSection({
           />
         </>
       )}
+    </div>
+  );
+}
+
+// === BEAUTY&PERSONAL CARE INFO SECTION ===
+
+export function BeautyInfoSection({
+  values,
+  handleChange,
+  handleBlur,
+  setFieldValue,
+}) {
+  const availableDays = [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun",
+  ];
+  const servicePlaces = [
+    { value: "customer_address", label: "Customer address" },
+    { value: "walk_in_salon", label: "Walk-in salon" },
+    { value: "my_home_address", label: "My home address" },
+  ];
+
+  const toggleArrayValue = (field, value) => {
+    const currentValues = values?.[field] || [];
+    setFieldValue(
+      field,
+      currentValues.includes(value)
+        ? currentValues.filter((item) => item !== value)
+        : [...currentValues, value],
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-xl font-semibold mb-2">
+        Beauty & Personal Care Information
+      </h2>
+      <p className="text-gray-500 mb-3">
+        Provide your services, availability, and business details.
+      </p>
+
+      <InputField
+        label="Service name"
+        name="serviceName"
+        value={values?.serviceName || ""}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="e.g. Braiding"
+      />
+
+      <InputField
+        label="Years of experience"
+        name="yearsOfExperience"
+        type="number"
+        min="0"
+        value={values?.yearsOfExperience || ""}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="e.g. 5"
+      />
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-[16px] text-[#231F20] font-medium">
+          Available days
+        </legend>
+        <div className="flex flex-wrap gap-3">
+          {availableDays.map((day) => (
+            <label key={day} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={(values?.availableDays || []).includes(day)}
+                onChange={() => toggleArrayValue("availableDays", day)}
+                className="h-4 w-4"
+              />
+              <span>{day}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <InputField
+          label="Business hours start"
+          name="businessHours.start"
+          type="time"
+          value={values?.businessHours?.start || ""}
+          onChange={(event) =>
+            setFieldValue("businessHours.start", event.target.value)
+          }
+          onBlur={handleBlur}
+        />
+        <InputField
+          label="Business hours end"
+          name="businessHours.end"
+          type="time"
+          value={values?.businessHours?.end || ""}
+          onChange={(event) =>
+            setFieldValue("businessHours.end", event.target.value)
+          }
+          onBlur={handleBlur}
+        />
+      </div>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-[16px] text-[#231F20] font-medium">
+          Service place
+        </legend>
+        <div className="flex flex-wrap gap-3">
+          {servicePlaces.map((place) => (
+            <label key={place.value} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={(values?.servicePlace || []).includes(place.value)}
+                onChange={() => toggleArrayValue("servicePlace", place.value)}
+                className="h-4 w-4"
+              />
+              <span>{place.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <InputField
+        label="Business name"
+        name="BusinessName"
+        value={values?.BusinessName || ""}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="Enter your business name"
+      />
+
+      <InputField
+        label="Business address"
+        name="BusinessAddress"
+        value={values?.BusinessAddress || ""}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="Enter your business address"
+      />
+
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor="cacFile"
+          className="text-[16px] text-[#231F20] font-medium"
+        >
+          CAC file
+        </label>
+        <input
+          id="cacFile"
+          name="cacFile"
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          onChange={(event) =>
+            setFieldValue("cacFile", event.target.files?.[0]?.name || "")
+          }
+          onBlur={handleBlur}
+          className="w-full rounded-md border border-gray-400 bg-gray-50 px-5 py-4"
+        />
+      </div>
     </div>
   );
 }
