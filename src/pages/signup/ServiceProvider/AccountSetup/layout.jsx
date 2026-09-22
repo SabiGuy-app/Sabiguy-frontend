@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 
 export default function AccountSetupLayout({ currentStep, children }) {
   const steps = [
-    "Account Type",       
     "Personal Info",
     'Face Capture',
     "Verification",
@@ -39,3 +38,4 @@ export default function AccountSetupLayout({ currentStep, children }) {
   );
 
 }
+// commit 1: Added framer-motion animations to the AccountSetupLayout component for smoother transitions between steps.

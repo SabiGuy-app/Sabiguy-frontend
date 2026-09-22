@@ -1,10 +1,26 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
-import { fleetNavGroups } from "./fleetNavLinks";
-import { formatNaira } from "../utils/format";
+import {
+  LogOut,
+  Home,
+  Book,
+  MessageCircle,
+  ClipboardList,
+  Cog,
+  HelpCircle,
+} from "lucide-react";
+// import { formatNaira } from "../utils/format";
 
-export default function FleetSidebar({ open = false, onClose, wallet = {} }) {
+const links = [
+  { name: "Dashboard", path: "/beauty-provider/dashboard", icon: <Home size={18} /> },
+  { name: "Hire Alerts", path: "/beauty-provider/dashboard/bookings", icon: <Book size={18} /> },
+  { name: "Chat", path: "/beauty-provider/dashboard/chat", icon: <MessageCircle size={18} /> },
+  { name: "Activity", path: "/beauty-provider/dashboard/activity", icon: <ClipboardList size={18} /> },
+  { name: "Settings", path: "/beauty-provider/dashboard/settings", icon: <Cog size={18} /> },
+  { name: "Help", path: "/beauty-provider/dashboard/help", icon: <HelpCircle size={18} /> },
+];
+
+export default function BeautySidebar({ open = false, onClose, wallet = {} }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -58,44 +74,23 @@ export default function FleetSidebar({ open = false, onClose, wallet = {} }) {
           <img src="/logo.jpg" alt="SabiGuy Logo" className="h-10 w-auto" />
         </button>
 
-        <div className="rounded-xl border border-[#88B99E] bg-[#F4FAF7] px-4 py-3">
-          <p className="text-base font-medium text-[#2D2A2B]">
-            Wallet: <span className="font-semibold">{formatNaira(wallet.balance)}</span>
-          </p>
-          <p className="mt-1 text-sm text-[#656263]">
-            Owed to drivers: {formatNaira(wallet.owedToDrivers)}
-          </p>
-        </div>
-
-        <nav className="mt-7 flex-1 space-y-6 overflow-y-auto">
-          {fleetNavGroups.map((group, groupIndex) => (
-            <div key={`${group.section || "primary"}-${groupIndex}`}>
-              {group.section && (
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[#8C898A]">
-                  {group.section}
-                </p>
-              )}
-              <div className="space-y-1.5">
-                {group.items.map((link) => {
-                  const isActive = pathname === link.path;
-                  const Icon = link.icon;
-                  return (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      onClick={() => onClose?.()}
-                      className={`flex items-center gap-4 rounded-lg px-4 py-3 text-base text-[#5F5C5D] hover:text-white hover:bg-[#005823]/80 ${
-                        isActive ? "bg-[#005823] font-medium text-white" : ""
-                      }`}
-                    >
-                      <Icon size={18} />
-                      <span>{link.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+        <nav className="mt-7 flex-1 space-y-1.5 overflow-y-auto">
+          {links.map((link) => {
+            const isActive = pathname === link.path;
+            return (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => onClose?.()}
+                className={`flex items-center gap-4 rounded-lg px-4 py-3 text-base text-[#5F5C5D] hover:text-white hover:bg-[#005823]/80 ${
+                  isActive ? "bg-[#005823] font-medium text-white" : ""
+                }`}
+              >
+                {link.icon}
+                <span>{link.name}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mt-auto border-t pt-4">

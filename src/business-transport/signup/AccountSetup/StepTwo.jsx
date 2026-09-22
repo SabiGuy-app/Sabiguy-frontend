@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
+const VERIFY_OTP_ENDPOINT = "/business/auth/verify-email";
+const RESEND_OTP_ENDPOINT = "/business/auth/resend-otp";
+
 export default function StepTwo({ onNext, email }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
@@ -17,7 +20,7 @@ export default function StepTwo({ onNext, email }) {
   const [canResend, setCanResend] = useState(false);
 
   const inputRefs = useRef([]);
-  const google_email = localStorage.getItem("google-email");
+  const googleEmail = localStorage.getItem("google-email");
 
   // Countdown timer
   useEffect(() => {
@@ -71,25 +74,19 @@ export default function StepTwo({ onNext, email }) {
       setLoading(true);
       setErrorMessage("");
 
-      // Retrieve token from localStorage (saved in StepOne)
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setErrorMessage("No token found. Please register again.");
-        return;
-      }
-
       const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/auth/email`,
-        { otp: fullOtp },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        `${import.meta.env.VITE_BASE_URL}${VERIFY_OTP_ENDPOINT}`,
+        { email: email || googleEmail, otp: fullOtp },
       );
 
       if (response.status === 200 || response.status === 201) {
-        setSuccessMessage("Email verified successfully!");
+        const token = response.data?.token;
+        if (token) {
+          localStorage.setItem("token", token);
+        }
+        setSuccessMessage(
+          response.data?.message || "Email verified successfully!",
+        );
         setTimeout(() => onNext(), 1000);
       } else {
         setErrorMessage("Verification failed. Please try again.");
@@ -110,23 +107,14 @@ export default function StepTwo({ onNext, email }) {
       setErrorMessage("");
       setSuccessMessage("");
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setErrorMessage("No token found. Please register again.");
-        return;
-      }
-
       const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/auth/resend-otp`,
-        { email: email || google_email },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        `${import.meta.env.VITE_BASE_URL}${RESEND_OTP_ENDPOINT}`,
+        { email: email || googleEmail },
       );
       if (response.status === 200 || response.status === 201) {
-        setSuccessMessage("Verification code resent successfully!");
+        setSuccessMessage(
+          response.data?.message || "Verification code resent successfully!",
+        );
         setCountdown(60); // Reset countdown to 10 minutes
         setCanResend(false);
         setOtp(["", "", "", "", "", ""]); // Clear OTP inputs
@@ -143,7 +131,6 @@ export default function StepTwo({ onNext, email }) {
       setResending(false);
     }
   };
-
 
   const handlePaste = (e) => {
     e.preventDefault();
@@ -174,13 +161,11 @@ export default function StepTwo({ onNext, email }) {
     <div className="h-screen">
       <Navbar />
       <AuthLayout
-        title="Let's Get Started!!"
-        // description="Sign up and get up to ₦500 off your rides!"
-
-        description="Join us to discover reliable professionals anytime, anywhere."
+        title="Let's Get Started!"
+        description="Set up your business account to start managing your fleet on SabiGuy."
       >
         <motion.div
-          key="step-two"
+          key="business-step-two"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
@@ -191,7 +176,7 @@ export default function StepTwo({ onNext, email }) {
           </h2>
           <p className="text-gray-500 text-center mb-6">
             We've sent a verification code to your email:{" "}
-            <span className="font-bold">{email || google_email}</span>
+            <span className="font-bold">{email || googleEmail}</span>
           </p>
 
           <div className="flex flex-col gap-4 items-center">

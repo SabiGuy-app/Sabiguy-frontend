@@ -36,12 +36,12 @@ export default function SkillsVerification({ onNext, onBack }) {
   const token = localStorage.getItem("token");
   const email = localStorage.getItem("email");
 
-  const uploadFile = async (file) => {
+  const uploadFile = async (file, folder = "work_visuals") => {
     const formData = new FormData();
     formData.append("file", file);
 
     const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/file/${email}/work_visuals`,
+      `${import.meta.env.VITE_BASE_URL}/file/${email}/${folder}`,
       formData,
       {
         headers: {
@@ -94,22 +94,6 @@ export default function SkillsVerification({ onNext, onBack }) {
         dynamicFields.vehicleName = values.vehicleName;
         dynamicFields.vehicleRegNo = values.vehicleRegNo;
         dynamicFields.vehicleProductionYear = values.vehicleProductionYear;
-      } else if (selectedJobTitle === "domestic") {
-        dynamicFields.fullName = values.fullName;
-        dynamicFields.nationalId = values.nationalId;
-        dynamicFields.referenceContact = values.referenceContact;
-      } else if (selectedJobTitle === "emergency") {
-        dynamicFields.emergencyServiceId = values.emergencyServiceId;
-        dynamicFields.certificationNumber = values.certificationNumber;
-      } else if (selectedJobTitle === "home_repair") {
-        dynamicFields.licenseNumber = values.licenseNumber;
-        dynamicFields.yearsOfExperience = values.yearsOfExperience;
-      } else if (selectedJobTitle === "professional") {
-        dynamicFields.professionalLicense = values.professionalLicense;
-        dynamicFields.organizationName = values.organizationName;
-      } else if (selectedJobTitle === "freelance") {
-        dynamicFields.portfolioUrl = values.portfolioUrl;
-        dynamicFields.freelanceExperience = values.freelanceExperience;
       }
 
       const jobTitle =
@@ -118,23 +102,30 @@ export default function SkillsVerification({ onNext, onBack }) {
       const payload = {
         job: [
           {
-            service: values.title,
-            title: jobTitle,
-            tagLine: values.tagLine,
+            service:
+              selectedJobTitle === "beauty_personal_care"
+                ? "beauty_personal_care"
+                : values.title,
+            ...(selectedJobTitle === "beauty_personal_care"
+              ? {}
+              : { title: jobTitle, tagLine: values.tagLine }),
           },
         ],
-        ...dynamicFields,
-        workVisuals: [
-          {
-            pictures: workPictures.map((p) => p.url),
-          },
-        ],
-
-        service: services.map((s) => ({
-          serviceName: s.name,
-          pricingModel: s.pricingModel,
-          price: s.price,
-        })),
+        ...(selectedJobTitle === "beauty_personal_care"
+          ? {}
+          : {
+              ...dynamicFields,
+              workVisuals: [
+                {
+                  pictures: workPictures.map((p) => p.url),
+                },
+              ],
+              service: services.map((s) => ({
+                serviceName: s.name,
+                pricingModel: s.pricingModel,
+                price: s.price,
+              })),
+            }),
       };
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/provider/job-service`,
@@ -147,6 +138,37 @@ export default function SkillsVerification({ onNext, onBack }) {
       );
 
       if (response.status === 200 || response.status === 201) {
+        if (selectedJobTitle === "beauty_personal_care") {
+          const serviceDetailsPayload = {
+            service: (values.beautyServices || []).map((serviceName) => ({
+              serviceName,
+            })),
+            yearsOfExperience: Number(values.yearsOfExperience),
+            availableDays: values.availableDays,
+            businessHours: values.businessHours,
+            servicePlace: values.servicePlace,
+            workVisuals: [
+              {
+                pictures: values.workPhotos || [],
+                videos: [],
+              },
+            ],
+            businessAddress: values.isRegistered ? values.BusinessAddress : "",
+            businessName: values.isRegistered ? values.BusinessName : "",
+            cacFile: values.isRegistered ? values.cacFile : "",
+          };
+
+          await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/provider/service-details`,
+            serviceDetailsPayload,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+        }
+
         trackEvent("kyc_step_completed", {
           role: "provider",
           step: "skill_verification",
@@ -201,7 +223,7 @@ export default function SkillsVerification({ onNext, onBack }) {
   };
 
   return (
-    <AccountSetupLayout currentStep={3}>
+    <AccountSetupLayout currentStep={2}>
       <div className="mt-4">
         <div
           onClick={onBack}
@@ -220,8 +242,17 @@ export default function SkillsVerification({ onNext, onBack }) {
         <Formik
           initialValues={{
             service: "",
+            beautyServices: [],
+            isRegistered: null,
             title: "",
             tagLine: "",
+            availableDays: [],
+            businessHours: { start: "", end: "" },
+            servicePlace: [],
+            BusinessName: "",
+            BusinessAddress: "",
+            cacFile: "",
+            workPhotos: [],
             // Transport fields
             driverLicenseNumber: "",
             vehicleProductionYear: "",
@@ -303,6 +334,16 @@ export default function SkillsVerification({ onNext, onBack }) {
               if (selectedJobTitle === "freelance") {
                 return values.portfolioUrl && values.freelanceExperience;
               }
+              if (selectedJobTitle === "beauty_personal_care") {
+                return (
+                  values.beautyServices.length > 0 &&
+                  values.yearsOfExperience !== "" &&
+                  values.availableDays.length > 0 &&
+                  values.businessHours.start &&
+                  values.businessHours.end &&
+                  values.servicePlace.length > 0
+                );
+              }
               return false;
             })();
 
@@ -347,10 +388,11 @@ export default function SkillsVerification({ onNext, onBack }) {
                     handleChange={handleChange}
                     handleBlur={handleBlur}
                     setFieldValue={setFieldValue}
+                    uploadFile={uploadFile}
                   />
                 )}
 
-                {selectedJobTitle && (
+                {selectedJobTitle === "transport" && (
                   <div className="flex flex-col gap-4 mt-2">
                     <div className="flex gap-3">
                       <h3 className="text-[16px] font-semibold text-[#231F20] mb-1">
@@ -417,65 +459,71 @@ export default function SkillsVerification({ onNext, onBack }) {
                   </div>
                 )}
 
-                {/* <InputField
-                name="tagLine"
-                label="Tagline"
-                value={values.tagLine}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="e.g Trusted electrician for home and office wiring."
-                italicPlaceholder
-              />
+                {/* <div>
+                  <InputField
+                    name="tagLine"
+                    label="Tagline"
+                    value={values.tagLine}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="e.g Trusted electrician for home and office wiring."
+                    italicPlaceholder
+                  />
 
-              <p className="font-semibold text-xl">
-                Add your Services & Pricing
-              </p>
-              <p>
-                List the services you offer and set fair prices so customers
-                know what to expect.
-              </p>
-              <div className="flex flex-col gap-3 mt-3">
-                {services.map((service, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between border border-gray-300 rounded-lg p-3 shadow-sm bg-white"
-                  >
-                    <div>
-                      <h3 className="font-semibold text-lg">{service.name}</h3>
-                      <p className="text-green-700 font-semibold">
-                        ₦{service.price}
-                        <span className="text-gray-500 font-normal ml-2">
-                          • {service.pricingModelLabel}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-500">
-                      <Pencil
-                        className="w-4 h-4 cursor-pointer hover:text-gray-700"
-                        onClick={() => handleEditService(service, index)}
-                      />
-                      <Trash2
-                        className="w-4 h-4 cursor-pointer hover:text-red-600"
-                        onClick={() => handleDeleteService(index)}
-                      />
-                    </div>
+                  <p className="font-semibold text-xl">
+                    Add your Services & Pricing
+                  </p>
+                  <p>
+                    List the services you offer and set fair prices so customers
+                    know what to expect.
+                  </p>
+                  <div className="flex flex-col gap-3 mt-3">
+                    {services.map((service, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between border border-gray-300 rounded-lg p-3 shadow-sm bg-white"
+                      >
+                        <div>
+                          <h3 className="font-semibold text-lg">
+                            {service.name}
+                          </h3>
+                          <p className="text-green-700 font-semibold">
+                            ₦{service.price}
+                            <span className="text-gray-500 font-normal ml-2">
+                              • {service.pricingModelLabel}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-500">
+                          <Pencil
+                            className="w-4 h-4 cursor-pointer hover:text-gray-700"
+                            onClick={() => handleEditService(service, index)}
+                          />
+                          <Trash2
+                            className="w-4 h-4 cursor-pointer hover:text-red-600"
+                            onClick={() => handleDeleteService(index)}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="flex items-center gap-1 border border-gray-300 rounded-md w-40 py-1 font-semibold text-gray-700 bg-white hover:bg-[#8BC53FBF] transition"
-                onClick={() => setAddService(true)}
-              >
-                <IoIosAdd size={25} className="text-gray-600" />
-                <span>Add New Service</span>
-              </button>
-              {errorMessage && (
-                <p className="text-red-600 text-sm mt-2">{errorMessage}</p>
-              )}
-              {successMessage && (
-                <p className="text-green-600 text-sm mt-2">{successMessage}</p>
-              )} */}
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 border border-gray-300 rounded-md w-40 py-1 font-semibold text-gray-700 bg-white hover:bg-[#8BC53FBF] transition"
+                    onClick={() => setAddService(true)}
+                  >
+                    <IoIosAdd size={25} className="text-gray-600" />
+                    <span>Add New Service</span>
+                  </button>
+                  {errorMessage && (
+                    <p className="text-red-600 text-sm mt-2">{errorMessage}</p>
+                  )}
+                  {successMessage && (
+                    <p className="text-green-600 text-sm mt-2">
+                      {successMessage}
+                    </p>
+                  )}
+                </div> */}
 
                 <div className="flex justify-end gap-3 mt-8">
                   {/* <button
@@ -489,7 +537,7 @@ export default function SkillsVerification({ onNext, onBack }) {
                     className="bg-[#005823BF] text-white px-6 py-2 rounded-lg hover:bg-[#004e1a] transition disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={loading || uploadingVisuals || !isFormComplete}
                   >
-                    {loading ? "Saving..." : "Save & Continue"}
+                    {loading ? "Saving..." : "Complete"}
                   </button>
                 </div>
 
