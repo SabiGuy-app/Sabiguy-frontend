@@ -74,9 +74,9 @@ export default function Form() {
     <StepOne onNext={handleNext} email={formData.email} />, //KYC level 1
     <StepTwo onNext={handleNext} email={formData.email} onBack={handleBack} />,
     <StepThree onNext={handleNext} onBack={handleBack} />,
-    <PersonalInfoForm onNext={handleNext} onBack={handleBack} />, //KYC level 2
-    <FacialCapture onNext={handleNext} onBack={handleBack} />, //KYC level 4
-    <FaceCapture onNext={handleNext} onBack={handleBack} />,
+    <PersonalInfoForm onNext={handleNext} onBack={handleBack} data={formData} />, //KYC level 2
+    <FacialCapture onNext={handleNext} onBack={handleBack} data={formData} />, //KYC level 4
+    <FaceCapture onNext={handleNext} onBack={handleBack} data={formData} />,
     <SkillsVerification onNext={handleNext} onBack={handleBack} />, //KYC level 5
     // <UploadAutoMobile onNext={handleNext} onBack={handleBack} />, //KYC level 6
     // <BankAccountForm onNext={handleNext} onBack={handleBack} />, //KYC level completed
