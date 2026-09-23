@@ -13,6 +13,7 @@ import { SignUpSchema } from "./schema";
 import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
 import PasswordRequirements from "../../../components/PasswordRequirements";
+import { useAuthStore } from "../../../stores/auth.store";
 
 const MotionDiv = motion.div;
 
@@ -65,6 +66,7 @@ export default function StepOne({ onNext, email }) {
         const token = response.data?.token;
         if (token) {
           localStorage.setItem("token", token);
+          useAuthStore.getState().setToken(token);
         }
         localStorage.setItem("email", effectiveEmail);
         setSuccessMessage(
@@ -135,6 +137,7 @@ export default function StepOne({ onNext, email }) {
 
         if (data?.token) {
           localStorage.setItem("token", data.token);
+          useAuthStore.getState().setToken(data.token);
         }
         localStorage.setItem("google-email", googleEmail);
         localStorage.setItem("email", googleEmail);

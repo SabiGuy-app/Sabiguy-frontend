@@ -18,15 +18,17 @@ const BUSINESS_STEPS = {
   VERIFY_EMAIL: 2,
   ACCOUNT_CREATED: 3,
   BUSINESS_INFO: 4,
-  VEHICLE_SETUP: 5,
+  BUSINESS_VERIFICATION: 5,
+  SERVICE_DETAILS: 6,
   CONGRATS: 7,
 };
 
 const BUSINESS_KYC_LEVEL_TO_STEP = {
   0: BUSINESS_STEPS.ACCOUNT_DETAILS,
   1: BUSINESS_STEPS.BUSINESS_INFO,
-  2: BUSINESS_STEPS.VEHICLE_SETUP,
-  3: BUSINESS_STEPS.CONGRATS,
+  2: BUSINESS_STEPS.BUSINESS_VERIFICATION,
+  3: BUSINESS_STEPS.SERVICE_DETAILS,
+  4: BUSINESS_STEPS.CONGRATS,
 };
 
 const BUSINESS_SETUP_STEP_BY_CATEGORY = {
@@ -34,13 +36,15 @@ const BUSINESS_SETUP_STEP_BY_CATEGORY = {
   beauty: BeautyAndPersonalCare,
 };
 
-const DEFAULT_BUSINESS_SETUP_STEP = AddVehicleForm;
 const BUSINESS_WIZARD_DRAFT_KEY = "business-onboarding-draft";
 
 function readBusinessWizardDraft() {
   try {
     const stored = localStorage.getItem(BUSINESS_WIZARD_DRAFT_KEY);
-    return stored ? JSON.parse(stored) : null;
+    const draft = stored ? JSON.parse(stored) : null;
+    const email = localStorage.getItem("email");
+    if (email && draft?.formData?.email?.trim().toLowerCase() !== email.trim().toLowerCase()) return null;
+    return draft;
   } catch {
     return null;
   }
@@ -99,8 +103,7 @@ export default function BusinessForm() {
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
   const BusinessSetupStep =
-    BUSINESS_SETUP_STEP_BY_CATEGORY[formData.businessCategoryId] ??
-    DEFAULT_BUSINESS_SETUP_STEP;
+    BUSINESS_SETUP_STEP_BY_CATEGORY[formData.businessCategoryId] ?? AddVehicleForm;
   useEffect(() => {
     const storedKycLevel = localStorage.getItem("kycLevel");
     const storedEmail = localStorage.getItem("email");
