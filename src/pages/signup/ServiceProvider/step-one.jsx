@@ -74,7 +74,10 @@ export default function StepOne({ onNext, email }) {
       }
 
       if (response.status === 200 || response.status === 201) {
-        trackEvent("signup_completed", { role: "provider", method: "password" });
+        trackEvent("signup_completed", {
+          role: "provider",
+          method: "password",
+        });
         const token = response.data?.token;
         if (token) {
           localStorage.setItem("token", token);
@@ -97,7 +100,10 @@ export default function StepOne({ onNext, email }) {
       if (error.response) {
         const apiMessage = error.response.data?.message;
         if (apiMessage?.startsWith("Email not verified. OTP sent to email")) {
-          trackEvent("signup_otp_sent", { role: "provider", method: "password" });
+          trackEvent("signup_otp_sent", {
+            role: "provider",
+            method: "password",
+          });
           setSuccessMessage(
             "Your email is registered but not verified yet, you have however received another OTP. You will be redirected to the otp input page in a moment...",
           );
@@ -181,7 +187,9 @@ export default function StepOne({ onNext, email }) {
         if (!res.ok) {
           trackEvent("signup_failed", { role: "provider", method: "google" });
           setGoogleLoading(false);
-          setErrorMessage(data?.message || "An error occurred. Please try again.");
+          setErrorMessage(
+            data?.message || "An error occurred. Please try again.",
+          );
           return;
         }
 
@@ -191,7 +199,9 @@ export default function StepOne({ onNext, email }) {
 
         if (!googleEmail) {
           trackEvent("signup_failed", { role: "provider", method: "google" });
-          setErrorMessage("Google did not return an email address for this account.");
+          setErrorMessage(
+            "Google did not return an email address for this account.",
+          );
           setGoogleLoading(false);
           return;
         }
@@ -354,6 +364,8 @@ export default function StepOne({ onNext, email }) {
                       I agree to the{" "}
                       <Link
                         to="/policies/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#005823BF] font-medium"
                       >
                         Privacy Policy
@@ -361,6 +373,8 @@ export default function StepOne({ onNext, email }) {
                       ,{" "}
                       <Link
                         to="/policies/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#005823BF] font-medium"
                       >
                         Terms of Use
@@ -368,6 +382,8 @@ export default function StepOne({ onNext, email }) {
                       , and{" "}
                       <Link
                         to="/policies"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#005823BF] font-medium"
                       >
                         related policies

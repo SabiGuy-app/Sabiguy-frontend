@@ -34,7 +34,7 @@ export default function SkillsVerification({ onNext, onBack }) {
   const SelectedSection = jobSections[selectedJobTitle];
 
   const token = localStorage.getItem("token");
-  const email = localStorage.getItem("email");
+  const email = localStorage.getItem("email")
 
   const uploadFile = async (file, folder = "work_visuals") => {
     const formData = new FormData();
