@@ -1,7 +1,7 @@
 // data.js
 export const jobTitles = [
   { label: "Transport & Logistics Services", value: "transport" },
-  // { label: "Emergency Services", value: "emergency_services" },
+  { label: "Beauty & Personal Care", value: "beauty_personal_care" },
   // { label: "Home & Repair Services", value: "home_repair" },
   // { label: "Domestic & Lifestyle Services", value: "domestic_services" },
   // { label: "Professional Services", value: "professional_services" },

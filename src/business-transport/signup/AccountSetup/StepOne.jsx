@@ -62,7 +62,10 @@ export default function StepOne({ onNext, email }) {
       );
 
       if (response.status === 200 || response.status === 201) {
-        trackEvent("signup_completed", { role: "business", method: "password" });
+        trackEvent("signup_completed", {
+          role: "business",
+          method: "password",
+        });
         const token = response.data?.token;
         if (token) {
           localStorage.setItem("token", token);
@@ -131,7 +134,9 @@ export default function StepOne({ onNext, email }) {
         if (!res.ok) {
           trackEvent("signup_failed", { role: "business", method: "google" });
           setGoogleLoading(false);
-          setErrorMessage(data?.message || "An error occurred. Please try again.");
+          setErrorMessage(
+            data?.message || "An error occurred. Please try again.",
+          );
           return;
         }
 
@@ -295,6 +300,8 @@ export default function StepOne({ onNext, email }) {
                       I agree to the{" "}
                       <Link
                         to="/policies/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#005823BF] font-medium"
                       >
                         Privacy Policy
@@ -302,6 +309,8 @@ export default function StepOne({ onNext, email }) {
                       ,{" "}
                       <Link
                         to="/policies/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#005823BF] font-medium"
                       >
                         Terms of Use
@@ -309,6 +318,8 @@ export default function StepOne({ onNext, email }) {
                       , and{" "}
                       <Link
                         to="/policies"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[#005823BF] font-medium"
                       >
                         related policies
