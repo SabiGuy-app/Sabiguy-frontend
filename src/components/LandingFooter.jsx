@@ -9,7 +9,11 @@ const LandingFooter = () => {
       <div className="w-[90%] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
           <div className="flex flex-col gap-6 lg:w-[40%] items-center md:items-start text-center md:text-left">
-            <img src="/SB%20white.png" alt="SabiGuy Logo" className="h-14 md:h-16 w-auto" />
+            <img
+              src="/SB%20white.png"
+              alt="SabiGuy Logo"
+              className="h-14 md:h-16 w-auto"
+            />
             <p className="text-white/80 text-[16px] leading-relaxed">
               Connecting you with trusted local service providers.
             </p>
@@ -48,7 +52,11 @@ const LandingFooter = () => {
                 href="https://x.com/sabiguyapp"
                 className="hover:opacity-80 transition-opacity"
               >
-                <img src="/home/X.png" alt="X" className="w-[25px] h-[25px] brightness-0 invert" />
+                <img
+                  src="/home/X.png"
+                  alt="X"
+                  className="w-[25px] h-[25px] brightness-0 invert"
+                />
               </a>
             </div>
           </div>
@@ -124,11 +132,40 @@ const LandingFooter = () => {
           <p>© {currentYear} SabiGuy. All rights reserved.</p>
 
           <p className="max-w-xl text-white/70 text-center md:text-left">
-            SabiGuy is a technology enabled marketplace operated by Pitchers International. Services are provided by independent riders and service providers. By using this platform, you agree to our <Link to="/policies/terms" className="hover:text-white underline">Terms of Use</Link>, <Link to="/policies/privacy" className="hover:text-white underline">Privacy Policy</Link>, and <Link to="/policies" className="hover:text-white underline">related policies</Link>.
+            SabiGuy is a technology enabled marketplace operated by Pitchers
+            International. Services are provided by independent riders and
+            service providers. By using this platform, you agree to our{" "}
+            <Link
+              to="/policies/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white underline"
+            >
+              Terms of Use
+            </Link>
+            ,{" "}
+            <Link
+              to="/policies/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white underline"
+            >
+              Privacy Policy
+            </Link>
+            , and{" "}
+            <Link
+              to="/policies"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white underline"
+            >
+              related policies
+            </Link>
+            .
           </p>
 
           {/* <div className="flex gap-8 justify-center">
-            <Link to="/policies" className="hover:text-white transition-colors">
+            <Link to="/policies" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
               Policies (Terms & Privacy)
             </Link>
           </div> */}
