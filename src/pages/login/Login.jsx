@@ -145,7 +145,10 @@ const getBusinessKycStatus = async (email) => {
     );
 
     const token = data?.token || data?.data?.token || data?.accessToken;
-    if (token) localStorage.setItem("token", token);
+    if (token) {
+      localStorage.setItem("token", token);
+      useAuthStore.getState().setToken(token);
+    }
 
     const message = String(data?.message || "").toLowerCase();
     const isNewBusiness =
@@ -162,8 +165,8 @@ const getBusinessKycStatus = async (email) => {
       return "incomplete";
     }
 
-    // Business onboarding maps level 3 to the completed/congrats step.
-    if (level < 3) {
+    // Service details completes level 4; level 3 still needs that setup step.
+    if (level < 4) {
       localStorage.setItem("kycLevel", String(level));
       localStorage.setItem("email", email);
       return "incomplete";

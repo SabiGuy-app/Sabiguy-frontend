@@ -1,12 +1,25 @@
 import { IoIosArrowBack } from "react-icons/io";
 import BusinessSetupLayout from "../ServiceProvider/BusinessSetupLayout";
-import InputField from "../../../components/InputField";
-import { useState } from "react";
-import { Check, ChevronDown, CloudUpload, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ChevronDown, CloudUpload, Plus, X } from "lucide-react";
+import {
+  saveBusinessServiceDetails,
+  uploadBusinessWorkVisual,
+} from "../../../api/business";
+
+const BUSINESS_SERVICE_DRAFT_KEY = "business-service-details-draft";
+
+function readBusinessServiceDraft() {
+  try {
+    const stored = localStorage.getItem(BUSINESS_SERVICE_DRAFT_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
 
 const BeautyAndPersonalCare = ({ onBack, onNext }) => {
-  const [experience, setExperience] = useState("");
-
+  const draft = readBusinessServiceDraft();
   const services = [
     { id: 1, name: "Braiding" },
     { id: 2, name: "Hair Dresser" },
@@ -16,9 +29,21 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
     { id: 6, name: "Nails Tech" },
   ];
 
-  const [selectedServices, setSelectedServices] = useState([]);
-  // Service Locations State (defaulting to the two selected in your image)
-  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedServices, setSelectedServices] = useState(
+    () => draft?.selectedServices || [],
+  );
+  const [serviceDetails, setServiceDetails] = useState(
+    () => draft?.serviceDetails || {},
+  );
+  const [selectedLocations, setSelectedLocations] = useState(
+    () => draft?.selectedLocations || [],
+  );
+  const [studioPictures, setStudioPictures] = useState(
+    () => draft?.studioPictures || [],
+  );
+  const [uploadingPictures, setUploadingPictures] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Handlers
   const toggleLocation = (value) => {
@@ -39,22 +64,9 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
       { id: 6, name: "Nails Tech", status: false },
     ],
 
-    experience: ["0-2 years", "2-5 years", "5-10 years", "10+ years"],
-
     businessHours: {
-      type: "every_day",
       openingTime: "09:00 AM",
       closingTime: "06:00 PM",
-
-      availableDays: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ],
     },
 
     serviceLocations: [
@@ -78,16 +90,42 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
     photos: [],
   };
 
-  const [scheduleType, setScheduleType] = useState(
-    businessData.businessHours.type,
-  );
   const [openingTime, setOpeningTime] = useState(
-    businessData.businessHours.openingTime,
+    () => draft?.openingTime || businessData.businessHours.openingTime,
   );
   const [closingTime, setClosingTime] = useState(
-    businessData.businessHours.closingTime,
+    () => draft?.closingTime || businessData.businessHours.closingTime,
   );
-  const [selectedDays, setSelectedDays] = useState([]);
+  const [selectedDays, setSelectedDays] = useState(
+    () => draft?.selectedDays || [],
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        BUSINESS_SERVICE_DRAFT_KEY,
+        JSON.stringify({
+          selectedServices,
+          serviceDetails,
+          selectedLocations,
+          studioPictures,
+          openingTime,
+          closingTime,
+          selectedDays,
+        }),
+      );
+    } catch {
+      // Ignore storage quota or privacy-mode errors.
+    }
+  }, [
+    selectedServices,
+    serviceDetails,
+    selectedLocations,
+    studioPictures,
+    openingTime,
+    closingTime,
+    selectedDays,
+  ]);
 
   const timeOptions = [
     "07:00 AM",
@@ -106,6 +144,22 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
     "08:00 PM",
   ];
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const dayLabels = {
+    Mon: "Monday",
+    Tue: "Tuesday",
+    Wed: "Wednesday",
+    Thu: "Thursday",
+    Fri: "Friday",
+    Sat: "Saturday",
+    Sun: "Sunday",
+  };
+  const timeTo24Hour = (time) => {
+    const [value, period] = time.split(" ");
+    let [hours, minutes] = value.split(":").map(Number);
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  };
 
   const toggleDay = (day) => {
     setSelectedDays((prev) =>
@@ -114,12 +168,128 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
   };
 
   const toggleService = (id) => {
-    setSelectedServices((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((serviceId) => serviceId !== id);
+    const isSelected = selectedServices.includes(id);
+
+    setSelectedServices((prev) =>
+      isSelected
+        ? prev.filter((serviceId) => serviceId !== id)
+        : [...prev, id],
+    );
+
+    setServiceDetails((prev) => {
+      if (isSelected) {
+        const next = { ...prev };
+        delete next[id];
+        return next;
       }
-      return [...prev, id];
+
+      return {
+        ...prev,
+        [id]: prev[id] || { pricingModel: "", price: "" },
+      };
     });
+  };
+
+  const updateServiceDetail = (id, field, value) => {
+    setServiceDetails((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value },
+    }));
+  };
+
+  const handlePictureUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    const email = localStorage.getItem("email") || localStorage.getItem("google-email");
+    if (!email) {
+      setErrorMessage("Your session has expired. Please sign in again.");
+      return;
+    }
+
+    setUploadingPictures(true);
+    setErrorMessage("");
+    try {
+      const urls = await Promise.all(
+        files.map((file) => uploadBusinessWorkVisual(email, file)),
+      );
+      setStudioPictures((prev) => [...prev, ...urls.filter(Boolean)]);
+    } catch (error) {
+      setErrorMessage(
+        error?.response?.data?.message ||
+          "Failed to upload studio image(s). Please try again.",
+      );
+    } finally {
+      setUploadingPictures(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleSaveAndContinue = async () => {
+    setErrorMessage("");
+    if (uploadingPictures) {
+      setErrorMessage("Please wait for studio images to finish uploading.");
+      return;
+    }
+    if (!selectedServices.length) {
+      setErrorMessage("Please select at least one service.");
+      return;
+    }
+    if (!selectedLocations.length) {
+      setErrorMessage("Please select at least one service location.");
+      return;
+    }
+    if (!selectedDays.length) {
+      setErrorMessage("Please select at least one available day.");
+      return;
+    }
+
+    const service = selectedServices.map((id) => ({
+      serviceName: services.find((item) => item.id === id)?.name,
+      pricingModel: serviceDetails[id]?.pricingModel || "",
+      price: serviceDetails[id]?.price ?? "",
+    }));
+    const missingPricing = service.filter(
+      (item) =>
+        !item.serviceName ||
+        !String(item.pricingModel).trim() ||
+        item.price === "" ||
+        item.price === null ||
+        item.price === undefined,
+    );
+    if (missingPricing.length > 0) {
+      setErrorMessage(
+        `Please complete pricing for: ${missingPricing
+          .map((item) => item.serviceName || "selected service")
+          .join(", ")}.`,
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await saveBusinessServiceDetails({
+        service,
+        availableDays: selectedDays.map((day) => dayLabels[day]),
+        businessHours: {
+          start: timeTo24Hour(openingTime),
+          end: timeTo24Hour(closingTime),
+        },
+        servicePlace: businessData.serviceLocations
+          .filter((location) => selectedLocations.includes(location.value))
+          .map((location) => location.name),
+        studioImages: [{ pictures: studioPictures, videos: [] }],
+      });
+      localStorage.removeItem(BUSINESS_SERVICE_DRAFT_KEY);
+      onNext?.();
+    } catch (error) {
+      setErrorMessage(
+        error?.response?.data?.message ||
+          "Unable to save your business service details. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -186,32 +356,6 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
               </div>
 
               <div className="flex flex-col gap-3">
-                <h3 className="font-semibold">Experience</h3>
-
-                <div className="relative w-full">
-                  <select
-                    value={experience}
-                    onChange={(e) => setExperience(e.target.value)}
-                    className="w-full border rounded-lg py-2.5 px-4 bg-[#231F200D] border-[#231F2040] h-15 appearance-none outline-none focus:border-[#3B82F6] focus:bg-white transition-all cursor-pointer font-normal text-[#231F20BF]"
-                  >
-                    <option value="" disabled>
-                      Select experience
-                    </option>
-
-                    {businessData.experience.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-600">
-                    <ChevronDown size={20} strokeWidth={2} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
                 <h3 className="font-semibold">Business Hours</h3>
                 <p className="text-[#231F20BF]">
                   Set when customers can book your services.
@@ -219,50 +363,6 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
 
                 {/* Business Hours */}
                 <div className="flex flex-col gap-5 mt-2">
-                  <div className="flex items-center gap-6">
-                    {/* Every day Radio */}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <div
-                        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-                          scheduleType === "every_day"
-                            ? "border-[#34805A]"
-                            : "border-gray-300"
-                        }`}
-                        onClick={() => setScheduleType("every_day")}
-                      >
-                        {scheduleType === "every_day" && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-[#34805A]" />
-                        )}
-                      </div>
-                      <span
-                        className={`font-medium ${scheduleType === "every_day" ? "text-[#34805A]" : "text-gray-500"}`}
-                      >
-                        Every day
-                      </span>
-                    </label>
-
-                    {/* 24/7 Radio */}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <div
-                        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-                          scheduleType === "24_7"
-                            ? "border-[#34805A]"
-                            : "border-gray-300"
-                        }`}
-                        onClick={() => setScheduleType("24_7")}
-                      >
-                        {scheduleType === "24_7" && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-[#34805A]" />
-                        )}
-                      </div>
-                      <span
-                        className={`font-medium ${scheduleType === "24_7" ? "text-[#34805A]" : "text-gray-500"}`}
-                      >
-                        24/7
-                      </span>
-                    </label>
-                  </div>
-
                   {/* Times */}
                   <div className="flex w-full items-end gap-3">
                     <div className="flex w-full flex-col gap-1.5">
@@ -271,10 +371,7 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
                       </label>
                       <div className="relative w-full">
                         <select
-                          disabled={scheduleType === "24_7"}
-                          value={
-                            scheduleType === "24_7" ? "12:00 AM" : openingTime
-                          }
+                          value={openingTime}
                           onChange={(e) => setOpeningTime(e.target.value)}
                           className="w-full appearance-none rounded-lg border border-[#231F2040] bg-white px-4 py-2.5 text-[15px] text-gray-700 outline-none transition-all focus:border-[#3B82F6] disabled:bg-gray-100 disabled:opacity-70 cursor-pointer"
                         >
@@ -298,10 +395,7 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
                       </label>
                       <div className="relative w-full">
                         <select
-                          disabled={scheduleType === "24_7"}
-                          value={
-                            scheduleType === "24_7" ? "11:59 PM" : closingTime
-                          }
+                          value={closingTime}
                           onChange={(e) => setClosingTime(e.target.value)}
                           className="w-full appearance-none rounded-lg border border-[#231F2040] bg-white px-4 py-2.5 text-[15px] text-gray-700 outline-none transition-all focus:border-[#3B82F6] disabled:bg-gray-100 disabled:opacity-70 cursor-pointer"
                         >
@@ -330,7 +424,6 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
                           <button
                             key={day}
                             type="button"
-                            disabled={scheduleType === "24_7"}
                             onClick={() => toggleDay(day)}
                             className={`min-w-[52px] rounded-full px-2.5 py-1 text-[14px] transition-all disabled:opacity-60 ${
                               isSelected
@@ -343,6 +436,50 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
                         );
                       })}
                     </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <h3 className="font-semibold">Pricing per service</h3>
+                      <p className="text-sm text-gray-500">
+                        Complete the pricing model and price for every selected service.
+                      </p>
+                    </div>
+                    {selectedServices.map((id) => {
+                      const service = services.find((item) => item.id === id);
+                      return (
+                        <div key={id} className="grid gap-3 md:grid-cols-3">
+                          <span className="flex items-center rounded-lg bg-gray-100 px-3 py-2 text-sm">
+                            {service?.name}
+                          </span>
+                          <select
+                            value={serviceDetails[id]?.pricingModel || ""}
+                            onChange={(event) =>
+                              updateServiceDetail(id, "pricingModel", event.target.value)
+                            }
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          >
+                            <option value="">Pricing model</option>
+                            <option value="fixed">Fixed</option>
+                            <option value="project">Per Project</option>
+                            <option value="daily">Per Day</option>
+                            <option value="hourly">Per Hour</option>
+                            <option value="unit">Per Unit</option>
+                          </select>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Price"
+                            value={serviceDetails[id]?.price ?? ""}
+                            onWheel={(event) => event.currentTarget.blur()}
+                            onChange={(event) =>
+                              updateServiceDetail(id, "price", event.target.value)
+                            }
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Where do you provide your service */}
@@ -403,8 +540,10 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
                       <input
                         type="file"
                         multiple
-                        accept=".jpg,.jpeg,.png,.pdf"
+                        accept="image/jpeg,image/png,image/jpg"
+                        onChange={handlePictureUpload}
                         className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                        disabled={uploadingPictures}
                       />
 
                       <div className="flex flex-col items-center justify-center gap-3">
@@ -426,6 +565,23 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
                         </p>
                       </div>
                     </div>
+                    {studioPictures.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {studioPictures.map((picture) => (
+                          <div key={picture} className="relative h-20 w-20">
+                            <img src={picture} alt="Studio work" className="h-full w-full rounded-lg object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setStudioPictures((prev) => prev.filter((item) => item !== picture))}
+                              className="absolute right-1 top-1 rounded-full bg-white p-1 text-gray-600"
+                              aria-label="Remove studio image"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Bottom Action Buttons */}
@@ -439,18 +595,16 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
                     </button>
                     <button
                       type="button"
-                      onClick={() =>
-                        onNext?.({
-                          services: selectedServices,
-                          experience,
-                          serviceLocations: selectedLocations,
-                        })
-                      }
+                      onClick={handleSaveAndContinue}
+                      disabled={submitting || uploadingPictures}
                       className="rounded-lg bg-[#34805A] px-8 py-2.5 font-semibold text-white transition-all hover:bg-[#296647]"
                     >
-                      Save & Continue
+                      {submitting ? "Saving..." : "Save & Continue"}
                     </button>
                   </div>
+                  {errorMessage && (
+                    <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
+                  )}
                 </div>
               </div>
             </div>

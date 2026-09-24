@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { useAuthStore } from "../../../stores/auth.store";
 
 const VERIFY_OTP_ENDPOINT = "/business/auth/verify-email";
 const RESEND_OTP_ENDPOINT = "/business/auth/resend-otp";
@@ -83,6 +84,7 @@ export default function StepTwo({ onNext, email }) {
         const token = response.data?.token;
         if (token) {
           localStorage.setItem("token", token);
+          useAuthStore.getState().setToken(token);
         }
         setSuccessMessage(
           response.data?.message || "Email verified successfully!",

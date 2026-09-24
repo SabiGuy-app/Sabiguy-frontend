@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import axios from "axios";
 import InputField from "../../../components/InputField";
+import { useAuthStore } from "../../../stores/auth.store";
 
 const BUSINESS_KYC_ENDPOINT = "/businesses/kyc-level";
 
@@ -38,6 +39,7 @@ export default function ConfirmKyc({ onNext }) {
         data?.token || data?.data?.token || data?.accessToken;
       if (token) {
         localStorage.setItem("token", token);
+        useAuthStore.getState().setToken(token);
       }
 
       localStorage.setItem("email", normalizedEmail);
