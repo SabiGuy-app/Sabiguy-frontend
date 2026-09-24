@@ -8,7 +8,7 @@ import {
 import distance from "/distance.png";
 import { useState } from "react";
 
-export default function AlertsCard({
+export default function   AlertsCard({
   alert,
   onViewDetails,
   onAcceptBooking,
