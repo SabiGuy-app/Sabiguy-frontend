@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Phone,
   MessageCircle,
@@ -12,7 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import DeliveryMap from "../../../../components/dashboard/Map";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
-import { startJob } from "../../../../api/bookings";
+import { startJob, getBookingsDetails } from "../../../../api/bookings";
 import { cancelBooking as cancelProviderBooking } from "../../../../api/provider";
 import {
   canMessage,
@@ -22,6 +22,8 @@ import {
 import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
 import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 import ProviderCancellationModal from "../../../../components/provider-dashboard/ProviderCancellationModal";
+import WaitingForPaymentModal from "../../../../components/provider-dashboard/WaitingForPaymentModal"; // adjust path to match where you save it
+import PaymentExpiredModal from "../../../../components/provider-dashboard/PaymentExpiredModal"; // adjust path to match where you save it
 
 // Error Boundary for Map Component
 class MapErrorBoundary extends React.Component {
@@ -95,6 +97,139 @@ export default function StartNavigation() {
     alert?.originalData?.dropoffLocation || bookingDetails?.dropoffLocation,
   );
 
+  const bookingId = alert?.id || alert?.originalData?._id || bookingDetails?._id;
+  const customer = alert?.originalData?.userId || {};
+
+  // ---------------------------------------------------------------
+  // PAYMENT STATUS — single source of truth for the modal(s) AND the
+  // Start Navigation button's disabled state below.
+  //   "pending" -> WaitingForPaymentModal shows, button disabled
+  //   "paid"    -> both modals unmount, button enabled
+  //   "expired" -> PaymentExpiredModal shows, button stays disabled
+  // ---------------------------------------------------------------
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [latestBooking, setLatestBooking] = useState(null);
+  const [waitingModalDismissed, setWaitingModalDismissed] = useState(false);
+  const pollRef = useRef(null);
+
+  useEffect(() => {
+    if (!alert?.id || paymentStatus !== "pending") return;
+
+    const poll = async () => {
+      try {
+        const data = await getBookingsDetails(alert.id);
+        const latestBookingData = data?.data?.booking;
+        setLatestBooking(latestBookingData);
+
+        // Confirmed: /api/v1/bookings/{id} returns status "paid_escrow"
+        // once payment is complete (held in escrow until the job wraps).
+        if (latestBookingData?.status === "paid_escrow") {
+          setPaymentStatus("paid");
+        }
+      } catch (err) {
+        console.error("Failed to fetch booking status:", err);
+        // a failed check just tries again on the next tick
+      }
+    };
+
+    poll(); // check immediately, don't wait 5s for the first result
+    pollRef.current = setInterval(poll, 5000);
+
+    return () => clearInterval(pollRef.current);
+  }, [alert?.id, paymentStatus]);
+
+  // Note: checked the payment API module (initializePayment, verifyPayment,
+  // payWithWallet) — it's REST-only (axios calls), no socket/push mechanism
+  // exists in this codebase. Polling above is the only way to detect
+  // payment confirmation right now, not a temporary fallback.
+
+  const handlePaymentExpire = () => {
+    clearInterval(pollRef.current); // stop polling a dead job
+    setPaymentStatus("expired");
+  };
+
+  const handlePaymentModalClose = () => {
+    // X icon just hides the popup — stays on this page, keeps polling
+    // AND keeps counting down in the background, since both now live
+    // in this parent component instead of inside the modal.
+    setWaitingModalDismissed(true);
+  };
+
+  const handleBackToDashboard = () => {
+    navigate("/dashboard/provider/hire-alert");
+  };
+
+  const isPaid = paymentStatus === "paid";
+
+  // ---------------------------------------------------------------
+  // COUNTDOWN TIMER — lives here (the parent) instead of inside
+  // WaitingForPaymentModal, specifically so it keeps running even
+  // while the modal is dismissed/unmounted. If the timer lived inside
+  // the modal, closing the modal would unmount it, React would clear
+  // its interval, and the countdown would just stop — meaning
+  // PaymentExpiredModal would never fire for a dismissed job.
+  //
+  // Same deadline-in-localStorage approach as before, so a page
+  // refresh doesn't reset it either.
+  // ---------------------------------------------------------------
+  const PAYMENT_WINDOW_SECONDS = 5 * 60; // 5 minutes
+  const [deadline, setDeadline] = useState(null);
+  const [secondsLeft, setSecondsLeft] = useState(PAYMENT_WINDOW_SECONDS);
+  const hasExpiredRef = useRef(false);
+
+  useEffect(() => {
+    if (!alert?.id) return;
+
+    const storageKey = `payment_deadline_${alert.id}`;
+    const stored = localStorage.getItem(storageKey);
+
+    if (stored) {
+      setDeadline(stored);
+      return;
+    }
+
+    const fresh = new Date(Date.now() + PAYMENT_WINDOW_SECONDS * 1000).toISOString();
+    localStorage.setItem(storageKey, fresh);
+    setDeadline(fresh);
+  }, [alert?.id]);
+
+  useEffect(() => {
+    if (!deadline || paymentStatus !== "pending") return; // stop once paid/expired
+
+    const getRemaining = () =>
+      Math.max(Math.floor((new Date(deadline).getTime() - Date.now()) / 1000), 0);
+
+    const tick = () => {
+      const remaining = getRemaining();
+      setSecondsLeft(remaining);
+
+      if (remaining <= 0 && !hasExpiredRef.current) {
+        hasExpiredRef.current = true;
+        localStorage.removeItem(`payment_deadline_${alert?.id}`);
+        handlePaymentExpire();
+      }
+    };
+
+    tick(); // sync immediately, don't wait a full second
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deadline, paymentStatus]);
+
+  // Same fields AlertsCard.jsx reads off `alert` for pickup, dropoff,
+  // price breakdown and delivery date — reused so the modal shows the
+  // exact numbers the provider saw before accepting.
+  const modalPickup = alert?.originalData?.pickupLocation?.address || "N/A";
+  const modalDropoff = alert?.originalData?.dropoffLocation?.address || "N/A";
+  const modalDateTime = alert?.deliveryDate || "N/A";
+  const modalBookingPrice =
+    latestBooking?.agreedPrice ?? latestBooking?.calculatedPrice ?? alert?.BookingPrice ?? 0;
+  // ⚠️ This schema has no platformFee/riderReceives fields — these still
+  // fall back to `alert`'s values from AlertsCard until you confirm
+  // where (or whether) the backend sends a fee breakdown.
+  const modalPlatformFee = alert?.platformFee ?? 0;
+  const modalRiderReceives = alert?.RiderReceives ?? 0;
+
   const handleStartNavigation = async () => {
     if (!alert?.id) return;
     try {
@@ -112,7 +247,6 @@ export default function StartNavigation() {
     }
   };
 
-  const bookingId = alert?.id || alert?.originalData?._id || bookingDetails?._id;
   const statusForCancel =
     alert?.originalData?.status || bookingDetails?.status || alert?.status;
   const isAcceptedUnpaidRoute =
@@ -136,8 +270,6 @@ export default function StartNavigation() {
     navigate("/dashboard/provider/hire-alert");
   };
 
-  const customer = alert?.originalData?.userId || {};
-
   return (
     <ProviderDashboardLayout>
       <div className="py-4">
@@ -147,6 +279,32 @@ export default function StartNavigation() {
         onSubmit={handleCancel}
         onComplete={handleCancelComplete}
       />
+
+      {/* Pops up on load and unmounts once paymentStatus flips, or once
+          the provider dismisses it early with the X icon. */}
+      {paymentStatus === "pending" && !waitingModalDismissed && (
+        <WaitingForPaymentModal
+          secondsLeft={secondsLeft}
+          customer={{
+            fullName: customer?.fullName || "Customer",
+            profilePicture: customer?.profilePicture || "/avatar.png",
+          }}
+          pickup={modalPickup}
+          dropoff={modalDropoff}
+          dateTime={modalDateTime}
+          bookingPrice={modalBookingPrice}
+          platformFee={modalPlatformFee}
+          riderReceives={modalRiderReceives}
+          onClose={handlePaymentModalClose}
+          onExpire={handlePaymentExpire}
+        />
+      )}
+
+      {/* Separate modal — pops up automatically the moment the
+          countdown above hits 0 with no payment confirmed. */}
+      {paymentStatus === "expired" && (
+        <PaymentExpiredModal onBackToDashboard={handleBackToDashboard} />
+      )}
 
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
         <div className="">
@@ -264,10 +422,18 @@ export default function StartNavigation() {
             </div>
           </div>
           {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+
+          {/* Disabled until the customer has paid (isPaid false while
+              "pending" or "expired"), same as while starting=true. */}
           <button
             onClick={handleStartNavigation}
-            disabled={starting}
-            className="px-4 py-2 rounded-md bg-[#005823] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={starting || !isPaid}
+            title={!isPaid ? "Waiting for customer payment" : undefined}
+            className={`px-4 py-2 rounded-md text-white transition-colors ${
+              isPaid
+                ? "bg-[#005823] hover:bg-[#00481c]"
+                : "bg-[#005823]/40 cursor-not-allowed"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {starting ? "Starting..." : "Start Navigation"}
           </button>
