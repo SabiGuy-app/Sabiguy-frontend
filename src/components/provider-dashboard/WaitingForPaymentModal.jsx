@@ -1,20 +1,23 @@
-import { useState, useEffect, useRef } from "react";
 import { X, MapPin, Calendar, Shield } from "lucide-react";
 
 /**
  * Waiting for Payment modal — the countdown view only.
  *
- * `onExpire` fires ONCE, the instant the timer reaches zero. It does NOT
- * render anything itself for the expired state — the parent page listens
- * for this callback, sets its own status to "expired", and shows the
- * separate <PaymentExpiredModal /> in this modal's place.
+ * This component does NOT own the timer. It used to run its own
+ * setInterval internally — but that meant closing the modal (X icon)
+ * unmounted it, React cleared its interval, and the countdown simply
+ * stopped, so the expired state would never fire for a dismissed job.
+ * Now the PARENT page owns the timer and passes `secondsLeft` down as
+ * a plain number every render — this component just displays it. The
+ * countdown keeps running in the parent regardless of whether this
+ * modal is even mounted.
  *
- * `onClose` is the X icon — Just close the WaitingForPaymentModal
+ * `onClose` is the X icon — just closes the modal; the countdown
+ * itself is unaffected and keeps running in the parent.
  */
 export default function WaitingForPaymentModal({
-  initialSeconds = 5 * 60, // 5 minutes
+  secondsLeft = 0,
   onClose = () => {},
-  onExpire = () => {},
   customer = {
     fullName: "Customer",
     profilePicture: "/avatar.png",
@@ -26,30 +29,6 @@ export default function WaitingForPaymentModal({
   platformFee = 0,
   riderReceives = 0,
 }) {
-  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
-
-  // Ref, not state — we only want onExpire to fire ONE time, and a ref
-  // update doesn't trigger a re-render the way state would, so there's
-  // no risk of the effect body running twice before the flag "sticks".
-  const hasExpiredRef = useRef(false);
-
-  useEffect(() => {
-    if (secondsLeft <= 0) {
-      if (!hasExpiredRef.current) {
-        hasExpiredRef.current = true;
-        onExpire();
-      }
-      return; // don't start another interval once we're at 0
-    }
-
-    const id = setInterval(() => {
-      setSecondsLeft((prev) => Math.max(prev - 1, 0));
-    }, 1000);
-
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secondsLeft <= 0]);
-
   const formatTime = (totalSeconds) => {
     const m = Math.floor(totalSeconds / 60);
     const s = totalSeconds % 60;
