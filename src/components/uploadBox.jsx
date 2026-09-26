@@ -9,13 +9,48 @@ export default function UploadBox({
   onUploadEnd,
   multiple = true,
   maxSizeMB = 5,
+  uploadFile,
+  onError,
+  disabled = false,
+  prompt = "Drag and drop files here or",
+  formatHint,
+  className = "",
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [previews, setPreviews] = useState([]);
   const fileInputRef = useRef(null);
 
   const handleFiles = async (files) => {
+    if (disabled || uploading || !files.length) return;
+    if (uploadFile) {
+      const selectedFiles = Array.from(files).slice(0, multiple ? undefined : 1);
+      const allowedTypes = accept.split(",").map((type) => type.trim());
+      const invalid = selectedFiles.some((file) =>
+        file.size > maxSizeMB * 1024 * 1024 ||
+        !allowedTypes.some((type) => type.endsWith("/*")
+          ? file.type.startsWith(type.slice(0, -1))
+          : file.type === type),
+      );
+      if (invalid) {
+        onError?.(`Choose an accepted file format, up to ${maxSizeMB} MB each.`);
+        return;
+      }
+      setUploading(true);
+      onUploadStart?.();
+      try {
+        for (const file of selectedFiles) {
+          const url = await uploadFile(file);
+          if (!url) throw new Error("The upload did not return a file URL. Please try again.");
+          onUploadComplete?.([url]);
+        }
+      } catch (error) {
+        onError?.(error.response?.data?.message || error.message || "File upload failed. Please try again.");
+      } finally {
+        setUploading(false);
+        onUploadEnd?.();
+      }
+      return;
+    }
     const validFiles = Array.from(files).filter(
       (file) => file.size <= maxSizeMB * 1024 * 1024
     );
@@ -25,9 +60,6 @@ export default function UploadBox({
       return;
     }
 
-    // ✅ Step 1: Show immediate local previews
-    const localPreviews = validFiles.map((file) => URL.createObjectURL(file));
-    setPreviews((prev) => [...prev, ...localPreviews]);
 
     // ✅ Step 2: Upload to backend
     if (!uploadEndpoint) {
@@ -61,7 +93,6 @@ export default function UploadBox({
 
       // ✅ Step 3: Replace local preview with real URLs
       if (uploadedUrls.length > 0) {
-        setPreviews(uploadedUrls);
         onUploadComplete?.(uploadedUrls);
       }
     } catch (err) {
@@ -93,15 +124,29 @@ export default function UploadBox({
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={handleBrowse}
-        className={`border-2 border-dashed rounded-lg p-10 text-center text-sm cursor-pointer transition
-          ${isDragging ? "bg-[#EAF5EE] border-[#005823]" : "border-[#005823BF] hover:bg-[#F5F8F6]"}`}
+        role="button"
+        tabIndex={disabled || uploading ? -1 : 0}
+        aria-label="Upload pictures"
+        aria-disabled={disabled || uploading}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleBrowse();
+          }
+        }}
+        className={`border-2 border-dashed rounded-lg p-10 text-center text-sm cursor-pointer transition focus-visible:outline-2 focus-visible:outline-[#005823]
+          ${isDragging ? "bg-[#EAF5EE] border-[#005823]" : "border-[#005823BF] hover:bg-[#F5F8F6]"} ${className}`}
       >
         <input
           type="file"
           multiple={multiple}
           accept={accept}
           ref={fileInputRef}
-          onChange={(e) => handleFiles(e.target.files)}
+          disabled={disabled || uploading}
+          onChange={(e) => {
+            handleFiles(e.target.files);
+            e.target.value = "";
+          }}
           className="hidden"
         />
 
@@ -114,39 +159,17 @@ export default function UploadBox({
               <span className="text-[#005823BF] font-medium">Uploading...</span>
             ) : (
               <>
-                Drag and drop files here or{" "}
+                {prompt}{" "}
                 <span className="text-[#005823BF] font-medium">Browse</span>
               </>
             )}
           </p>
           <p className="text-gray-400 text-sm">
-            JPEG, PNG (Max {maxSizeMB} MB)
+            {formatHint || `JPEG, PNG (Max ${maxSizeMB} MB)`}
           </p>
         </div>
       </div>
 
-      {/* ✅ Preview area */}
-      {/* {previews.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-3 justify-center">
-          {previews.map((url, i) =>
-            url.match(/\.(mp4|webm|ogg)$/i) ? (
-              <video
-                key={i}
-                src={url}
-                controls
-                className="w-32 h-32 rounded-lg border object-cover"
-              />
-            ) : (
-              <img
-                key={i}
-                src={url}
-                alt="preview"
-                className="w-32 h-32 rounded-lg border object-cover"
-              />
-            )
-          )}
-        </div>
-      )} */}
     </div>
   );
 }
