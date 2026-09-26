@@ -8,6 +8,8 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useAuthStore } from "../../../stores/auth.store";
 
+const MotionDiv = motion.div;
+
 const VERIFY_OTP_ENDPOINT = "/business/auth/verify-email";
 const RESEND_OTP_ENDPOINT = "/business/auth/resend-otp";
 
@@ -160,13 +162,13 @@ export default function StepTwo({ onNext, email }) {
   const isOtpComplete = otp.every((digit) => digit !== "");
 
   return (
-    <div className="h-screen">
+    <div className="min-h-screen text-[#231F20]">
       <Navbar />
       <AuthLayout
         title="Let's Get Started!"
-        description="Set up your business account to start managing your fleet on SabiGuy."
+        description="Set up your business account to start managing your business on SabiGuy."
       >
-        <motion.div
+        <MotionDiv
           key="business-step-two"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -196,7 +198,7 @@ export default function StepTwo({ onNext, email }) {
                   ref={(el) => (inputRefs.current[index] = el)}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-11 h-12 sm:w-14 sm:h-14 box-border appearance-none px-1.5 sm:px-3 text-center border border-gray-300 rounded-md text-lg sm:text-xl focus:outline-none focus:ring-2 focus:ring-[#8BC53FBF]"
+                  className="w-11 h-12 sm:w-14 sm:h-14 box-border appearance-none px-1.5 sm:px-3 text-center bg-gray-50 border border-gray-400 rounded-md text-lg sm:text-xl focus:outline-none focus:border-[#8BC53FBF] focus:ring-1 focus:ring-[#8BC53FBF]"
                 />
               ))}
             </div>
@@ -248,14 +250,14 @@ export default function StepTwo({ onNext, email }) {
 
             <div className="inline-flex mt-2">
               <Link to="/login">
-                <button className="w-90 text-sm px-2 py-2 font-medium text-[#005823] hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-3 rounded-md">
+                <button className="w-full text-sm px-2 py-2 font-medium text-[#005823] hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-3 rounded-md">
                   <FaChevronLeft size={20} className="text-[#005823]" />
                   <span>Back to sign in</span>
                 </button>
               </Link>
             </div>
           </div>
-        </motion.div>
+        </MotionDiv>
       </AuthLayout>
     </div>
   );

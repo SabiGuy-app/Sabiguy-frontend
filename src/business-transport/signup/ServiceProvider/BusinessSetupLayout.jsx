@@ -1,7 +1,10 @@
 import SidebarProgress from "../../../components/SidebarProgress";
 import { motion } from "framer-motion";
 
-export default function BusinessSetupLayout({ currentStep, children }) {
+const MotionDiv = motion.div;
+const MotionMain = motion.main;
+
+export default function BusinessSetupLayout({ currentStep, children, contentClassName = "" }) {
   const steps = [
     // "Account Type",
     "Business Info",
@@ -12,8 +15,8 @@ export default function BusinessSetupLayout({ currentStep, children }) {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen p-8 bg-white relative">
-      <motion.div
+    <div className="flex flex-col md:flex-row min-h-screen p-4 sm:p-8 bg-white relative">
+      <MotionDiv
         key="sidebar"
         initial={{ x: -300, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -21,19 +24,19 @@ export default function BusinessSetupLayout({ currentStep, children }) {
         transition={{ duration: 0.3 }}
       >
         <SidebarProgress steps={steps} currentStep={currentStep} />
-      </motion.div>
+      </MotionDiv>
 
       {/* Content area */}
-      <motion.main
+      <MotionMain
         key={currentStep}
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -50 }}
         transition={{ duration: 0.3 }}
-        className="flex-1 flex items-center justify-center p-8 md:p-10"
+        className={`min-w-0 flex-1 flex items-start justify-center px-0 py-6 md:px-10 md:py-0 ${contentClassName}`}
       >
         <div className="w-full max-w-lg">{children}</div>
-      </motion.main>
+      </MotionMain>
     </div>
   );
 }

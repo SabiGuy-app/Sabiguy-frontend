@@ -167,11 +167,11 @@ export default function StepOne({ onNext, email }) {
   });
 
   return (
-    <div className="h-screen">
+    <div className="min-h-screen text-[#231F20]">
       <Navbar />
       <AuthLayout
         title="Let's Get Started!"
-        description="Set up your business account to start managing your fleet on SabiGuy."
+        description="Set up your business account to start managing your business on SabiGuy."
       >
         <MotionDiv
           key="business-step-one"
@@ -209,7 +209,7 @@ export default function StepOne({ onNext, email }) {
                   <ErrorMessage
                     name="fullName"
                     component="span"
-                    className="text-[#db3a3a]"
+                    className="text-red-600"
                   />
                 </div>
                 <div>
@@ -236,7 +236,7 @@ export default function StepOne({ onNext, email }) {
                   <ErrorMessage
                     name="phoneNumber"
                     component="span"
-                    className="text-[#db3a3a]"
+                    className="text-red-600"
                   />
                 </div>
 
@@ -253,7 +253,7 @@ export default function StepOne({ onNext, email }) {
                   <ErrorMessage
                     name="password"
                     component="span"
-                    className="text-[#db3a3a]"
+                    className="text-red-600"
                   />
                   <PasswordRequirements password={values.password} />
                   {showPassword ? (
@@ -270,7 +270,7 @@ export default function StepOne({ onNext, email }) {
                 </div>
 
                 {errorMessage && (
-                  <div className="text-center text-[#db3a3a] mt-2">
+                  <div className="text-center text-red-600 mt-2">
                     {errorMessage}
                   </div>
                 )}
@@ -328,7 +328,7 @@ export default function StepOne({ onNext, email }) {
                     </label>
                   </div>
                   {termError && (
-                    <span className="text-[#db3a3a] text-sm">{termError}</span>
+                    <span className="text-red-600 text-sm">{termError}</span>
                   )}
                 </div>
 
