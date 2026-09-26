@@ -1,6 +1,8 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
-import { ChevronDown, UploadCloud, X } from "lucide-react";
+import { X } from "lucide-react";
+import Button from "../../../../components/button";
+import UploadBox from "../../../../components/uploadBox";
 import InputField from "../../../../components/InputField";
 import BusinessSetupLayout from "../BusinessSetupLayout";
 
@@ -30,7 +32,6 @@ export default function BusinessInfo({ onNext, onBack }) {
   const [ninFile, setNinFile] = useState(null);
   const [uploadingNin, setUploadingNin] = useState(false);
   const [ninError, setNinError] = useState("");
-  const ninInputRef = useRef(null);
 
   const handleChange = (field) => (e) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -67,44 +68,15 @@ export default function BusinessInfo({ onNext, onBack }) {
     return response.data?.file?.url ?? response.data?.data?.file?.url;
   };
 
-  const handleNinFile = async (fileList) => {
-    const file = fileList?.[0];
-    if (!file) return;
-
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      setNinError("Only JPEG, PNG or PDF files are allowed.");
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      setNinError(`File must be under ${MAX_FILE_SIZE_MB}MB.`);
-      return;
-    }
-
-    setNinError("");
-    setUploadingNin(true);
-    try {
-      const url = await uploadFile(file);
-      setNinFile({ name: file.name, url });
-      if (errors.nin) setErrors((er) => ({ ...er, nin: undefined }));
-    } catch (err) {
-      setNinError(
-        err.response?.data?.message ||
-          "Failed to upload NIN slip. Please try again.",
-      );
-    } finally {
-      setUploadingNin(false);
-    }
-  };
-
-  const handleNinDrop = (e) => {
-    e.preventDefault();
-    handleNinFile(e.dataTransfer.files);
-  };
-
   const handleRemoveNin = () => {
     setNinFile(null);
     setNinError("");
   };
+
+  const canContinue = Boolean(
+    form.category && form.businessName.trim() && form.address.trim() &&
+    form.city.trim() && ninFile?.url,
+  );
 
   const validate = () => {
     const next = {};
@@ -204,20 +176,12 @@ export default function BusinessInfo({ onNext, onBack }) {
 
   return (
     <BusinessSetupLayout currentStep={0}>
-      <div style={{ background: "#fff", minHeight: "100vh" }}>
-        {/* <div
-          onClick={onBack}
-          className="flex items-center gap-2 w-fit cursor-pointer"
-        >
-          <IoIosArrowBack size={24} />
-          <h2 className="text-lg">Back</h2>
-        </div> */}
-
-        <div className="w-full max-w-lg px-5 py-8">
-          <h1 className="text-[19px] font-semibold text-gray-900 tracking-tight">
+      <div className="text-[#231F20]">
+        <div className="w-full max-w-lg">
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
             Tell us about your business
           </h1>
-          <p className="mt-1.5 text-[13px] leading-snug text-gray-500">
+          <p className="mt-1.5 text-base leading-relaxed text-[#231F20BF]">
             Provide accurate details about your company to help us verify your
             business and set up your account.
           </p>
@@ -230,31 +194,12 @@ export default function BusinessInfo({ onNext, onBack }) {
             className="mt-7 space-y-5"
           >
             <div>
-              <label className="block text-[13px] font-medium text-gray-900 mb-2">
-                Business category
-              </label>
-              <div className="relative">
-                <select
-                  value={form.category}
-                  onChange={handleCategoryChange}
-                  className="w-full appearance-none rounded-lg bg-gray-100 border border-[#231F2040] px-4 py-3.5 text-[13px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#005823]/30"
-                >
-                  <option value="" disabled>
-                    Select category
-                  </option>
-                  {CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={16}
-                  className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
-                />
-              </div>
+              <InputField select name="businessCategory" label="Business category"
+                placeholder="Select category" value={form.category}
+                options={CATEGORIES.map((category) => ({ value: category.id, label: category.label }))}
+                onChange={(option) => handleCategoryChange({ target: { value: option.value } })} />
               {errors.category && (
-                <p className="mt-1.5 text-[12px] text-red-600">
+                <p className="mt-1.5 text-sm text-red-600">
                   {errors.category}
                 </p>
               )}
@@ -267,13 +212,12 @@ export default function BusinessInfo({ onNext, onBack }) {
                   <InputField
                     name="businessName"
                     label="Business Name"
-                    placeholder="e.g Adewale Fleet Services"
+                    placeholder="e.g Adewale Services"
                     value={form.businessName}
                     onChange={handleChange("businessName")}
-                    error={errors.businessName}
                   />
                   {errors.businessName && (
-                    <p className="mt-1.5 text-[12px] text-red-600">
+                    <p className="mt-1.5 text-sm text-red-600">
                       {errors.businessName}
                     </p>
                   )}
@@ -286,10 +230,9 @@ export default function BusinessInfo({ onNext, onBack }) {
                     placeholder="Address"
                     value={form.address}
                     onChange={handleChange("address")}
-                    error={errors.address}
                   />
                   {errors.address && (
-                    <p className="mt-1.5 text-[12px] text-red-600">
+                    <p className="mt-1.5 text-sm text-red-600">
                       {errors.address}
                     </p>
                   )}
@@ -302,58 +245,31 @@ export default function BusinessInfo({ onNext, onBack }) {
                     placeholder="Ibadan"
                     value={form.city}
                     onChange={handleChange("city")}
-                    error={errors.city}
                   />
                   {errors.city && (
-                    <p className="mt-1.5 text-[12px] text-red-600">
+                    <p className="mt-1.5 text-sm text-red-600">
                       {errors.city}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-900 mb-2">
+                  <label className="block text-base font-medium text-[#231F20] mb-2">
                     NIN Slip
                   </label>
 
                   {!ninFile ? (
-                    <div
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={handleNinDrop}
-                      onClick={() =>
-                        !uploadingNin && ninInputRef.current?.click()
-                      }
-                      className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-10 text-center transition-colors ${
-                        uploadingNin
-                          ? "cursor-not-allowed opacity-60"
-                          : "cursor-pointer hover:bg-gray-50"
-                      }`}
-                    >
-                      <UploadCloud size={32} className="text-[#005823]" />
-                      <p className="text-[15px] text-gray-700">
-                        {uploadingNin ? (
-                          "Uploading..."
-                        ) : (
-                          <>
-                            Upload NIN slip{" "}
-                            <span className="font-medium text-[#005823] underline">
-                              Browse
-                            </span>
-                          </>
-                        )}
-                      </p>
-                      <p className="text-[12px] text-gray-400">
-                        JPEG, PNG, PDF format, Max {MAX_FILE_SIZE_MB}MB
-                      </p>
-                      <input
-                        ref={ninInputRef}
-                        type="file"
-                        accept={ACCEPTED_TYPES.join(",")}
-                        className="hidden"
-                        disabled={uploadingNin}
-                        onChange={(e) => handleNinFile(e.target.files)}
-                      />
-                    </div>
+                    <UploadBox multiple={false} accept={ACCEPTED_TYPES.join(",")} maxSizeMB={MAX_FILE_SIZE_MB}
+                      prompt="Upload NIN slip" formatHint="JPEG, PNG, PDF format, Max 5 MB"
+                      disabled={submitting} onUploadStart={() => { setUploadingNin(true); setNinError(""); }}
+                      onUploadEnd={() => setUploadingNin(false)} onError={setNinError}
+                      uploadFile={async (file) => {
+                        const url = await uploadFile(file);
+                        if (!url) throw new Error("Upload failed. Please try again.");
+                        setNinFile({ name: file.name, url });
+                        setErrors((previous) => ({ ...previous, nin: undefined }));
+                        return url;
+                      }} />
                   ) : (
                     <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
                       <span className="max-w-[220px] truncate text-[13px] text-gray-700">
@@ -371,34 +287,32 @@ export default function BusinessInfo({ onNext, onBack }) {
                   )}
 
                   {ninError && (
-                    <p className="mt-1.5 text-[12px] text-red-600">
+                    <p className="mt-1.5 text-sm text-red-600">
                       {ninError}
                     </p>
                   )}
                   {errors.nin && !ninError && (
-                    <p className="mt-1.5 text-[12px] text-red-600">
+                    <p className="mt-1.5 text-sm text-red-600">
                       {errors.nin}
                     </p>
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={submitting || uploadingNin}
-                  className="ml-auto flex items-center gap-1.5 rounded-lg bg-[#005823CC] px-6 py-3 text-[14px] font-medium text-white hover:bg-emerald-900 active:bg-emerald-950 transition-colors disabled:opacity-60"
-                >
-                  {submitting ? "Saving..." : "Save & Continue"}
-                </button>
+                <div className="flex justify-end gap-4 pt-2">
+                  <Button type="button" variant="ghost" onClick={onBack} disabled={submitting || uploadingNin}>Back</Button>
+                  <Button type="submit" disabled={!canContinue || submitting || uploadingNin}>
+                    {submitting ? "Saving..." : "Save & Continue"}
+                  </Button>
+                </div>
               </>
             )}
           </form>
 
           {errorMessage && (
-            <p className="mt-3 text-[12px] text-red-600">{errorMessage}</p>
+            <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
           )}
           {successMessage && (
-            <p className="mt-3 text-[12px] text-green-600">{successMessage}</p>
+            <p className="mt-3 text-sm text-[#005823]">{successMessage}</p>
           )}
         </div>
       </div>
