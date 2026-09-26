@@ -167,7 +167,7 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
   };
 
   const canContinue = selectedServices.length > 0 && selectedLocations.length > 0 &&
-    selectedDays.length > 0 && Boolean(openingTime && closingTime);
+    selectedDays.length > 0 && Boolean(openingTime && closingTime) && studioPictures.length > 0;
 
   const handleSaveAndContinue = async () => {
     setErrorMessage("");
@@ -185,6 +185,10 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
     }
     if (hoursMode !== "always" && !selectedDays.length) {
       setErrorMessage("Please select at least one available day.");
+      return;
+    }
+    if (!studioPictures.length) {
+      setErrorMessage("Please upload at least one photo of your studio space.");
       return;
     }
 
@@ -291,7 +295,7 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
 
         <section aria-labelledby="studio-photos-heading">
           <h2 id="studio-photos-heading" className="font-semibold">Photos of your studio space</h2>
-          <p className="mb-3 mt-3 text-sm text-[#231F20BF]">Photos of your salon or studio space (inside &amp; outside).</p>
+          <p className="mb-3 mt-3 text-sm text-[#231F20BF]">Upload at least one photo of your salon or studio space (inside &amp; outside).</p>
           <UploadBox uploadFile={uploadPicture} accept="image/jpeg,image/png,application/pdf"
             disabled={submitting} prompt="Upload pictures" formatHint="JPEG, PNG, PDF format, Max 5 MB each"
             className="!rounded-md !border !border-[#231F2066] !px-4 !py-6 [&_svg]:h-10 [&_svg]:w-10 [&_svg]:stroke-[1.5] [&_svg]:text-[#005823] [&_p:first-of-type]:pt-4 [&_p:first-of-type]:text-base [&_p:last-of-type]:text-xs"
