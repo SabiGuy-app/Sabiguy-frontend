@@ -352,7 +352,7 @@ export default function Bookings() {
     providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
     providerImage:
       booking.providerId?.profilePicture ||
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
+      "/avatar.png",
     providerVehicleImage:
       booking.providerId?.workVisuals?.[0]?.pictures?.[0] || null,
     providerRole: (
@@ -378,14 +378,22 @@ export default function Bookings() {
     // description: booking.description || null,
     notes: booking.pickupNote,
     modeOfDelivery: booking.modeOfDelivery || "—",
+    scheduleType: booking.scheduleType || booking.schedule_type || null,
 
-    scheduledDate: booking.createdAt
-      ? new Date(booking.createdAt).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : "—",
+    scheduledDate:
+      booking.scheduleDate || booking.startDate
+        ? new Date(booking.scheduleDate || booking.startDate).toLocaleString(
+            "en-GB",
+            {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            },
+          )
+        : null,
     deliveryDate: booking.endDate
       ? new Date(booking.endDate).toLocaleDateString("en-GB", {
           day: "numeric",
