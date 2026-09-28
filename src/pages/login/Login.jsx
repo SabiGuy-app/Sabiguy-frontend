@@ -15,13 +15,7 @@ import { LoginSchema } from "./schema";
 import ForgotPassword from "../Forgot-Password/ForgotPassword";
 import { useAuthStore } from "../../stores/auth.store";
 import Loader from "../../components/Loader";
-import {
-  login,
-  googleLogin,
-  businessLogin,
-  businessGoogleLogin,
-  getUserByEmail,
-} from "../../api/auth";
+import { login, googleLogin, getUserByEmail } from "../../api/auth";
 import { requestNotificationPermission } from "../../services/fcmService";
 import { registerUserFCMToken } from "../../api/fcm";
 
@@ -37,7 +31,7 @@ const registerFCM = async () => {
     const fcmToken = await Promise.race([
       requestNotificationPermission(),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("FCM timeout")), 3000)
+        setTimeout(() => reject(new Error("FCM timeout")), 3000),
       ),
     ]);
     if (fcmToken) {
@@ -66,10 +60,7 @@ const extractErrorMessage = (error) => {
     }
   } else {
     message =
-      raw?.message ||
-      raw?.error ||
-      raw?.error?.message ||
-      raw?.data?.message;
+      raw?.message || raw?.error || raw?.error?.message || raw?.data?.message;
   }
 
   // Strip axios internal noise
@@ -102,7 +93,7 @@ const getProviderKycStatus = async (email) => {
   try {
     const { data } = await axios.post(
       `${import.meta.env.VITE_BASE_URL}/provider/kyc-level`,
-      { email }
+      { email },
     );
 
     // Persist token if the KYC endpoint returns a fresher one
@@ -150,10 +141,7 @@ const getBusinessKycStatus = async (email) => {
     const message = String(data?.message || "").toLowerCase();
     const isNewBusiness =
       message.includes("new customer") || message.includes("new business");
-    const rawLevel =
-      data?.kycLevel ??
-      data?.data?.kycLevel ??
-      data?.level;
+    const rawLevel = data?.kycLevel ?? data?.data?.kycLevel ?? data?.level;
     const level = Number(rawLevel);
 
     if (isNewBusiness) {
@@ -230,13 +218,13 @@ export default function Login() {
       return;
     }
 
-    if (userRole === "business") {
+    if (userRole === "business" || userRole === "businessOwner") {
       const kycStatus = await getBusinessKycStatus(email);
 
       if (kycStatus === "incomplete") {
         setRedirecting(true);
         setErrorMessage(
-          "You are yet to complete your onboarding process. You will be redirected to where you stopped..."
+          "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
         );
         setTimeout(() => navigate("/business-provider/signup"), 2000);
         return;
@@ -253,7 +241,7 @@ export default function Login() {
       if (kycStatus === "incomplete") {
         setRedirecting(true);
         setErrorMessage(
-          "You are yet to complete your onboarding process. You will be redirected to where you stopped..."
+          "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
         );
         setTimeout(() => navigate("/service-provider/signup"), 2000);
         return;
@@ -286,30 +274,15 @@ export default function Login() {
         message: res.message,
       });
     } catch (error) {
-      // Not a buyer/provider account — try the business login before giving up.
-      try {
-        const bizRes = await businessLogin({ email, password: values.password });
+      console.error("Login error:", error);
 
-        if (!bizRes?.token) {
-          setErrorMessage("Login failed. Please try again.");
-          return;
-        }
-
-        await finaliseLogin({
-          role: "business",
-          email: bizRes.email || email,
-          token: bizRes.token,
-          message: bizRes.message,
-        });
-      } catch (bizError) {
-        console.error("Login error:", error, bizError);
-
-        if (error.request && !error.response) {
-          setErrorMessage("No response from server. Please check your connection.");
-        } else {
-          const raw = extractErrorMessage(error);
-          setErrorMessage(normaliseMessage(raw, "Login failed. Try again."));
-        }
+      if (error.request && !error.response) {
+        setErrorMessage(
+          "No response from server. Please check your connection.",
+        );
+      } else {
+        const raw = extractErrorMessage(error);
+        setErrorMessage(normaliseMessage(raw, "Login failed. Try again."));
       }
     } finally {
       // Always reset loading — this was the primary bug causing infinite loading
@@ -345,37 +318,9 @@ export default function Login() {
           token: data.token,
         });
       } catch (err) {
-        // Not a buyer/provider account — try the business Google login before giving up.
-        try {
-          const bizData = await businessGoogleLogin(tokenResponse.access_token);
-
-          if (!bizData?.token) {
-            const msg =
-              typeof bizData === "string"
-                ? bizData
-                : bizData?.message || bizData?.error;
-            setErrorMessage(normaliseMessage(msg, "Google login failed."));
-            return;
-          }
-
-          // The business endpoint only returns a token, no email — read it
-          // straight from Google since we already have the access token.
-          const userInfo = await fetch(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
-            { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } },
-          );
-          const profile = await userInfo.json();
-
-          await finaliseLogin({
-            role: "business",
-            email: bizData.email || profile?.email || "",
-            token: bizData.token,
-          });
-        } catch (bizErr) {
-          console.error("Google login error:", err, bizErr);
-          const raw = extractErrorMessage(err);
-          setErrorMessage(normaliseMessage(raw, "Google login failed."));
-        }
+        console.error("Google login error:", err);
+        const raw = extractErrorMessage(err);
+        setErrorMessage(normaliseMessage(raw, "Google login failed."));
       } finally {
         setGoogleLoading(false);
       }
@@ -463,7 +408,9 @@ export default function Login() {
                       type="button"
                       onClick={() => setShowPassword((p) => !p)}
                       className="absolute top-11 right-3"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? <BsEye /> : <BsEyeSlash />}
                     </button>
