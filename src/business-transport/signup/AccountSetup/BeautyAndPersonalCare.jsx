@@ -1,24 +1,51 @@
-import { IoIosArrowBack } from "react-icons/io";
 import BusinessSetupLayout from "../ServiceProvider/BusinessSetupLayout";
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
+import Button from "../../../components/button";
 import InputField from "../../../components/InputField";
-import { useState } from "react";
-import { Check, ChevronDown, CloudUpload, Plus } from "lucide-react";
+import UploadBox from "../../../components/uploadBox";
+import SelectionChip from "../../../components/SelectionChip";
+import {
+  saveBusinessServiceDetails,
+  uploadBusinessWorkVisual,
+} from "../../../api/business";
+
+const BUSINESS_SERVICE_DRAFT_KEY = "business-service-details-draft";
+
+function readBusinessServiceDraft() {
+  try {
+    const stored = localStorage.getItem(BUSINESS_SERVICE_DRAFT_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
 
 const BeautyAndPersonalCare = ({ onBack, onNext }) => {
-  const [experience, setExperience] = useState("");
-
+  const draft = readBusinessServiceDraft();
   const services = [
-    { id: 1, name: "Braiding" },
+    { id: 1, name: "Barbing" },
     { id: 2, name: "Hair Dresser" },
     { id: 3, name: "Spa" },
-    { id: 4, name: "Lash Tech" },
+    { id: 4, name: "Lash Tech." },
     { id: 5, name: "Pedicure" },
-    { id: 6, name: "Nails Tech" },
+    { id: 6, name: "Nails Tech." },
   ];
 
-  const [selectedServices, setSelectedServices] = useState([]);
-  // Service Locations State (defaulting to the two selected in your image)
-  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedServices, setSelectedServices] = useState(
+    () => draft?.selectedServices || [],
+  );
+  const [selectedLocations, setSelectedLocations] = useState(
+    () => (draft?.selectedLocations || []).filter((location) =>
+      ["walk_in_salon", "customer_address"].includes(location),
+    ),
+  );
+  const [studioPictures, setStudioPictures] = useState(
+    () => draft?.studioPictures || [],
+  );
+  const [uploadingPictures, setUploadingPictures] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Handlers
   const toggleLocation = (value) => {
@@ -30,64 +57,58 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
   const businessData = {
     businessCategory: "Beauty & Personal Care",
 
-    services: [
-      { id: 1, name: "Braiding", status: false },
-      { id: 2, name: "Hair Dresser", status: false },
-      { id: 3, name: "Spa", status: false },
-      { id: 4, name: "Lash Tech", status: false },
-      { id: 5, name: "Pedicure", status: false },
-      { id: 6, name: "Nails Tech", status: false },
-    ],
-
-    experience: ["0-2 years", "2-5 years", "5-10 years", "10+ years"],
-
     businessHours: {
-      type: "every_day",
       openingTime: "09:00 AM",
       closingTime: "06:00 PM",
-
-      availableDays: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ],
     },
 
     serviceLocations: [
-      {
-        id: 1,
-        name: "Customer Address",
-        value: "customer_address",
-      },
-      {
-        id: 2,
-        name: "Walk in Salon",
-        value: "walk_in_salon",
-      },
-      {
-        id: 3,
-        name: "My Home Address",
-        value: "my_home_address",
-      },
+      { id: 1, name: "Walk in Salon", value: "walk_in_salon" },
+      { id: 2, name: "Customer Address", value: "customer_address" },
     ],
 
-    photos: [],
   };
 
-  const [scheduleType, setScheduleType] = useState(
-    businessData.businessHours.type,
-  );
   const [openingTime, setOpeningTime] = useState(
-    businessData.businessHours.openingTime,
+    () => draft?.openingTime || businessData.businessHours.openingTime,
   );
   const [closingTime, setClosingTime] = useState(
-    businessData.businessHours.closingTime,
+    () => draft?.closingTime || businessData.businessHours.closingTime,
   );
-  const [selectedDays, setSelectedDays] = useState([]);
+  const [selectedDays, setSelectedDays] = useState(
+    () => draft?.selectedDays || [],
+  );
+
+  // Keep manual hours active while the schedule selector is hidden.
+  // const [hoursMode, setHoursMode] = useState(() => draft?.hoursMode || "every_day");
+  const hoursMode = "every_day";
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        BUSINESS_SERVICE_DRAFT_KEY,
+        JSON.stringify({
+          selectedServices,
+          selectedLocations,
+          studioPictures,
+          openingTime,
+          closingTime,
+          selectedDays,
+          hoursMode,
+        }),
+      );
+    } catch {
+      // Ignore storage quota or privacy-mode errors.
+    }
+  }, [
+    selectedServices,
+    selectedLocations,
+    studioPictures,
+    openingTime,
+    closingTime,
+    selectedDays,
+    hoursMode,
+  ]);
 
   const timeOptions = [
     "07:00 AM",
@@ -106,6 +127,22 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
     "08:00 PM",
   ];
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const dayLabels = {
+    Mon: "Monday",
+    Tue: "Tuesday",
+    Wed: "Wednesday",
+    Thu: "Thursday",
+    Fri: "Friday",
+    Sat: "Saturday",
+    Sun: "Sunday",
+  };
+  const timeTo24Hour = (time) => {
+    const [value, period] = time.split(" ");
+    let [hours, minutes] = value.split(":").map(Number);
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  };
 
   const toggleDay = (day) => {
     setSelectedDays((prev) =>
@@ -114,347 +151,183 @@ const BeautyAndPersonalCare = ({ onBack, onNext }) => {
   };
 
   const toggleService = (id) => {
-    setSelectedServices((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((serviceId) => serviceId !== id);
-      }
-      return [...prev, id];
-    });
+    const isSelected = selectedServices.includes(id);
+
+    setSelectedServices((prev) =>
+      isSelected
+        ? prev.filter((serviceId) => serviceId !== id)
+        : [...prev, id],
+    );
+  };
+
+  const uploadPicture = async (file) => {
+    const email = localStorage.getItem("email") || localStorage.getItem("google-email");
+    if (!email) throw new Error("Your session has expired. Please sign in again.");
+    return uploadBusinessWorkVisual(email, file);
+  };
+
+  const canContinue = selectedServices.length > 0 && selectedLocations.length > 0 &&
+    selectedDays.length > 0 && Boolean(openingTime && closingTime) && studioPictures.length > 0;
+
+  const handleSaveAndContinue = async () => {
+    setErrorMessage("");
+    if (uploadingPictures) {
+      setErrorMessage("Please wait for studio images to finish uploading.");
+      return;
+    }
+    if (!selectedServices.length) {
+      setErrorMessage("Please select at least one service.");
+      return;
+    }
+    if (!selectedLocations.length) {
+      setErrorMessage("Please select at least one service location.");
+      return;
+    }
+    if (hoursMode !== "always" && !selectedDays.length) {
+      setErrorMessage("Please select at least one available day.");
+      return;
+    }
+    if (!studioPictures.length) {
+      setErrorMessage("Please upload at least one photo of your studio space.");
+      return;
+    }
+
+    const service = selectedServices.map((id) => ({
+      serviceName: services.find((item) => item.id === id)?.name,
+    }));
+
+    setSubmitting(true);
+    try {
+      await saveBusinessServiceDetails({
+        service,
+        availableDays: (hoursMode === "always" ? daysOfWeek : selectedDays).map((day) => dayLabels[day]),
+        businessHours: {
+          start: hoursMode === "always" ? "00:00" : timeTo24Hour(openingTime),
+          end: hoursMode === "always" ? "23:59" : timeTo24Hour(closingTime),
+        },
+        servicePlace: businessData.serviceLocations
+          .filter((location) => selectedLocations.includes(location.value))
+          .map((location) => location.name),
+        studioImages: [{ pictures: studioPictures, videos: [] }],
+      });
+      localStorage.removeItem(BUSINESS_SERVICE_DRAFT_KEY);
+      onNext?.();
+    } catch (error) {
+      setErrorMessage(
+        error?.response?.data?.message ||
+          "Unable to save your business service details. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <BusinessSetupLayout currentStep={2}>
-      <div>
-        <div
-          onClick={onBack}
-          className="flex items-center gap-2 w-fit mb-8 cursor-pointer"
-        >
-          <IoIosArrowBack size={24} />
-          <h2 className="text-lg">Back</h2>
-        </div>
-        <div>
-          <h2 className="text-[20px] text-[#231F20] font-semibold mb-2">
-            Verify your skill
-          </h2>
-          <p className="text-[#231F20BF] text-[16px] mb-6">
-            Complete your verification to build trust with customers and access
-            more features.
-          </p>
+    <BusinessSetupLayout currentStep={2} contentClassName="!items-start !px-0 !py-6 md:!px-10 md:!py-0 md:-mt-3.5">
+      <div className="flex flex-col gap-6 text-[#231F20]">
+        <InputField
+          label="Business category"
+          name="businessCategory"
+          value={businessData.businessCategory}
+          readOnly
+          inputClassName="!mt-1 !h-16 !rounded-[10px] !border-[#231F2026] !bg-[#F5F5F5] !text-[#231F20BF]"
+        />
 
-          <div>
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-3">
-                <h3 className="font-semibold">Business category</h3>
-                <div className="border rounded-lg py-2.5 px-4 bg-[#231F200D] border-[#231F2040] h-15 flex justify-between items-center font-normal text-[#231F20BF]">
-                  {businessData.businessCategory}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="font-semibold">Services you provide</h3>
-                  <p className="text-[#231F20BF]">
-                    Choose all the services your business offers.
-                  </p>
-                  <div className="w-full flex gap-3 flex-wrap">
-                    {services.map((service) => {
-                      const isSelected = selectedServices.includes(service.id);
-
-                      return (
-                        <button
-                          onClick={() => toggleService(service.id)}
-                          className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-medium transition-all duration-200
-                           ${
-                             isSelected
-                               ? "border-[#34805A] bg-[#34805A] text-white"
-                               : "border-gray-300 bg-white text-gray-700 hover:border-[#34805A] hover:text-[#34805A]"
-                           }`}
-                          type="button"
-                          key={service.id}
-                        >
-                          {isSelected ? (
-                            <Check size={18} strokeWidth={2} />
-                          ) : (
-                            <Plus size={18} strokeWidth={2} />
-                          )}
-                          {service.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <h3 className="font-semibold">Experience</h3>
-
-                <div className="relative w-full">
-                  <select
-                    value={experience}
-                    onChange={(e) => setExperience(e.target.value)}
-                    className="w-full border rounded-lg py-2.5 px-4 bg-[#231F200D] border-[#231F2040] h-15 appearance-none outline-none focus:border-[#3B82F6] focus:bg-white transition-all cursor-pointer font-normal text-[#231F20BF]"
-                  >
-                    <option value="" disabled>
-                      Select experience
-                    </option>
-
-                    {businessData.experience.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-600">
-                    <ChevronDown size={20} strokeWidth={2} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <h3 className="font-semibold">Business Hours</h3>
-                <p className="text-[#231F20BF]">
-                  Set when customers can book your services.
-                </p>
-
-                {/* Business Hours */}
-                <div className="flex flex-col gap-5 mt-2">
-                  <div className="flex items-center gap-6">
-                    {/* Every day Radio */}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <div
-                        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-                          scheduleType === "every_day"
-                            ? "border-[#34805A]"
-                            : "border-gray-300"
-                        }`}
-                        onClick={() => setScheduleType("every_day")}
-                      >
-                        {scheduleType === "every_day" && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-[#34805A]" />
-                        )}
-                      </div>
-                      <span
-                        className={`font-medium ${scheduleType === "every_day" ? "text-[#34805A]" : "text-gray-500"}`}
-                      >
-                        Every day
-                      </span>
-                    </label>
-
-                    {/* 24/7 Radio */}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <div
-                        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-                          scheduleType === "24_7"
-                            ? "border-[#34805A]"
-                            : "border-gray-300"
-                        }`}
-                        onClick={() => setScheduleType("24_7")}
-                      >
-                        {scheduleType === "24_7" && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-[#34805A]" />
-                        )}
-                      </div>
-                      <span
-                        className={`font-medium ${scheduleType === "24_7" ? "text-[#34805A]" : "text-gray-500"}`}
-                      >
-                        24/7
-                      </span>
-                    </label>
-                  </div>
-
-                  {/* Times */}
-                  <div className="flex w-full items-end gap-3">
-                    <div className="flex w-full flex-col gap-1.5">
-                      <label className="text-[15px] text-gray-600">
-                        Opening time
-                      </label>
-                      <div className="relative w-full">
-                        <select
-                          disabled={scheduleType === "24_7"}
-                          value={
-                            scheduleType === "24_7" ? "12:00 AM" : openingTime
-                          }
-                          onChange={(e) => setOpeningTime(e.target.value)}
-                          className="w-full appearance-none rounded-lg border border-[#231F2040] bg-white px-4 py-2.5 text-[15px] text-gray-700 outline-none transition-all focus:border-[#3B82F6] disabled:bg-gray-100 disabled:opacity-70 cursor-pointer"
-                        >
-                          {timeOptions.map((time) => (
-                            <option key={`open-${time}`} value={time}>
-                              {time}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                          <ChevronDown size={18} strokeWidth={2} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-3 text-gray-400">—</div>
-
-                    <div className="flex w-full flex-col gap-1.5">
-                      <label className="text-[15px] text-gray-600">
-                        Closing time
-                      </label>
-                      <div className="relative w-full">
-                        <select
-                          disabled={scheduleType === "24_7"}
-                          value={
-                            scheduleType === "24_7" ? "11:59 PM" : closingTime
-                          }
-                          onChange={(e) => setClosingTime(e.target.value)}
-                          className="w-full appearance-none rounded-lg border border-[#231F2040] bg-white px-4 py-2.5 text-[15px] text-gray-700 outline-none transition-all focus:border-[#3B82F6] disabled:bg-gray-100 disabled:opacity-70 cursor-pointer"
-                        >
-                          {timeOptions.map((time) => (
-                            <option key={`close-${time}`} value={time}>
-                              {time}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                          <ChevronDown size={18} strokeWidth={2} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Available Days */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[15px] text-gray-600">
-                      Available days
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {daysOfWeek.map((day) => {
-                        const isSelected = selectedDays.includes(day);
-                        return (
-                          <button
-                            key={day}
-                            type="button"
-                            disabled={scheduleType === "24_7"}
-                            onClick={() => toggleDay(day)}
-                            className={`min-w-[52px] rounded-full px-2.5 py-1 text-[14px] transition-all disabled:opacity-60 ${
-                              isSelected
-                                ? "border border-[#34805A] bg-[#34805A] text-white"
-                                : "border border-gray-300 bg-white text-gray-600 hover:border-[#34805A] hover:text-[#34805A]"
-                            }`}
-                          >
-                            {day}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Where do you provide your service */}
-                  <div className="flex flex-col gap-3 mt-4">
-                    <div>
-                      <h3 className="font-semibold text-[#231F20]">
-                        Where do you provide your service
-                      </h3>
-                      <p className="text-[#231F20BF] text-sm mt-1">
-                        Select all that apply
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3 mt-1">
-                      {businessData.serviceLocations.map((location) => {
-                        const isSelected = selectedLocations.includes(
-                          location.value,
-                        );
-                        return (
-                          <button
-                            key={location.id}
-                            type="button"
-                            onClick={() => toggleLocation(location.value)}
-                            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                              isSelected
-                                ? "border-[#34805A] bg-[#34805A] text-white"
-                                : "border-gray-300 bg-white text-gray-700 hover:border-[#34805A] hover:text-[#34805A]"
-                            }`}
-                          >
-                            {isSelected ? (
-                              <Check size={16} strokeWidth={2.5} />
-                            ) : (
-                              <Plus size={16} strokeWidth={2.5} />
-                            )}
-                            {location.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Photos of your work */}
-                  <div className="flex flex-col gap-3 mt-4">
-                    <div>
-                      <h3 className="font-semibold text-[#231F20] flex gap-1">
-                        Photos of your work
-                        <span className="text-[#231F20BF] font-normal">
-                          (optional)
-                        </span>
-                      </h3>
-                      <p className="text-[#231F20BF] text-sm mt-1">
-                        Upload clear photos that show your work or tools.
-                      </p>
-                    </div>
-
-                    {/* Upload Dropzone */}
-                    <div className="relative mt-2 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-400 bg-white py-10 transition-all hover:bg-gray-50">
-                      <input
-                        type="file"
-                        multiple
-                        accept=".jpg,.jpeg,.png,.pdf"
-                        className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                      />
-
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <CloudUpload
-                          size={36}
-                          className="text-[#34805A]"
-                          strokeWidth={1.5}
-                        />
-
-                        <p className="text-base text-gray-700">
-                          Upload pictures
-                          <span className="font-semibold text-[#34805A]">
-                            Browse
-                          </span>
-                        </p>
-
-                        <p className="text-xs md:text-sm text-gray-400">
-                          JPEG, PNG, PDF format, Max 5 MB each
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom Action Buttons */}
-                  <div className="mt-12 flex justify-end gap-4 border-t border-gray-100 pt-6">
-                    <button
-                      type="button"
-                      onClick={onBack}
-                      className="rounded-lg border border-[#34805A] bg-white px-8 py-2.5 font-semibold text-[#34805A] transition-all hover:bg-green-50"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onNext?.({
-                          services: selectedServices,
-                          experience,
-                          serviceLocations: selectedLocations,
-                        })
-                      }
-                      className="rounded-lg bg-[#34805A] px-8 py-2.5 font-semibold text-white transition-all hover:bg-[#296647]"
-                    >
-                      Save & Continue
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <section aria-labelledby="business-services-heading">
+          <h2 id="business-services-heading" className="font-semibold">Services you provide</h2>
+          <p className="mt-1.5 text-[#231F20BF]">Choose all the services your business offers.</p>
+          <div className="mt-5 flex flex-wrap gap-x-3 gap-y-5">
+            {services.map((service) => (
+              <SelectionChip key={service.id} selected={selectedServices.includes(service.id)}
+                onClick={() => toggleService(service.id)} disabled={submitting}>
+                {service.name}
+              </SelectionChip>
+            ))}
           </div>
+        </section>
+
+        <section aria-labelledby="business-hours-heading">
+          <h2 id="business-hours-heading" className="font-semibold">Business Hours</h2>
+          <p className="mt-1.5 text-[#231F20BF]">Set when customers can book your services.</p>
+          {/* <fieldset className="mt-5 flex gap-6" disabled={submitting}>
+            <legend className="sr-only">Business hours schedule</legend>
+            {[["every_day", "Every day"], ["always", "24/7"]].map(([value, label]) => (
+              <label key={value} className={`flex cursor-pointer items-center gap-2 ${hoursMode === value ? "font-medium text-[#005823BF]" : "text-[#231F20BF]"}`}>
+                <input type="radio" name="hoursMode" value={value} checked={hoursMode === value}
+                  onChange={() => setHoursMode(value)} className="h-4 w-4 accent-[#005823]" />
+                {label}
+              </label>
+            ))}
+          </fieldset> */}
+          <div className={`mt-3 flex max-w-[388px] items-end gap-3 ${hoursMode === "always" ? "pointer-events-none opacity-50" : ""}`}
+            inert={hoursMode === "always" ? true : undefined}>
+            <InputField select singleChevron name="openingTime" labelClassName="!text-sm !font-normal !text-[#231F20BF]" label="Opening time" value={hoursMode === "always" ? "00:00" : openingTime}
+              options={hoursMode === "always" ? [{ value: "00:00", label: "12:00 AM" }] : timeOptions.map((time) => ({ value: time, label: time }))}
+              onChange={(option) => setOpeningTime(option.value)} inputClassName="!h-11 !border-[#231F2026] !bg-white !px-3 !py-2 !text-xs" />
+            <span aria-hidden="true" className="pb-3 text-[#231F20BF]">&ndash;</span>
+            <InputField select singleChevron name="closingTime" labelClassName="!text-sm !font-normal !text-[#231F20BF]" label="Closing time" value={hoursMode === "always" ? "23:59" : closingTime}
+              options={hoursMode === "always" ? [{ value: "23:59", label: "11:59 PM" }] : timeOptions.map((time) => ({ value: time, label: time }))}
+              onChange={(option) => setClosingTime(option.value)} inputClassName="!h-11 !border-[#231F2026] !bg-white !px-3 !py-2 !text-xs" />
+          </div>
+          <p className="mt-1.5 text-sm text-[#231F20BF]">Available days</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {daysOfWeek.map((day) => (
+              <SelectionChip key={day} selected={hoursMode === "always" || selectedDays.includes(day)} showIcon={false}
+                disabled={hoursMode === "always" || submitting} onClick={() => toggleDay(day)}>
+                {day}
+              </SelectionChip>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="service-location-heading">
+          <h2 id="service-location-heading" className="font-semibold">Where do you provide your service</h2>
+          <p className="mt-1.5 text-[#231F20BF]">Select all that apply</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {businessData.serviceLocations.map((location) => (
+              <SelectionChip key={location.id} selected={selectedLocations.includes(location.value)}
+                disabled={submitting} onClick={() => toggleLocation(location.value)}>
+                {location.name}
+              </SelectionChip>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="studio-photos-heading">
+          <h2 id="studio-photos-heading" className="font-semibold">Photos of your studio space</h2>
+          <p className="mb-3 mt-3 text-sm text-[#231F20BF]">Upload at least one photo of your salon or studio space (inside &amp; outside).</p>
+          <UploadBox uploadFile={uploadPicture} accept="image/jpeg,image/png,application/pdf"
+            disabled={submitting} prompt="Upload pictures" formatHint="JPEG, PNG, PDF format, Max 5 MB each"
+            className="!rounded-md !border !border-[#231F2066] !px-4 !py-6 [&_svg]:h-10 [&_svg]:w-10 [&_svg]:stroke-[1.5] [&_svg]:text-[#005823] [&_p:first-of-type]:pt-4 [&_p:first-of-type]:text-base [&_p:last-of-type]:text-xs"
+            onUploadStart={() => { setUploadingPictures(true); setErrorMessage(""); }}
+            onUploadEnd={() => setUploadingPictures(false)} onError={setErrorMessage}
+            onUploadComplete={(urls) => setStudioPictures((prev) => [...prev, ...urls])} />
+          {studioPictures.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-3">
+              {studioPictures.map((picture, index) => (
+                <li key={`${picture}-${index}`} className="relative flex h-20 w-20 items-center justify-center rounded-lg border border-gray-200">
+                  {/\.pdf(?:[?#]|$)/i.test(picture)
+                    ? <a href={picture} target="_blank" rel="noreferrer" className="text-sm text-[#005823]">View PDF</a>
+                    : <img src={picture} alt={`Studio photo ${index + 1}`} className="h-full w-full rounded-lg object-cover" />}
+                  <button type="button" aria-label={`Remove studio file ${index + 1}`} disabled={submitting}
+                    onClick={() => setStudioPictures((prev) => prev.filter((_, itemIndex) => itemIndex !== index))}
+                    className="absolute right-1 top-1 rounded-full bg-white p-1 text-gray-600">
+                    <X size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {errorMessage && <p role="alert" className="text-sm text-red-600">{errorMessage}</p>}
+        <div className="mt-4 flex justify-end gap-6">
+          <Button type="button" variant="ghost" size="sm" onClick={onBack} disabled={submitting || uploadingPictures}
+            className="h-[54px] min-w-[105px] rounded-lg border border-[#005823] px-6 text-sm font-medium text-[#005823] transition-colors hover:bg-[#F5F8F6] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50">Back</Button>
+          <Button type="button" size="sm" onClick={handleSaveAndContinue} disabled={!canContinue || submitting || uploadingPictures}
+            className="h-[54px] min-w-[141px] rounded-lg bg-[#005823BF] px-6 text-sm font-medium text-white transition-colors hover:bg-[#005823] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed disabled:hover:bg-gray-300">
+            {submitting ? "Saving..." : "Complete"}
+          </Button>
         </div>
       </div>
     </BusinessSetupLayout>

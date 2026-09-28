@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+//import { useNavigate } from "react-router-dom";
 import {
   PhoneCall,
   MessageCircle,
@@ -10,6 +11,7 @@ import {
   CheckCircle,
   Award,
   BadgeCheck,
+  AlertTriangle,
 } from "lucide-react";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import { toast } from "react-hot-toast";
@@ -21,6 +23,7 @@ import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
 import { getWalletBalance } from "../../../../api/provider";
 import { useSearchParams } from "react-router-dom";
 import UserCancellationModal from "../../../../components/UserCancellationModal";
+import PaymentExpiredModal from "./Modalpayment";
 
 export default function BookingSummary2() {
   const [selectedPayment, setSelectedPayment] = useState("wallet");
@@ -33,13 +36,19 @@ export default function BookingSummary2() {
   const [isPaid, setIsPaid] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
+  
 
   const navigate = useNavigate();
+  //const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryBookingId = searchParams.get("bookingId");
   const paymentSuccess = searchParams.get("payment_success");
   const reference = searchParams.get("reference");
-
+  const [timeLeft, setTimeLeft] = useState(5 * 60);
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+ 
   const booking = useBookingStore((state) => state.booking);
   const setBooking = useBookingStore((state) => state.setBooking);
 
@@ -128,6 +137,22 @@ export default function BookingSummary2() {
     fetchBooking();
   }, [queryBookingId, paymentSuccess, setBooking]);
 
+  useEffect(() => {
+    if (isPaid || showExpiredModal) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((previousTime) => Math.max(previousTime - 1, 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isPaid, showExpiredModal]);
+
+  useEffect(() => {
+    if (!isPaid && timeLeft === 0) {
+      setShowExpiredModal(true);
+    }
+  }, [isPaid, timeLeft]);
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -135,8 +160,9 @@ export default function BookingSummary2() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
-  };
-
+    
+  }; 
+ 
   const handleCancelSubmit = async (reason) => {
     await cancelBooking(bookingDetails._id, reason);
   };
@@ -492,6 +518,17 @@ export default function BookingSummary2() {
             <div className="lg:col-span-5 space-y-6">
               {/* Job Summary */}
               <div className="bg-[#231F2005] border border-[#231F201A] p-6 rounded-[16px] space-y-6">
+                     {!isPaid && (
+                  <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                    <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-500" />
+                    <p className="text-sm font-medium">
+                      Complete your payment before the countdown expires —{" "}
+                      <span className="font-bold tabular-nums">
+                        {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+                      </span>
+                    </p>
+                  </div>
+                )}
                 <h3 className="text-xl font-bold text-[#231F20]">Job Summary</h3>
 
                 <div className="space-y-4">
@@ -668,6 +705,9 @@ export default function BookingSummary2() {
             </div>
         </div>
         {showSuccessModal && <SuccessModal />}
+        {showExpiredModal && (
+          <PaymentExpiredModal onBackTobooking={() => navigate("/bookings")} />
+        )}
       </div>
     </DashboardLayout>
   );

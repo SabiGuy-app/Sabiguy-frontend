@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { UploadCloud, X, FileText } from "lucide-react";
 import BusinessSetupLayout from "../BusinessSetupLayout";
-import { IoIosArrowBack } from "react-icons/io";
+import Button from "../../../../components/button";
+import UploadBox from "../../../../components/uploadBox";
 import axios from "axios";
 
 const MAX_FILE_SIZE_MB = 5;
@@ -37,7 +38,6 @@ export default function BusinessVerification({ onBack, onNext }) {
   const [businessPhotos, setBusinessPhotos] = useState([]); // [{ id, name, url }]
   const [uploadingBusinessPhotos, setUploadingBusinessPhotos] = useState(false);
   const [businessPhotoError, setBusinessPhotoError] = useState("");
-  const businessPhotoInputRef = useRef(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -116,57 +116,12 @@ export default function BusinessVerification({ onBack, onNext }) {
 
   // ---- Business photos (multiple) ----
 
-  const handleBusinessPhotos = async (fileList) => {
-    const incoming = Array.from(fileList || []);
-    if (incoming.length === 0) return;
-
-    const valid = [];
-    let rejection = "";
-
-    incoming.forEach((file) => {
-      if (!ACCEPTED_TYPES.includes(file.type)) {
-        rejection = "Only JPEG, PNG or PDF files are allowed.";
-        return;
-      }
-      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        rejection = `Each file must be under ${MAX_FILE_SIZE_MB}MB.`;
-        return;
-      }
-      valid.push(file);
-    });
-
-    setBusinessPhotoError(rejection);
-
-    if (valid.length === 0) return;
-
-    setUploadingBusinessPhotos(true);
-    try {
-      const uploaded = await Promise.all(
-        valid.map(async (file) => ({
-          id: `${Date.now()}-${file.name}-${Math.random()}`,
-          name: file.name,
-          url: await uploadFile(file, BUSINESS_PHOTO_FIELD),
-        })),
-      );
-      setBusinessPhotos((prev) => [...prev, ...uploaded]);
-    } catch (err) {
-      setBusinessPhotoError(
-        err.response?.data?.message ||
-          "Failed to upload photo(s). Please try again.",
-      );
-    } finally {
-      setUploadingBusinessPhotos(false);
-    }
-  };
-
-  const handleBusinessPhotoDrop = (e) => {
-    e.preventDefault();
-    handleBusinessPhotos(e.dataTransfer.files);
-  };
-
   const handleRemoveBusinessPhoto = (id) => {
     setBusinessPhotos((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const canContinue = SINGLE_DOCUMENTS.every((doc) => Boolean(files[doc.id]?.url)) &&
+    businessPhotos.filter((photo) => photo.url).length >= MIN_BUSINESS_PHOTOS;
 
 
   const handleSubmit = async () => {
@@ -231,15 +186,8 @@ export default function BusinessVerification({ onBack, onNext }) {
 
   return (
     <BusinessSetupLayout currentStep={1}>
-      <div style={{ background: "#fff", minHeight: "100vh" }} className="">
-        {/* <div
-          onClick={onBack}
-          className="flex items-center gap-2 w-fit cursor-pointer"
-        >
-          <IoIosArrowBack size={24} />
-          <h2 className="text-lg">Back</h2>
-        </div> */}
-        <div className="w-full max-w-lg px-5 py-8">
+      <div className="text-[#231F20]">
+        <div className="w-full max-w-lg">
           <h1 className="text-[20px] font-semibold text-[#231F20]">
             Business Verification
           </h1>
@@ -256,10 +204,10 @@ export default function BusinessVerification({ onBack, onNext }) {
 
               return (
                 <div key={doc.id}>
-                  <label className="block text-[15px] font-medium text-[#231F20] mb-1">
+                  <label className="block text-base font-medium text-[#231F20] mb-1">
                     {doc.label}
                   </label>
-                  <p className="mb-2 text-[13px] leading-snug text-[#231F20BF]">
+                  <p className="mb-2 text-sm leading-relaxed text-[#231F20BF]">
                     {doc.description}
                   </p>
 
@@ -286,9 +234,9 @@ export default function BusinessVerification({ onBack, onNext }) {
                   ) : (
                     <button
                       type="button"
-                      disabled={isUploading}
+                      disabled={isUploading || submitting}
                       onClick={() => inputRefs.current[doc.id]?.click()}
-                      className={`flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 py-3.5 text-[14px] text-gray-600 transition-colors ${
+                      className={`flex w-full items-center justify-center gap-2 rounded-md border border-gray-400 bg-gray-50 px-5 py-4 text-base text-[#231F20BF] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8BC53FBF] ${
                         isUploading
                           ? "cursor-not-allowed opacity-60"
                           : "cursor-pointer hover:bg-gray-100"
@@ -304,12 +252,12 @@ export default function BusinessVerification({ onBack, onNext }) {
                     type="file"
                     accept={ACCEPTED_TYPES.join(",")}
                     className="hidden"
-                    disabled={isUploading}
+                    disabled={isUploading || submitting}
                     onChange={(e) => handleFile(doc, e.target.files?.[0])}
                   />
 
                   {error && (
-                    <p className="mt-2 text-[12px] text-red-600">{error}</p>
+                    <p className="mt-2 text-sm text-red-600">{error}</p>
                   )}
                 </div>
               );
@@ -317,55 +265,27 @@ export default function BusinessVerification({ onBack, onNext }) {
 
             {/* Business/Store photos - multiple */}
             <div>
-              <label className="block text-[15px] font-medium text-[#231F20] mb-1">
+              <label className="block text-base font-medium text-[#231F20] mb-1">
                 Business/Store photo{" "}
                 <span className="font-normal text-gray-500">
                   (you can upload more than one)
                 </span>
               </label>
-              <p className="mb-2 text-[13px] leading-snug text-[#231F20BF]">
+              <p className="mb-2 text-sm leading-relaxed text-[#231F20BF]">
                 Upload clear photos of your shop, store, or business premises.
               </p>
 
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={handleBusinessPhotoDrop}
-                onClick={() =>
-                  !uploadingBusinessPhotos &&
-                  businessPhotoInputRef.current?.click()
-                }
-                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-10 text-center transition-colors ${
-                  uploadingBusinessPhotos
-                    ? "cursor-not-allowed opacity-60"
-                    : "cursor-pointer hover:bg-gray-50"
-                }`}
-              >
-                <UploadCloud size={32} className="text-[#005823]" />
-                <p className="text-[15px] text-gray-700">
-                  {uploadingBusinessPhotos ? (
-                    "Uploading..."
-                  ) : (
-                    <>
-                      Upload photos{" "}
-                      <span className="font-medium text-[#005823] underline">
-                        Browse
-                      </span>
-                    </>
-                  )}
-                </p>
-                <p className="text-[12px] text-gray-400">
-                  JPEG, PNG, PDF format, Max {MAX_FILE_SIZE_MB}MB each
-                </p>
-                <input
-                  ref={businessPhotoInputRef}
-                  type="file"
-                  multiple
-                  accept={ACCEPTED_TYPES.join(",")}
-                  className="hidden"
-                  disabled={uploadingBusinessPhotos}
-                  onChange={(e) => handleBusinessPhotos(e.target.files)}
-                />
-              </div>
+              <UploadBox accept={ACCEPTED_TYPES.join(",")} maxSizeMB={MAX_FILE_SIZE_MB}
+                prompt="Upload photos" formatHint="JPEG, PNG, PDF format, Max 5 MB each"
+                disabled={submitting}
+                onUploadStart={() => { setUploadingBusinessPhotos(true); setBusinessPhotoError(""); }}
+                onUploadEnd={() => setUploadingBusinessPhotos(false)} onError={setBusinessPhotoError}
+                uploadFile={async (file) => {
+                  const url = await uploadFile(file, BUSINESS_PHOTO_FIELD);
+                  if (!url) throw new Error("Upload failed. Please try again.");
+                  setBusinessPhotos((previous) => [...previous, { id: crypto.randomUUID(), name: file.name, url }]);
+                  return url;
+                }} />
 
               {businessPhotos.length > 0 && (
                 <div className="mt-3 space-y-2">
@@ -397,36 +317,27 @@ export default function BusinessVerification({ onBack, onNext }) {
               )}
 
               {businessPhotoError && (
-                <p className="mt-2 text-[12px] text-red-600">
+                <p className="mt-2 text-sm text-red-600">
                   {businessPhotoError}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-8">
-            <button
-              type="button"
-              onClick={onBack}
-              className="rounded-md border border-gray-200 px-6 py-3 text-[14px] font-medium text-gray-600 hover:bg-gray-50 transition-all duration-200"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="rounded-md bg-[#005823BF] px-6 py-3 text-[14px] font-medium text-white hover:bg-[#005823] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+          <div className="mt-8 flex justify-end gap-4">
+            <Button type="button" variant="ghost" onClick={onBack}
+              disabled={submitting || uploadingBusinessPhotos || Object.values(uploading).some(Boolean)}>Back</Button>
+            <Button type="button" onClick={handleSubmit}
+              disabled={!canContinue || submitting || uploadingBusinessPhotos || Object.values(uploading).some(Boolean)}>
               {submitting ? "Saving..." : "Save & Continue"}
-            </button>
+            </Button>
           </div>
 
           {errorMessage && (
-            <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+            <p className="text-red-600 text-sm mt-2">{errorMessage}</p>
           )}
           {successMessage && (
-            <p className="text-green-600 text-sm mt-2">{successMessage}</p>
+            <p className="text-[#005823] text-sm mt-2">{successMessage}</p>
           )}
         </div>
       </div>
