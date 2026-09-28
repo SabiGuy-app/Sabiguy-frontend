@@ -1,4 +1,12 @@
-import { MapPin, Clock, Star, MessageCircle, Copy, Check, PhoneCall } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  Star,
+  MessageCircle,
+  Copy,
+  Check,
+  PhoneCall,
+} from "lucide-react";
 import { useState } from "react";
 import { canMessage, canProviderCancel } from "../../utils/chat.utils";
 import { useCallContext } from "../shared/CallContext";
@@ -62,6 +70,7 @@ export default function JobsCard({
       completed: "bg-green-100 text-green-700 border-green-200",
       cancelled: "bg-red-100 text-red-700 border-red-200",
       pending: "bg-gray-100 text-gray-700 border-gray-200",
+      expired: "bg-red-100 text-red-700 border-red-200",
     };
 
     const normalized = String(status || "")
@@ -79,10 +88,14 @@ export default function JobsCard({
     job?.dropoffLocation?.address ||
     job?.originalData?.dropoffLocation?.address ||
     "N/A";
+  const scheduleDate = job?.scheduleDate || job?.originalData?.scheduleDate;
   const amount = job?.BookingPrice || job?.originalData?.BookingPrice || 0;
   const platformFee =
-    job?.originalData?.pricingBreakdown?.driverCommission || job?.originalData?.pricingBreakdown?.originalProviderCommission || 0;
-  const riderReceives = job?.RiderReceives || job?.originalData?.RiderReceives || 0;
+    job?.originalData?.pricingBreakdown?.driverCommission ||
+    job?.originalData?.pricingBreakdown?.originalProviderCommission ||
+    0;
+  const riderReceives =
+    job?.RiderReceives || job?.originalData?.RiderReceives || 0;
   const shouldShowNavigation =
     normalizedStatus === "paid_escrow" ||
     normalizedStatus === "in_progress" ||
@@ -118,7 +131,9 @@ export default function JobsCard({
                 </span>
                 {job?.orderId && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-gray-500">#{job.orderId}</span>
+                    <span className="text-xs font-bold text-gray-500">
+                      #{job.orderId}
+                    </span>
                     <button
                       onClick={() => handleCopy(job.fullOrderId)}
                       className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
@@ -136,11 +151,25 @@ export default function JobsCard({
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#2D6A3E]" />
-                  <span>{formatDateTime(job?.createdAt || job?.originalData?.createdAt)}</span>
+                  <span>
+                    {formatDateTime(
+                      job?.createdAt || job?.originalData?.createdAt,
+                    )}
+                  </span>
                 </div>
                 <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
-                  Delivery: {formatTitle(job?.originalData?.scheduleType || "N/A")}
+                  Delivery:{" "}
+                  {formatTitle(
+                    job?.scheduleType ||
+                      job?.originalData?.scheduleType ||
+                      "N/A",
+                  )}
                 </span>
+                {scheduleDate && (
+                  <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
+                    Schedule: {formatDateTime(scheduleDate)}
+                  </span>
+                )}
               </div>
 
               <div className="relative pl-0 pt-2">
@@ -200,7 +229,9 @@ export default function JobsCard({
                   <Clock className="w-4 h-4 text-yellow-500" />
                   <span className="font-medium">
                     Job Completed On:{" "}
-                    {formatDateTime(job?.completedAt || job?.originalData?.completedAt)}
+                    {formatDateTime(
+                      job?.completedAt || job?.originalData?.completedAt,
+                    )}
                   </span>
                 </div>
               )}

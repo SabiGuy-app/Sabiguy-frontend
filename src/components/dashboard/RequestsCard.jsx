@@ -282,10 +282,21 @@ export default function RequestCard({
           </div>
 
           <div className="flex flex-col gap-2 mb-4 text-sm text-gray-600 mt-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#2D6A3E]" />
-              <span>{request.scheduledDate}</span>
-            </div>
+            {(request.scheduleType || request.scheduledDate) && (
+              <div className="flex items-start gap-2">
+                <Calendar className="w-4 h-4 text-[#2D6A3E] mt-0.5" />
+                <div className="flex flex-col">
+                  {request.scheduleType && (
+                    <span className="capitalize">
+                      Schedule: {request.scheduleType}
+                    </span>
+                  )}
+                  {request.scheduledDate && (
+                    <span>Scheduled for: {request.scheduledDate}</span>
+                  )}
+                </div>
+              </div>
+            )}
             {request.startsIn && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
@@ -397,7 +408,7 @@ export default function RequestCard({
                 </button>
               )}
 
-              {[ 
+              {[
                 "paid escrow",
                 "enroute to pickup",
                 "arrived at pickup",
