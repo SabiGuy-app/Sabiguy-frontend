@@ -216,7 +216,9 @@ export default function Bookings() {
           applyRideDiscount: values.applyRideDiscount,
           scheduleDate:
             values.serviceType === "scheduled"
-              ? `${values.scheduleDate}T${values.scheduleTime}:00`
+              ? new Date(
+                  `${values.scheduleDate}T${values.scheduleTime}:00`,
+                ).toISOString()
               : undefined,
         };
 
