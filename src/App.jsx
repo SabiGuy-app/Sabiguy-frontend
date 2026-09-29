@@ -30,7 +30,6 @@ import BeautyOverview from "./beauty-care/dashboard/pages/BeautyOverview";
 import BeautyProfilePage from "./beauty-care/dashboard/pages/BeautySettings";
 import BeautyContactPage from "./beauty-care/dashboard/pages/BeautyHelp";
 import BeautyActivityPage from "./beauty-care/dashboard/pages/BeautyActivity";
-import BeautyChatPage from "./beauty-care/dashboard/pages/BeautyChatPage";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -385,7 +384,7 @@ function App() {
 
               <Route
                 path="/beauty-provider/dashboard/chat"
-                element={<BeautyChatPage />}
+                element={<BeautyOverview />}
               />
 
               <Route
