@@ -68,7 +68,7 @@ export default function BeautySidebar({ open = false, onClose, wallet = {} }) {
       >
         <button
           type="button"
-          onClick={() => navigate("/business-provider/dashboard")}
+          onClick={() => navigate("/beauty-provider/dashboard")}
           className="mb-9 hidden w-fit xl:block"
         >
           <img src="/logo.jpg" alt="SabiGuy Logo" className="h-10 w-auto" />

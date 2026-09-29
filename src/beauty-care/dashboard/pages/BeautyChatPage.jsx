@@ -16,7 +16,7 @@ import { useSearchParams, useLocation } from "react-router-dom";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 const CHAT_STATUS_CATEGORY = "active";
 
-export default function BeautyChatPage() {
+const BeautyChatPage = () => {
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -519,18 +519,18 @@ export default function BeautyChatPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     {/* <button className="text-gray-600 hover:text-gray-800">
-                            <span className="text-sm p-2 bg-[#005823]/10 rounded">
-                              View Profile
-                            </span>
-                          </button> */}
+                                <span className="text-sm p-2 bg-[#005823]/10 rounded">
+                                  View Profile
+                                </span>
+                              </button> */}
                     {/* <button className="text-gray-600 hover:text-gray-800">
-                            <span className="text-sm text-[#005823] border border-gray-300 p-2 rounded">
-                              {selectedChat.bookingId?.status || "Active Booking"}
-                            </span>
-                          </button> */}
+                                <span className="text-sm text-[#005823] border border-gray-300 p-2 rounded">
+                                  {selectedChat.bookingId?.status || "Active Booking"}
+                                </span>
+                              </button> */}
                     {/* <button className="text-gray-600 hover:text-gray-800">
-                            <FiPhone size={20} />
-                          </button> */}
+                                <FiPhone size={20} />
+                              </button> */}
                   </div>
                 </div>
               </div>
@@ -709,4 +709,6 @@ export default function BeautyChatPage() {
       </div>
     </BeautyDashboardLayout>
   );
-}
+};
+
+export default BeautyChatPage;
