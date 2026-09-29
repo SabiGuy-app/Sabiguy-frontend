@@ -35,6 +35,7 @@ export default function BeautyRequest({ filter = "all" }) {
   const [params, setParams] = useSearchParams();
   const [screen, setScreen] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [isReviewExpanded, setIsReviewExpanded] = useState(false);
   const close = () => { setScreen(null); if (params.has("beauty")) { const next = new URLSearchParams(params); next.delete("beauty"); setParams(next, { replace: true }); } };
   if (!booking) return null;
   const visible = filter === "all" || (filter === "pending" && ["pending", "accepted"].includes(booking.status)) || (filter === "active" && ["active", "review"].includes(booking.status)) || (filter === "completed" && booking.status === "completed");
@@ -46,6 +47,7 @@ export default function BeautyRequest({ filter = "all" }) {
   const reviewScore = Math.max(0, Math.min(5, Math.round(Number(booking.review?.score || 0))));
   const reviewText = booking.review?.review || "Excellent work! Very professional and finished ahead of schedule.";
   const shouldShowReadMore = reviewText.length > 120;
+  const displayedReviewText = isReviewExpanded || !shouldShowReadMore ? reviewText : `${reviewText.slice(0, 120).trim()}...`;
   const pickupAddress = "15 Victoria Island, Lagos...";
   const pickupFullAddress = "15 Victoria Island, Lagos";
   const dropoffAddress = booking.address || "24 Palm Avenue, Lekki Phase 1, Lagos";
@@ -100,11 +102,11 @@ export default function BeautyRequest({ filter = "all" }) {
             <span className="text-sm font-semibold text-[#231F20]">{reviewScore.toFixed(1)}</span>
           </div>
           <p className="mt-3 text-sm text-[#231F20BF]">
-            {reviewText}
+            {displayedReviewText}
           </p>
           {shouldShowReadMore && (
-            <button type="button" className="mt-2 text-sm text-[#231F20BF] hover:text-[#005823]">
-              Read more
+            <button type="button" className="mt-2 text-sm text-[#231F20BF] hover:text-[#005823]" onClick={() => setIsReviewExpanded((expanded) => !expanded)}>
+              {isReviewExpanded ? "Show less" : "Read more"}
             </button>
           )}
         </div>
