@@ -9,15 +9,18 @@ import {
   Clock,
   Copy,
   MapPin,
+  MapPinned,
   MessageCircle,
   Navigation,
   Phone,
   Star,
   Check,
+  Wallet,
   Wrench,
   X,
 } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaTelegramPlane, FaWhatsapp } from "react-icons/fa";
+import distance from "/distance.png";
 import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
 import { beautyProvider as provider } from "../../data/beautyProvider";
 import Modal from "../../../../components/Modal";
@@ -40,6 +43,9 @@ export default function BeautyRequest({ filter = "all" }) {
   const profileLink = `${window.location.origin}${provider.profilePath}`;
   const shareText = encodeURIComponent(`Book ${provider.fullName} on SabiGUY: ${profileLink}`);
   const encodedProfileLink = encodeURIComponent(profileLink);
+  const reviewScore = Math.max(0, Math.min(5, Math.round(Number(booking.review?.score || 0))));
+  const reviewText = booking.review?.review || "Excellent work! Very professional and finished ahead of schedule.";
+  const shouldShowReadMore = reviewText.length > 120;
   const pickupAddress = "15 Victoria Island, Lagos...";
   const pickupFullAddress = "15 Victoria Island, Lagos";
   const dropoffAddress = booking.address || "24 Palm Avenue, Lekki Phase 1, Lagos";
@@ -58,8 +64,52 @@ export default function BeautyRequest({ filter = "all" }) {
   };
   return <>
     {visible && <article className="my-5 rounded-xl bg-white p-5 shadow-sm">
-      <div className="flex gap-3"><img src={provider.profilePicture} alt={provider.fullName} className="h-12 w-12 rounded-full object-cover" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{booking.service}</h3><span className={`rounded-full px-2 py-1 text-xs ${booking.status === "completed" ? "bg-green-50 text-green-700" : booking.status === "active" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-700"}`}>{statuses[booking.status]}</span></div><p className="my-1 text-sm">{provider.fullName}</p><span className="text-xs text-[#34805A]">{booking.label}</span><p className="mt-2 flex gap-1 text-xs text-gray-500"><MapPin size={14} />{booking.address}</p><p className="mt-2 flex gap-1 text-xs text-gray-500"><CalendarDays size={14} />{new Date(booking.date).toLocaleString()}</p></div><strong className="text-[#005823]">{formatMoney(booking.price)}</strong></div>
-      <div className="mt-4 flex flex-wrap gap-3 border-t border-gray-100 pt-4">
+      <div className="flex gap-4">
+        <img src={provider.profilePicture} alt={provider.fullName} className="h-12 w-12 rounded-full object-cover" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <h3 className="text-lg font-semibold text-[#231F20]">{booking.service}</h3>
+            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${booking.status === "completed" ? "border-[#34805A] bg-[#34805A1A] text-[#34805A]" : booking.status === "active" ? "border-blue-200 bg-blue-50 text-blue-600" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+              {statuses[booking.status]}
+            </span>
+          </div>
+          <p className="mt-2 flex items-center gap-2 text-sm text-[#231F20BF]">
+            <MapPinned size={16} className="text-[#34805A]" />
+            {booking.label}
+          </p>
+          <p className="mt-3 flex items-center gap-2 text-sm text-[#231F20BF]">
+            <MapPin size={18} className="text-[#34805A]" />
+            {provider.city || "Lekki Phase 1, Lagos"}
+          </p>
+          <p className="mt-3 flex items-center gap-2 text-sm text-[#231F20BF]">
+            <CalendarDays size={18} className="text-[#34805A]" />
+            {new Date(booking.date).toLocaleString("en-NG", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
+          </p>
+          <p className="mt-3 flex items-center gap-2 text-sm text-[#231F20BF]">
+            <img src={distance} alt="" className="h-[18px] w-[18px] object-contain" />
+            Distance: 10.5 km
+          </p>
+        </div>
+      </div>
+      {booking.review && (
+        <div className="mt-6 border-t border-gray-200 pt-5">
+          <div className="flex items-center gap-3 text-amber-400">
+            {Array.from({ length: reviewScore }, (_, index) => (
+              <Star key={index} size={24} fill="currentColor" />
+            ))}
+            <span className="text-sm font-semibold text-[#231F20]">{reviewScore.toFixed(1)}</span>
+          </div>
+          <p className="mt-3 text-sm text-[#231F20BF]">
+            {reviewText}
+          </p>
+          {shouldShowReadMore && (
+            <button type="button" className="mt-2 text-sm text-[#231F20BF] hover:text-[#005823]">
+              Read more
+            </button>
+          )}
+        </div>
+      )}
+      {booking.status !== "completed" && <div className="mt-4 flex flex-wrap gap-3 border-t border-gray-100 pt-4">
         <Button type="button" onClick={() => setScreen("details")}>
           View Details
         </Button>
@@ -76,8 +126,7 @@ export default function BeautyRequest({ filter = "all" }) {
             </span>
           </Button>
         )}
-      </div>
-      {booking.review && <div className="mt-4 border-t border-gray-100 pt-4"><div className="flex text-amber-400">{Array.from({length: booking.review.score}, (_, index) => <Star key={index} size={16} fill="currentColor" />)}</div><p className="mt-2 text-sm text-gray-500">{booking.review.review}</p></div>}
+      </div>}
     </article>}
     {view === "payment" && <BeautyBookingFlow provider={provider} booking={booking} initialStage="payment" onClose={close} />}
     {view === "track" && (
@@ -240,13 +289,15 @@ export default function BeautyRequest({ filter = "all" }) {
                   <div className="flex gap-4">
                     <Wrench size={22} className="mt-1 text-[#2F7B4F]" />
                     <div>
-                      <dt className="font-semibold text-[#231F20]">Service Type</dt>
-                      <dd className="mt-1 text-sm text-[#231F20BF]">
-                        {booking.service}
-                        <span className="ml-2 rounded bg-[#8BC53F33] px-2 py-1 text-xs font-semibold text-[#2F7B4F]">
-                          {booking.label}
-                        </span>
-                      </dd>
+                      <dt className="font-semibold text-[#231F20]">Service</dt>
+                      <dd className="mt-1 text-sm text-[#231F20BF]">{booking.service}</dd>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <MapPinned size={22} className="mt-1 text-[#2F7B4F]" />
+                    <div>
+                      <dt className="font-semibold text-[#231F20]">Service Location</dt>
+                      <dd className="mt-1 text-sm text-[#231F20BF]">{booking.label}</dd>
                     </div>
                   </div>
                   <div className="flex gap-4">
@@ -271,6 +322,45 @@ export default function BeautyRequest({ filter = "all" }) {
                     </div>
                   </div>
                   <div className="flex gap-4">
+                    <Wallet size={22} className="mt-1 text-[#2F7B4F]" />
+                    <div>
+                      <dt className="font-semibold text-[#231F20]">Service Cost</dt>
+                      <dd className="mt-1 text-sm text-[#231F20BF]">{formatMoney(booking.price)}</dd>
+                    </div>
+                  </div>
+                </dl>
+                <dl className="hidden">
+                  <div className="flex gap-4">
+                    <Wrench size={22} className="mt-1 text-[#2F7B4F]" />
+                    <div className="[&>dd:last-child]:hidden">
+                      <dt className="font-semibold text-[#231F20]">Service Type</dt>
+                      <dd className="mt-1 text-sm text-[#231F20BF]">{booking.service}{" · "}{booking.label}</dd>
+                      <dd className="mt-1 text-sm text-[#231F20BF]">{booking.service} · {booking.label}</dd>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <CalendarDays size={22} className="mt-1 text-[#2F7B4F]" />
+                    <div>
+                      <dt className="font-semibold text-[#231F20]">Start Date &amp; Time</dt>
+                      <dd className="mt-1 text-sm text-[#231F20BF]">{serviceDate}</dd>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <Clock size={22} className="mt-1 text-[#2F7B4F]" />
+                    <div>
+                      <dt className="font-semibold text-[#231F20]">Duration</dt>
+                      <dd className="mt-1 text-sm text-[#231F20BF]">{booking.duration} minutes</dd>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <MapPin size={22} className="mt-1 text-[#2F7B4F]" />
+                    <div>
+                      <dt className="font-semibold text-[#231F20]">Location</dt>
+                      <dd className="mt-1 text-sm text-[#231F20BF]">{dropoffAddress}</dd>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 [&>span]:hidden">
+                    <Wallet size={22} className="mt-1 text-[#2F7B4F]" />
                     <span className="mt-1 text-2xl font-bold text-[#2F7B4F]">₦</span>
                     <div>
                       <dt className="font-semibold text-[#231F20]">Service Cost</dt>

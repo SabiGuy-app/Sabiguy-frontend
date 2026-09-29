@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
 import { useEffect, useState } from "react";
-import { BadgeCheck, CalendarDays, Check, Clock, Globe, MapPin, MessageCircle, Phone, Star, Wallet, Wrench } from "lucide-react";
+import { BadgeCheck, CalendarDays, Check, Clock, Globe, MapPin, MapPinned, MessageCircle, Phone, Star, Wallet, Wrench } from "lucide-react";
 import Modal from "../../../../components/Modal";
 import Button from "../../../../components/button";
 import InputField from "../../../../components/InputField";
@@ -25,7 +25,8 @@ function ProviderSummary({ provider }) {
 
 function BookingInformation({ booking, date, address }) {
   const rows = [
-    { label: "Service Type", value: `${booking.service} · ${booking.label}`, icon: Wrench },
+    { label: "Service", value: booking.service, icon: Wrench },
+    { label: "Service Location", value: booking.label, icon: MapPinned },
     { label: "Start Date & Time", value: date ? new Date(date).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }) : "Choose a date and time", icon: CalendarDays },
     { label: "Duration", value: `${booking.duration} minutes`, icon: Clock },
     { label: "Location", value: address || "Enter your address", icon: MapPin },
