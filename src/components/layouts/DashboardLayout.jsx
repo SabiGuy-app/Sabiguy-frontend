@@ -11,7 +11,7 @@ import { CallContext } from "../shared/CallContext";
 import { CallModal } from "../shared/CallModal";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout({ children, showSidebar = true }) {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const currentUser = useAuthStore((state) => state.user);
@@ -55,14 +55,14 @@ export default function DashboardLayout({ children }) {
 
         <div className="flex min-h-screen bg-gray-50 pt-16 sm:pt-20">
           {/* Overlay for mobile */}
-          {sidebarOpen && (
+          {showSidebar && sidebarOpen && (
             <div
               className="fixed inset-0 bg-black/50 z-30 md:hidden"
               onClick={() => setSidebarOpen(false)}
             />
           )}
-          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <div className="flex-1 md:ml-64 flex flex-col w-full">
+          {showSidebar && <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
+          <div className={`flex-1 ${showSidebar ? "md:ml-64" : ""} flex flex-col w-full min-w-0`}>
             <main className="flex-1 min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] p-3 sm:p-6 w-full">
               <div className="max-w-7xl mx-auto w-full">{children}</div>
             </main>
