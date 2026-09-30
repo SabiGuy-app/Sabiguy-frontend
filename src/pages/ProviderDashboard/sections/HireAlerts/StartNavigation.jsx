@@ -121,9 +121,12 @@ export default function StartNavigation() {
         const latestBookingData = data?.data?.booking;
         setLatestBooking(latestBookingData);
 
-        // Confirmed: /api/v1/bookings/{id} returns status "paid_escrow"
-        // once payment is complete (held in escrow until the job wraps).
-        if (latestBookingData?.status === "paid_escrow") {
+        // Confirmed: /api/v1/bookings/{id} returns one of these status
+        // values once payment is complete — "paid_escrow" for immediate
+        // bookings, "paid_escrow_scheduled" for scheduled ones — held
+        // in escrow until the job wraps.
+        const paidStatuses = ["paid_escrow", "paid_escrow_scheduled"];
+        if (paidStatuses.includes(latestBookingData?.status)) {
           setPaymentStatus("paid");
         }
       } catch (err) {
