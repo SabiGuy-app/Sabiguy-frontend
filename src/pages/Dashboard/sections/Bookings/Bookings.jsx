@@ -1,3 +1,5 @@
+import BeautyRequest from "../../components/beauty/BeautyRequest";
+import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
@@ -42,7 +44,10 @@ const vehicleOptions = (service) => {
 };
 
 export default function Bookings() {
-  const [activeTab, setActiveTab] = useState("request");
+  const locationForTab = useLocation();
+  const sampleBooking = useBeautyBookingStore((state) => state.booking);
+  const [activeTab, setActiveTab] = useState(() => new URLSearchParams(locationForTab.search).get("tab") === "requests" ? "requests" : "request");
+  useEffect(() => { if (new URLSearchParams(locationForTab.search).get("tab") === "requests") setActiveTab("requests"); }, [locationForTab.search]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -984,6 +989,7 @@ export default function Bookings() {
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
             />
+            <BeautyRequest filter={statusFilter} />
 
             {/* ✅ Loading */}
             {bookingsLoading && (
@@ -1033,7 +1039,7 @@ export default function Bookings() {
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      No requests found
+                      {sampleBooking ? "No other requests found" : "No requests found"}
                     </h3>
                     <p className="text-gray-600">
                       {userBookings.length === 0

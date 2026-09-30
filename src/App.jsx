@@ -60,6 +60,8 @@ const ActivityPage = lazy(() => import("./pages/Dashboard/sections/Activity"));
 const ProfilePage = lazy(() => import("./pages/Dashboard/sections/Settings"));
 const ContactPage = lazy(() => import("./pages/Dashboard/sections/Help"));
 const Categories = lazy(() => import("./pages/Dashboard/sections/Categories"));
+const BeautyServices = lazy(() => import("./pages/Dashboard/sections/BeautyServices"));
+const BeautyProviderProfile = lazy(() => import("./pages/Dashboard/sections/BeautyProviderProfile"));
 const DynamicServicePage = lazy(
   () => import("./pages/Dashboard/Services/pages/ServicePage"),
 );
@@ -413,6 +415,8 @@ function App() {
                 <Route path="/dashboard/help" element={<ContactPage />} />
                 <Route path="/dashboard/settings" element={<ProfilePage />} />
                 <Route path="/dashboard/categories" element={<Categories />} />
+                <Route path="/dashboard/categories/beauty-personal-care" element={<BeautyServices />} />
+                <Route path="/dashboard/beauty/:providerId" element={<BeautyProviderProfile />} />
                 <Route path="/bookings/vehicletype" element={<VehicleType />} />
                 <Route
                   path="/bookings/availableriders"

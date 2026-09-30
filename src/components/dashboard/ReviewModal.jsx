@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { Star, Wallet, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CreditCard, Star, Wallet } from "lucide-react";
 
 export default function ReviewModal({
   isOpen,
-  onClose,
   onSubmit,
   loading,
   apiError,
@@ -16,6 +15,7 @@ export default function ReviewModal({
   const [hovered, setHovered] = useState(0);
   const [review, setReview] = useState("");
   const [tipAmount, setTipAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("wallet");
   const [errors, setErrors] = useState({});
 
   const isTipDisabled =
@@ -29,6 +29,7 @@ export default function ReviewModal({
       setScore(0);
       setReview("");
       setTipAmount("");
+      setPaymentMethod("wallet");
       setErrors({});
     }
   }, [isOpen]);
@@ -58,66 +59,21 @@ export default function ReviewModal({
       score,
       review: review.trim(),
       tipAmount: tipAmount === "" ? 0 : parseFloat(tipAmount),
+      paymentMethod,
     });
   };
 
-  const renderWalletBadge = () => {
-    if (walletLoading) {
-      return (
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-400">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          Loading...
-        </div>
-      );
-    }
-
-    if (walletError || walletBalance === null) {
-      return (
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-400">
-          <Wallet className="w-3.5 h-3.5" />
-          Unavailable
-        </div>
-      );
-    }
-
-    const balance = Number(walletBalance) || 0;
-    const isLow = balance <= 0;
-
-    return (
-      <div
-        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-          isLow ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-700"
-        }`}
-      >
-        <Wallet className="w-3.5 h-3.5" />₦
-        {balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
-      </div>
-    );
-  };
+  const tipOptions = [500, 1000, 2000];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">
-          Accept Job Completion
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4 py-4">
+      <div className="max-h-[88vh] w-full max-w-[520px] overflow-y-auto rounded-2xl bg-white px-4 py-5 shadow-xl sm:px-6 md:px-7 md:py-6">
+        <h2 className="text-center text-lg font-semibold text-[#231F20] md:text-xl">
+          Rate your experience with {providerName || "your provider"}
         </h2>
-        <p className="text-sm text-gray-500 mb-5">
-          Rate your experience with this provider
-        </p>
 
-        {/* Provider + Wallet Balance row */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="inline-flex rounded-full bg-[#005823]/5 px-3 py-1 text-xs font-semibold text-[#005823]">
-            {providerName ? `Provider: ${providerName}` : "Provider"}
-          </div>
-          {renderWalletBadge()}
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Rating
-          </label>
-          <div className="flex gap-1">
+        <div className="mt-3">
+          <div className="flex justify-center gap-2 sm:gap-4">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
@@ -129,107 +85,134 @@ export default function ReviewModal({
                 }}
                 onMouseEnter={() => setHovered(star)}
                 onMouseLeave={() => setHovered(0)}
+                aria-label={`Rate ${star} star${star === 1 ? "" : "s"}`}
               >
                 <Star
-                  className={`w-8 h-8 transition-colors ${
+                  strokeWidth={1.6}
+                  className={`h-7 w-7 transition-colors sm:h-8 sm:w-8 md:h-9 md:w-9 ${
                     star <= (hovered || score)
                       ? "fill-yellow-400 text-yellow-400"
-                      : "fill-gray-200 text-gray-200"
+                      : "fill-transparent text-[#BDBDBD]"
                   }`}
                 />
               </button>
             ))}
           </div>
           {errors.score && (
-            <p className="mt-1 text-xs text-red-500">{errors.score}</p>
+            <p className="mt-2 text-center text-xs text-red-500">
+              {errors.score}
+            </p>
           )}
         </div>
 
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Review (optional)
+        <div className="mt-4 md:mt-5">
+          <label className="block text-sm font-normal text-[#231F20] md:text-lg">
+            Tell us how it went{" "}
+            <span className="text-[#231F2080]">(optional)</span>
           </label>
           <textarea
-            rows={3}
-            placeholder="Share your experience..."
+            rows={4}
+            placeholder="Share your experience"
             value={review}
-            onChange={(e) => setReview(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#005823] resize-none"
+            onChange={(event) => setReview(event.target.value)}
+            className="mt-2 h-16 w-full resize-none rounded-xl border border-[#231F2026] bg-[#FAFAFA] px-4 py-3 text-sm text-[#231F20] outline-none transition placeholder:text-[#231F2040] focus:border-[#34805A] md:h-20"
           />
         </div>
 
-        <div className="mb-5">
+        <div className="mt-4 md:mt-5">
           <label
-            className={`block text-sm font-medium mb-2 ${
-              isTipDisabled ? "text-gray-400" : "text-gray-700"
+            className={`block text-sm font-normal md:text-lg ${
+              isTipDisabled ? "text-gray-400" : "text-[#231F20]"
             }`}
           >
-            Add a Tip (optional)
+            Add a Tip <span className="text-[#231F2080]">(optional)</span>
           </label>
-          <div className={`relative ${isTipDisabled ? "opacity-50" : ""}`}>
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-              ₦
-            </span>
-            <input
-              type="number"
-              min={100}
-              step="100"
-              placeholder="0.00"
-              value={tipAmount}
+          <div
+            className={`mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 md:gap-3 ${
+              isTipDisabled ? "opacity-50" : ""
+            }`}
+          >
+            {tipOptions.map((amount) => (
+              <button
+                key={amount}
+                type="button"
+                disabled={isTipDisabled}
+                onClick={() => {
+                  setTipAmount(String(amount));
+                  if (errors.tipAmount)
+                    setErrors((prev) => ({ ...prev, tipAmount: null }));
+                }}
+                className={`h-10 rounded-xl text-sm transition-colors disabled:cursor-not-allowed md:h-11 ${
+                  Number(tipAmount) === amount
+                    ? "bg-[#635BFF] text-white"
+                    : "bg-[#F5F5F5] text-[#231F20]"
+                }`}
+              >
+                ₦{amount.toLocaleString("en-NG")}
+              </button>
+            ))}
+            <button
+              type="button"
               disabled={isTipDisabled}
-              onChange={(e) => {
-                setTipAmount(e.target.value);
-                if (errors.tipAmount)
-                  setErrors((prev) => ({ ...prev, tipAmount: null }));
-              }}
-              className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#005823] disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
+              onClick={() => setTipAmount("")}
+              className="h-10 rounded-xl bg-[#F5F5F5] text-sm text-[#231F20] transition-colors disabled:cursor-not-allowed md:h-11"
+            >
+              Custom
+            </button>
           </div>
           {isTipDisabled && !walletLoading ? (
-            <p className="mt-1.5 text-[11px] text-red-400 leading-tight">
+            <p className="mt-2 text-xs text-red-400">
               {walletError
-                ? "Could not load balance — tip unavailable"
+                ? "Could not load balance - tip unavailable"
                 : "Insufficient wallet balance to add a tip"}
             </p>
-          ) : (
-            <p className="mt-1.5 text-[11px] text-gray-400 leading-tight">
-              Note: Minimum tip is ₦100. Amount will be deducted from your
-              wallet.
-            </p>
-          )}
+          ) : null}
           {errors.tipAmount && (
             <p className="mt-1 text-xs text-red-500">{errors.tipAmount}</p>
           )}
         </div>
 
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row md:mt-5 md:gap-4">
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("wallet")}
+            className={`flex h-10 w-full items-center justify-center gap-2 rounded-xl text-sm transition-colors sm:w-[132px] md:h-11 ${
+              paymentMethod === "wallet"
+                ? "bg-[#635BFF] text-white"
+                : "bg-[#F5F5F5] text-[#231F20]"
+            }`}
+          >
+            <Wallet size={18} />
+            Wallet
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("card")}
+            className={`flex h-10 w-full items-center justify-center gap-2 rounded-xl text-sm transition-colors sm:w-[132px] md:h-11 ${
+              paymentMethod === "card"
+                ? "bg-[#635BFF] text-white"
+                : "bg-[#F5F5F5] text-[#231F20]"
+            }`}
+          >
+            <CreditCard size={18} />
+            Card
+          </button>
+        </div>
+
         {apiError && (
-          <div className="mb-5 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
+          <div className="mt-6 rounded-lg border border-red-100 bg-red-50 p-3 text-xs text-red-600">
             {apiError}
           </div>
         )}
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex-1 px-4 py-2.5 bg-[#005823] text-white rounded-lg font-medium hover:bg-[#1f4a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              "Submit"
-            )}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={loading}
+          className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-[#34805A] text-base font-semibold text-white transition-colors hover:bg-[#2b6c4b] disabled:cursor-not-allowed disabled:opacity-50 md:mt-6 md:h-12"
+        >
+          {loading ? "Submitting..." : "Done"}
+        </button>
       </div>
     </div>
   );

@@ -337,7 +337,10 @@ export default function BookingSummary2() {
                 <span>Loading...</span>
               </>
             ) : (
-              "Track Provider"
+              <>
+                <Navigation className="w-5 h-5" />
+                <span>Track Provider</span>
+              </>
             )}
           </button>
         </div>
