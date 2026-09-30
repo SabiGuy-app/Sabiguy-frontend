@@ -12,6 +12,8 @@ export default function Button({
   const styles = {
     primary: "bg-[#005823BF] text-white hover:bg-[#005823]",
     secondary: "bg-[#005823BF] text-white hover:bg-[#005823] px-6 py-3",
+    outline:
+      "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
     ghost: " text-[#005823] font-bold  border border-[#005823] px-4 py-2",
     disabled: "bg-gray-300 text-gray-600 px-6 py-3 cursor-not-allowed",
   };

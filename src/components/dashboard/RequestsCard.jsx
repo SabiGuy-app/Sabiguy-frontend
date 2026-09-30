@@ -1,7 +1,6 @@
 import {
   Calendar,
   MapPin,
-  Send,
   Clock,
   Star,
   PhoneCall,
@@ -9,6 +8,7 @@ import {
   Copy,
   Check,
   CreditCard,
+  Navigation,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -282,10 +282,21 @@ export default function RequestCard({
           </div>
 
           <div className="flex flex-col gap-2 mb-4 text-sm text-gray-600 mt-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#2D6A3E]" />
-              <span>{request.scheduledDate}</span>
-            </div>
+            {(request.scheduleType || request.scheduledDate) && (
+              <div className="flex items-start gap-2">
+                <Calendar className="w-4 h-4 text-[#2D6A3E] mt-0.5" />
+                <div className="flex flex-col">
+                  {request.scheduleType && (
+                    <span className="capitalize">
+                      Schedule: {request.scheduleType}
+                    </span>
+                  )}
+                  {request.scheduledDate && (
+                    <span>Scheduled for: {request.scheduledDate}</span>
+                  )}
+                </div>
+              </div>
+            )}
             {request.startsIn && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
@@ -335,6 +346,7 @@ export default function RequestCard({
           <div className="mt-5">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:flex md:items-center md:gap-3">
               <button
+                type="button"
                 onClick={() => onViewDetails(request)}
                 className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base"
               >
@@ -373,10 +385,11 @@ export default function RequestCard({
                 "completed",
               ].includes(request.status.toLowerCase()) && (
                 <button
+                  type="button"
                   onClick={() => onTrackProvider(request.id)}
                   className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base"
                 >
-                  <Send className="w-4 h-4" />
+                  <Navigation className="w-4 h-4" />
                   Track provider
                 </button>
               )}
@@ -397,7 +410,7 @@ export default function RequestCard({
                 </button>
               )}
 
-              {[ 
+              {[
                 "paid escrow",
                 "enroute to pickup",
                 "arrived at pickup",
@@ -437,6 +450,7 @@ export default function RequestCard({
                         Dispute Job Completion
                       </button>
                       <button
+                        type="button"
                         onClick={() => setModalOpen(true)}
                         className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                       >

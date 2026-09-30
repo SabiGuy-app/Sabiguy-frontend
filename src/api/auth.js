@@ -101,7 +101,7 @@ export const login = async (payload) => {
 export const businessLogin = async (payload) => {
   try {
     const { data } = await api.post("/business/auth/login", payload);
-
+localStorage.getItem("token")
     if (data.token) {
       localStorage.setItem("token", data.token);
       useAuthStore.getState().setToken(data.token);

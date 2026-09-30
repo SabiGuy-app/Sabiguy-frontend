@@ -1,3 +1,4 @@
+import { useBeautyBookingStore } from "../../stores/beautyBooking.store";
 import { useState, useEffect } from "react";
 import { Bell, Search, Menu, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,7 @@ import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
 
 export default function Navbar({ onMenuClick }) {
+  const sampleUnread = useBeautyBookingStore((state) => state.notifications.filter((item) => !item.isRead).length);
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -600,9 +602,9 @@ export default function Navbar({ onMenuClick }) {
             className="relative"
           >
             <Bell size={24} />
-            {unreadCount > 0 && (
+            {unreadCount + sampleUnread > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[20px] h-4 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1">
-                {unreadCount > 99 ? "99+" : unreadCount}
+                {unreadCount + sampleUnread > 99 ? "99+" : unreadCount + sampleUnread}
               </span>
             )}
           </button>
@@ -648,7 +650,7 @@ export default function Navbar({ onMenuClick }) {
           onClose={() => setShowNotifications(false)}
           notifications={notifications}
           loading={loadingNotifications}
-          unreadCount={unreadCount}
+          unreadCount={unreadCount + sampleUnread}
           onMarkAsRead={markAsRead}
           onMarkAllAsRead={markAllAsRead}
           onDelete={deleteNotification}

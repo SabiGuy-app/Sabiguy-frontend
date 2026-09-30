@@ -1,8 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FiSearch, FiSend, FiBell } from "react-icons/fi";
-import { FiArrowLeft, FiWifiOff, FiAlertTriangle, FiRefreshCw, FiX } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiWifiOff,
+  FiAlertTriangle,
+  FiRefreshCw,
+  FiX,
+} from "react-icons/fi";
 import { useChat } from "../../hooks/useChat";
-import { formatMessageDate, getInitials, formatTime, formatRelativeTime } from "../../utils/chat.utils";
+import {
+  formatMessageDate,
+  getInitials,
+  formatTime,
+  formatRelativeTime,
+} from "../../utils/chat.utils";
 
 /**
  * Shared ChatView component used by both Customer Chat and Provider Chat.
@@ -101,34 +112,58 @@ export default function ChatView({ emptyStateText }) {
   }, {});
 
   // Fix 6.5: Resolve typing bookingId (handles both object and string)
-  const typingBookingId = selectedChat?.bookingId?._id || selectedChat?.bookingId;
+  const typingBookingId =
+    selectedChat?.bookingId?._id || selectedChat?.bookingId;
 
   // Fix 6.2: Connection status banner
   const renderConnectionBanner = () => {
     if (connectionStatus === "connected") return null;
 
     const bannerConfig = {
-      connecting: { bg: "bg-blue-50 border-blue-200", text: "text-blue-700", icon: null, label: "Connecting to chat server..." },
-      reconnecting: { bg: "bg-yellow-50 border-yellow-200", text: "text-yellow-700", icon: <FiWifiOff className="flex-shrink-0" size={14} />, label: "Reconnecting... Messages may be delayed." },
-      disconnected: { bg: "bg-red-50 border-red-200", text: "text-red-700", icon: <FiWifiOff className="flex-shrink-0" size={14} />, label: "Disconnected from chat server. Trying to reconnect..." },
-      failed: { bg: "bg-red-50 border-red-300", text: "text-red-800", icon: <FiAlertTriangle className="flex-shrink-0" size={14} />, label: "Unable to connect. Real-time messaging is unavailable. Please refresh." },
+      connecting: {
+        bg: "bg-blue-50 border-blue-200",
+        text: "text-blue-700",
+        icon: null,
+        label: "Connecting to chat server...",
+      },
+      reconnecting: {
+        bg: "bg-yellow-50 border-yellow-200",
+        text: "text-yellow-700",
+        icon: <FiWifiOff className="flex-shrink-0" size={14} />,
+        label: "Reconnecting... Messages may be delayed.",
+      },
+      disconnected: {
+        bg: "bg-red-50 border-red-200",
+        text: "text-red-700",
+        icon: <FiWifiOff className="flex-shrink-0" size={14} />,
+        label: "Disconnected from chat server. Trying to reconnect...",
+      },
+      failed: {
+        bg: "bg-red-50 border-red-300",
+        text: "text-red-800",
+        icon: <FiAlertTriangle className="flex-shrink-0" size={14} />,
+        label:
+          "Unable to connect. Real-time messaging is unavailable. Please refresh.",
+      },
     };
 
     const config = bannerConfig[connectionStatus] || bannerConfig.connecting;
     return (
-      <div className={`flex items-center gap-2 px-4 py-2 text-xs font-medium border-b ${config.bg} ${config.text}`}>
+      <div
+        className={`flex items-center gap-2 px-4 py-2 text-xs font-medium border-b ${config.bg} ${config.text}`}
+      >
         {config.icon}
         <span>{config.label}</span>
       </div>
     );
   };
 
-
-
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] bg-gray-50 overflow-hidden">
       {/* Sidebar - Chat List */}
-      <div className={`w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col ${mobileShowChat ? "hidden md:flex" : "flex"} h-full md:h-full`}>
+      <div
+        className={`w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col ${mobileShowChat ? "hidden md:flex" : "flex"} h-full md:h-full`}
+      >
         {/* Chats Header */}
         <div className="px-4 py-3 border-b border-gray-200">
           <h2 className="font-semibold text-gray-800">Chats</h2>
@@ -175,7 +210,11 @@ export default function ChatView({ emptyStateText }) {
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
                     <img
-                      src={chat.otherParticipant?.avatar || chat.otherParticipant?.profilePicture || "/avatar.png"}
+                      src={
+                        chat.otherParticipant?.avatar ||
+                        chat.otherParticipant?.profilePicture ||
+                        "/avatar.png"
+                      }
                       alt=""
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {
@@ -212,11 +251,11 @@ export default function ChatView({ emptyStateText }) {
       </div>
 
       {/* Main Content Area */}
-      <div className={`w-full md:flex-1 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"} h-full md:h-full relative`}>
-
+      <div
+        className={`w-full md:flex-1 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"} h-full md:h-full relative`}
+      >
         {/* Fix 6.2: Connection status banner */}
         {renderConnectionBanner()}
-
 
         {selectedChat ? (
           <>
@@ -233,7 +272,11 @@ export default function ChatView({ emptyStateText }) {
                   </button>
                   <div className="w-10 h-10 rounded-full overflow-hidden">
                     <img
-                      src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                      src={
+                        selectedChat.otherParticipant?.profilePicture ||
+                        selectedChat.otherParticipant?.avatar ||
+                        "/avatar.png"
+                      }
                       alt=""
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {
@@ -252,44 +295,69 @@ export default function ChatView({ emptyStateText }) {
                   </div>
                 </div>
               </div>
-              
+
               {/* Booking Details Panel */}
               {selectedChat.bookingId && (
                 <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 md:grid-cols-4">
                   {/* Status */}
                   <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-gray-500 uppercase">Status</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase">
+                      Status
+                    </span>
                     <span className="mt-1 text-sm font-medium text-gray-800 capitalize">
-                      {selectedChat.bookingId?.status?.replace(/_/g, " ") || "—"}
+                      {selectedChat.bookingId?.status?.replace(/_/g, " ") ||
+                        "—"}
                     </span>
                   </div>
-                  
+
                   {/* Amount */}
                   {selectedChat.bookingId?.totalAmount && (
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-gray-500 uppercase">Amount</span>
+                      <span className="text-xs font-semibold text-gray-500 uppercase">
+                        Amount
+                      </span>
                       <span className="mt-1 text-sm font-medium text-green-600">
                         ₦{selectedChat.bookingId.totalAmount.toLocaleString()}
                       </span>
                     </div>
                   )}
-                  
+
                   {/* Location */}
                   {selectedChat.bookingId?.location && (
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-gray-500 uppercase">Location</span>
+                      <span className="text-xs font-semibold text-gray-500 uppercase">
+                        Location
+                      </span>
                       <span className="mt-1 text-sm font-medium text-gray-800 truncate">
                         {selectedChat.bookingId.location}
                       </span>
                     </div>
                   )}
-                  
+
                   {/* Date */}
                   {selectedChat.bookingId?.scheduleDate && (
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-gray-500 uppercase">Date</span>
+                      <span className="text-xs font-semibold text-gray-500 uppercase">
+                        Scheduled for
+                      </span>
                       <span className="mt-1 text-sm font-medium text-gray-800">
-                        {new Date(selectedChat.bookingId.scheduleDate).toLocaleDateString()}
+                        {new Date(
+                          selectedChat.bookingId.scheduleDate,
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {(selectedChat.bookingId?.scheduleType ||
+                    selectedChat.bookingId?.schedule_type) && (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-gray-500 uppercase">
+                        Schedule
+                      </span>
+                      <span className="mt-1 text-sm font-medium text-gray-800 capitalize">
+                        {(
+                          selectedChat.bookingId.scheduleType ||
+                          selectedChat.bookingId.schedule_type
+                        ).replace(/_/g, " ")}
                       </span>
                     </div>
                   )}
@@ -318,7 +386,9 @@ export default function ChatView({ emptyStateText }) {
                           disabled={messagesLoading}
                           className="px-4 py-2 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {messagesLoading ? "Loading..." : "Load older messages"}
+                          {messagesLoading
+                            ? "Loading..."
+                            : "Load older messages"}
                         </button>
                       </div>
                     )}
@@ -326,102 +396,133 @@ export default function ChatView({ emptyStateText }) {
                       if (!date || date === "Invalid Date") return null;
                       return (
                         <div key={date}>
-                      {/* Date Divider */}
-                      <div className="flex items-center justify-center py-4">
-                        <span className="px-4 py-1 bg-white rounded-full text-xs text-gray-500 border border-gray-200 shadow-sm">
-                          {date}
-                        </span>
-                      </div>
+                          {/* Date Divider */}
+                          <div className="flex items-center justify-center py-4">
+                            <span className="px-4 py-1 bg-white rounded-full text-xs text-gray-500 border border-gray-200 shadow-sm">
+                              {date}
+                            </span>
+                          </div>
 
-                      {/* Messages for this date */}
-                      <div className="space-y-3">
-                        {msgs.map((msg) => {
-                          // Skip truly empty messages, but ALWAYS show "sending" messages 
-                          // and check for both .message and .text fields
-                          const messageContent = msg.message || msg.text || "";
-                          const hasContent = typeof messageContent === "string" && messageContent.trim().length > 0;
-                          const hasAttachments = msg.attachments && msg.attachments.length > 0;
-                          
-                          if (!hasContent && !hasAttachments && msg.status !== "sending") {
-                            return null;
-                          }
+                          {/* Messages for this date */}
+                          <div className="space-y-3">
+                            {msgs.map((msg) => {
+                              // Skip truly empty messages, but ALWAYS show "sending" messages
+                              // and check for both .message and .text fields
+                              const messageContent =
+                                msg.message || msg.text || "";
+                              const hasContent =
+                                typeof messageContent === "string" &&
+                                messageContent.trim().length > 0;
+                              const hasAttachments =
+                                msg.attachments && msg.attachments.length > 0;
 
-                          const isCurrentUser =
-                            msg.senderId?.toString() === currentUserId;
-                          const isSending = msg.status === "sending";
-                          const isError = msg.status === "error"; // Fix 4.2
-                          const isRead = msg.read || (Array.isArray(msg.readBy) && msg.readBy.some(r => r.userId !== currentUserId));
+                              if (
+                                !hasContent &&
+                                !hasAttachments &&
+                                msg.status !== "sending"
+                              ) {
+                                return null;
+                              }
 
-                          return (
-                            <div
-                              key={msg._id}
-                              className={`flex ${
-                                isCurrentUser
-                                  ? "justify-end"
-                                  : "justify-start"
-                              }`}
-                            >
-                              <div className={`flex items-end gap-2 max-w-xs ${isSending ? "opacity-70" : ""} ${isError ? "opacity-80" : ""}`}>
-                                {!isCurrentUser && (
-                                  <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
-                                    <img
-                                      src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
-                                      alt=""
-                                      className="w-full h-full rounded-full object-cover"
-                                      onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = "/avatar.png";
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                                <div>
+                              const isCurrentUser =
+                                msg.senderId?.toString() === currentUserId;
+                              const isSending = msg.status === "sending";
+                              const isError = msg.status === "error"; // Fix 4.2
+                              const isRead =
+                                msg.read ||
+                                (Array.isArray(msg.readBy) &&
+                                  msg.readBy.some(
+                                    (r) => r.userId !== currentUserId,
+                                  ));
+
+                              return (
+                                <div
+                                  key={msg._id}
+                                  className={`flex ${
+                                    isCurrentUser
+                                      ? "justify-end"
+                                      : "justify-start"
+                                  }`}
+                                >
                                   <div
-                                    className={`px-4 py-3 rounded-2xl shadow-sm transition-all relative ${
-                                      isError
-                                        ? "bg-red-100 text-red-800 border border-red-300 rounded-br-none"
-                                        : isCurrentUser
-                                          ? "bg-[#8BC53F] text-white rounded-br-none"
-                                          : "bg-white text-gray-800 rounded-bl-none border border-gray-200"
-                                    }`}
+                                    className={`flex items-end gap-2 max-w-xs ${isSending ? "opacity-70" : ""} ${isError ? "opacity-80" : ""}`}
                                   >
-                                    <p className="text-sm break-words">
-                                      {msg.message}
-                                    </p>
-                                    {isSending && (
-                                      <div className="absolute -bottom-4 right-0 text-[10px] text-gray-400 italic">
-                                        Sending...
+                                    {!isCurrentUser && (
+                                      <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+                                        <img
+                                          src={
+                                            selectedChat.otherParticipant
+                                              ?.profilePicture ||
+                                            selectedChat.otherParticipant
+                                              ?.avatar ||
+                                            "/avatar.png"
+                                          }
+                                          alt=""
+                                          className="w-full h-full rounded-full object-cover"
+                                          onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = "/avatar.png";
+                                          }}
+                                        />
                                       </div>
                                     )}
-                                  </div>
-                                  <div className="flex items-center gap-1 px-2 mt-1">
-                                    <span className="text-xs text-gray-500">
-                                      {formatTime(msg.createdAt)}
-                                    </span>
-                                    {isCurrentUser && !isSending && !isError && (
-                                      <span className={`text-xs ${isRead ? "text-blue-500" : "text-gray-400"}`}>
-                                        {isRead ? "✓✓" : "✓"}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {/* Fix 4.1 / 4.2: Error state with retry + dismiss */}
-                                  {isError && (
-                                    <div className="flex items-center gap-2 px-2 mt-1">
-                                      <span className="text-[10px] text-red-500 font-medium">{msg.errorText || "Failed to send"}</span>
-                                      <button
-                                        onClick={() => retryMessage(msg._id)}
-                                        className="text-[10px] text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-0.5"
+                                    <div>
+                                      <div
+                                        className={`px-4 py-3 rounded-2xl shadow-sm transition-all relative ${
+                                          isError
+                                            ? "bg-red-100 text-red-800 border border-red-300 rounded-br-none"
+                                            : isCurrentUser
+                                              ? "bg-[#8BC53F] text-white rounded-br-none"
+                                              : "bg-white text-gray-800 rounded-bl-none border border-gray-200"
+                                        }`}
                                       >
-                                        <FiRefreshCw size={10} /> Retry
-                                      </button>
-                                      <button
-                                        onClick={() => dismissMessage(msg._id)}
-                                        className="text-[10px] text-gray-400 hover:text-gray-600 font-semibold"
-                                      >
-                                        Dismiss
-                                      </button>
-                                    </div>
-                                  )}
+                                        <p className="text-sm break-words">
+                                          {msg.message}
+                                        </p>
+                                        {isSending && (
+                                          <div className="absolute -bottom-4 right-0 text-[10px] text-gray-400 italic">
+                                            Sending...
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-1 px-2 mt-1">
+                                        <span className="text-xs text-gray-500">
+                                          {formatTime(msg.createdAt)}
+                                        </span>
+                                        {isCurrentUser &&
+                                          !isSending &&
+                                          !isError && (
+                                            <span
+                                              className={`text-xs ${isRead ? "text-blue-500" : "text-gray-400"}`}
+                                            >
+                                              {isRead ? "✓✓" : "✓"}
+                                            </span>
+                                          )}
+                                      </div>
+                                      {/* Fix 4.1 / 4.2: Error state with retry + dismiss */}
+                                      {isError && (
+                                        <div className="flex items-center gap-2 px-2 mt-1">
+                                          <span className="text-[10px] text-red-500 font-medium">
+                                            {msg.errorText || "Failed to send"}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              retryMessage(msg._id)
+                                            }
+                                            className="text-[10px] text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-0.5"
+                                          >
+                                            <FiRefreshCw size={10} /> Retry
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              dismissMessage(msg._id)
+                                            }
+                                            className="text-[10px] text-gray-400 hover:text-gray-600 font-semibold"
+                                          >
+                                            Dismiss
+                                          </button>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -433,7 +534,6 @@ export default function ChatView({ emptyStateText }) {
                     })}
                   </>
                 )}
-
 
                 <div ref={messagesEndRef} />
               </div>
@@ -479,7 +579,8 @@ export default function ChatView({ emptyStateText }) {
                 Select a chat
               </h2>
               <p className="text-gray-500 mb-6 max-w-sm">
-                {emptyStateText || "Choose a conversation from the list to start messaging."}
+                {emptyStateText ||
+                  "Choose a conversation from the list to start messaging."}
               </p>
             </div>
           </div>
