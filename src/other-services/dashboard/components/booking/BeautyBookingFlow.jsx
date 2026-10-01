@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useBeautyBookingStore } from "../../../stores/beautyBooking.store";
+import { useBeautyBookingStore } from "../../../../../stores/beautyBooking.store";
 import { useEffect, useState } from "react";
 import {
   BadgeCheck,
@@ -15,10 +15,10 @@ import {
   Wallet,
   Wrench,
 } from "lucide-react";
-import Modal from "../../../components/Modal";
-import Button from "../../../components/button";
-import InputField from "../../../components/InputField";
-import { formatMoney } from "./bookingFormat";
+import Modal from "../../../../../components/Modal";
+import Button from "../../../../../components/button";
+import InputField from "../../../../../components/InputField";
+import { formatMoney } from "../../utils/bookingFormat";
 
 const countdown = (seconds) =>
   [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60]

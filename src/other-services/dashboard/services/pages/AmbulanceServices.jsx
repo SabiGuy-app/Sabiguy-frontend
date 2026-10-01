@@ -1,4 +1,4 @@
-import ServicesPage from "../../../../components/dashboard/ServicesPage";
+import ServicesPage from "../../../../../components/dashboard/ServicesPage";
 import { useNavigate } from "react-router-dom";
 import { Home, ChevronRight } from "lucide-react";
 

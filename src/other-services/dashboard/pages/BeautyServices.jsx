@@ -1,8 +1,8 @@
 import { Home } from "lucide-react";
-import DashboardLayout from "../../../components/layouts/DashboardLayout";
-import Breadcrumbs from "../../../components/dashboard/BreadCrumbs";
-import ProviderCard from "../../../components/dashboard/ProviderCard";
-import { beautyProvider } from "./beautyProvider";
+import DashboardLayout from "../../../../components/layouts/DashboardLayout";
+import Breadcrumbs from "../../../../components/dashboard/BreadCrumbs";
+import ProviderCard from "../../../../components/dashboard/ProviderCard";
+import { beautyProvider } from "../data/beautyProvider";
 
 export default function BeautyServices() {
   return (

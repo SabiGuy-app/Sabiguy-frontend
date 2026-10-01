@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import ChatBotDrawer from "../../../components/dashboard/ChatBoxDrawer";
-import ChatBotUI from "../../../components/dashboard/ChatBotUI";
+import ChatBotDrawer from "../../../../components/dashboard/ChatBoxDrawer";
+import ChatBotUI from "../../../../components/dashboard/ChatBotUI";
 import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
-import BeautyContactSection from "../components/ContactSection";
+import BeautyContactSection from "../components/shared/ContactSection";
 
 export default function BeautyContactPage() {
   const [open, setOpen] = useState(false);

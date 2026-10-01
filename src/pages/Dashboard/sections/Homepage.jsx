@@ -12,7 +12,7 @@ import ServicesCard from "../../../components/dashboard/ServicesCard";
 import {
   exploreCategories,
   getCategoryDestination,
-} from "../../../other-services/dashboard/components/data/exploreCategories";
+} from "../../../other-services/beauty-personal-care/dashboard/data/exploreCategories";
 import new1 from "/new1.png";
 import new2 from "/new2.png";
 import new3 from "/new3.png";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FiSearch, FiPlus } from "react-icons/fi";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import BeautyFundWalletModal from "./BeautyFundWalletModal";
+import BeautyFundWalletModal from "../booking/BeautyFundWalletModal";
 
 const SAMPLE_BALANCE = 125000;
 
