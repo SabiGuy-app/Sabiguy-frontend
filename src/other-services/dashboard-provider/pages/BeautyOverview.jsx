@@ -1,5 +1,5 @@
 import React from "react";
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
+import BeautyDashboardLayout from "../components/layout/BeautyDashboardLayout";
 
 const BeautyOverview = () => {
   return (

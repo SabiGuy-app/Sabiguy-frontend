@@ -1,9 +1,9 @@
-import StarRating from "../../../../components/dashboard/StarRating";
-import TabNavigation from "../../../../components/dashboard/TabNav";
+import StarRating from "../../../components/dashboard/StarRating";
+import TabNavigation from "../../../components/dashboard/TabNav";
 import { useState } from "react";
 import { FiUser } from "react-icons/fi";
-import { useAuthStore } from "../../../../stores/auth.store";
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
+import { useAuthStore } from "../../../stores/auth.store";
+import BeautyDashboardLayout from "../components/layout/BeautyDashboardLayout";
 import BeautyProfileInfoTab from "../components/settings/ProfileInfoTab";
 import BeautySettingsTab from "../components/settings/SettingsTab";
 import BeautyWalletTab from "../components/settings/WalletTab";

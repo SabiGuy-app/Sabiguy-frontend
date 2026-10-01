@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Store, House, MapPin, CalendarDays, Timer } from "lucide-react";
-import Button from "../../../../../components/button";
+import Button from "../../../../components/button";
 
 import { formatMoney } from "../../utils/bookingFormat";
 

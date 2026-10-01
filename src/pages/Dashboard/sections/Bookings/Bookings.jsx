@@ -1,4 +1,4 @@
-import BeautyRequest from "../../../../other-services/beauty-personal-care/dashboard/components/requests/BeautyRequest";
+import BeautyRequest from "../../../../other-services/dashboard/components/booking/BeautyRequest";
 import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";

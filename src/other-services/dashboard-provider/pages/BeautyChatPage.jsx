@@ -1,4 +1,4 @@
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
+import BeautyDashboardLayout from "../components/layout/BeautyDashboardLayout";
 import { useState, useEffect, useRef } from "react";
 import {
   FiSearch,
@@ -8,9 +8,9 @@ import {
   FiPaperclip,
   FiPhone,
 } from "react-icons/fi";
-import { chatService } from "../../../../api/chat";
+import { chatService } from "../../../api/chat";
 import { io } from "socket.io-client";
-import { useAuthStore } from "../../../../stores/auth.store";
+import { useAuthStore } from "../../../stores/auth.store";
 import { useSearchParams, useLocation } from "react-router-dom";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;

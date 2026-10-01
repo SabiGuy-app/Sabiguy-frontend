@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FiSearch, FiPlus } from "react-icons/fi";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import BeautyFundWalletModal from "../booking/BeautyFundWalletModal";
+import BeautyFundWalletModal from "../../../dashboard/components/booking/BeautyFundWalletModal";
 
 const SAMPLE_BALANCE = 125000;
 
@@ -192,7 +192,8 @@ export default function BeautyWalletTab() {
                   <span>{new Date(t.createdAt).toLocaleDateString()}</span>
                   <span
                     className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full capitalize ${
-                      STATUS_BADGE_STYLES[t.status] || "bg-gray-100 text-gray-700"
+                      STATUS_BADGE_STYLES[t.status] ||
+                      "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {t.status}
@@ -212,20 +213,21 @@ export default function BeautyWalletTab() {
             </button>
 
             <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    className={`w-8 h-8 flex items-center justify-center text-sm rounded-lg transition-colors ${
-                      currentPage === page
-                        ? "bg-[#005823] text-white"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
+              {Array.from(
+                { length: Math.min(totalPages, 5) },
+                (_, i) => i + 1,
+              ).map((page) => (
+                <button
+                  key={page}
+                  className={`w-8 h-8 flex items-center justify-center text-sm rounded-lg transition-colors ${
+                    currentPage === page
+                      ? "bg-[#005823] text-white"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
             </div>
 
             <button

@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Modal from "../../../components/Modal";
-import Button from "../../../components/button";
-import { handleLogout } from "../../../api/auth";
+import Modal from "../../../../components/Modal";
+import Button from "../../../../components/button";
+import { handleLogout } from "../../../../api/auth";
 import BeautyTopbar from "./BeautyTopbar";
 import BeautySidebar from "./BeautySidebar";
 // import useInactivityLogout, {

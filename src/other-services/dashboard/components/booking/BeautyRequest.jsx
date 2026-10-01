@@ -1,4 +1,4 @@
-import DeliveryMap from "../../../../../components/dashboard/Map";
+import DeliveryMap from "../../../../components/dashboard/Map";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -26,12 +26,12 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import distance from "/distance.png";
-import { useBeautyBookingStore } from "../../../../../stores/beautyBooking.store";
+import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
 import { beautyProvider as provider } from "../../data/beautyProvider";
-import Modal from "../../../../../components/Modal";
-import Button from "../../../../../components/button";
-import ReviewModal from "../../../../../components/dashboard/ReviewModal";
-import BeautyBookingFlow from "../booking/BeautyBookingFlow";
+import Modal from "../../../../components/Modal";
+import Button from "../../../../components/button";
+import ReviewModal from "../../../../components/dashboard/ReviewModal";
+import BeautyBookingFlow from "./BeautyBookingFlow";
 import { formatMoney } from "../../utils/bookingFormat";
 
 const statuses = {
