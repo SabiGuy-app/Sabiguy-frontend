@@ -357,7 +357,7 @@ function App() {
               <Route path="/congrats" element={<Congrats />} />
               <Route
                 path="/forgot-password"
-                element={<ForgotPassword accountType="business" />}
+                element={<ForgotPassword />}
               />
               <Route path="/otp-input" element={<OtpInput />} />
               <Route path="/reset-password" element={<ResetPassword />} />
