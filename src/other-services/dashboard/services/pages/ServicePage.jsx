@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import ServicesPage from "../../../../../components/dashboard/ServicesPage";
-import { useProviderStore } from "../../../../../stores/provider.store";
+import ServicesPage from "../../../../components/dashboard/ServicesPage";
+import { useProviderStore } from "../../../../stores/provider.store";
 import { Home } from "lucide-react";
 
 export default function DynamicServicePage() {

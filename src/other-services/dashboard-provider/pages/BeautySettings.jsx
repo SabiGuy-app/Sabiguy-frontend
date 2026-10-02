@@ -3,12 +3,12 @@ import TabNavigation from "../../../components/dashboard/TabNav";
 import { useState } from "react";
 import { FiUser } from "react-icons/fi";
 import { useAuthStore } from "../../../stores/auth.store";
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
-import BeautyProfileInfoTab from "../components/ProfileInfoTab";
-import BeautySettingsTab from "../components/SettingsTab";
-import BeautyWalletTab from "../components/WalletTab";
-import BeautyPasswordTab from "../components/PasswordTab";
-import BeautyProfileTabs from "../components/ProfileTabs";
+import BeautyDashboardLayout from "../components/layout/BeautyDashboardLayout";
+import BeautyProfileInfoTab from "../components/settings/ProfileInfoTab";
+import BeautySettingsTab from "../components/settings/SettingsTab";
+import BeautyWalletTab from "../components/settings/WalletTab";
+import BeautyPasswordTab from "../components/settings/PasswordTab";
+import BeautyProfileTabs from "../components/settings/ProfileTabs";
 
 export default function BeautyProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");

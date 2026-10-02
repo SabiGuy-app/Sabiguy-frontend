@@ -26,11 +26,11 @@ import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
 import NotFound from "./pages/Not-found/NotFound";
 import ProviderNotFound from "./pages/Not-found/ProviderNotFound";
 import UserNotFound from "./pages/Not-found/UserNotFound";
-import BeautyOverview from "./other-services/dashboard/pages/BeautyOverview";
-import BeautyProfilePage from "./other-services/dashboard/pages/BeautySettings";
-import BeautyContactPage from "./other-services/dashboard/pages/BeautyHelp";
-import BeautyActivityPage from "./other-services/dashboard/pages/BeautyActivity";
-import BeautyChatPage from "./other-services/dashboard/pages/BeautyChatPage";
+import BeautyOverview from "./other-services/dashboard-provider/pages/BeautyOverview";
+import BeautyProfilePage from "./other-services/dashboard-provider/pages/BeautySettings";
+import BeautyContactPage from "./other-services/dashboard-provider/pages/BeautyHelp";
+import BeautyActivityPage from "./other-services/dashboard-provider/pages/BeautyActivity";
+import BeautyChatPage from "./other-services/dashboard-provider/pages/BeautyChatPage";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -62,18 +62,16 @@ const ProfilePage = lazy(() => import("./pages/Dashboard/sections/Settings"));
 const ContactPage = lazy(() => import("./pages/Dashboard/sections/Help"));
 const Categories = lazy(() => import("./pages/Dashboard/sections/Categories"));
 const BeautyServices = lazy(
-  () => import("./other-services/dashboard/components/BeautyServices"),
+  () => import("./other-services/dashboard/pages/BeautyServices"),
 );
 const BeautyProviderProfile = lazy(
-  () => import("./other-services/dashboard/components/BeautyProviderProfile"),
+  () => import("./other-services/dashboard/pages/BeautyProviderProfile"),
 );
 const DynamicServicePage = lazy(
-  () =>
-    import("./other-services/dashboard/components/Services/pages/ServicePage"),
+  () => import("./other-services/dashboard/services/pages/ServicePage"),
 );
 const AmbulanceServices = lazy(
-  () =>
-    import("./other-services/dashboard/components/Services/pages/AmbulanceServices"),
+  () => import("./other-services/dashboard/services/pages/AmbulanceServices"),
 );
 const ProviderDetails = lazy(
   () => import("./pages/Dashboard/sections/ProviderDetails"),

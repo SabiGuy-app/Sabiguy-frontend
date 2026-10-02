@@ -8,7 +8,7 @@ import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import {
   exploreCategories,
   getCategoryDestination,
-} from "../../../other-services/dashboard/components/data/exploreCategories";
+} from "../../../other-services/dashboard/data/exploreCategories";
 
 export default function Categories() {
   const navigate = useNavigate();

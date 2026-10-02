@@ -14,8 +14,8 @@ import {
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import { beautyProvider as provider } from "../data/beautyProvider";
 
-import ServiceBookingOptions from "../../../other-services/dashboard/components/ServiceBookingOptions";
-import BeautyBookingFlow from "../../../other-services/dashboard/components/BeautyBookingFlow";
+import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
+import BeautyBookingFlow from "..//components/booking/BeautyBookingFlow";
 
 function WorkPhoto({ src, alt, className }) {
   const [failed, setFailed] = useState(false);

@@ -9,7 +9,7 @@ import {
 import { useState } from "react";
 import TabNavigation from "../../../components/dashboard/TabNav";
 import Activities from "../../../components/dashboard/Activities";
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
+import BeautyDashboardLayout from "../components/layout/BeautyDashboardLayout";
 import ActivityDetailsModal from "../../../components/dashboard/ActivityDetailsModal";
 
 const SAMPLE_NOTIFICATIONS = [

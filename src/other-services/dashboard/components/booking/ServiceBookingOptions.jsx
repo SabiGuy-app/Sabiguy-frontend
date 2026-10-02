@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Store, House, MapPin, CalendarDays, Timer } from "lucide-react";
-import Button from "../../../components/button";
+import Button from "../../../../components/button";
 
-import { formatMoney } from "../../../pages/Dashboard/components/beauty/bookingFormat";
+import { formatMoney } from "../../utils/bookingFormat";
 
 export default function ServiceBookingOptions({ service, onBook }) {
   const [place, setPlace] = useState("salon");
