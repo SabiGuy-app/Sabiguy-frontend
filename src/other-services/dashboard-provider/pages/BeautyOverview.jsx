@@ -1,12 +1,12 @@
 import { Wallet, Briefcase, Star } from "lucide-react";
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
-import BeautyStatCard from "../components/BeautyStatCard";
-import BeautyRevenueOverview from "../components/BeautyRevenueOverview";
-import BeautyResponseTime from "../components/BeautyResponseTime";
-import BeautyWalletCard from "../components/BeautyWalletCard";
-import BeautyRevenueByService from "../components/BeautyRevenueByService";
-import BeautyPeakHours from "../components/BeautyPeakHours";
-import BeautyRecentTransactions from "../components/BeautyRecentTransactions";
+import BeautyDashboardLayout from "../components/layout/BeautyDashboardLayout";
+import BeautyStatCard from "../components/settings/BeautyStatCard";
+import BeautyRevenueOverview from "../components/settings/BeautyRevenueOverview";
+import BeautyResponseTime from "../components/settings/BeautyResponseTime";
+import BeautyWalletCard from "../components/settings/BeautyWalletCard";
+import BeautyRevenueByService from "../components/settings/BeautyRevenueByService";
+import BeautyPeakHours from "../components/settings/BeautyPeakHours";
+import BeautyRecentTransactions from "../components/settings/BeautyRecentTransactions";
 
 export default function BeautyOverview() {
   return (

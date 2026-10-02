@@ -5,7 +5,4 @@ import AmbulanceServices from "./AmbulanceServices";
 
 export {
   AmbulanceServices,
-  PlumbingServices,
-  CleaningServices,
-  ElectricalServices,
 };

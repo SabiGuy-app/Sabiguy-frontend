@@ -1,4 +1,4 @@
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
+import BeautyDashboardLayout from "../components/layout/BeautyDashboardLayout";
 import { useState, useEffect, useRef } from "react";
 import {
   FiSearch,

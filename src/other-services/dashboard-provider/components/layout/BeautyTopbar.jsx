@@ -1,7 +1,7 @@
 import { Bell, Search, Menu, UserRound } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import NotificationDrawer from "../../../components/dashboard/Notification";
+import NotificationDrawer from "../../../../components/dashboard/Notification";
 
 const MOCK_NOTIFICATIONS = [
   {

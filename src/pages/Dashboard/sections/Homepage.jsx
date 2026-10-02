@@ -9,7 +9,10 @@ import { useAuthStore } from "../../../stores/auth.store";
 import { useState, useEffect } from "react";
 import { useProviderStore } from "../../../stores/provider.store";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
-import { exploreCategories, getCategoryDestination } from "../data/exploreCategories";
+import {
+  exploreCategories,
+  getCategoryDestination,
+} from "../../../other-services/dashboard/data/exploreCategories";
 import new1 from "/new1.png";
 import new2 from "/new2.png";
 import new3 from "/new3.png";
@@ -116,7 +119,10 @@ export default function DashboardHome() {
   const handleServiceClick = (service, task) => {
     const destination = getCategoryDestination(service, task);
     if (destination) navigate(destination);
-    else { setSelectedService(service); setModalOpen(true); }
+    else {
+      setSelectedService(service);
+      setModalOpen(true);
+    }
   };
 
   const handleCategoryClick = (category) => {
