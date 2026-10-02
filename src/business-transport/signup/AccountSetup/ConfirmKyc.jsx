@@ -8,6 +8,7 @@ import { useState } from "react";
 import axios from "axios";
 import InputField from "../../../components/InputField";
 import { useAuthStore } from "../../../stores/auth.store";
+import { getBusinessProfile } from "../../../api/auth";
 
 const MotionDiv = motion.div;
 
@@ -66,7 +67,25 @@ export default function ConfirmKyc({ onNext }) {
       }
 
       localStorage.setItem("kycLevel", String(level));
-      onNext?.({ kycLevel: level, email: normalizedEmail });
+
+      // Restore the saved category so the setup step resolves to the right
+      // screen (Beauty vs. Transport), matching the login-resume path.
+      let businessCategory;
+      try {
+        const profile = await getBusinessProfile();
+        businessCategory = profile?.businessCategory;
+        if (businessCategory) {
+          localStorage.setItem("businessCategory", businessCategory);
+        }
+      } catch (err) {
+        console.warn("Could not load business category:", err.message);
+      }
+
+      onNext?.({
+        kycLevel: level,
+        email: normalizedEmail,
+        ...(businessCategory ? { businessCategory } : {}),
+      });
     } catch (error) {
       console.error("Unable to retrieve business KYC level:", error);
       setErrorMessage(
