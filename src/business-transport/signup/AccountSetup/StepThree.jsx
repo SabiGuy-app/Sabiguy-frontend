@@ -10,6 +10,11 @@ export default function StepThree({ onNext }) {
       <AuthLayout title="A few clicks away from completing your business setup">
         <div className="flex flex-col min-h-[70vh] justify-start sm:justify-center items-center px-4 py-8 text-center">
           <div className="w-full max-w-md">
+            <img
+              src="/Group.svg"
+              alt="Congratulations"
+              className="w-full max-w-xs mx-auto mb-6"
+            />
             <h2 className="font-semibold text-2xl sm:text-3xl mb-4 sm:mb-6">
               Congratulations!
             </h2>

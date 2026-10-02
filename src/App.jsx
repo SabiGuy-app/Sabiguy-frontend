@@ -31,7 +31,6 @@ import BeautyProfilePage from "./other-services/dashboard-provider/pages/BeautyS
 import BeautyContactPage from "./other-services/dashboard-provider/pages/BeautyHelp";
 import BeautyActivityPage from "./other-services/dashboard-provider/pages/BeautyActivity";
 import BeautyChatPage from "./other-services/dashboard-provider/pages/BeautyChatPage";
-import BeautyProviderDashboard from "./other-services/dashboard-provider/pages/BeautyProviderDashboard";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -382,7 +381,7 @@ function App() {
 
               <Route
                 path="/beauty-provider/dashboard"
-                element={<BeautyProviderDashboard />}
+                element={<BeautyOverview />}
               />
 
               <Route

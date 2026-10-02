@@ -36,6 +36,17 @@ const BUSINESS_SETUP_STEP_BY_CATEGORY = {
   beauty: BeautyAndPersonalCare,
 };
 
+// In-session onboarding sets businessCategoryId ("beauty"/"transport"). On
+// resume we only have the saved businessCategory label from the backend, so
+// fall back to matching that.
+function resolveBusinessCategoryId(formData) {
+  if (formData.businessCategoryId) return formData.businessCategoryId;
+  const label = String(formData.businessCategory || "").toLowerCase();
+  if (label.includes("beauty")) return "beauty";
+  if (label.includes("transport")) return "transport";
+  return "";
+}
+
 const BUSINESS_WIZARD_DRAFT_KEY = "business-onboarding-draft";
 
 function readBusinessWizardDraft() {
@@ -103,19 +114,24 @@ export default function BusinessForm() {
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
   const BusinessSetupStep =
-    BUSINESS_SETUP_STEP_BY_CATEGORY[formData.businessCategoryId] ?? AddVehicleForm;
+    BUSINESS_SETUP_STEP_BY_CATEGORY[resolveBusinessCategoryId(formData)] ??
+    AddVehicleForm;
   useEffect(() => {
     const storedKycLevel = localStorage.getItem("kycLevel");
     const storedEmail = localStorage.getItem("email");
+    const storedCategory = localStorage.getItem("businessCategory");
     if (storedKycLevel) {
       const mappedStep = getStepForBusinessKycLevel(storedKycLevel);
       if (mappedStep !== null) {
         setStep(mappedStep);
       }
-      if (storedEmail) {
-        setFormData((prev) => ({ ...prev, email: storedEmail }));
-      }
+      setFormData((prev) => ({
+        ...prev,
+        ...(storedEmail ? { email: storedEmail } : {}),
+        ...(storedCategory ? { businessCategory: storedCategory } : {}),
+      }));
       localStorage.removeItem("kycLevel");
+      localStorage.removeItem("businessCategory");
     }
   }, []);
 
