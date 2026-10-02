@@ -65,7 +65,7 @@ const BeautyServices = lazy(
   () => import("./other-services/dashboard/components/BeautyServices"),
 );
 const BeautyProviderProfile = lazy(
-  () => import("./pages/Dashboard/sections/BeautyProviderProfile"),
+  () => import("./other-services/dashboard/components/BeautyProviderProfile"),
 );
 const DynamicServicePage = lazy(
   () =>
@@ -359,7 +359,7 @@ function App() {
               <Route path="/congrats" element={<Congrats />} />
               <Route
                 path="/forgot-password"
-                element={<ForgotPassword accountType="business" />}
+                element={<ForgotPassword />}
               />
               <Route path="/otp-input" element={<OtpInput />} />
               <Route path="/reset-password" element={<ResetPassword />} />
