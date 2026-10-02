@@ -153,6 +153,18 @@ export const businessGoogleLogin = async (accessToken) => {
   }
 };
 
+// GET AUTHENTICATED BUSINESS PROFILE
+// Used on login to restore the saved business category so onboarding can
+// resume on the correct step from any device (not just the browser that
+// holds the local draft).
+export const getBusinessProfile = async () => {
+  const token = localStorage.getItem("token");
+  const { data } = await api.get("/business/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data?.data || data;
+};
+
 // GET USER BY EMAIL
 export const getUserByEmail = async (email) => {
   const token = localStorage.getItem("token");
