@@ -6,7 +6,7 @@ import { beautyProvider } from "../data/beautyProvider";
 
 export default function BeautyServices() {
   return (
-    <DashboardLayout showSidebar={false}>
+    <DashboardLayout showSidebar={true}>
       <div className="mx-auto max-w-6xl py-4">
         <Breadcrumbs paths={[{ label: "", to: "/dashboard", icon: Home }, { label: "Categories", to: "/dashboard/categories" }, { label: "Beauty & Personal Care" }]} />
         <h1 className="text-2xl font-semibold text-[#231F20] sm:text-3xl">Beauty &amp; Personal Care</h1>
