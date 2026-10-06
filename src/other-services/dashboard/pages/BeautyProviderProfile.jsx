@@ -50,29 +50,28 @@ function WorkPhoto({ src, alt, className }) {
 
 export default function BeautyProviderProfile() {
   const { providerId } = useParams();
-  const [provider, setProvider] = useState(fallbackProvider);
-  const [notFound, setNotFound] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [providerState, setProviderState] = useState(null);
+  const [missingProviderId, setMissingProviderId] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
   const [showAll, setShowAll] = useState(false);
   const [booking, setBooking] = useState(null);
   const [reviewsList, setReviewsList] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState("");
+  const provider = providerState?.requestedId === providerId ? providerState.data : null;
 
   useEffect(() => {
     let active = true;
 
     const loadProvider = async () => {
-      setNotFound(false);
+      setMissingProviderId(null);
       setActiveImage(0);
 
       if (providerId === fallbackProvider.id) {
-        setProvider(fallbackProvider);
+        setProviderState({ requestedId: providerId, data: fallbackProvider });
         return;
       }
 
-      setLoading(true);
       try {
         const cachedProviders = JSON.parse(
           sessionStorage.getItem(BEAUTY_PROVIDER_CACHE_KEY) || "[]",
@@ -82,15 +81,13 @@ export default function BeautyProviderProfile() {
         );
 
         if (active && provider) {
-          setProvider(provider);
+          setProviderState({ requestedId: providerId, data: provider });
         } else if (active) {
-          setNotFound(true);
+          setMissingProviderId(providerId);
         }
       } catch (error) {
         console.error("Failed to load beauty provider", error);
-        if (active) setNotFound(true);
-      } finally {
-        if (active) setLoading(false);
+        if (active) setMissingProviderId(providerId);
       }
     };
 
@@ -135,7 +132,7 @@ export default function BeautyProviderProfile() {
     };
   }, [providerId]);
 
-  if (notFound)
+  if (missingProviderId === providerId)
     return (
       <DashboardLayout showSidebar={false}>
         <p className="py-8">
@@ -150,6 +147,19 @@ export default function BeautyProviderProfile() {
       </DashboardLayout>
     );
 
+  if (!provider)
+    return (
+      <DashboardLayout showSidebar={false}>
+        <div className="mx-auto max-w-7xl animate-pulse" aria-label="Loading provider profile">
+          <div className="mb-6 h-6 w-48 rounded bg-gray-200" />
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)]">
+            <div className="aspect-[814/453] rounded-xl bg-gray-200" />
+            <div className="h-48 rounded-xl bg-gray-200" />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+
   const services = showAll ? provider.services : provider.services.slice(0, 3);
   const hasMoreServices = provider.services.length > 3;
   return (
@@ -160,7 +170,7 @@ export default function BeautyProviderProfile() {
           className="mb-6 inline-flex items-center gap-5 py-2 text-sm font-semibold"
         >
           <ArrowLeft size={20} />
-          {loading ? "Loading..." : provider.fullName}
+          {provider.fullName}
         </Link>
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)]">
           <main className="min-w-0 rounded-2xl bg-white p-5 sm:p-8">
