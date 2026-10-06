@@ -44,6 +44,36 @@ export const bookingPost = async (payload) => {
   }
 };
 
+export const createServiceBooking = async (payload) => {
+  try {
+    const { data } = await api.post("/bookings/service", payload);
+
+    trackEvent("service_booking_created", {
+      booking_id: data?.data?._id || data?.booking?._id || data?._id,
+      category: payload?.category,
+      pricing_option: payload?.pricingOption,
+      provider_id: payload?.providerId,
+      service_name: payload?.service?.[0]?.serviceName,
+    });
+
+    return data;
+  } catch (error) {
+    trackEvent("service_booking_create_failed", {
+      category: payload?.category,
+      pricing_option: payload?.pricingOption,
+      provider_id: payload?.providerId,
+      service_name: payload?.service?.[0]?.serviceName,
+      status: error?.response?.status,
+    });
+    throw error;
+  }
+};
+
+export const searchServiceProviders = async (payload) => {
+  const { data } = await api.post("/bookings/search", payload);
+  return data;
+};
+
 export const getAllBookings = async (params = {}) => {
   const token = localStorage.getItem("token");
   const {
@@ -74,12 +104,13 @@ export const getAllBookings = async (params = {}) => {
   return data;
 };
 
-export const getBookingsDetails = async (payload) => {
+export const getBookingsDetails = async (payload, options = {}) => {
   const token = localStorage.getItem("token");
   const { data } = await api.get(`/bookings/${payload}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    preserveSessionOnRefreshFailure: options.preserveSessionOnRefreshFailure,
   });
 
   return data;
@@ -145,11 +176,11 @@ export const updateBookingStatus = async (bookingId, status) => {
   return data;
 };
 
-export const markAsComplete = async (bookingId) => {
+export const markAsComplete = async (bookingId, payload = {}) => {
   const token = localStorage.getItem("token");
   const { data } = await api.patch(
     `/provider/bookings/${bookingId}/complete`,
-    {},
+    payload,
     {
       headers: {
         Authorization: `Bearer ${token}`,

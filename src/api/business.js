@@ -1,5 +1,15 @@
 import api from "./axios";
 
+export const getAllBusinesses = async (params = {}) => {
+  const { data } = await api.get("/businesses/getAllBusinesses", { params });
+  return data;
+};
+
+export const getBusinessById = async (businessId) => {
+  const { data } = await api.get(`/businesses/${businessId}`);
+  return data;
+};
+
 export const saveBusinessServiceDetails = async (serviceDetails) => {
   const { data } = await api.post(
     "/businesses/service-details",

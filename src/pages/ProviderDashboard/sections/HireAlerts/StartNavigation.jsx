@@ -118,7 +118,7 @@ export default function StartNavigation() {
     const poll = async () => {
       try {
         const data = await getBookingsDetails(alert.id);
-        const latestBookingData = data?.data?.booking;
+        const latestBookingData = data?.data?.booking || data?.data?.data?.booking || data?.data?.data || data?.data;
         setLatestBooking(latestBookingData);
 
         // Confirmed: /api/v1/bookings/{id} returns one of these status
@@ -140,6 +140,16 @@ export default function StartNavigation() {
 
     return () => clearInterval(pollRef.current);
   }, [alert?.id, paymentStatus]);
+
+  useEffect(() => {
+    if (paymentStatus !== "paid" || !latestBooking?._id) return;
+    if (String(latestBooking.serviceType || "").toLowerCase().includes("beauty")) {
+      navigate(`/dashboard/provider/beauty-service/${latestBooking._id}`, {
+        replace: true,
+        state: { booking: latestBooking },
+      });
+    }
+  }, [paymentStatus, latestBooking, navigate]);
 
   // Note: checked the payment API module (initializePayment, verifyPayment,
   // payWithWallet) — it's REST-only (axios calls), no socket/push mechanism
@@ -219,19 +229,49 @@ export default function StartNavigation() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadline, paymentStatus]);
 
-  // Same fields AlertsCard.jsx reads off `alert` for pickup, dropoff,
-  // price breakdown and delivery date — reused so the modal shows the
-  // exact numbers the provider saw before accepting.
-  const modalPickup = alert?.originalData?.pickupLocation?.address || "N/A";
-  const modalDropoff = alert?.originalData?.dropoffLocation?.address || "N/A";
-  const modalDateTime = alert?.deliveryDate || "N/A";
-  const modalBookingPrice =
-    latestBooking?.agreedPrice ?? latestBooking?.calculatedPrice ?? alert?.BookingPrice ?? 0;
-  // ⚠️ This schema has no platformFee/riderReceives fields — these still
-  // fall back to `alert`'s values from AlertsCard until you confirm
-  // where (or whether) the backend sends a fee breakdown.
-  const modalPlatformFee = alert?.platformFee ?? 0;
-  const modalRiderReceives = alert?.RiderReceives ?? 0;
+  const paymentBooking = latestBooking || alert?.originalData || {};
+  const modalService =
+    paymentBooking?.serviceDetails?.serviceName ||
+    paymentBooking?.subCategory ||
+    alert?.subCategory ||
+    "Service";
+  const pricingOption = paymentBooking?.serviceDetails?.pricingOption;
+  const modalServiceLocation =
+    pricingOption === "customer_address"
+      ? "Customer’s Address"
+      : pricingOption === "provider_address"
+        ? "Provider’s Address"
+        : pricingOption === "walk_in"
+          ? "Walk in Salon"
+          : "";
+  const scheduledDate = paymentBooking?.scheduleDate || paymentBooking?.startDate;
+  const formattedDate = scheduledDate
+    ? new Date(scheduledDate).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "";
+  const modalDateTime = [
+    formattedDate,
+    paymentBooking?.scheduledTime || paymentBooking?.time || "",
+  ].filter(Boolean).join(" - ");
+  const modalDuration =
+    paymentBooking?.serviceDetails?.duration ||
+    (paymentBooking?.estimatedDuration?.value
+      ? `${paymentBooking.estimatedDuration.value} ${paymentBooking.estimatedDuration.unit || "minutes"}`
+      : "");
+  const modalLocation =
+    paymentBooking?.location?.address ||
+    paymentBooking?.pickupLocation?.address ||
+    alert?.originalData?.location?.address ||
+    "";
+  const modalServiceCost =
+    paymentBooking?.agreedPrice ??
+    paymentBooking?.serviceDetails?.price ??
+    paymentBooking?.budget ??
+    alert?.BookingPrice ??
+    0;
 
   const handleStartNavigation = async () => {
     if (!alert?.id) return;
@@ -289,15 +329,20 @@ export default function StartNavigation() {
         <WaitingForPaymentModal
           secondsLeft={secondsLeft}
           customer={{
-            fullName: customer?.fullName || "Customer",
-            profilePicture: customer?.profilePicture || "/avatar.png",
+            ...customer,
+            ...(latestBooking?.userId && typeof latestBooking.userId === "object"
+              ? latestBooking.userId
+              : {}),
+            fullName: customer?.fullName || latestBooking?.userId?.fullName || "Customer",
+            profilePicture: customer?.profilePicture || latestBooking?.userId?.profilePicture || "/avatar.png",
+            location: customer?.location || latestBooking?.userId?.location?.address,
           }}
-          pickup={modalPickup}
-          dropoff={modalDropoff}
+          service={modalService}
+          serviceLocation={modalServiceLocation}
           dateTime={modalDateTime}
-          bookingPrice={modalBookingPrice}
-          platformFee={modalPlatformFee}
-          riderReceives={modalRiderReceives}
+          duration={modalDuration}
+          location={modalLocation}
+          serviceCost={modalServiceCost}
           onClose={handlePaymentModalClose}
           onExpire={handlePaymentExpire}
         />

@@ -217,7 +217,7 @@ const animateMarker = (marker, from, to, duration = 700) => {
   return marker.__raf;
 };
 
-const DeliveryMap = ({ pickup, dropoff, bookingDetails }) => {
+const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const pickupMarker = useRef(null);
@@ -463,14 +463,14 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails }) => {
 
         routePolyline.current = new window.google.maps.Polyline({
           path: routePath,
-          strokeColor: "#005823",
+          strokeColor: routeColor,
           strokeOpacity: 0.8,
           strokeWeight: 5,
           map: map.current,
         });
       },
     );
-  }, [pickup, dropoff, loadState]);
+  }, [pickup, dropoff, loadState, routeColor]);
 
   useEffect(() => {
     if (!map.current) return;

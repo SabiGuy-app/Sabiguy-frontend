@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import PaymentConfirmationModal from "../components/dashboard/PaymentConfirmationModal";
 import { verifyPayment } from "../api/payment";
 import { verifyWalletFunding } from "../api/provider";
@@ -7,18 +7,42 @@ import { toast } from "react-hot-toast";
 
 export default function WalletCallback() {
     const [searchParams] = useSearchParams();
+    const location = useLocation();
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
 
-    const reference = searchParams.get("reference") || "";
+    const reference = searchParams.get("reference") || searchParams.get("trxref") || "";
     const urlBookingId = searchParams.get("bookingId");
 
-    const [bookingId, setBookingId] = useState(null);
     const [isBookingPayment, setIsBookingPayment] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [verificationError, setVerificationError] = useState("");
+    const [callbackBookingId, setCallbackBookingId] = useState("");
+    const processingRef = useRef(false);
 
     // Detect if this is a wallet funding reference (starts with "FUND_")
-    const isWalletFunding = reference.startsWith("FUND_");
+    const isWalletFunding = reference.startsWith("FUND_") ||
+        (location.pathname === "/wallet/funding/callback" && !reference.startsWith("PAY_"));
+
+    const handleBookingVerification = useCallback(async (currentBookingId, ref) => {
+        if (!currentBookingId || !ref || processingRef.current) return;
+
+        processingRef.current = true;
+        setVerificationError("");
+        toast.loading("Verifying booking payment...", { id: "verify-booking" });
+
+        try {
+            await verifyPayment(ref);
+            localStorage.removeItem("pendingBookingPaymentId");
+            toast.success("Payment verified!", { id: "verify-booking" });
+            navigate(`/bookings/summary?bookingId=${encodeURIComponent(currentBookingId)}&payment_success=true&reference=${encodeURIComponent(ref)}`, { replace: true });
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.message || "Payment verification failed. Please try again.";
+            setVerificationError(message);
+            toast.error(message, { id: "verify-booking" });
+        } finally {
+            processingRef.current = false;
+        }
+    }, [navigate]);
 
     useEffect(() => {
         let storedBookingId = null;
@@ -30,55 +54,19 @@ export default function WalletCallback() {
 
         const finalBookingId = urlBookingId || storedBookingId;
 
-        if (reference) {
-            if (finalBookingId && !isWalletFunding) {
-                // Booking payment callback
-                setBookingId(finalBookingId);
-                setIsBookingPayment(true);
-                handleBookingVerification(finalBookingId, reference);
-            } else {
-                // Wallet funding callback — show verification modal
-                setShowModal(true);
-            }
+        if (isWalletFunding) {
+            setShowModal(true);
+            return;
         }
-    }, [reference, urlBookingId]);
 
-    const handleBookingVerification = async (currentBookingId, ref) => {
-        if (!ref) return;
-        if (isProcessing) return;
-
-        try {
-            setIsProcessing(true);
-            toast.loading("Verifying booking payment...", { id: "verify-booking" });
-
-            await verifyPayment(ref);
-
-            toast.success("Payment verified!", { id: "verify-booking" });
-            localStorage.removeItem("pendingBookingPaymentId");
-
-            setTimeout(() => {
-                navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_success=true&reference=${ref}`);
-            }, 1000);
-        } catch (error) {
-            console.error("Booking verification failed:", error);
-            const isDoubleVerify = error?.response?.status === 404 || error?.response?.status === 409;
-
-            if (isDoubleVerify) {
-                toast.success("Payment already verified!", { id: "verify-booking" });
-                localStorage.removeItem("pendingBookingPaymentId");
-                setTimeout(() => {
-                    navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_success=true&reference=${ref}`);
-                }, 1000);
-            } else {
-                toast.error("Payment verification failed. Please contact support.", { id: "verify-booking" });
-                setTimeout(() => {
-                    navigate(`/bookings/summary?bookingId=${currentBookingId}&payment_failed=true`);
-                }, 2000);
-            }
-        } finally {
-            setIsProcessing(false);
+        setIsBookingPayment(true);
+        setCallbackBookingId(finalBookingId || "");
+        if (!reference || !finalBookingId) {
+            setVerificationError("The payment return is missing a reference or booking ID. Open your bookings and retry payment.");
+            return;
         }
-    };
+        handleBookingVerification(finalBookingId, reference);
+    }, [handleBookingVerification, isWalletFunding, reference, urlBookingId]);
 
     const handleWalletSuccess = () => {
         navigate("/dashboard/settings?payment_success=true");
@@ -88,6 +76,27 @@ export default function WalletCallback() {
         setShowModal(false);
         navigate("/dashboard/settings");
     };
+
+    if (isBookingPayment && verificationError) {
+        return (
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-50 p-4">
+                <div className="w-full max-w-md rounded-lg bg-white p-6 text-center shadow-lg">
+                    <h2 className="mb-3 text-xl font-semibold text-gray-900">Payment verification failed</h2>
+                    <p className="mb-6 text-sm text-gray-600">{verificationError}</p>
+                    <div className="flex flex-wrap justify-center gap-3">
+                        {callbackBookingId && reference && (
+                            <button type="button" onClick={() => handleBookingVerification(callbackBookingId, reference)} className="rounded-md bg-[#005823] px-5 py-3 font-medium text-white">
+                                Retry verification
+                            </button>
+                        )}
+                        <button type="button" onClick={() => navigate("/bookings?tab=requests")} className="rounded-md border border-gray-300 px-5 py-3 font-medium text-gray-700">
+                            Back to bookings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // Booking payment — show spinner while verifying
     if (isBookingPayment) {

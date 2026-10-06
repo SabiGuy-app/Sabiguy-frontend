@@ -15,6 +15,7 @@ export default function JobsCard({
   job,
   onViewDetails,
   onMarkAsCompleted,
+  onRateCustomer,
   onShowNavigation,
   onMessageCustomer,
   onCancel,
@@ -112,6 +113,79 @@ export default function JobsCard({
   const shouldShowCancelButton = canProviderCancel(
     job?.originalData?.status || job?.status,
   );
+
+  const rawBooking = job?.originalData || {};
+  const isBeautyJob = String(rawBooking?.serviceType || "")
+    .toLowerCase()
+    .includes("beauty");
+
+  if (isBeautyJob) {
+    const beautyStatus = bookingStatus;
+    const serviceLocation = {
+      walk_in: "Walk in Salon",
+      provider_address: "Provider's Address",
+      customer_address: "Customer's Address",
+    }[rawBooking?.serviceDetails?.pricingOption] || "";
+    const bookingLocation = rawBooking?.location?.address || job?.location || "Location unavailable";
+    const scheduledAt = rawBooking?.scheduledTime
+      ? `${formatDateTime(rawBooking?.scheduleDate).replace(/,?\s\d{1,2}:\d{2}\s?(AM|PM)$/i, "")} - ${rawBooking.scheduledTime}`
+      : formatDateTime(rawBooking?.scheduleDate || rawBooking?.startDate || job?.scheduleDate);
+    const distance = rawBooking?.distance?.value != null
+      ? `${rawBooking.distance.value} ${rawBooking.distance.unit || "km"}`
+      : null;
+    const eta = rawBooking?.providerETA?.value != null
+      ? `${rawBooking.providerETA.value} min away`
+      : null;
+    const cardStatus = {
+      paid_escrow: "Pending",
+      paid_escrow_scheduled: "Pending",
+      in_progress: "In Progress",
+      awaiting_confirmation: "Waiting Confirmation",
+      completed: "Completed",
+      funds_released: "Completed",
+    }[beautyStatus] || job?.status || "Pending";
+    const isInProgress = beautyStatus === "in_progress";
+    const canStartJourney = ["paid_escrow", "paid_escrow_scheduled", "enroute_to_pickup", "arrived_at_pickup"].includes(beautyStatus);
+
+    return (
+      <article className="rounded-[7px] border border-gray-100 bg-white px-4 py-4 shadow-sm sm:px-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-[15px] font-semibold text-[#333]">{formatTitle(rawBooking?.serviceDetails?.serviceName || job?.title)}</h3>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${getStatusStyles(job?.status)}`}>{cardStatus}</span>
+            </div>
+            {serviceLocation && <p className="mt-1 inline-flex rounded bg-[#E8F4EC] px-2 py-0.5 text-[10px] text-[#438B66]">{serviceLocation}</p>}
+            <div className="mt-2 space-y-1 text-[11px] text-[#777]">
+              <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-[#438B66]" />{bookingLocation}</p>
+              <p className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-[#438B66]" />{scheduledAt}</p>
+              {(distance || eta) && <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 rotate-45 text-[#438B66]" />{[distance, eta].filter(Boolean).join(" · ")}</p>}
+            </div>
+          </div>
+          <p className="shrink-0 text-right text-[17px] font-semibold text-[#176C3A]">₦{Number(rawBooking?.agreedPrice ?? rawBooking?.serviceDetails?.price ?? amount).toLocaleString()}</p>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2 border-t border-gray-200 pt-2">
+          <button onClick={() => onViewDetails(job)} className="min-w-[100px] rounded-[3px] bg-[#438B66] px-4 py-2 text-[11px] font-medium text-white hover:bg-[#347653]">View Details</button>
+          {isInProgress ? (
+            <button onClick={() => onMarkAsCompleted(job)} className="rounded-[3px] bg-[#F3F3F3] px-4 py-2 text-[11px] font-medium text-[#555] hover:bg-gray-200">Mark as Completed</button>
+          ) : canStartJourney ? (
+            <button onClick={() => onShowNavigation?.(job)} className="rounded-[3px] border border-gray-200 px-4 py-2 text-[11px] font-medium text-[#555] hover:bg-gray-50">{rawBooking?.serviceDetails?.pricingOption === "customer_address" ? "En Route" : "Start Service"}</button>
+          ) : ["funds_released", "user_accepted_completion"].includes(beautyStatus) ? (
+            <button onClick={() => onRateCustomer?.(job)} className="rounded-[3px] border border-gray-200 px-4 py-2 text-[11px] font-medium text-[#555] hover:bg-gray-50">Rate Customer</button>
+          ) : null}
+        </div>
+        {["completed", "funds_released", "awaiting_confirmation"].includes(beautyStatus) && rawBooking?.rating?.score > 0 && (
+          <div className="mt-3 border-t border-gray-100 bg-[#FAFAFA] px-3 py-2">
+            <div className="flex items-center gap-0.5 text-[#F3B400]" aria-label={`${rawBooking.rating.score} out of 5 stars`}>
+              {Array.from({ length: 5 }, (_, index) => <span key={index} className={index < Math.round(rawBooking.rating.score) ? "opacity-100" : "opacity-30"}>★</span>)}
+              <span className="ml-1 text-[10px] font-semibold text-[#333]">{Number(rawBooking.rating.score).toFixed(1)}</span>
+            </div>
+            {rawBooking.rating.review && <p className="mt-0.5 line-clamp-2 text-[10px] text-[#666]">{rawBooking.rating.review}</p>}
+          </div>
+        )}
+      </article>
+    );
+  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationToast from "../NotificationToast";
 import NotificationCompletionModal from "../NotificationCompletionModal";
+import BeautyCompletionReviewModal from "./BeautyCompletionReviewModal";
 import BookingRequestModal from "../BookingRequestModal";
 import ActivityDetailsModal from "./ActivityDetailsModal";
 import ReviewModal from "./ReviewModal";
@@ -13,12 +14,16 @@ import notificationSoundService from "../../services/notificationSoundService";
 import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
-import { acceptCompletion, disputeCompletion, getAllBookings } from "../../api/bookings";
-import { handleLogout } from "../../api/auth";
+import { acceptCompletion, disputeCompletion, getAllBookings, getBookingsDetails } from "../../api/bookings";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
 
-export default function Navbar({ onMenuClick }) {
+export default function Navbar({
+  onMenuClick,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = "Search providers or services...",
+}) {
   const sampleUnread = useBeautyBookingStore((state) => state.notifications.filter((item) => !item.isRead).length);
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -26,9 +31,12 @@ export default function Navbar({ onMenuClick }) {
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [, setLocationEnabled] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completionNotification, setCompletionNotification] = useState(null);
+  const [completionBooking, setCompletionBooking] = useState(null);
+  const [completionBookingLoading, setCompletionBookingLoading] = useState(false);
+  const [completionBookingError, setCompletionBookingError] = useState("");
   const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
   const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
   const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
@@ -42,6 +50,7 @@ export default function Navbar({ onMenuClick }) {
   const hydrated = useAuthStore((state) => state.hydrated);
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
+  const hasPageSearch = typeof onSearchChange === "function";
   const completionNotificationTypes = [
     "booking_completed",
     "booking_completed_awaiting_acceptance",
@@ -50,18 +59,6 @@ export default function Navbar({ onMenuClick }) {
     "new_booking_request",
     "booking_selected",
   ];
-
-  // Don't render until store is hydrated
-  if (!hydrated) {
-    return (
-      <nav className="bg-white border-b border-gray-200 h-20 flex items-center px-6 fixed top-0 left-0 right-0 z-30">
-        <div className="flex justify-between items-center w-full">
-          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
-        </div>
-      </nav>
-    );
-  }
 
   const fetchUnreadCount = async () => {
     try {
@@ -340,7 +337,31 @@ export default function Navbar({ onMenuClick }) {
   const completionProviderName =
     completionNotification?.data?.providerName ||
     completionNotification?.data?.provider?.fullName ||
+    (completionBooking?._id === completionBookingId ? completionBooking?.providerId?.fullName : null) ||
     null;
+
+  useEffect(() => {
+    if (!showCompletionModal || !completionBookingId) return undefined;
+    let active = true;
+    getBookingsDetails(completionBookingId)
+      .then((response) => {
+        if (!active) return;
+        const booking = response?.data?.booking || response?.data?.data?.booking || response?.data?.data || response?.data || response?.booking || response;
+        if (!booking?._id) throw new Error("Booking details are unavailable.");
+        setCompletionBooking(booking);
+        setCompletionBookingError("");
+      })
+      .catch((err) => { if (active) setCompletionBookingError(err.response?.data?.message || err.message || "Unable to load booking details."); })
+      .finally(() => { if (active) setCompletionBookingLoading(false); });
+    setCompletionBooking(null);
+    setCompletionBookingLoading(true);
+    return () => { active = false; };
+  }, [showCompletionModal, completionBookingId]);
+
+  const activeCompletionBooking = completionBooking?._id === completionBookingId ? completionBooking : null;
+  const completionDetailsPending = showCompletionModal && !!completionBookingId && !activeCompletionBooking && !completionBookingError;
+  const isBeautyCompletion = String(activeCompletionBooking?.serviceType || completionNotification?.data?.serviceType || "")
+    .toLowerCase().includes("beauty");
 
   const handleAcceptCompletion = () => {
     if (!completionBookingId) {
@@ -511,18 +532,12 @@ export default function Navbar({ onMenuClick }) {
     userLocationService.setSocket(socket);
   }, [socket]);
 
-  // Test notification (remove after debugging)
-  const testNotification = () => {
-    const testNotif = {
-      _id: Date.now().toString(),
-      title: "Test Notification",
-      message: "This is a test notification to verify the toast is working!",
-      type: "test",
-      read: false,
-      createdAt: new Date(),
-    };
-    showNotificationToast(testNotif);
-  };
+  if (!hydrated) {
+    return <nav className="fixed left-0 right-0 top-0 z-30 flex h-20 items-center justify-between border-b border-gray-200 bg-white px-6">
+      <div className="h-8 w-32 animate-pulse rounded bg-gray-200" />
+      <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
+    </nav>;
+  }
 
   return (
     <>
@@ -549,22 +564,29 @@ export default function Navbar({ onMenuClick }) {
         </button>
 
         {/* Desktop Search */}
-        {/* <div className="hidden md:flex flex-1 items-center ml-10 max-w-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2">
+        {hasPageSearch && (
+          <div className="hidden md:flex flex-1 items-center ml-2 max-w-sm bg-white border border-gray-300 rounded-lg px-3 py-2">
           <Search size={18} className="text-gray-500 mr-2" />
           <input
             type="text"
-            placeholder="Search providers or services..."
-            className="bg-transparent w-full outline-none text-sm"
+            value={searchValue || ""}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={searchPlaceholder}
+            className="bg-transparent w-full outline-none text-sm text-gray-800 placeholder:text-gray-400"
           />
-        </div> */}
+        </div>
+        )}
 
         {/* Mobile Search Toggle */}
-        {/* <button
-          onClick={() => setShowSearch(!showSearch)}
-          className="md:hidden text-gray-600"
-        >
-          <Search size={22} />
-        </button> */}
+        {hasPageSearch && (
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className="md:hidden text-gray-600"
+            aria-label="Search"
+          >
+            <Search size={22} />
+          </button>
+        )}
 
         {/* Right Icons */}
         <div className="flex items-center space-x-4">
@@ -632,13 +654,15 @@ export default function Navbar({ onMenuClick }) {
         </div>
 
         {/* Mobile Search Dropdown */}
-        {showSearch && (
+        {hasPageSearch && showSearch && (
           <div className="absolute top-16 left-0 w-full bg-white border-t border-gray-200 p-4 md:hidden">
             <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2">
               <Search size={18} className="text-gray-500 mr-2" />
               <input
                 type="text"
-                placeholder="Search providers or services..."
+                value={searchValue || ""}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder={searchPlaceholder}
                 className="bg-transparent w-full outline-none text-sm"
               />
             </div>
@@ -657,7 +681,7 @@ export default function Navbar({ onMenuClick }) {
           onBookingCompleted={handleBookingCompletedNotification}
         />
         <NotificationCompletionModal
-          isOpen={showCompletionModal}
+          isOpen={showCompletionModal && !completionDetailsPending && !completionBookingLoading && !isBeautyCompletion}
           onClose={() => {
             setShowCompletionModal(false);
             setCompletionNotification(null);
@@ -666,6 +690,14 @@ export default function Navbar({ onMenuClick }) {
           onDisputeCompletion={handleDisputeCompletion}
           providerName={completionProviderName}
           notification={completionNotification}
+        />
+        <BeautyCompletionReviewModal
+          isOpen={showCompletionModal && isBeautyCompletion}
+          booking={activeCompletionBooking}
+          loading={completionBookingLoading || completionDetailsPending}
+          error={completionBookingError}
+          onClose={() => { setShowCompletionModal(false); setCompletionNotification(null); }}
+          onConfirm={handleAcceptCompletion}
         />
         <BookingRequestModal
           isOpen={showBookingRequestModal}

@@ -57,7 +57,9 @@ export const getWalletBalance = async (options = {}) => {
   const url = options.bustCache
     ? `/wallet/balance?t=${Date.now()}`
     : "/wallet/balance";
-  const { data } = await api.get(url);
+  const { data } = await api.get(url, {
+    preserveSessionOnRefreshFailure: options.preserveSessionOnRefreshFailure,
+  });
   return data;
 };
 
@@ -158,8 +160,15 @@ export const getAllProviders = async () => {
   return data;
 };
 
+export const getProviderDirectory = async (params = {}) => {
+  const { data } = await api.get("/provider/all", { params });
+  return data;
+};
+
 export const getProviderReviews = async (providerId) => {
-  const { data } = await api.get(`/provider/${providerId}/reviews`);
+  const { data } = await api.get("/provider/reviews", {
+    params: providerId ? { providerId } : {},
+  });
   return data;
 };
 

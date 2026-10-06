@@ -1,4 +1,4 @@
-import { createElement, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,10 +12,21 @@ import {
   Image,
 } from "lucide-react";
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
-import { beautyProvider as provider } from "../data/beautyProvider";
+import { getProviderReviews } from "../../../api/provider";
+import { beautyProvider as fallbackProvider } from "../data/beautyProvider";
 
 import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
 import BeautyBookingFlow from "..//components/booking/BeautyBookingFlow";
+
+const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v8";
+
+const extractReviews = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.data?.reviews)) return response.data.reviews;
+  if (Array.isArray(response?.reviews)) return response.reviews;
+  return [];
+};
 
 function WorkPhoto({ src, alt, className }) {
   const [failed, setFailed] = useState(false);
@@ -39,10 +50,92 @@ function WorkPhoto({ src, alt, className }) {
 
 export default function BeautyProviderProfile() {
   const { providerId } = useParams();
+  const [provider, setProvider] = useState(fallbackProvider);
+  const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [showAll, setShowAll] = useState(false);
   const [booking, setBooking] = useState(null);
-  if (providerId !== provider.id)
+  const [reviewsList, setReviewsList] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    const loadProvider = async () => {
+      setNotFound(false);
+      setActiveImage(0);
+
+      if (providerId === fallbackProvider.id) {
+        setProvider(fallbackProvider);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const cachedProviders = JSON.parse(
+          sessionStorage.getItem(BEAUTY_PROVIDER_CACHE_KEY) || "[]",
+        );
+        const provider = cachedProviders.find(
+          (item) => item.id === providerId || item.backendId === providerId,
+        );
+
+        if (active && provider) {
+          setProvider(provider);
+        } else if (active) {
+          setNotFound(true);
+        }
+      } catch (error) {
+        console.error("Failed to load beauty provider", error);
+        if (active) setNotFound(true);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    loadProvider();
+
+    return () => {
+      active = false;
+    };
+  }, [providerId]);
+
+  useEffect(() => {
+    if (!providerId || providerId === fallbackProvider.id) {
+      setReviewsList([]);
+      return;
+    }
+
+    let active = true;
+    setReviewsLoading(true);
+    setReviewsError("");
+
+    getProviderReviews(providerId)
+      .then((response) => {
+        if (!active) return;
+        setReviewsList(extractReviews(response));
+      })
+      .catch((error) => {
+        console.error("Failed to fetch beauty provider reviews", error);
+        if (!active) return;
+        if (error?.response?.data?.message === "Provider not found") {
+          setReviewsList([]);
+          setReviewsError("");
+          return;
+        }
+        setReviewsError("Unable to load reviews");
+      })
+      .finally(() => {
+        if (active) setReviewsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [providerId]);
+
+  if (notFound)
     return (
       <DashboardLayout showSidebar={false}>
         <p className="py-8">
@@ -56,7 +149,9 @@ export default function BeautyProviderProfile() {
         </p>
       </DashboardLayout>
     );
+
   const services = showAll ? provider.services : provider.services.slice(0, 3);
+  const hasMoreServices = provider.services.length > 3;
   return (
     <DashboardLayout showSidebar={false}>
       <div className="mx-auto max-w-7xl text-[#231F20]">
@@ -65,7 +160,7 @@ export default function BeautyProviderProfile() {
           className="mb-6 inline-flex items-center gap-5 py-2 text-sm font-semibold"
         >
           <ArrowLeft size={20} />
-          {provider.fullName}
+          {loading ? "Loading..." : provider.fullName}
         </Link>
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)]">
           <main className="min-w-0 rounded-2xl bg-white p-5 sm:p-8">
@@ -120,59 +215,109 @@ export default function BeautyProviderProfile() {
                 Services &amp; Pricing
               </h2>
               <div className="space-y-3">
-                {services.map((service) => (
+                {services.map((service, index) => (
                   <ServiceBookingOptions
                     key={service.name}
                     service={service}
+                    defaultOpen={index === 0}
                     onBook={setBooking}
                   />
                 ))}
+                {provider.services.length === 0 && (
+                  <p className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                    Service and pricing details are not available yet, so booking cannot be started.
+                  </p>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setShowAll(!showAll)}
-                aria-expanded={showAll}
-                className="mt-3 w-full rounded border border-gray-200 py-2.5 text-xs hover:bg-gray-50"
-              >
-                {showAll ? "View less" : "View all"}
-              </button>
+              {hasMoreServices && (
+                <button
+                  type="button"
+                  onClick={() => setShowAll(!showAll)}
+                  aria-expanded={showAll}
+                  className="mt-3 w-full rounded border border-gray-200 py-2.5 text-xs hover:bg-gray-50"
+                >
+                  {showAll ? "View less" : "View all"}
+                </button>
+              )}
             </section>
             <section className="mb-12 mt-12" aria-labelledby="recent-reviews">
               <h2 id="recent-reviews" className="mb-5 text-xl font-bold">
                 Recent Reviews
               </h2>
               <div className="divide-y divide-gray-200">
-                {provider.recentReviews.map((review) => (
-                  <article
-                    key={review.id}
-                    className="flex gap-3 py-6 first:pt-0"
-                  >
-                    <span
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-white ${review.color}`}
-                    >
-                      {review.initial}
-                    </span>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="font-medium">{review.name}</h3>
-                        <span
-                          aria-label="5 out of 5 stars"
-                          className="flex gap-1 text-amber-400"
-                        >
-                          {Array.from({ length: 5 }, (_, i) => (
-                            <Star key={i} size={15} fill="currentColor" />
-                          ))}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                        {review.text}
-                      </p>
-                      <p className="mt-4 text-xs text-gray-500">
-                        {review.date}
-                      </p>
-                    </div>
-                  </article>
-                ))}
+                {reviewsLoading ? (
+                  <p className="py-6 text-sm text-gray-500">
+                    Loading reviews...
+                  </p>
+                ) : reviewsError ? (
+                  <p className="py-6 text-sm text-red-500">{reviewsError}</p>
+                ) : reviewsList.length === 0 ? (
+                  <p className="py-6 text-sm italic text-gray-500">
+                    No reviews yet
+                  </p>
+                ) : (
+                  reviewsList.map((review, index) => {
+                    const reviewer = review.user || review.userId || {};
+                    const reviewerName =
+                      reviewer.fullName || review.userName || "Anonymous";
+                    const reviewerAvatar =
+                      reviewer.profilePicture || review.userAvatar || "/avatar.png";
+                    const score = Number(review.score || review.rating || 0);
+                    const reviewDate = review.ratedAt || review.createdAt;
+                    const createdAt = reviewDate
+                      ? new Date(reviewDate).toLocaleDateString(
+                          undefined,
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          },
+                        )
+                      : "";
+
+                    return (
+                      <article
+                        key={review._id || review.id || index}
+                        className="flex gap-3 py-6 first:pt-0"
+                      >
+                        <img
+                          src={reviewerAvatar}
+                          alt={reviewerName}
+                          className="h-11 w-11 shrink-0 rounded-full object-cover"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = "/avatar.png";
+                          }}
+                        />
+                        <div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="font-medium">{reviewerName}</h3>
+                            <span
+                              aria-label={`${score} out of 5 stars`}
+                              className="flex gap-1 text-amber-400"
+                            >
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <Star
+                                  key={i}
+                                  size={15}
+                                  fill={i < score ? "currentColor" : "none"}
+                                />
+                              ))}
+                            </span>
+                          </div>
+                          <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                            {review.review || "No feedback provided."}
+                          </p>
+                          {createdAt && (
+                            <p className="mt-4 text-xs text-gray-500">
+                              {createdAt}
+                            </p>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })
+                )}
               </div>
             </section>
           </main>

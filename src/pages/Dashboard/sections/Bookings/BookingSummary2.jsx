@@ -93,7 +93,10 @@ export default function BookingSummary2() {
   const fetchBalance = async () => {
     try {
       setIsLoadingBalance(true);
-      const data = await getWalletBalance({ bustCache: true });
+      const data = await getWalletBalance({
+        bustCache: true,
+        preserveSessionOnRefreshFailure: paymentSuccess === "true",
+      });
       const available =
         data?.data?.walletBalance?.available ??
         data?.data?.available ??
@@ -118,7 +121,9 @@ export default function BookingSummary2() {
 
     const fetchBooking = async () => {
       try {
-        const data = await getBookingsDetails(bookingId);
+        const data = await getBookingsDetails(bookingId, {
+          preserveSessionOnRefreshFailure: paymentSuccess === "true",
+        });
         setBooking(data);
 
         if (paymentSuccess === "true") {

@@ -11,7 +11,13 @@ import { CallContext } from "../shared/CallContext";
 import { CallModal } from "../shared/CallModal";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 
-export default function DashboardLayout({ children, showSidebar = true }) {
+export default function DashboardLayout({
+  children,
+  showSidebar = true,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder,
+}) {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const currentUser = useAuthStore((state) => state.user);
@@ -51,7 +57,12 @@ export default function DashboardLayout({ children, showSidebar = true }) {
   return (
     <CallContext.Provider value={{ openCall }}>
       <div className="min-h-screen bg-gray-50">
-        <Navbar onMenuClick={toggleSidebar} />
+        <Navbar
+          onMenuClick={toggleSidebar}
+          searchValue={searchValue}
+          onSearchChange={onSearchChange}
+          searchPlaceholder={searchPlaceholder}
+        />
 
         <div className="flex min-h-screen bg-gray-50 pt-16 sm:pt-20">
           {/* Overlay for mobile */}
