@@ -185,13 +185,20 @@ const JobCompletedCelebrationModal = ({
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
         <div
-          className="bg-white rounded-3xl max-w-md w-full max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl transform transition-all"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Job completion confirmed"
+          className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full min-h-0 flex flex-col overflow-hidden shadow-2xl transform transition-all"
+          style={{
+            height: "min(640px, calc(100dvh - 24px))",
+            maxHeight: "calc(100vh - 24px)",
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Gradient Header */}
-          <div className="relative h-28 sm:h-36 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 overflow-hidden flex-shrink-0">
+          <div className="relative h-20 sm:h-36 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 overflow-hidden flex-shrink-0">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative">
                 {/* Animated glow circle */}
@@ -216,7 +223,7 @@ const JobCompletedCelebrationModal = ({
           </div>
 
           {/* Content */}
-          <div className="px-5 sm:px-6 py-5 sm:py-6 space-y-4">
+          <div className="min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 sm:py-6 space-y-4">
             {/* Title with Emoji */}
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
@@ -296,8 +303,8 @@ const JobCompletedCelebrationModal = ({
               )}
 
               {/* Date and Time */}
-              <div className="flex items-center justify-between gap-3 p-3 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg border border-gray-200">
-                <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-700 flex items-center gap-2 min-w-0">
                   <Calendar size={16} className="text-gray-600" />
                   {formattedDate}
                 </span>
@@ -319,10 +326,11 @@ const JobCompletedCelebrationModal = ({
               </p>
             </div>
 
-            {/* Action Button */}
+          </div>
+          <div className="flex-shrink-0 px-4 sm:px-6 py-3 border-t border-gray-100 bg-white">
             <button
               onClick={onClose}
-              className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
             >
               <FiCheckCircle size={18} />
               Awesome! Dismiss

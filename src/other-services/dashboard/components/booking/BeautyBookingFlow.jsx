@@ -1,10 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
 import { useEffect, useState } from "react";
+import { initializePayment, payWithWallet } from "../../../../api/payment";
+import { getWalletBalance } from "../../../../api/provider";
 import {
   BadgeCheck,
   CalendarDays,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Globe,
   MapPin,
@@ -14,6 +18,7 @@ import {
   Star,
   Wallet,
   Wrench,
+  X,
 } from "lucide-react";
 import Modal from "../../../../components/Modal";
 import Button from "../../../../components/button";
@@ -28,6 +33,44 @@ const localDateTime = (date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60000)
     .toISOString()
     .slice(0, 16);
+
+const formatBookingDate = (value) => value?.slice(0, 10);
+
+const formatBookingTime = (value) => {
+  const rawTime = value?.slice(11, 16);
+  if (!rawTime) return "";
+
+  const [hourValue, minute] = rawTime.split(":");
+  const hour = Number(hourValue);
+  const period = hour >= 12 ? "PM" : "AM";
+  const twelveHour = hour % 12 || 12;
+
+  return `${twelveHour}:${minute} ${period}`;
+};
+
+const parseTimeToDate = (day, timeLabel) => {
+  const [time, period] = timeLabel.split(" ");
+  const [hourValue, minuteValue] = time.split(":");
+  let hour = Number(hourValue);
+
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
+
+  const date = new Date(2026, 9, day, hour, Number(minuteValue));
+  return localDateTime(date);
+};
+
+const responseCountdown = (seconds) =>
+  [Math.floor(seconds / 60), seconds % 60]
+    .map((part) => String(part).padStart(2, "0"))
+    .join(" : ");
+
+const getDurationLabel = (duration) =>
+  typeof duration === "string"
+    ? duration
+    : Number(duration) === 60
+      ? "1 hr"
+      : `${Number(duration || 45)} mins`;
 
 function ProviderSummary({ provider }) {
   return (
@@ -106,17 +149,22 @@ export default function BeautyBookingFlow({
   provider,
   booking,
   onClose,
-  initialStage = "details",
+  initialStage = "schedule",
 }) {
   const navigate = useNavigate();
   const store = useBeautyBookingStore();
+  const fetchBookings = store.fetchBookings;
   const [stage, setStage] = useState(initialStage);
+  const [createdBookingId, setCreatedBookingId] = useState(null);
+  const [bookingRecord, setBookingRecord] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(8);
+  const [selectedTime, setSelectedTime] = useState("11:00 AM");
   const [date, setDate] = useState(
     () =>
       booking.date ||
       (booking.mode === "now"
         ? localDateTime(new Date(Date.now() + 3600000))
-        : ""),
+        : parseTimeToDate(8, "11:00 AM")),
   );
   const [address, setAddress] = useState(
     booking.address ||
@@ -125,21 +173,99 @@ export default function BeautyBookingFlow({
   const [note, setNote] = useState(booking.note || "");
   const [method, setMethod] = useState("wallet");
   const [expiresAt, setExpiresAt] = useState(
-    initialStage === "payment" ? Date.now() + 300000 : null,
+    initialStage === "payment"
+      ? Date.parse(booking.paymentDeadlineAt || "") || Date.now() + 300000
+      : null,
   );
+  const [receivedExpiresAt, setReceivedExpiresAt] = useState(null);
   const [now, setNow] = useState(Date.now);
   const [message, setMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [paymentError, setPaymentError] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [walletLoading, setWalletLoading] = useState(false);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+  useEffect(() => {
+    if (stage !== "received" || !createdBookingId) return undefined;
+
+    let active = true;
+    let timeoutId;
+    const pollBooking = async () => {
+      try {
+        const bookings = await fetchBookings();
+        const currentBooking = bookings.find(
+          (item) => item.id === createdBookingId,
+        );
+        if (!active || !currentBooking) return;
+
+        if (currentBooking.status === "accepted") {
+          setBookingRecord(currentBooking);
+          setExpiresAt(
+            Date.parse(currentBooking.paymentDeadlineAt || "") ||
+              Date.now() + 300000,
+          );
+          setStage("payment");
+          return;
+        }
+
+        if (["expired", "cancelled"].includes(currentBooking.status)) {
+          setBookingRecord(currentBooking);
+          setStage("expired");
+          return;
+        }
+      } catch {
+        // Keep checking; a temporary polling error should not close the request.
+      }
+
+      if (active) timeoutId = setTimeout(pollBooking, 4000);
+    };
+
+    pollBooking();
+    return () => {
+      active = false;
+      clearTimeout(timeoutId);
+    };
+  }, [createdBookingId, fetchBookings, stage]);
+  useEffect(() => {
+    if (stage !== "payment") return;
+
+    const fetchBalance = async () => {
+      setWalletLoading(true);
+      try {
+        const response = await getWalletBalance({ bustCache: true });
+        const available =
+          response?.data?.walletBalance?.available ??
+          response?.data?.available ??
+          response?.available ??
+          0;
+        setWalletBalance(Number(available || 0));
+      } catch {
+        setWalletBalance(null);
+      } finally {
+        setWalletLoading(false);
+      }
+    };
+
+    fetchBalance();
+  }, [stage]);
   const startsIn = date
     ? Math.max(0, Math.ceil((new Date(date).getTime() - now) / 1000))
     : 0;
   const remaining = expiresAt
     ? Math.max(0, Math.ceil((expiresAt - now) / 1000))
     : 300;
-  const total = booking.price + 100;
+  const responseRemaining = receivedExpiresAt
+    ? Math.max(0, Math.ceil((receivedExpiresAt - now) / 1000))
+    : 300;
+  const paymentBooking = bookingRecord || booking;
+  const total = Number(
+    paymentBooking.totalAmount || paymentBooking.price + 100 || 0,
+  );
+  const serviceCharge = Math.max(0, total - Number(booking.price || 0));
   const canContinue = Boolean(
     address.trim() && date && new Date(date).getTime() > now,
   );
@@ -148,6 +274,242 @@ export default function BeautyBookingFlow({
     setNow(Date.now());
     setStage("payment");
   };
+  const createBooking = async () => {
+    if (!canContinue || store.loading) return;
+
+    setSubmitError("");
+    try {
+      const providerId =
+        provider.backendId ||
+        provider.providerId?._id ||
+        provider.providerId ||
+        provider.id;
+
+      if (!providerId || providerId === "phil-crook") {
+        throw new Error(
+          "This provider profile is not connected to a bookable provider account yet.",
+        );
+      }
+
+      const response = await store.submit({
+        category: "beauty_personal_care",
+        service: [
+          {
+            serviceName: booking.service,
+          },
+        ],
+        pricingOption: booking.pricingOption || "walk_in",
+        date: formatBookingDate(date),
+        time: formatBookingTime(date),
+        location: address.trim(),
+        providerId,
+      });
+      const createdBooking = useBeautyBookingStore.getState().booking;
+      const bookingId =
+        createdBooking?.id ||
+        response?.data?._id ||
+        response?.booking?._id ||
+        response?._id;
+      if (!bookingId) {
+        throw new Error("Booking was created, but its ID was not returned.");
+      }
+      setCreatedBookingId(bookingId);
+      setBookingRecord(createdBooking);
+      setReceivedExpiresAt(Date.now() + 300000);
+      setStage("received");
+    } catch (error) {
+      setSubmitError(
+        error?.response?.data?.message ||
+          "Booking creation failed. Please try again.",
+      );
+    }
+  };
+  const selectSchedule = (day, timeLabel = selectedTime) => {
+    setSelectedDay(day);
+    setSelectedTime(timeLabel);
+    setDate(parseTimeToDate(day, timeLabel));
+  };
+  const handlePayment = async () => {
+    if (!remaining || paymentLoading) return;
+
+    const bookingId = paymentBooking.id || paymentBooking._id;
+    if (!bookingId) {
+      setPaymentError("Booking ID not found. Please refresh your bookings.");
+      return;
+    }
+
+    setPaymentError("");
+    setPaymentLoading(true);
+
+    try {
+      const pickupNote = note.trim() || undefined;
+
+      if (method === "wallet") {
+        await payWithWallet(bookingId, pickupNote);
+        await store.fetchBookings();
+        setStage("success");
+        return;
+      }
+
+      const response = await initializePayment(bookingId, pickupNote);
+      const authorizationUrl =
+        response?.data?.authorizationUrl || response?.authorizationUrl;
+
+      if (!authorizationUrl) {
+        throw new Error("Payment gateway did not return a checkout link.");
+      }
+
+      localStorage.setItem("pendingBookingPaymentId", bookingId);
+      window.location.href = authorizationUrl;
+    } catch (error) {
+      setPaymentError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Payment processing failed. Please try again.",
+      );
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  if (stage === "schedule") {
+    const days = Array.from({ length: 31 }, (_, index) => index + 1);
+    const timeOptions = [
+      "9:00 AM",
+      "9:30 AM",
+      "11:00 AM",
+      "11:30 AM",
+      "12:00 PM",
+      "12:30 PM",
+      "02:00 AM",
+      "3:30 AM",
+      "4:30 PM",
+      "5:00 PM",
+      "5:30 PM",
+      "06:00 PM",
+    ];
+
+    return (
+      <Modal
+        isOpen
+        onClose={onClose}
+        showCloseButton={false}
+        overlayClassName="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/35 px-3 py-4 sm:items-center sm:px-4 sm:py-6"
+        panelClassName="relative w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-xl max-h-[calc(100vh-2rem)] overflow-y-auto"
+        contentClassName="text-gray-700"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-4 py-3 sm:px-5 sm:py-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">
+              Select Date & Time
+            </h2>
+            <p className="text-sm text-gray-500">
+              Times shown are based on the provider's availability.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close modal"
+            className="rounded-full p-1 text-gray-700 hover:bg-gray-100"
+          >
+            <X size={22} />
+          </button>
+        </div>
+
+        <div className="grid divide-y divide-gray-200 md:grid-cols-[1fr_0.95fr] md:divide-x md:divide-y-0">
+          <section className="px-4 py-4 sm:px-5 sm:py-5">
+            <div className="mb-4 flex items-center justify-between sm:mb-6">
+              <button
+                type="button"
+                aria-label="Previous month"
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-100 text-gray-500"
+              >
+                <ChevronLeft size={17} />
+              </button>
+              <h3 className="text-sm font-semibold text-gray-700">
+                October 2026
+              </h3>
+              <button
+                type="button"
+                aria-label="Next month"
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-100 text-gray-500"
+              >
+                <ChevronRight size={17} />
+              </button>
+            </div>
+            <div className="grid grid-cols-7 gap-y-2 text-center text-sm sm:gap-y-5">
+              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
+                <span key={day} className="font-medium text-gray-700">
+                  {day}
+                </span>
+              ))}
+              <span />
+              <span />
+              <span />
+              {days.map((day) => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => selectSchedule(day)}
+                  className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm sm:h-9 sm:w-9 ${
+                    selectedDay === day
+                      ? "bg-[#34805A] font-semibold text-white"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="px-4 py-4 sm:px-5 sm:py-5">
+            <h3 className="mb-3 text-base font-semibold text-gray-800 sm:mb-5">
+              Select time
+            </h3>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {timeOptions.map((timeOption) => (
+                <button
+                  key={timeOption}
+                  type="button"
+                  onClick={() => selectSchedule(selectedDay, timeOption)}
+                  className={`rounded-md border px-2 py-2 text-xs font-medium sm:px-3 sm:text-sm ${
+                    selectedTime === timeOption
+                      ? "border-[#34805A] bg-[#34805A] text-white"
+                      : "border-gray-200 text-gray-700 hover:border-[#34805A]"
+                  }`}
+                >
+                  {timeOption}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-gray-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <p className="flex items-center gap-2 text-sm text-gray-600">
+            <Clock size={18} className="text-[#34805A]" />
+            This service takes {getDurationLabel(booking.duration)}
+          </p>
+          <button
+            type="button"
+            disabled={!canContinue || store.loading}
+            onClick={createBooking}
+            className="w-full rounded-md bg-[#34805A] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#2d6f4f] disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
+          >
+            {store.loading ? "Creating..." : "Continue"}
+          </button>
+        </div>
+
+        {submitError && (
+          <p className="mx-5 mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+            {submitError}
+          </p>
+        )}
+      </Modal>
+    );
+  }
 
   if (stage === "details")
     return (
@@ -202,18 +564,41 @@ export default function BeautyBookingFlow({
           />
         </label>
         <div className="mt-6 grid">
+          {submitError && (
+            <p className="mb-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+              {submitError}
+            </p>
+          )}
           <Button
-            disabled={!canContinue}
-            onClick={() => {
-              if (canContinue) {
-                store.submit({ ...booking, date, address, note });
-                setStage("received");
-              }
-            }}
+            disabled={!canContinue || store.loading}
+            onClick={createBooking}
           >
-            Continue
+            {store.loading ? "Creating Booking..." : "Continue"}
           </Button>
         </div>
+      </Modal>
+    );
+
+  if (stage === "expired")
+    return (
+      <Modal
+        isOpen
+        onClose={onClose}
+        title="Booking Update"
+        panelClassName="relative w-[94%] max-w-md rounded-xl bg-white p-6 shadow-xl"
+      >
+        <p className="py-5 text-center text-sm text-gray-600">
+          This booking request was {bookingRecord?.status || "closed"}. You can
+          return to your bookings to review its status.
+        </p>
+        <Button
+          onClick={() => {
+            onClose();
+            navigate("/bookings?tab=requests");
+          }}
+        >
+          View bookings
+        </Button>
       </Modal>
     );
 
@@ -222,19 +607,32 @@ export default function BeautyBookingFlow({
       <Modal
         isOpen
         onClose={onClose}
-        panelClassName="relative w-[94%] max-w-2xl rounded-2xl bg-white px-6 py-16 shadow-xl"
+        showCloseButton={false}
+        overlayClassName="fixed inset-0 z-50 flex items-center justify-center bg-[#D8D8D8] px-4 py-8"
+        panelClassName="relative flex min-h-[62vh] w-full max-w-4xl items-center justify-center bg-white px-6 py-16"
       >
+        <span className="absolute left-0 top-[-34px] text-lg font-medium uppercase tracking-wide text-gray-500">
+          Searching
+        </span>
         <div className="text-center">
           <img
             src="/favicon.png"
             alt="SabiGuy"
-            className="mx-auto mb-8 h-20 w-20 object-contain"
+            className="mx-auto mb-6 h-20 w-20 object-contain"
           />
-          <h2 className="text-2xl font-bold">Request Received</h2>
-          <p className="mx-auto mt-4 max-w-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Request Received
+          </h2>
+          <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-gray-500">
             This provider is reviewing your booking.
             <br />
-            You’ll be notified shortly.
+            You'll be notified shortly
+          </p>
+          <p className="mt-8 text-2xl font-bold tabular-nums text-[#34805A]">
+            {responseCountdown(responseRemaining)}
+          </p>
+          <p className="mt-1 text-xs text-gray-400">
+            Response time remaining
           </p>
         </div>
       </Modal>
@@ -328,7 +726,7 @@ export default function BeautyBookingFlow({
                 </div>
                 <div className="flex justify-between">
                   <dt>Service Charge</dt>
-                  <dd>{formatMoney(100)}</dd>
+                  <dd>{formatMoney(serviceCharge)}</dd>
                 </div>
                 <div className="flex justify-between font-semibold text-[#005823]">
                   <dt>Total Amount</dt>
@@ -358,7 +756,12 @@ export default function BeautyBookingFlow({
                       {item.label}
                       {item.id === "wallet" && (
                         <small className="block text-gray-500">
-                          Balance: {formatMoney(60000)}
+                          Balance:{" "}
+                          {walletLoading
+                            ? "Checking..."
+                            : walletBalance == null
+                              ? "Unavailable"
+                              : formatMoney(walletBalance)}
                         </small>
                       )}
                     </span>
@@ -390,18 +793,18 @@ export default function BeautyBookingFlow({
                 />
               </label>
               <div className="mt-5 grid">
+                {paymentError && (
+                  <p className="mb-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {paymentError}
+                  </p>
+                )}
                 <Button
-                  disabled={
-                    !remaining || (method === "wallet" && total > 60000)
-                  }
-                  onClick={() => {
-                    if (remaining > 0) {
-                      store.pay();
-                      setStage("success");
-                    }
-                  }}
+                  disabled={!remaining || paymentLoading}
+                  onClick={handlePayment}
                 >
-                  Confirm &amp; Pay {formatMoney(total)}
+                  {paymentLoading
+                    ? "Processing..."
+                    : `Confirm & Pay ${formatMoney(total)}`}
                 </Button>
               </div>
               {!remaining && (

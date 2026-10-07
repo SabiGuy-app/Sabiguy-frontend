@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { X, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { verifyPayment as verifyPaymentAPI } from "../../api/payment";
 
@@ -9,13 +9,7 @@ const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess, verif
     // Use custom verify function if provided, otherwise fall back to default
     const verify = verifyFn || verifyPaymentAPI;
 
-    useEffect(() => {
-        if (isOpen && reference) {
-            handleVerify();
-        }
-    }, [isOpen, reference]);
-
-    const handleVerify = async () => {
+    const handleVerify = useCallback(async () => {
         try {
             setStatus("verifying");
             setMessage("Verifying your payment...");
@@ -35,22 +29,16 @@ const PaymentConfirmationModal = ({ isOpen, reference, onClose, onSuccess, verif
                 setMessage(data.message || "Payment verification failed");
             }
         } catch (error) {
-            // Handle already-verified (double redirect) as success
-            const statusCode = error?.response?.status;
-            if (statusCode === 404 || statusCode === 409) {
-                setStatus("success");
-                setMessage("Payment already verified!");
-                if (onSuccess) {
-                    setTimeout(() => {
-                        onSuccess();
-                    }, 2000);
-                }
-            } else {
-                setStatus("error");
-                setMessage(error?.response?.data?.message || "Failed to verify payment. Please contact support.");
-            }
+            setStatus("error");
+            setMessage(error?.response?.data?.message || error?.message || "Failed to verify payment. Please contact support.");
         }
-    };
+    }, [onSuccess, reference, verify]);
+
+    useEffect(() => {
+        if (isOpen && reference) {
+            handleVerify();
+        }
+    }, [handleVerify, isOpen, reference]);
 
     if (!isOpen) return null;
 

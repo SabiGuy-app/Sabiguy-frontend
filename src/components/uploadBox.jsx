@@ -8,6 +8,7 @@ export default function UploadBox({
    onUploadStart,  
   onUploadEnd,
   multiple = true,
+  maxFiles,
   maxSizeMB = 5,
   uploadFile,
   onError,
@@ -23,7 +24,7 @@ export default function UploadBox({
   const handleFiles = async (files) => {
     if (disabled || uploading || !files.length) return;
     if (uploadFile) {
-      const selectedFiles = Array.from(files).slice(0, multiple ? undefined : 1);
+      const selectedFiles = Array.from(files).slice(0, multiple ? maxFiles : 1);
       const allowedTypes = accept.split(",").map((type) => type.trim());
       const invalid = selectedFiles.some((file) =>
         file.size > maxSizeMB * 1024 * 1024 ||

@@ -344,11 +344,11 @@ export default function RequestCard({
           </div>
 
           <div className="mt-5">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:flex md:items-center md:gap-3">
+            <div className="grid min-w-0 grid-cols-2 items-start gap-2 sm:gap-3 lg:flex lg:flex-wrap lg:items-center">
               <button
                 type="button"
                 onClick={() => onViewDetails(request)}
-                className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base"
+                className="flex w-full min-w-0 items-center justify-center px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors lg:w-fit lg:px-5 lg:py-2 lg:text-base"
               >
                 View Details
               </button>
@@ -357,7 +357,7 @@ export default function RequestCard({
               ) && (
                 <button
                   onClick={handleMakePayment}
-                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base"
+                  className="flex w-full min-w-0 items-center justify-center gap-1 px-2 py-1.5 text-xs sm:gap-2 sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors lg:w-fit lg:px-5 lg:py-2 lg:text-base"
                 >
                   <CreditCard className="w-4 h-4" />
                   Make Payment
@@ -387,7 +387,7 @@ export default function RequestCard({
                 <button
                   type="button"
                   onClick={() => onTrackProvider(request.id)}
-                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base"
+                  className="flex w-full min-w-0 items-center justify-center gap-1 px-2 py-1.5 text-xs sm:gap-2 sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors lg:w-fit lg:px-4 lg:py-2 lg:text-base"
                 >
                   <Navigation className="w-4 h-4" />
                   Track provider
@@ -403,7 +403,7 @@ export default function RequestCard({
               ].includes(request.status.toLowerCase()) && (
                 <button
                   onClick={() => onMessageProvider?.(request)}
-                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+                  className="col-span-2 flex w-full min-w-0 items-center justify-center gap-1 px-2 py-1.5 text-xs sm:gap-2 sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors lg:w-fit lg:col-auto lg:px-4 lg:py-2 lg:text-base"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Message Provider
@@ -431,7 +431,7 @@ export default function RequestCard({
                       },
                     })
                   }
-                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+                  className="col-span-2 flex w-full min-w-0 items-center justify-center gap-1 px-2 py-1.5 text-xs sm:gap-2 sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors lg:w-fit lg:col-auto lg:px-4 lg:py-2 lg:text-base"
                 >
                   <PhoneCall className="w-4 h-4" />
                   Call Provider
@@ -442,7 +442,7 @@ export default function RequestCard({
                 !request.ratings &&
                 !submitted && (
                   <>
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <div className="col-span-2 mt-1 flex min-w-0 flex-col gap-2 sm:flex-row lg:col-auto lg:flex-wrap">
                       <button
                         onClick={() => setDisputeModalOpen(true)}
                         className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2"

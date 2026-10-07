@@ -1,15 +1,7 @@
 import InputField from "../../../../components/InputField";
 import { useState } from "react";
-import { Check, CloudUpload, Plus } from "lucide-react";
-
-const beautyServices = [
-  "Braiding",
-  "Hair Dresser",
-  "Spa",
-  "Lash Tech",
-  "Pedicure",
-  "Nails Tech",
-];
+import { Check, CloudUpload, Plus, X } from "lucide-react";
+import { BEAUTY_SERVICE_NAMES } from "../../../../constants/beautyServices";
 
 const experienceOptions = ["0-2 years", "2-5 years", "5-10 years", "10+ years"];
 
@@ -98,6 +90,16 @@ export function BeautyAndPersonalCareSection({
     }
   };
 
+  const removeWorkPhoto = (index) => {
+    setFieldValue(
+      "workPhotos",
+      (values?.workPhotos || []).filter((_, photoIndex) => photoIndex !== index),
+    );
+    setWorkPhotoNames((currentNames) =>
+      currentNames.filter((_, photoIndex) => photoIndex !== index),
+    );
+  };
+
   const handleCacUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -121,7 +123,7 @@ export function BeautyAndPersonalCareSection({
           Choose all the services your business offers.
         </p>
         <div className="flex w-full flex-wrap gap-3">
-          {beautyServices.map((service) => {
+          {BEAUTY_SERVICE_NAMES.map((service) => {
             const isSelected = (values?.beautyServices || []).includes(service);
             return (
               <button
@@ -257,7 +259,7 @@ export function BeautyAndPersonalCareSection({
           <input
             type="file"
             multiple
-            accept=".jpg,.jpeg,.png,.pdf"
+            accept=".jpg,.jpeg,.png"
             onChange={handleWorkPhotosUpload}
             disabled={uploadingWorkPhotos}
             className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
@@ -281,14 +283,37 @@ export function BeautyAndPersonalCareSection({
               )}
             </p>
             <p className="text-xs text-gray-400 md:text-sm">
-              JPEG, PNG, PDF format, Max 5 MB each
+              JPEG, PNG format, Max 5 MB each
             </p>
           </div>
         </div>
-        {workPhotoNames.length > 0 && (
-          <div className="flex flex-col gap-1 text-sm text-gray-600">
-            {workPhotoNames.map((fileName) => (
-              <span key={fileName}>{fileName}</span>
+        {(values?.workPhotos || []).length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {(values?.workPhotos || []).map((photoUrl, index) => (
+              <div
+                key={`${photoUrl}-${index}`}
+                className="relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+              >
+                <img
+                  src={photoUrl}
+                  alt={workPhotoNames[index] || "Uploaded work"}
+                  className="h-full w-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+                <span className="flex h-full w-full items-center justify-center px-2 text-center text-[10px] text-gray-500">
+                  {workPhotoNames[index] || "Uploaded file"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeWorkPhoto(index)}
+                  className="absolute right-1 top-1 rounded-full bg-white p-1 text-gray-600 shadow hover:text-red-600"
+                  aria-label="Remove uploaded work photo"
+                >
+                  <X size={12} />
+                </button>
+              </div>
             ))}
           </div>
         )}

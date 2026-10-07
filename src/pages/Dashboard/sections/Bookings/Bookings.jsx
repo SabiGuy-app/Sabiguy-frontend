@@ -1,5 +1,5 @@
 import BeautyRequest from "../../../../other-services/dashboard/components/booking/BeautyRequest";
-import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
+import { normalizeBeautyBooking } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
@@ -43,9 +43,14 @@ const vehicleOptions = (service) => {
   ];
 };
 
+const isBeautyBooking = (booking) =>
+  String(booking?.serviceType || "")
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, "_") === "beauty_personal_care";
+
 export default function Bookings() {
   const locationForTab = useLocation();
-  const sampleBooking = useBeautyBookingStore((state) => state.booking);
   const [activeTab, setActiveTab] = useState(() =>
     new URLSearchParams(locationForTab.search).get("tab") === "requests"
       ? "requests"
@@ -420,6 +425,7 @@ export default function Bookings() {
   });
 
   const filteredRequests = userBookings
+    .filter((booking) => !isBeautyBooking(booking))
     .map(mapBookingToRequest)
     .filter((request) => {
       const status = request.status.toLowerCase();
@@ -446,6 +452,17 @@ export default function Bookings() {
           "user accepted completion",
         ].includes(status);
       return false;
+    });
+  const visibleBeautyBookings = userBookings
+    .filter(isBeautyBooking)
+    .map(normalizeBeautyBooking)
+    .filter((booking) => {
+      if (statusFilter === "pending")
+        return ["pending", "accepted"].includes(booking.status);
+      if (statusFilter === "active")
+        return ["active", "review"].includes(booking.status);
+      if (statusFilter === "completed") return booking.status === "completed";
+      return true;
     });
 
   const handleViewDetails = (request) => {
@@ -994,7 +1011,13 @@ export default function Bookings() {
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
             />
-            <BeautyRequest filter={statusFilter} />
+            <BeautyRequest
+              filter={statusFilter}
+              sourceBookings={userBookings}
+              loading={bookingsLoading}
+              loadError={bookingsError}
+              onRefresh={refreshBookings}
+            />
 
             {/* ✅ Loading */}
             {bookingsLoading && (
@@ -1014,8 +1037,9 @@ export default function Bookings() {
             {/* ✅ Real bookings list */}
             {!bookingsLoading && !bookingsError && (
               <div className="space-y-4 w-full">
-                {filteredRequests.length > 0 ? (
-                  filteredRequests.map((request) => (
+                {filteredRequests.length > 0 || visibleBeautyBookings.length > 0 ? (
+                  <>
+                    {filteredRequests.map((request) => (
                     <RequestCard
                       key={request.id}
                       request={request}
@@ -1025,7 +1049,8 @@ export default function Bookings() {
                       onBookingCancelled={refreshBookings}
                       onStatusUpdate={refreshBookings}
                     />
-                  ))
+                    ))}
+                  </>
                 ) : (
                   <div className="text-center py-12 bg-white rounded-lg">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1044,9 +1069,7 @@ export default function Bookings() {
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {sampleBooking
-                        ? "No other requests found"
-                        : "No requests found"}
+                      No requests found
                     </h3>
                     <p className="text-gray-600">
                       {userBookings.length === 0
