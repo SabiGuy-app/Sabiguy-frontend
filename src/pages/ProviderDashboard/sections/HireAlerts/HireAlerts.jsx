@@ -135,9 +135,14 @@ export default function HireAlerts() {
           booking.serviceType ||
           "Untitled job",
         BookingPrice:
-          booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || booking.agreedPrice || 0,
+          booking?.pricingBreakdown?.subtotal ||
+          booking?.pricing?.breakdown?.subtotal ||
+          booking.agreedPrice ||
+          0,
         platformFee:
-          booking?.pricingBreakdown?.originalProviderCommission || booking?.pricing?.fees?.driverCommission || 0,
+          booking?.pricingBreakdown?.originalProviderCommission ||
+          booking?.pricing?.fees?.driverCommission ||
+          0,
         RiderReceives:
           booking?.driverReceives || booking?.breakdown?.providerReceives || 0,
         calculatedPrice:
@@ -153,21 +158,27 @@ export default function HireAlerts() {
           : booking.scheduleType
             ? String(booking.scheduleType).replace(/_/g, " ")
             : "TBD",
-        scheduledDate: booking.startDate
-          ? new Date(booking.startDate).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            }) +
-            " - " +
-            new Date(booking.startDate).toLocaleTimeString("en-US", {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            })
-          : booking.scheduleType
-            ? String(booking.scheduleType).replace(/_/g, " ")
-            : "TBD",
+        scheduleDate: booking.scheduleDate || booking.startDate || null,
+        scheduledDate:
+          booking.scheduleDate || booking.startDate
+            ? new Date(
+                booking.scheduleDate || booking.startDate,
+              ).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }) +
+              " - " +
+              new Date(
+                booking.scheduleDate || booking.startDate,
+              ).toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })
+            : booking.scheduleType
+              ? String(booking.scheduleType).replace(/_/g, " ")
+              : "TBD",
         orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
         fullOrderId: booking._id || "",
         location:
@@ -349,7 +360,7 @@ export default function HireAlerts() {
     }
 
     if (statusFilter === "pending") {
-      return status === "awaiting payment";
+      return (status === "awaiting payment" || status === "paid escrow scheduled");
     }
 
     if (statusFilter === "completed") {
@@ -597,6 +608,7 @@ export default function HireAlerts() {
                 alert={alert}
                 onViewDetails={handleViewAlert}
                 onAcceptBooking={handleAcceptBooking}
+                onCancel={handleOpenCancel}
                 accepting={acceptingAlertId === alert.id}
               />
             ))

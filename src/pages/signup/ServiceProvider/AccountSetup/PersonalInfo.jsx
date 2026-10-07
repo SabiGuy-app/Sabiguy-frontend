@@ -11,7 +11,7 @@ import { trackEvent } from "../../../../services/analytics";
 import { IoIosArrowBack } from "react-icons/io";
 import { LuUpload, LuFileCheck, LuX } from "react-icons/lu";
 
-export default function PersonalInfoForm({ onBack, onNext }) {
+export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -159,11 +159,11 @@ export default function PersonalInfoForm({ onBack, onNext }) {
 
           <Formik
             initialValues={{
-              gender: "",
-              city: "",
-              address: "",
-              ninSlip: "",
-              ninSlipFile: null,
+              gender: data.gender || "",
+              city: data.city || "",
+              address: data.address || "",
+              ninSlip: data.ninSlip || "",
+              ninSlipFile: data.ninSlipFile || null,
             }}
             validationSchema={PersonalInfoSchema}
             onSubmit={handleSubmit}

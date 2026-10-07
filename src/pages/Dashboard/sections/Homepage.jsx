@@ -9,10 +9,10 @@ import { useAuthStore } from "../../../stores/auth.store";
 import { useState, useEffect } from "react";
 import { useProviderStore } from "../../../stores/provider.store";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
-import family from "/family.png";
-import delivery from "/delivery.png";
-import handtool from "/hand-tools.png";
-import siren from "/siren.png";
+import {
+  exploreCategories,
+  getCategoryDestination,
+} from "../../../other-services/dashboard/data/exploreCategories";
 import new1 from "/new1.png";
 import new2 from "/new2.png";
 import new3 from "/new3.png";
@@ -109,81 +109,19 @@ export default function DashboardHome() {
     },
   ];
 
-  const services = [
-    {
-      // logo: (
-      //   <Truck
-      //     size={80}
-      //     className="bg-[#6467F2]/10 text-[#6467F2] rounded-full p-5 "
-      //   />
-      // ),
-      image: delivery,
-      title: "Transport & Logistics",
-    },
-    {
-      // logo: (
-      //   <CircleAlert
-      //     size={80}
-      //     className="bg-red-50 text-red-500 rounded-full p-5 "
-      //   />
-      // ),
-      image: siren,
-      title: "Emergency Services",
-    },
-    {
-      // logo: (
-      //   <Home
-      //     size={80}
-      //     className="bg-blue-50 text-blue-500 rounded-full p-5 "
-      //   />
-      // ),
-      image: family,
-      title: "Domestic & Lifetyle",
-    },
-    {
-      // logo: (
-      //   <Wrench
-      //     size={80}
-      //     className="bg-[#FF620D]/10 text-[#FF620D] rounded-full p-5 "
-      //   />
-      // ),
-      image: handtool,
-      title: "Home & Repair",
-    },
-    {
-      // logo: (
-      //   <Briefcase
-      //     size={80}
-      //     className="bg-purple-50 text-purple-500 rounded-full p-5 "
-      //   />
-      // ),
-      image: family,
-      title: "Professional Services",
-    },
-    {
-      // logo: (
-      //   <Palette
-      //     size={80}
-      //     className="bg-[#E83781]/10 text-[#E83781]  rounded-full p-5 "
-      //   />
-      // ),
-      image: family,
-      title: "Freelance & Creative Services",
-    },
-  ];
+  const services = exploreCategories;
 
   const categoryServiceMap = {
     "Package Delivery": "package delivery",
     "Book a Ride": "book a ride",
   };
 
-  const handleServiceClick = (service, isDisabled) => {
-    if (isDisabled) {
+  const handleServiceClick = (service, task) => {
+    const destination = getCategoryDestination(service, task);
+    if (destination) navigate(destination);
+    else {
       setSelectedService(service);
       setModalOpen(true);
-    } else {
-      // navigate("/bookings");
-      // console.log("Active service clicked:", service.title);
     }
   };
 
@@ -272,17 +210,17 @@ export default function DashboardHome() {
           <h3 className="text-[20px] font-semibold mb-4">Categories</h3>
         </div>
         <div id="explore-categories">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((ser, idx) => {
-              const isDisabled = ser.title !== "Transport & Logistics";
               return (
                 <ServicesCard
                   key={idx}
                   image={ser.image}
-                  logo={ser.logo}
+                  tasks={ser.tasks}
+                  imageIncludesTitle={ser.imageIncludesTitle}
                   title={ser.title}
-                  disabled={isDisabled}
-                  onClick={() => handleServiceClick(ser, isDisabled)}
+                  onClick={() => handleServiceClick(ser)}
+                  onTaskClick={(task) => handleServiceClick(ser, task)}
                 />
               );
             })}

@@ -26,10 +26,11 @@ import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
 import NotFound from "./pages/Not-found/NotFound";
 import ProviderNotFound from "./pages/Not-found/ProviderNotFound";
 import UserNotFound from "./pages/Not-found/UserNotFound";
-import BeautyOverview from "./beauty-care/dashboard/pages/BeautyOverview";
-import BeautyProfilePage from "./beauty-care/dashboard/pages/BeautySettings";
-import BeautyContactPage from "./beauty-care/dashboard/pages/BeautyHelp";
-import BeautyActivityPage from "./beauty-care/dashboard/pages/BeautyActivity";
+import BeautyOverview from "./other-services/dashboard-provider/pages/BeautyOverview";
+import BeautyProfilePage from "./other-services/dashboard-provider/pages/BeautySettings";
+import BeautyContactPage from "./other-services/dashboard-provider/pages/BeautyHelp";
+import BeautyActivityPage from "./other-services/dashboard-provider/pages/BeautyActivity";
+import BeautyChatPage from "./other-services/dashboard-provider/pages/BeautyChatPage";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -60,11 +61,17 @@ const ActivityPage = lazy(() => import("./pages/Dashboard/sections/Activity"));
 const ProfilePage = lazy(() => import("./pages/Dashboard/sections/Settings"));
 const ContactPage = lazy(() => import("./pages/Dashboard/sections/Help"));
 const Categories = lazy(() => import("./pages/Dashboard/sections/Categories"));
+const BeautyServices = lazy(
+  () => import("./other-services/dashboard/pages/BeautyServices"),
+);
+const BeautyProviderProfile = lazy(
+  () => import("./other-services/dashboard/pages/BeautyProviderProfile"),
+);
 const DynamicServicePage = lazy(
-  () => import("./pages/Dashboard/Services/pages/ServicePage"),
+  () => import("./other-services/dashboard/services/pages/ServicePage"),
 );
 const AmbulanceServices = lazy(
-  () => import("./pages/Dashboard/Services/pages/AmbulanceServices"),
+  () => import("./other-services/dashboard/services/pages/AmbulanceServices"),
 );
 const ProviderDetails = lazy(
   () => import("./pages/Dashboard/sections/ProviderDetails"),
@@ -350,7 +357,7 @@ function App() {
               <Route path="/congrats" element={<Congrats />} />
               <Route
                 path="/forgot-password"
-                element={<ForgotPassword accountType="business" />}
+                element={<ForgotPassword />}
               />
               <Route path="/otp-input" element={<OtpInput />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -384,7 +391,7 @@ function App() {
 
               <Route
                 path="/beauty-provider/dashboard/chat"
-                element={<BeautyOverview />}
+                element={<BeautyChatPage />}
               />
 
               <Route
@@ -413,6 +420,14 @@ function App() {
                 <Route path="/dashboard/help" element={<ContactPage />} />
                 <Route path="/dashboard/settings" element={<ProfilePage />} />
                 <Route path="/dashboard/categories" element={<Categories />} />
+                <Route
+                  path="/dashboard/categories/beauty-personal-care"
+                  element={<BeautyServices />}
+                />
+                <Route
+                  path="/dashboard/beauty/:providerId"
+                  element={<BeautyProviderProfile />}
+                />
                 <Route path="/bookings/vehicletype" element={<VehicleType />} />
                 <Route
                   path="/bookings/availableriders"

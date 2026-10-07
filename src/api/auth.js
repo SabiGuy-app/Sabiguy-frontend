@@ -6,63 +6,24 @@ import { useProviderStore } from "../stores/provider.store";
 import { removeFCMToken } from "./fcm";
 import { trackEvent } from "../services/analytics";
 
-// BUSINESS PASSWORD RESET
-// These endpoints are public, but use the shared API client so the base URL
-// continues to come from VITE_BASE_URL.
-export const requestBusinessPasswordReset = async (email) => {
-  const { data } = await api.post("/business/auth/forgot-password", { email });
-  return data;
-};
-
-export const requestPasswordReset = async (email, accountType = "user") => {
-  if (accountType === "business") {
-    return {
-      data: await requestBusinessPasswordReset(email),
-      accountType: "business",
-    };
-  }
-
-  if (accountType === "auto") {
-    try {
-      return {
-        data: await requestBusinessPasswordReset(email),
-        accountType: "business",
-      };
-    } catch (error) {
-      // A shared login screen can serve both account types. If the email is
-      // not a business account, let the regular account endpoint handle it.
-      if (![400, 404].includes(error.response?.status)) {
-        throw error;
-      }
-    }
-  }
-
+// Password reset uses the shared auth endpoints for every account type.
+export const requestPasswordReset = async (email) => {
   const { data } = await api.post("/auth/password", { email });
-  return { data, accountType: "user" };
-};
-
-export const resendBusinessPasswordResetOtp = async (email) => {
-  const { data } = await api.post(
-    "/business/auth/resend-forgot-password-otp",
-    { email },
-  );
   return data;
 };
 
-export const verifyBusinessPasswordResetOtp = async ({ email, otp }) => {
-  const { data } = await api.post("/business/auth/verify-reset-otp", {
-    email,
-    otp,
-  });
+export const resendPasswordResetOtp = async (email) => {
+  const { data } = await api.post("/auth/resend-forgot-password-otp", { email });
   return data;
 };
 
-export const resetBusinessPassword = async ({ email, otp, newPassword }) => {
-  const { data } = await api.post("/business/auth/reset-password", {
-    email,
-    otp,
-    newPassword,
-  });
+export const verifyPasswordResetOtp = async ({ email, otp }) => {
+  const { data } = await api.post("/auth/verify-reset-otp", { email, otp });
+  return data;
+};
+
+export const resetPassword = async ({ email, otp, newPassword }) => {
+  const { data } = await api.post("/auth/reset", { email, otp, newPassword });
   return data;
 };
 
@@ -101,7 +62,7 @@ export const login = async (payload) => {
 export const businessLogin = async (payload) => {
   try {
     const { data } = await api.post("/business/auth/login", payload);
-
+localStorage.getItem("token")
     if (data.token) {
       localStorage.setItem("token", data.token);
       useAuthStore.getState().setToken(data.token);
@@ -151,6 +112,18 @@ export const businessGoogleLogin = async (accessToken) => {
     });
     throw error;
   }
+};
+
+// GET AUTHENTICATED BUSINESS PROFILE
+// Used on login to restore the saved business category so onboarding can
+// resume on the correct step from any device (not just the browser that
+// holds the local draft).
+export const getBusinessProfile = async () => {
+  const token = localStorage.getItem("token");
+  const { data } = await api.get("/business/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data?.data || data;
 };
 
 // GET USER BY EMAIL

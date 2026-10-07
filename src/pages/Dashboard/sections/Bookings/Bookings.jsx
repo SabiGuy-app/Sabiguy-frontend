@@ -1,3 +1,5 @@
+import BeautyRequest from "../../../../other-services/dashboard/components/booking/BeautyRequest";
+import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
@@ -42,7 +44,17 @@ const vehicleOptions = (service) => {
 };
 
 export default function Bookings() {
-  const [activeTab, setActiveTab] = useState("request");
+  const locationForTab = useLocation();
+  const sampleBooking = useBeautyBookingStore((state) => state.booking);
+  const [activeTab, setActiveTab] = useState(() =>
+    new URLSearchParams(locationForTab.search).get("tab") === "requests"
+      ? "requests"
+      : "request",
+  );
+  useEffect(() => {
+    if (new URLSearchParams(locationForTab.search).get("tab") === "requests")
+      setActiveTab("requests");
+  }, [locationForTab.search]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -216,7 +228,9 @@ export default function Bookings() {
           applyRideDiscount: values.applyRideDiscount,
           scheduleDate:
             values.serviceType === "scheduled"
-              ? `${values.scheduleDate}T${values.scheduleTime}:00`
+              ? new Date(
+                  `${values.scheduleDate}T${values.scheduleTime}:00`,
+                ).toISOString()
               : undefined,
         };
 
@@ -316,6 +330,11 @@ export default function Bookings() {
 
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
+
+
+    
+
+
     return (
       <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (
@@ -350,9 +369,7 @@ export default function Bookings() {
             .replace(/\b\w/g, (l) => l.toUpperCase()),
     providerName: booking.providerId?.fullName || "—",
     providerIdDisplay: booking.providerId?._id?.slice(-6)?.toUpperCase() || "—",
-    providerImage:
-      booking.providerId?.profilePicture ||
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop",
+    providerImage: booking.providerId?.profilePicture || "/avatar.png",
     providerVehicleImage:
       booking.providerId?.workVisuals?.[0]?.pictures?.[0] || null,
     providerRole: (
@@ -378,14 +395,22 @@ export default function Bookings() {
     // description: booking.description || null,
     notes: booking.pickupNote,
     modeOfDelivery: booking.modeOfDelivery || "—",
+    scheduleType: booking.scheduleType || booking.schedule_type || null,
 
-    scheduledDate: booking.createdAt
-      ? new Date(booking.createdAt).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : "—",
+    scheduledDate:
+      booking.scheduleDate || booking.startDate
+        ? new Date(booking.scheduleDate || booking.startDate).toLocaleString(
+            "en-GB",
+            {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            },
+          )
+        : null,
     deliveryDate: booking.endDate
       ? new Date(booking.endDate).toLocaleDateString("en-GB", {
           day: "numeric",
@@ -417,6 +442,7 @@ export default function Bookings() {
         return [
           "payment pending",
           "awaiting provider acceptance",
+          "paid escrow scheduled",
           "provider selected",
         ].includes(status);
       if (statusFilter === "completed")
@@ -974,6 +1000,7 @@ export default function Bookings() {
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
             />
+            <BeautyRequest filter={statusFilter} />
 
             {/* ✅ Loading */}
             {bookingsLoading && (
@@ -1023,7 +1050,9 @@ export default function Bookings() {
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      No requests found
+                      {sampleBooking
+                        ? "No other requests found"
+                        : "No requests found"}
                     </h3>
                     <p className="text-gray-600">
                       {userBookings.length === 0

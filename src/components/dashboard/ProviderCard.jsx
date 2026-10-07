@@ -13,6 +13,8 @@ export default function ProviderCard({
   city, 
   job, 
   profilePicture,
+  profilePath,
+  className = "w-70",
   onFavorite,
   isFavorited = false,
   showFavoriteButton = true,
@@ -34,12 +36,12 @@ export default function ProviderCard({
     }
   };
   const handleViewProfile = () => {
-    navigate(`/dashboard/provider/${providerId}`);
+    navigate(profilePath || `/dashboard/provider/${providerId}`);
   };
 
   return (
     
-    <div className="bg-white w-70 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all">
+    <div className={`bg-white ${className} rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all`}>
       {/* Provider Image */}
       <div className="relative h-56 bg-gray-200 overflow-hidden">
         {profilePicture ? (

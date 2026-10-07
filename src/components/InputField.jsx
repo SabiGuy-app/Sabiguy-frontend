@@ -1,6 +1,6 @@
 import { Fragment, useEffect } from "react";
 import { Listbox, Transition } from "@headlessui/react";
-import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
+import { ChevronUpDownIcon, ChevronDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 
@@ -20,6 +20,8 @@ export default function InputField({
   name,
   size = "full",
   inputClassName = "",
+  labelClassName = "",
+  singleChevron = false,
   ...props
 }) {
   const getSelected = () => {
@@ -77,7 +79,7 @@ export default function InputField({
 
   return (
     <div className={`flex flex-col gap-1 ${widthClass}`}>
-      {label && <label className="text-[16px] text-[#231F20] font-medium">{label}</label>}
+      {label && <label htmlFor={name} className={`text-[16px] text-[#231F20] font-medium ${labelClassName}`}>{label}</label>}
 
       {select ? (
         <Listbox
@@ -89,13 +91,15 @@ export default function InputField({
         >
           <div className="relative">
             <Listbox.Button
+              id={name}
+              aria-label={label}
               className={`w-full px-5 py-4 bg-gray-50 border border-gray-400 rounded-md text-left focus:outline-none focus:ring-1 focus:ring-[#8BC53FBF] focus:border-[#8BC53FBF] ${inputClassName}`}
             >
               <span className={`${selected ? "text-gray-900" : "text-gray-400"}`}>
                 {selected?.label || placeholder || "Select"}
               </span>
               <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <ChevronUpDownIcon className="w-5 h-5 text-gray-400" />
+                {singleChevron ? <ChevronDownIcon className="w-4 h-4 text-[#231F20BF]" /> : <ChevronUpDownIcon className="w-5 h-5 text-gray-400" />}
               </span>
             </Listbox.Button>
 

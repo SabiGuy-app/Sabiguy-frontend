@@ -244,14 +244,14 @@ const JobCompletedCelebrationModal = ({
                     <TrendingUp size={18} className="text-white" />
                   </div>
                 </div>
-                <h3 className="text-sm font-bold text-amber-900">
+                {/* <h3 className="text-sm font-bold text-amber-900">
                   Bonus Earned!
-                </h3>
+                </h3> */}
               </div>
-              <p className="text-xs text-amber-800">
+              {/* <p className="text-xs text-amber-800">
                 🎁 You've earned a bonus for successfully completing this job!
                 Your excellent work is appreciated.
-              </p>
+              </p> */}
             </div>
 
             {/* Details Grid */}

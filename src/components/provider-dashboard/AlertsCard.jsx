@@ -1,10 +1,4 @@
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  Copy,
-  Check,
-} from "lucide-react";
+import { Calendar, MapPin, Clock, Copy, Check } from "lucide-react";
 import distance from "/distance.png";
 import { useState } from "react";
 
@@ -12,6 +6,7 @@ export default function AlertsCard({
   alert,
   onViewDetails,
   onAcceptBooking,
+  onCancel,
   accepting,
 }) {
   const [copied, setCopied] = useState(false);
@@ -45,11 +40,16 @@ export default function AlertsCard({
       completed: "bg-green-100 text-green-700 border-green-200",
     };
 
-    return styles[String(status || "").toLowerCase()] || "bg-gray-100 text-gray-700 border-gray-200";
+    return (
+      styles[String(status || "").toLowerCase()] ||
+      "bg-gray-100 text-gray-700 border-gray-200"
+    );
   };
 
   const pickupAddress = alert?.originalData?.pickupLocation?.address || "N/A";
   const dropoffAddress = alert?.originalData?.dropoffLocation?.address || "N/A";
+  const scheduleType = alert?.scheduleType || alert?.originalData?.scheduleType;
+  const scheduleDate = alert?.scheduleDate || alert?.originalData?.scheduleDate;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
@@ -67,7 +67,9 @@ export default function AlertsCard({
 
                 {alert?.orderId && (
                   <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-xs font-bold text-gray-500">#{alert.orderId}</span>
+                    <span className="text-xs font-bold text-gray-500">
+                      #{alert.orderId}
+                    </span>
                     <button
                       onClick={() => handleCopy(alert.fullOrderId)}
                       className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
@@ -104,6 +106,16 @@ export default function AlertsCard({
                 <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
                   Delivery: {alert?.deliveryDate}
                 </span>
+                {scheduleType && (
+                  <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
+                    Schedule: {String(scheduleType).replace(/_/g, " ")}
+                  </span>
+                )}
+                {scheduleDate && (
+                  <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
+                    Scheduled: {formatCreatedAt(scheduleDate)}
+                  </span>
+                )}
               </div>
 
               <div className="relative pl-0 pt-2">
@@ -183,6 +195,7 @@ export default function AlertsCard({
 
           <div className="flex flex-col sm:flex-row gap-3 border-t pt-4 mt-3">
             <button
+              type="button"
               onClick={() => onAcceptBooking?.(alert)}
               disabled={accepting}
               className="w-full sm:w-auto px-8 py-3 bg-[#2D6A3E] text-white cursor-pointer rounded-xl font-bold hover:bg-[#1f4a2a] transition-all text-sm sm:text-base active:scale-95 shadow-md shadow-green-900/10"
@@ -190,7 +203,16 @@ export default function AlertsCard({
               {accepting ? "Accepting..." : "Accept Booking"}
             </button>
 
-            {String(alert?.status || "").toLowerCase() === "awaiting response" && (
+            <button
+              type="button"
+              onClick={() => onCancel?.(alert)}
+              className="w-full sm:w-auto px-8 py-3 bg-white text-red-700 border border-red-200 cursor-pointer rounded-xl font-bold hover:bg-red-50 transition-all text-sm sm:text-base active:scale-95"
+            >
+              Cancel
+            </button>
+
+            {String(alert?.status || "").toLowerCase() ===
+              "awaiting response" && (
               <button className="w-full sm:w-auto px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95">
                 Awaiting Response
               </button>

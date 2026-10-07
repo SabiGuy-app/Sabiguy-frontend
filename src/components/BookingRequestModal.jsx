@@ -12,9 +12,16 @@ export default function BookingRequestModal({
   const message =
     payload?.message || "You have a new booking request to review.";
   const serviceType = payload?.serviceType || "Booking";
-  const scheduleDate = payload?.scheduleDate || payload?.scheduleTime || null;
-  const pickupAddress = payload?.pickupAddress || payload?.pickupLocation?.address || null;
-  const dropoffAddress = payload?.dropoffAddress || payload?.dropoffLocation?.address || null;
+  const scheduleType = payload?.scheduleType || payload?.schedule_type || null;
+  const scheduleDate =
+    payload?.scheduleDate ||
+    payload?.schedule_date ||
+    payload?.scheduleTime ||
+    null;
+  const pickupAddress =
+    payload?.pickupAddress || payload?.pickupLocation?.address || null;
+  const dropoffAddress =
+    payload?.dropoffAddress || payload?.dropoffLocation?.address || null;
   const calculatedPrice =
     payload?.calculatedPrice ??
     payload?.budget ??
@@ -86,10 +93,21 @@ export default function BookingRequestModal({
                     Booking details
                   </p>
                   <div className="mt-3 space-y-3">
+                    {scheduleType && (
+                      <div className="flex items-center gap-2 text-sm text-[#231F20BF]">
+                        <CalendarDays size={14} className="text-[#005823]" />
+                        <span className="capitalize">
+                          Schedule: {String(scheduleType).replace(/_/g, " ")}
+                        </span>
+                      </div>
+                    )}
                     {scheduleDate && (
                       <div className="flex items-center gap-2 text-sm text-[#231F20BF]">
                         <CalendarDays size={14} className="text-[#005823]" />
-                        <span>{new Date(scheduleDate).toLocaleString()}</span>
+                        <span>
+                          Scheduled for:{" "}
+                          {new Date(scheduleDate).toLocaleString()}
+                        </span>
                       </div>
                     )}
                     {pickupAddress && (
@@ -108,16 +126,17 @@ export default function BookingRequestModal({
                         </span>
                       </div>
                     )}
-                    {calculatedPrice !== null && calculatedPrice !== undefined && (
-                      <div className="flex items-center gap-2 text-sm text-[#231F20BF]">
-                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#005823] text-[10px] font-bold text-white">
-                          ₦
-                        </span>
-                        <span>
-                          Price: {Number(calculatedPrice).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
+                    {calculatedPrice !== null &&
+                      calculatedPrice !== undefined && (
+                        <div className="flex items-center gap-2 text-sm text-[#231F20BF]">
+                          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#005823] text-[10px] font-bold text-white">
+                            ₦
+                          </span>
+                          <span>
+                            Price: {Number(calculatedPrice).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
 

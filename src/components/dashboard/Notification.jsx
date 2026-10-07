@@ -1,3 +1,4 @@
+import { useBeautyBookingStore } from "../../stores/beautyBooking.store";
 import { X, Trash2, Check, Loader2, Eye } from "lucide-react";
 import { FiMessageSquare, FiCalendar, FiBell } from "react-icons/fi";
 import { formatDistanceToNow } from "date-fns";
@@ -19,10 +20,11 @@ export default function NotificationDrawer({
   onBookingCompleted,
 }) {
   const navigate = useNavigate();
+  const sample = useBeautyBookingStore();
+  const allNotifications = [...sample.notifications, ...notifications];
   const [markingAsRead, setMarkingAsRead] = useState(null); // Track which notification is being marked as read
   const [deleting, setDeleting] = useState(null);
   const [selectedNotification, setSelectedNotification] = useState(null);
-  const [fetchingBookings, setFetchingBookings] = useState(false);
   const user = useAuthStore((state) => state.user);
   const isProvider = user?.data?.role === "provider";
   const chatBase = isProvider ? "/dashboard/provider/chat" : "/dashboard/chat";
@@ -32,7 +34,7 @@ export default function NotificationDrawer({
   ];
 
   // Filter to only show UNREAD notifications
-  const unreadNotifications = notifications.filter((n) => !n.isRead);
+  const unreadNotifications = allNotifications.filter((n) => !n.isRead);
 
   // Group notifications by date
   const today = new Date();
@@ -86,7 +88,13 @@ export default function NotificationDrawer({
     return iconMap[type] || <FiBell className="text-gray-500" size={20} />;
   };
 
+  const getBeautyNotificationUrl = (notification) => {
+    const target = notification.data?.target || "details";
+    return `/bookings?tab=requests&beauty=${target}`;
+  };
+
   const handleNotificationClick = async (notification) => {
+    if (notification.type === "beauty_sample") { sample.markRead(); onClose(); navigate(getBeautyNotificationUrl(notification)); return; }
     // Set marking as read state
     setMarkingAsRead(notification._id);
 
@@ -107,8 +115,6 @@ export default function NotificationDrawer({
       notification.type === "booking_selected"
     ) {
       try {
-        setFetchingBookings(true);
-
         // Extract service type and mode of delivery from notification data
         const serviceType = notification.data?.serviceType;
         const modeOfDelivery = notification.data?.modeOfDelivery;
@@ -144,8 +150,6 @@ export default function NotificationDrawer({
             tab: "alert",
           },
         });
-      } finally {
-        setFetchingBookings(false);
       }
     }
     // Route to chat page for new_message type
@@ -170,6 +174,7 @@ export default function NotificationDrawer({
 
   const handleViewDetails = async (e, notification) => {
     e.stopPropagation();
+    if (notification.type === "beauty_sample") { sample.markRead(); onClose(); navigate(getBeautyNotificationUrl(notification)); return; }
 
     // If it's a booking request, route to hire alert page instead of opening modal
     if (
@@ -178,7 +183,6 @@ export default function NotificationDrawer({
     ) {
       onClose();
       try {
-        setFetchingBookings(true);
         const serviceType = notification.data?.serviceType;
         const modeOfDelivery = notification.data?.modeOfDelivery;
 
@@ -211,8 +215,6 @@ export default function NotificationDrawer({
             tab: "alert",
           },
         });
-      } finally {
-        setFetchingBookings(false);
       }
       return;
     }
@@ -231,6 +233,7 @@ export default function NotificationDrawer({
 
   const handleMarkAsRead = async (e, notificationId) => {
     e.stopPropagation();
+    if (notificationId === "sample-beauty-booking") { sample.markRead(); return; }
     setMarkingAsRead(notificationId);
     await onMarkAsRead(notificationId);
     setMarkingAsRead(null);
@@ -238,6 +241,7 @@ export default function NotificationDrawer({
 
   const handleDelete = async (e, notificationId) => {
     e.stopPropagation();
+    if (notificationId === "sample-beauty-booking") { sample.clearNotifications(); return; }
     setDeleting(notificationId);
     await onDelete(notificationId);
     setDeleting(null);
@@ -357,7 +361,7 @@ export default function NotificationDrawer({
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {unreadCount > 0 && (
               <button
-                onClick={onMarkAllAsRead}
+                onClick={() => { sample.markRead(); onMarkAllAsRead(); }}
                 className="text-xs sm:text-sm font-bold text-[#005823] hover:text-[#1f4a2a] whitespace-nowrap bg-green-50 px-3 py-1.5 rounded-full"
               >
                 Mark all as read
