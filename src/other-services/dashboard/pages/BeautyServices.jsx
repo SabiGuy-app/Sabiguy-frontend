@@ -94,6 +94,9 @@ const mergeProviderResults = (providers) => {
       distanceFromPickup:
         provider.distanceFromPickup ?? existing.distanceFromPickup,
       services: uniqueServices,
+      recentReviews: provider.recentReviews?.length
+        ? provider.recentReviews
+        : existing.recentReviews || [],
     });
   });
 
@@ -398,6 +401,22 @@ export default function BeautyServices() {
         const results = await searchProvidersForService(searchLocation, query);
         if (active) {
           setServiceSearchResults(results);
+          try {
+            const cachedProviders = JSON.parse(
+              sessionStorage.getItem(BEAUTY_PROVIDER_CACHE_KEY) || "[]",
+            );
+            sessionStorage.setItem(
+              BEAUTY_PROVIDER_CACHE_KEY,
+              JSON.stringify(
+                mergeProviderResults([
+                  ...(Array.isArray(cachedProviders) ? cachedProviders : []),
+                  ...results,
+                ]),
+              ),
+            );
+          } catch (cacheError) {
+            console.warn("Could not cache beauty search results", cacheError);
+          }
         }
       } catch (requestError) {
         if (!active) return;
