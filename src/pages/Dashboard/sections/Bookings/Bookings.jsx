@@ -330,6 +330,11 @@ export default function Bookings() {
 
   const StatusFilter = ({ activeFilter, onFilterChange }) => {
     const filters = ["All", "Active", "Pending", "Completed"];
+
+
+    
+
+
     return (
       <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (

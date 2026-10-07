@@ -360,7 +360,7 @@ export default function HireAlerts() {
     }
 
     if (statusFilter === "pending") {
-      return status === "awaiting payment";
+      return (status === "awaiting payment" || status === "paid escrow scheduled");
     }
 
     if (statusFilter === "completed") {
@@ -608,6 +608,7 @@ export default function HireAlerts() {
                 alert={alert}
                 onViewDetails={handleViewAlert}
                 onAcceptBooking={handleAcceptBooking}
+                onCancel={handleOpenCancel}
                 accepting={acceptingAlertId === alert.id}
               />
             ))

@@ -6,6 +6,7 @@ export default function AlertsCard({
   alert,
   onViewDetails,
   onAcceptBooking,
+  onCancel,
   accepting,
 }) {
   const [copied, setCopied] = useState(false);
@@ -194,11 +195,20 @@ export default function AlertsCard({
 
           <div className="flex flex-col sm:flex-row gap-3 border-t pt-4 mt-3">
             <button
+              type="button"
               onClick={() => onAcceptBooking?.(alert)}
               disabled={accepting}
               className="w-full sm:w-auto px-8 py-3 bg-[#2D6A3E] text-white cursor-pointer rounded-xl font-bold hover:bg-[#1f4a2a] transition-all text-sm sm:text-base active:scale-95 shadow-md shadow-green-900/10"
             >
               {accepting ? "Accepting..." : "Accept Booking"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onCancel?.(alert)}
+              className="w-full sm:w-auto px-8 py-3 bg-white text-red-700 border border-red-200 cursor-pointer rounded-xl font-bold hover:bg-red-50 transition-all text-sm sm:text-base active:scale-95"
+            >
+              Cancel
             </button>
 
             {String(alert?.status || "").toLowerCase() ===

@@ -424,7 +424,7 @@ export default function ProviderDetails() {
                     $50,000 - $100,000/month
                   </p>
                   <button className="w-full mt-10 bg-[#005823CC] text-white py-3 rounded-lg hover:bg-green-700 font-medium">
-                    Book Now{" "}
+                    Book Now
                   </button>
                 </div>
               )}

@@ -84,10 +84,12 @@ export default function JobsCard({
     job?.pickupLocation?.address ||
     job?.originalData?.pickupLocation?.address ||
     "N/A";
+
   const dropoffAddress =
     job?.dropoffLocation?.address ||
     job?.originalData?.dropoffLocation?.address ||
     "N/A";
+
   const scheduleDate = job?.scheduleDate || job?.originalData?.scheduleDate;
   const amount = job?.BookingPrice || job?.originalData?.BookingPrice || 0;
   const platformFee =
@@ -96,6 +98,7 @@ export default function JobsCard({
     0;
   const riderReceives =
     job?.RiderReceives || job?.originalData?.RiderReceives || 0;
+
   const shouldShowNavigation =
     normalizedStatus === "paid_escrow" ||
     normalizedStatus === "in_progress" ||
@@ -103,15 +106,25 @@ export default function JobsCard({
     normalizedStatus === "enroute_to_dropoff" ||
     normalizedStatus === "arrived_at_pickup" ||
     normalizedStatus === "enroute_to_pickup";
+
   const bookingStatus = String(job?.originalData?.status || job?.status || "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_");
+
   const shouldShowMessageButton =
     bookingStatus !== "funds_released" && canMessage(bookingStatus);
   const shouldShowCancelButton = canProviderCancel(
     job?.originalData?.status || job?.status,
   );
+
+  const shouldShowCallButton = ![
+    "cancelled",
+    "expired",
+    "booking_expired",
+    "funds_released",
+    "no_provider_available",
+  ].includes(bookingStatus);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
@@ -298,20 +311,39 @@ export default function JobsCard({
             {normalizedStatus === "completed" && (
               <div className="mt-3">
                 <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < (job?.originalData?.rating?.score || 0)
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  ))}
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const ratingScore = Number(
+                      job?.originalData?.rating?.score ??
+                        job?.ratings?.score ??
+                        job?.rating?.score ??
+                        0,
+                    );
+
+                    return (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${
+                          i < ratingScore
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    );
+                  })}
                 </div>
 
                 <p className="text-gray-500 mt-1 text-sm font-medium">
-                  {job?.originalData?.rating?.review || "No review available"}
+                  {(() => {
+                    const rev =
+                      job?.originalData?.rating?.review ??
+                      job?.ratings?.review ??
+                      job?.rating?.review;
+
+                    if (typeof rev === "string" && rev.trim() !== "") {
+                      return rev;
+                    }
+                    return "No review available";
+                  })()}
                 </p>
               </div>
             )}
@@ -355,30 +387,31 @@ export default function JobsCard({
                 Message Customer
               </button>
             )}
-
-            <button
-              onClick={() =>
-                callContext?.openCall?.({
-                  booking: job?.originalData || job,
-                  targetOverride: {
-                    targetId:
-                      job?.originalData?.userId?._id ||
-                      job?.originalData?.userId ||
-                      job?.userId?._id ||
-                      job?.userId,
-                    targetType: "buyer",
-                    targetName:
-                      job?.originalData?.userId?.fullName ||
-                      job?.originalData?.customerName ||
-                      "Customer",
-                  },
-                })
-              }
-              className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
-            >
-              <PhoneCall className="w-4 h-4" />
-              Call Customer
-            </button>
+            {shouldShowCallButton && (
+              <button
+                onClick={() =>
+                  callContext?.openCall?.({
+                    booking: job?.originalData || job,
+                    targetOverride: {
+                      targetId:
+                        job?.originalData?.userId?._id ||
+                        job?.originalData?.userId ||
+                        job?.userId?._id ||
+                        job?.userId,
+                      targetType: "buyer",
+                      targetName:
+                        job?.originalData?.userId?.fullName ||
+                        job?.originalData?.customerName ||
+                        "Customer",
+                    },
+                  })
+                }
+                className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
+              >
+                <PhoneCall className="w-4 h-4" />
+                Call Customer
+              </button>
+            )}
 
             {shouldShowCancelButton && (
               <button

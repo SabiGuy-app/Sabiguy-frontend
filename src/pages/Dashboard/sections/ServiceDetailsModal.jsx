@@ -28,7 +28,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
 
   const getStatusStyles = (status) => {
     const styles = {
-      pending: "bg-yellow-100 text-[#FFC107] border-yellow-200",
+      pending: "bg-yellow-100 text-[#FFC107] border-red-200",
       paid_escrow: "bg-[#007BFF1A] text-[#007BFF] border-[#007BFF]",
       cancelled: "bg-red-100 text-red-700 border-red-200",
       active: "bg-blue-100 text-blue-600 border-blue-200",
@@ -39,6 +39,8 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
       "waiting confirmation": "bg-orange-200 text-orange-800 border-orange-200",
       completed: "bg-green-100 text-green-700 border-green-200",
       user_accepted_completion: "bg-green-100 text-green-700 border-green-200",
+      "no provider available": "bg-red-50 text-red-700 border-red-200",
+      expired: "bg-red-100 text-red-700 border-red-200",
       "funds released": "bg-green-100 text-green-700 border-green-200",
     };
     return styles[status.toLowerCase()] || styles.pending;
@@ -79,7 +81,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
         <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
           <div className="space-y-6">
             <div className="shadow-sm p-6 rounded-[16px] space-y-6">
-             <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
+              <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
                 <img
                   src={
                     request.providerImage ||
@@ -87,8 +89,8 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   }
                   alt={request.providerName}
                   className="w-16 h-16 rounded-full object-cover flex-shrink-0 self-center lg:self-start"
-              />
-               <div className="flex-grow w-full text-center lg:text-left">
+                />
+                <div className="flex-grow w-full text-center lg:text-left">
                   <div className="flex items-center justify-center lg:justify-start gap-2 mb-1">
                     <h2 className="text-lg font-semibold text-gray-900 capitalize">
                       {request.providerName ?? "Provider"}
@@ -126,7 +128,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
 
                 {/* Stats */}
-               <div className="flex justify-between lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto mt-3 lg:mt-0">
+                <div className="flex justify-between lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto mt-3 lg:mt-0">
                   <div className="flex flex-col items-center flex-1 md:flex-none">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full">
                       <Award className="w-[24px] h-[24px] text-[#005823]" />
@@ -152,31 +154,33 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() =>
-                    callContext?.openCall?.({
-                      booking: request?.originalData || request,
-                      targetOverride: {
-                        targetId:
-                          request?.originalData?.providerId?._id ||
-                          request?.originalData?.providerId ||
-                          request?.providerId?._id ||
-                          request?.providerId,
-                        targetType: "provider",
-                        targetName:
-                          request?.providerName ||
-                          request?.originalData?.providerId?.fullName ||
-                          "Provider",
-                      },
-                    })
-                  }
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <PhoneCall className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-700">Call</span>
-                </button>
-                {request.status?.toLowerCase() !== "cancelled" && (
+              {!["cancelled", "funds released", "no provider available", "booking expired", "expired"].includes(
+                request.status?.toLowerCase().trim(),
+              ) && (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() =>
+                      callContext?.openCall?.({
+                        booking: request?.originalData || request,
+                        targetOverride: {
+                          targetId:
+                            request?.originalData?.providerId?._id ||
+                            request?.originalData?.providerId ||
+                            request?.providerId?._id ||
+                            request?.providerId,
+                          targetType: "provider",
+                          targetName:
+                            request?.providerName ||
+                            request?.originalData?.providerId?.fullName ||
+                            "Provider",
+                        },
+                      })
+                    }
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <PhoneCall className="w-4 h-4 text-gray-600" />
+                    <span className="font-medium text-gray-700">Call</span>
+                  </button>
                   <button
                     onClick={handleMessageProvider}
                     className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -184,14 +188,23 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     <MessageCircle className="w-4 h-4 text-gray-600" />
                     <span className="font-medium text-gray-700">Message</span>
                   </button>
-                )}
-                {/* <button
+                </div>
+              )}
+              {/* {request.status?.toLowerCase() !== "cancelled" &&  (
+                  <button
+                    onClick={handleMessageProvider}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4 text-gray-600" />
+                    <span className="font-medium text-gray-700">Message</span>
+                  </button>
+                )} */}
+              {/* <button
                   onClick={onClose}
                   className="text-red-500 font-medium px-4 hover:text-red-600 transition-colors whitespace-nowrap"
                 >
                   Cancel Request
                 </button> */}
-              </div>
             </div>
 
             {request.providerVehicleImage && (

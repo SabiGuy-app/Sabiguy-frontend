@@ -95,6 +95,9 @@ export default function RequestCard({
       completed: "bg-green-100 text-green-700 border-green-200",
       user_accepted_completion: "bg-green-100 text-green-700 border-green-200",
       "funds released": "bg-green-100 text-green-700 border-green-200",
+      expired: "bg-red-100 text-red-700 border-red-200",
+      "booking expired": "bg-red-100 text-red-700 border-red-200",
+      "no provider available": "bg-red-50 text-red-700 border-red-200",
     };
     return styles[status.toLowerCase()] || styles.pending;
   };
@@ -224,7 +227,7 @@ export default function RequestCard({
                       {request.title}
                     </h3>
                     <span
-                      className={`inline-flex items-center justify-center text-center px-1 py-1 text-xs font-medium rounded-full border max-w-30 break-words ${getStatusStyles(request.status)}`}
+                      className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-medium rounded-full border min-w-20 w-fit break-words ${getStatusStyles(request.status)}`}
                     >
                       {request.status}
                     </span>
