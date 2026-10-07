@@ -442,6 +442,7 @@ export default function Bookings() {
         return [
           "payment pending",
           "awaiting provider acceptance",
+          "paid escrow scheduled",
           "provider selected",
         ].includes(status);
       if (statusFilter === "completed")
