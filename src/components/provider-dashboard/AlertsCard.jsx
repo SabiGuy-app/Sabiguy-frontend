@@ -1,116 +1,238 @@
-import { CalendarDays, MapPin, Store } from "lucide-react";
-import distanceIcon from "/distance.png";
+import { Calendar, MapPin, Clock, Copy, Check } from "lucide-react";
+import distance from "/distance.png";
+import { useState } from "react";
 
-const SERVICE_PLACE_LABELS = {
-  customer_address: "Customer's Address",
-  provider_address: "Provider's Address",
-  walk_in: "Walk in Salon",
-};
+export default function AlertsCard({
+  alert,
+  onViewDetails,
+  onAcceptBooking,
+  accepting,
+}) {
+  const [copied, setCopied] = useState(false);
+  const [acceptError, setAcceptError] = useState("");
 
-const formatScheduledDate = (booking) => {
-  const dateValue = booking?.scheduleDate || booking?.startDate;
-  if (!dateValue) return "";
+  const handleAccept = async () => {
+    setAcceptError("");
+    try {
+      await onAcceptBooking?.(alert);
+    } catch (error) {
+      setAcceptError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to accept this booking.",
+      );
+    }
+  };
 
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return "";
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-  const dateText = date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  const timeText = booking?.scheduledTime ||
-    date.toLocaleTimeString("en-US", {
+  const formatCreatedAt = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-    }).replace(":00", "");
+    });
+  };
 
-  return `${dateText} - ${timeText}`;
-};
+  const getStatusStyles = (status) => {
+    const styles = {
+      new: "bg-green-100 text-green-500 border-green-200",
+      awaiting_response: "bg-yellow-100 text-[#FFC107] border-yellow-200",
+      "awaiting response": "bg-yellow-100 text-[#FFC107] border-yellow-200",
+      "waiting confirmation": "bg-orange-200 text-orange-800 border-orange-200",
+      completed: "bg-green-100 text-green-700 border-green-200",
+    };
 
-const formatDistanceAndEta = (booking) => {
-  const distanceValue = booking?.distance?.value ?? booking?.distanceFromPickup?.value;
-  const distanceUnit = booking?.distance?.unit || "km";
-  const etaValue = booking?.providerETA?.value ?? booking?.providerEta?.value;
-  const parts = [];
+    return (
+      styles[String(status || "").toLowerCase()] ||
+      "bg-gray-100 text-gray-700 border-gray-200"
+    );
+  };
 
-  if (Number.isFinite(Number(distanceValue))) {
-    parts.push(`${distanceValue} ${distanceUnit}`);
-  }
-  if (Number.isFinite(Number(etaValue))) {
-    parts.push(`${etaValue} min away`);
-  }
-
-  return parts.join(" • ");
-};
-
-export default function AlertsCard({ alert, onViewDetails }) {
-  const booking = alert?.originalData || {};
-  const pricingOption = String(
-    booking?.serviceDetails?.pricingOption || booking?.pricingOption || "",
-  ).toLowerCase();
-  const servicePlace = SERVICE_PLACE_LABELS[pricingOption] ||
-    (pricingOption ? pricingOption.replace(/_/g, " ") : "Customer's Address");
-  const serviceAddress = booking?.location?.address ||
-    booking?.pickupLocation?.address || alert?.location || "Address unavailable";
-  const scheduledDate = formatScheduledDate(booking);
-  const distanceAndEta = formatDistanceAndEta(booking);
-  const bookingPrice = Number(
-    booking?.agreedPrice ?? booking?.budget ?? booking?.totalAmount ?? alert?.agreedPrice ?? 0,
-  );
+  const pickupAddress = alert?.originalData?.pickupLocation?.address || "N/A";
+  const dropoffAddress = alert?.originalData?.dropoffLocation?.address || "N/A";
+  const scheduleType = alert?.scheduleType || alert?.originalData?.scheduleType;
+  const scheduleDate = alert?.scheduleDate || alert?.originalData?.scheduleDate;
 
   return (
-    <article className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2">
-        <div className="min-w-0">
-          <h3 className="break-words text-base font-semibold leading-5 text-[#231F20]">
-            {alert?.title || alert?.subCategory || "Service request"}
-          </h3>
-          <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-sm bg-[#E6EFE9] px-2 py-1 text-[11px] leading-4 text-[#2D6A3E]">
-            <Store className="h-3 w-3 shrink-0" />
-            <span className="truncate">{servicePlace}</span>
-          </span>
+    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
+      <div className="flex flex-col sm:flex-row items-start gap-4">
+        <div className="flex-1 w-full">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px] items-start">
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {alert?.subCategory
+                    ?.split(" ")
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(" ")}
+                </h3>
 
-          <div className="mt-2 space-y-1.5 text-xs text-[#6B6B6B] sm:text-sm">
-            <div className="flex min-w-0 items-start gap-1.5">
-              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#2D6A3E]" />
-              <span className="min-w-0 break-words">{serviceAddress}</span>
+                {alert?.orderId && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-xs font-bold text-gray-500">
+                      #{alert.orderId}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(alert.fullOrderId)}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
+                    >
+                      {copied ? (
+                        <Check size={12} className="text-green-500" />
+                      ) : (
+                        <Copy size={12} />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#2D6A3E]" />
+                  <span>{formatCreatedAt(alert?.originalData?.createdAt)}</span>
+                </div>
+                {alert?.posted && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-yellow-500" />
+                    <span className="font-medium">Posted: {alert.posted}</span>
+                  </div>
+                )}
+                {alert?.distance && (
+                  <div className="flex items-center gap-2">
+                    <img src={distance} alt="" />
+                    <p className="text-[#231F20BF]">
+                      Distance: <span>{alert.distance}</span>
+                    </p>
+                  </div>
+                )}
+                <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
+                  Delivery: {alert?.deliveryDate}
+                </span>
+                {scheduleType && (
+                  <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
+                    Schedule: {String(scheduleType).replace(/_/g, " ")}
+                  </span>
+                )}
+                {scheduleDate && (
+                  <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
+                    Scheduled: {formatCreatedAt(scheduleDate)}
+                  </span>
+                )}
+              </div>
+
+              <div className="relative pl-0 pt-2">
+                <div className="absolute left-4 top-[16px] bottom-[16px] w-[1.5px] bg-[#00582326] z-0" />
+
+                <div className="flex items-start gap-4 mb-4 relative z-10">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
+                    <div className="w-2.5 h-2.5 bg-[#005823] rounded-full shadow-inner" />
+                  </div>
+                  <div className="flex-1 mt-0.5">
+                    <span className="text-[#231F2080] text-xs font-bold uppercase tracking-wider">
+                      Pickup
+                    </span>
+                    <p className="text-[#231F20BF] text-base sm:text-[17px] font-medium leading-snug">
+                      {pickupAddress}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
+                    <MapPin className="w-3.5 h-3.5 text-[#005823]" />
+                  </div>
+                  <div className="flex-1 mt-0.5">
+                    <span className="text-[#231F2080] text-xs font-bold uppercase tracking-wider">
+                      Dropoff
+                    </span>
+                    <p className="text-[#231F20BF] text-base sm:text-[17px] font-medium leading-snug">
+                      {dropoffAddress}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            {scheduledDate && (
-              <div className="flex items-center gap-1.5">
-                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#2D6A3E]" />
-                <span>{scheduledDate}</span>
+
+            <div className="w-full rounded-2xl border border-green-100 bg-gradient-to-br from-[#F8FCF9] to-white p-4 shadow-sm lg:w-1/4 lg:min-w-[260px]">
+              <div className="flex flex-col gap-3 sm:text-right">
+                <span
+                  className={`inline-flex w-fit px-3 py-1 text-xs font-medium rounded-full border h-fit sm:ml-auto ${getStatusStyles(
+                    alert?.status,
+                  )}`}
+                >
+                  {alert?.status || "Pending"}
+                </span>
+
+                <div className="space-y-2">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                      Booking Price
+                    </span>
+                    <span className="text-xl sm:text-2xl font-bold text-[#2D6A3E] leading-none">
+                      ₦{Number(alert?.BookingPrice || 0).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                      Platform Fee
+                    </span>
+                    <span className="text-lg sm:text-xl font-semibold text-[#2D6A3E] leading-none">
+                      ₦{Number(alert?.platformFee || 0).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                      Rider Receives
+                    </span>
+                    <span className="text-lg sm:text-xl font-semibold text-[#2D6A3E] leading-none">
+                      ₦{Number(alert?.RiderReceives || 0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
-            {distanceAndEta && (
-              <div className="flex items-center gap-1.5">
-                <img src={distanceIcon} alt="" className="h-3.5 w-3.5 object-contain" />
-                <span>{distanceAndEta}</span>
-              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 border-t pt-4 mt-3">
+            <button
+              onClick={handleAccept}
+              disabled={accepting}
+              className="w-full sm:w-auto px-8 py-3 bg-[#2D6A3E] text-white cursor-pointer rounded-xl font-bold hover:bg-[#1f4a2a] transition-all text-sm sm:text-base active:scale-95 shadow-md shadow-green-900/10"
+            >
+              {accepting ? "Accepting..." : "Accept Booking"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onViewDetails?.(alert)}
+              className="w-full sm:w-auto px-6 py-3 bg-white text-[#2D6A3E] border border-[#2D6A3E] rounded-xl font-semibold hover:bg-gray-50 transition-all text-sm sm:text-base"
+            >
+              View Details
+            </button>
+
+            {String(alert?.status || "").toLowerCase() ===
+              "awaiting response" && (
+              <button className="w-full sm:w-auto px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95">
+                Awaiting Response
+              </button>
             )}
           </div>
-        </div>
-
-        <div className="flex min-w-[76px] flex-col items-end justify-between gap-4">
-          <span className="rounded-full bg-[#005823] px-2 py-0.5 text-[10px] font-medium leading-4 text-white">
-            New
-          </span>
-          <span className="whitespace-nowrap text-base font-bold text-[#005823] sm:text-lg">
-            ₦{bookingPrice.toLocaleString("en-NG")}
-          </span>
+          {acceptError && <p role="alert" className="mt-2 text-sm text-red-600">{acceptError}</p>}
         </div>
       </div>
-
-      <div className="mt-3 border-t border-gray-200 pt-2.5">
-        <button
-          type="button"
-          onClick={() => onViewDetails?.(alert)}
-          className="inline-flex min-h-8 items-center justify-center rounded-[4px] bg-[#2D6A3E] px-5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#1f4a2a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2D6A3E]"
-        >
-          View Details
-        </button>
-      </div>
-    </article>
+    </div>
   );
 }

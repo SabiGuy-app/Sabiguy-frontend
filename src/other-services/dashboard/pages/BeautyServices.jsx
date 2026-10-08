@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useLocation } from "react-router-dom";
 import {
   ChevronDown,
   Home,
@@ -22,14 +23,16 @@ import {
   extractNearbyProviders,
   normalizeSearchBeautyProvider,
 } from "../utils/beautyProviderMapper";
+import { getDistanceFromLocation, isWithinRadius } from "../utils/providerDistance";
+import {
+  isDiscoverableProvider,
+  mergeProviderAvailability,
+} from "../utils/providerAvailability";
 import { BEAUTY_PROVIDER_SEARCH_NAMES } from "../../../constants/beautyServices";
 
 const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v8";
 const BEAUTY_CATEGORY = "beauty_personal_care";
-const FALLBACK_LOCATION = {
-  latitude: 6.42301,
-  longitude: 3.418074,
-};
+const DEFAULT_RADIUS_KM = 10;
 
 // This profile matches the documented request that successfully returned a
 // beauty provider. The broader profile remains as a fallback for other prices.
@@ -44,9 +47,9 @@ const SERVICE_NAMES = [
 ];
 
 const getCurrentLocation = () =>
-  new Promise((resolve) => {
+  new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      resolve(FALLBACK_LOCATION);
+      reject(new Error("Location access is needed to find providers near you."));
       return;
     }
 
@@ -56,13 +59,10 @@ const getCurrentLocation = () =>
           latitude: coords.latitude,
           longitude: coords.longitude,
         }),
-      () => resolve(FALLBACK_LOCATION),
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 },
+      () => reject(new Error("Allow location access in your browser to see providers near you.")),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
   });
-
-const sameLocation = (first, second) =>
-  first.latitude === second.latitude && first.longitude === second.longitude;
 
 const mergeProviderResults = (providers) => {
   const providersById = new Map();
@@ -93,6 +93,7 @@ const mergeProviderResults = (providers) => {
       price: provider.price ?? existing.price,
       distanceFromPickup:
         provider.distanceFromPickup ?? existing.distanceFromPickup,
+      ...mergeProviderAvailability(existing, provider),
       services: uniqueServices,
       recentReviews: provider.recentReviews?.length
         ? provider.recentReviews
@@ -105,28 +106,6 @@ const mergeProviderResults = (providers) => {
 
 const extractDirectoryProviders = (response) =>
   Array.isArray(response?.data) ? response.data : [];
-
-const getDistanceFromLocation = (provider, location) => {
-  const rawCoordinates = provider.currentLocation?.coordinates;
-  const coordinates = Array.isArray(rawCoordinates)
-    ? rawCoordinates
-    : rawCoordinates?.coordinates;
-  if (!Array.isArray(coordinates) || coordinates.length < 2) return null;
-
-  const [longitude, latitude] = coordinates.map(Number);
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
-
-  const radians = (degrees) => (degrees * Math.PI) / 180;
-  const latitudeDelta = radians(latitude - location.latitude);
-  const longitudeDelta = radians(longitude - location.longitude);
-  const haversine =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(radians(location.latitude)) *
-      Math.cos(radians(latitude)) *
-      Math.sin(longitudeDelta / 2) ** 2;
-
-  return 6371 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
-};
 
 const normalizeAndMergeProviders = (directory, nearby, location) => {
   const normalizedDirectory = directory
@@ -172,28 +151,17 @@ const searchProviderBatch = async (location, searchProfile) => {
 };
 
 const findBeautyProviders = async (currentLocation) => {
-  const locations = sameLocation(currentLocation, FALLBACK_LOCATION)
-    ? [currentLocation]
-    : [currentLocation, FALLBACK_LOCATION];
-
-  for (const location of locations) {
-    const profileResults = await Promise.allSettled(
-      SEARCH_PROFILES.map((profile) => searchProviderBatch(location, profile)),
-    );
-    const providers = mergeProviderResults(
-      profileResults
-        .filter((result) => result.status === "fulfilled")
-        .flatMap((result) => result.value),
-    );
-
-    if (providers.length) return providers;
-
-    if (profileResults.every((result) => result.status === "rejected")) {
-      throw profileResults[0].reason;
-    }
+  const profileResults = await Promise.allSettled(
+    SEARCH_PROFILES.map((profile) => searchProviderBatch(currentLocation, profile)),
+  );
+  if (profileResults.every((result) => result.status === "rejected")) {
+    throw profileResults[0].reason;
   }
-
-  return [];
+  return mergeProviderResults(
+    profileResults
+      .filter((result) => result.status === "fulfilled")
+      .flatMap((result) => result.value),
+  );
 };
 
 const getServiceSearchNames = (query) => {
@@ -269,9 +237,8 @@ const FILTER_OPTIONS = {
     { value: "5", label: "5 stars" },
   ],
   location: [
-    { value: "default", label: "Location" },
-    { value: "5", label: "Within 5 km" },
     { value: "10", label: "Within 10 km" },
+    { value: "5", label: "Within 5 km" },
   ],
 };
 
@@ -316,22 +283,30 @@ function ProviderCardSkeleton() {
 }
 
 export default function BeautyServices() {
+  const routeLocation = useLocation();
   const [providers, setProviders] = useState([]);
-  const [searchLocation, setSearchLocation] = useState(FALLBACK_LOCATION);
+  const [searchLocation, setSearchLocation] = useState(null);
   const [serviceSearchResults, setServiceSearchResults] = useState(null);
   const [serviceSearchLoading, setServiceSearchLoading] = useState(false);
   const [serviceSearchError, setServiceSearchError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(
+    () => new URLSearchParams(routeLocation.search).get("service") || "",
+  );
   const [priceFilter, setPriceFilter] = useState("default");
   const [ratingFilter, setRatingFilter] = useState("default");
-  const [locationFilter, setLocationFilter] = useState("default");
+  const [locationFilter, setLocationFilter] = useState(String(DEFAULT_RADIUS_KM));
+
+  useEffect(() => {
+    setSearchTerm(new URLSearchParams(routeLocation.search).get("service") || "");
+  }, [routeLocation.search]);
 
   const loadProviders = useCallback(async (signal) => {
     setLoading(true);
     setError("");
+    setSearchLocation(null);
 
     try {
       const location = await getCurrentLocation();
@@ -346,10 +321,8 @@ export default function BeautyServices() {
           : [];
       const nearbyProviders =
         nearbyResult.status === "fulfilled" ? nearbyResult.value : [];
-      if (!directoryProviders.length && !nearbyProviders.length) {
-        throw directoryResult.status === "rejected"
-          ? directoryResult.reason
-          : nearbyResult.reason;
+      if (directoryResult.status === "rejected" && nearbyResult.status === "rejected") {
+        throw directoryResult.reason;
       }
       const normalizedProviders = normalizeAndMergeProviders(
         directoryProviders,
@@ -359,10 +332,14 @@ export default function BeautyServices() {
 
       if (signal.aborted) return;
 
-      setProviders(normalizedProviders);
+      const localProviders = normalizedProviders.filter((provider) =>
+        isDiscoverableProvider(provider) &&
+        isWithinRadius(provider, DEFAULT_RADIUS_KM),
+      );
+      setProviders(localProviders);
       sessionStorage.setItem(
         BEAUTY_PROVIDER_CACHE_KEY,
-        JSON.stringify(normalizedProviders),
+        JSON.stringify(localProviders),
       );
     } catch (requestError) {
       if (signal.aborted) return;
@@ -370,6 +347,7 @@ export default function BeautyServices() {
       setProviders([]);
       setError(
         requestError?.response?.data?.message ||
+          requestError?.message ||
           "We could not load beauty providers. Please try again.",
       );
     } finally {
@@ -385,6 +363,7 @@ export default function BeautyServices() {
 
   useEffect(() => {
     const query = searchTerm.trim();
+    if (!searchLocation) return undefined;
     if (query.length < 2) {
       setServiceSearchResults(null);
       setServiceSearchLoading(false);
@@ -398,7 +377,11 @@ export default function BeautyServices() {
 
     const timeoutId = setTimeout(async () => {
       try {
-        const results = await searchProvidersForService(searchLocation, query);
+        const results = (await searchProvidersForService(searchLocation, query))
+          .filter((provider) =>
+            isDiscoverableProvider(provider) &&
+            isWithinRadius(provider, DEFAULT_RADIUS_KM),
+          );
         if (active) {
           setServiceSearchResults(results);
           try {
@@ -469,9 +452,7 @@ export default function BeautyServices() {
         return provider.rating >= Number(ratingFilter);
       })
       .filter((provider) => {
-        if (locationFilter === "default") return true;
-        const distance = Number(provider.distanceFromPickup);
-        return Number.isFinite(distance) && distance <= Number(locationFilter);
+        return isWithinRadius(provider, Number(locationFilter));
       })
       .sort((first, second) => {
         if (priceFilter === "low" || priceFilter === "high") {
@@ -588,8 +569,8 @@ export default function BeautyServices() {
         ) : (
           <p className="rounded-md border border-gray-200 bg-white px-4 py-5 text-sm text-gray-500">
             {searchTerm.trim()
-              ? "No providers match your search."
-              : "No beauty providers are available near this location right now."}
+              ? "No nearby providers match your search."
+              : "No beauty providers are available within 10 km of your location right now."}
           </p>
         )}
       </div>

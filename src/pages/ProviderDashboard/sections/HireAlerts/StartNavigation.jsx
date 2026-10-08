@@ -23,6 +23,7 @@ import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
 import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 import ProviderCancellationModal from "../../../../components/provider-dashboard/ProviderCancellationModal";
 import WaitingForPaymentModal from "../../../../components/provider-dashboard/WaitingForPaymentModal"; // adjust path to match where you save it
+import BeautyWaitingForPaymentModal from "./BeautyWaitingForPaymentModal";
 import PaymentExpiredModal from "../../../../components/provider-dashboard/PaymentExpiredModal"; // adjust path to match where you save it
 
 // Error Boundary for Map Component
@@ -272,6 +273,20 @@ export default function StartNavigation() {
     paymentBooking?.budget ??
     alert?.BookingPrice ??
     0;
+  const isBeautyPaymentBooking = String(
+    paymentBooking?.serviceType || alert?.originalData?.serviceType || alert?.serviceType || "",
+  )
+    .toLowerCase()
+    .includes("beauty");
+  const modalCustomer = {
+    ...customer,
+    ...(latestBooking?.userId && typeof latestBooking.userId === "object"
+      ? latestBooking.userId
+      : {}),
+    fullName: customer?.fullName || latestBooking?.userId?.fullName || "Customer",
+    profilePicture: customer?.profilePicture || latestBooking?.userId?.profilePicture || "/avatar.png",
+    location: customer?.location || latestBooking?.userId?.location?.address,
+  };
 
   const handleStartNavigation = async () => {
     if (!alert?.id) return;
@@ -326,17 +341,9 @@ export default function StartNavigation() {
       {/* Pops up on load and unmounts once paymentStatus flips, or once
           the provider dismisses it early with the X icon. */}
       {paymentStatus === "pending" && !waitingModalDismissed && (
-        <WaitingForPaymentModal
+        isBeautyPaymentBooking ? <BeautyWaitingForPaymentModal
           secondsLeft={secondsLeft}
-          customer={{
-            ...customer,
-            ...(latestBooking?.userId && typeof latestBooking.userId === "object"
-              ? latestBooking.userId
-              : {}),
-            fullName: customer?.fullName || latestBooking?.userId?.fullName || "Customer",
-            profilePicture: customer?.profilePicture || latestBooking?.userId?.profilePicture || "/avatar.png",
-            location: customer?.location || latestBooking?.userId?.location?.address,
-          }}
+          customer={modalCustomer}
           service={modalService}
           serviceLocation={modalServiceLocation}
           dateTime={modalDateTime}
@@ -345,6 +352,16 @@ export default function StartNavigation() {
           serviceCost={modalServiceCost}
           onClose={handlePaymentModalClose}
           onExpire={handlePaymentExpire}
+        /> : <WaitingForPaymentModal
+          secondsLeft={secondsLeft}
+          customer={modalCustomer}
+          pickup={paymentBooking?.pickupLocation?.address || alert?.originalData?.pickupLocation?.address || "N/A"}
+          dropoff={paymentBooking?.dropoffLocation?.address || alert?.originalData?.dropoffLocation?.address || "N/A"}
+          dateTime={alert?.deliveryDate || "N/A"}
+          bookingPrice={latestBooking?.agreedPrice ?? latestBooking?.calculatedPrice ?? alert?.BookingPrice ?? 0}
+          platformFee={alert?.platformFee ?? 0}
+          riderReceives={alert?.RiderReceives ?? 0}
+          onClose={handlePaymentModalClose}
         />
       )}
 

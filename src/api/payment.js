@@ -26,12 +26,14 @@ export const initializePayment = async (bookingId, pickupNote) => {
     }
 };
 
-export const verifyPayment = async (reference) => {
+export const verifyPayment = async (reference, options = {}) => {
     try {
-        const { data } = await api.get(`/payment/verify/${encodeURIComponent(reference)}`, {
-            preserveSessionOnRefreshFailure: true,
-        });
-        if (data?.success !== true) {
+        const { data } = options.strict
+            ? await api.get(`/payment/verify/${encodeURIComponent(reference)}`, {
+                preserveSessionOnRefreshFailure: true,
+            })
+            : await api.get(`/payment/verify/${reference}`);
+        if (options.strict && data?.success !== true) {
             throw new Error(data?.message || "Payment was not confirmed by the server.");
         }
         trackEvent("payment_completed", {

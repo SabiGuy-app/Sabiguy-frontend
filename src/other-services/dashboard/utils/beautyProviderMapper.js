@@ -136,10 +136,9 @@ export const normalizeSearchBeautyProvider = (provider) => {
     providerETA: provider.providerETA,
     distanceFromPickup: provider.distanceFromPickup,
     isAvailable:
-      provider.availability?.isAvailable ?? provider.locationFresh !== false,
+      provider.availability?.isAvailable === true && provider.locationFresh !== false,
     isUnavailable:
-      provider.availability?.isAvailable === false ||
-      provider.locationFresh === false,
+      provider.availability?.isAvailable !== true || provider.locationFresh === false,
   };
 };
 

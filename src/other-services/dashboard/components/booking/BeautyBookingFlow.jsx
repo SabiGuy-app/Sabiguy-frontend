@@ -360,6 +360,7 @@ export default function BeautyBookingFlow({
       }
 
       localStorage.setItem("pendingBookingPaymentId", bookingId);
+      localStorage.setItem(`pendingBookingPaymentKind:${bookingId}`, "beauty");
       window.location.href = authorizationUrl;
     } catch (error) {
       setPaymentError(

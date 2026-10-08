@@ -596,27 +596,25 @@ export default function Bookings() {
                 {successMessage}
               </div>
             )}
-            <input type="hidden" name="jobTitle" value="transport" />
             <div id="booking-category">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Select work category
-              </label>
-              <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md text-gray-700 flex items-center justify-between">
-                <span>Transport &amp; Logistics</span>
-                <svg
-                  className="w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
+              <InputField
+                name="jobTitle"
+                label="Select work category"
+                select
+                singleChevron
+                options={[
+                  { label: "Transport & Logistics", value: "transport" },
+                  { label: "Beauty & Personal Care", value: "beauty_personal_care" },
+                ]}
+                value={formik.values.jobTitle}
+                onChange={(option) => {
+                  if (option.value === "beauty_personal_care") {
+                    navigate("/dashboard/categories/beauty-personal-care");
+                  } else {
+                    formik.setFieldValue("jobTitle", option.value);
+                  }
+                }}
+              />
             </div>
             <div>
               <InputField
