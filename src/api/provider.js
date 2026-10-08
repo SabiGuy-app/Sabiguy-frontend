@@ -37,6 +37,11 @@ export const cancelBooking = async (bookingId, reason = "") => {
   return data;
 };
 
+export const rateUser = async (bookingId, rating) => {
+  const { data } = await api.post(`/provider/bookings/${bookingId}/rate-user`, rating);
+  return data;
+};
+
 export const counterOffer = async (bookingId, offerData) => {
   const { data } = await api.patch(
     `/provider/bookings/${bookingId}/counter-offer`,

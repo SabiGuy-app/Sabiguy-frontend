@@ -80,6 +80,8 @@ export default function JobDetailsModal({
     const inProgress = status === "in_progress";
     const enRoute = status === "enroute_to_pickup";
     const atDestination = status === "arrived_at_pickup";
+    const canStartJourney = ["paid_escrow", "paid_escrow_scheduled", "enroute_to_pickup", "arrived_at_pickup"].includes(status);
+    const isClosed = ["completed", "awaiting_confirmation", "waiting_confirmation", "user_accepted_completion", "funds_released", "cancelled", "booking_expired", "expired"].includes(status);
     const needsTravel = booking?.serviceDetails?.pricingOption === "customer_address";
     const actionLabel = inProgress ? "Mark as Completed" : atDestination || !needsTravel ? "Start Service" : enRoute ? "Arrived at Destination" : "En Route";
     const handleAction = () => {
@@ -132,14 +134,14 @@ export default function JobDetailsModal({
               <button onClick={() => callContext?.openCall?.({ booking, targetOverride: { targetId: customer?._id || booking?.userId, targetType: "buyer", targetName: customer?.fullName || "Customer" } })} className="flex h-9 items-center justify-center gap-2 rounded-[4px] border border-gray-200 text-[11px] text-[#777] hover:bg-gray-50"><PhoneCall className="h-3.5 w-3.5" />Call</button>
               <button onClick={() => onMessageCustomer?.(job)} className="flex h-9 items-center justify-center gap-2 rounded-[4px] border border-gray-200 text-[11px] text-[#777] hover:bg-gray-50"><MessageCircle className="h-3.5 w-3.5" />Message</button>
             </div>
-            <button onClick={() => onCancel?.(job)} className="mt-2 w-full text-right text-[10px] font-medium text-red-600 hover:underline">Cancel Request</button>
+            {!isClosed && <button onClick={() => onCancel?.(job)} className="mt-2 w-full text-right text-[10px] font-medium text-red-600 hover:underline">Cancel Request</button>}
 
             <div className="mt-3 flex items-start justify-between gap-3">
               <h3 className="pt-1 text-[14px] font-semibold text-[#333]">Booking Information</h3>
-              <div className="shrink-0 text-right">
+              {canStartJourney && <div className="shrink-0 text-right">
                 <p className="text-[10px] text-[#888]">Service Starts In:</p>
                 <p className="text-[21px] font-semibold leading-7 tabular-nums text-[#438B66]">{countdown}</p>
-              </div>
+              </div>}
             </div>
 
             <div className="mt-1 space-y-2.5">
@@ -156,12 +158,12 @@ export default function JobDetailsModal({
               <div className="min-h-10 rounded-[4px] border border-gray-200 bg-[#F7FAFC] px-3 py-2 text-[10px] leading-4 text-[#888]">{booking?.pickupNote || "No additional notes provided."}</div>
             </div>
 
-            <button
+            {(canStartJourney || inProgress) && <button
               onClick={handleAction}
               className="mt-3 w-full rounded-[4px] bg-[#438B66] px-4 py-2.5 text-[11px] font-medium text-white hover:bg-[#347653]"
             >
               {actionLabel}
-            </button>
+            </button>}
           </div>
         </section>
       </div>

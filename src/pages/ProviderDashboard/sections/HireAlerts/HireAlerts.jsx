@@ -12,6 +12,7 @@ import CustomerRatingModal from "../../../../components/provider-dashboard/Custo
 import {
   cancelBooking as cancelProviderBooking,
   getProviderBookings,
+  rateUser,
 } from "../../../../api/provider";
 import { getAllBookings, getBookingsDetails, acceptBookings, startJob } from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
@@ -472,6 +473,16 @@ export default function HireAlerts() {
     fetchBookings();
   };
 
+  const handleRateCustomer = async (rating) => {
+    const bookingId = ratingJob?.originalData?._id || ratingJob?.id;
+    if (!bookingId) throw new Error("Booking ID is missing.");
+    const response = await rateUser(bookingId, rating);
+    if (response?.success === false) {
+      throw new Error(response.message || "Unable to submit the rating.");
+    }
+    fetchBookings();
+  };
+
   const getBookingId = (booking) =>
     booking?.id || booking?.originalData?._id || booking?._id || "";
 
@@ -657,7 +668,7 @@ export default function HireAlerts() {
         isOpen={!!ratingJob}
         customerName={ratingJob?.originalData?.userId?.fullName}
         onClose={() => setRatingJob(null)}
-        onSubmit={async () => { throw new Error("Customer rating is not available until the provider rating endpoint is confirmed."); }}
+        onSubmit={handleRateCustomer}
       />
 
       <ProviderCancellationModal
