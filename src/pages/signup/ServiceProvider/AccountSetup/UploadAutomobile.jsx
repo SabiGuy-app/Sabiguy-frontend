@@ -1,4 +1,4 @@
-import UploadBox from "../../../../components/uploadBox";
+import UploadBox from "../components/UploadBox";
 import AccountSetupLayout from "./layout";
 import { IoIosArrowBack } from "react-icons/io";
 import { useState, useEffect } from "react";

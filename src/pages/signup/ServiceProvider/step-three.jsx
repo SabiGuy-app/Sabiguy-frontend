@@ -1,7 +1,7 @@
 import React from "react";
-import Button from "../../../components/button";
-import Navbar from "../../../components/layouts/navbar";
-import AuthLayout from "../../../components/layouts/layout";
+import Button from "./components/Button";
+import Navbar from "./components/Navbar";
+import AuthLayout from "./components/AuthLayout";
 
 export default function StepThree({ onNext }) {
   return (

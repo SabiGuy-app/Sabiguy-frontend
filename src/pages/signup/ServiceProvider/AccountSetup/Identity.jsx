@@ -2,9 +2,9 @@ import AccountSetupLayout from "./layout";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoIosArrowBack, IoIosAdd } from "react-icons/io";
-import UploadBox from "../../../../components/uploadBox";
-import IDTypeSelector from "../../../../components/IdType";
-import DocumentTips from "../../../../components/DocumentTips";
+import UploadBox from "../components/UploadBox";
+import IDTypeSelector from "../components/IdTypeSelector";
+import DocumentTips from "../components/DocumentTips";
 import { FaPassport, FaIdCard, FaIdBadge, FaRegCreditCard} from "react-icons/fa";
 
 

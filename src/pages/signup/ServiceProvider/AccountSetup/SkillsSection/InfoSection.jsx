@@ -1,6 +1,6 @@
 // DriverInfoSection.jsx
 import { IoIosAdd } from "react-icons/io";
-import InputField from "../../../../../components/InputField";
+import InputField from "../../components/InputField";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { vehicleTypes } from "./jobData";

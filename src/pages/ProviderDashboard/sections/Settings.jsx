@@ -72,6 +72,10 @@ export default function ProviderProfilePage() {
     workCategory: firstJob.service || "",
     subCategory: firstJob.title || "",
     tagLine: firstJob.tagLine || "",
+    yearsOfExperience: user?.data?.yearsOfExperience ?? "",
+    availableDays: user?.data?.availableDays || [],
+    businessHours: user?.data?.businessHours || { start: "", end: "" },
+    servicePlace: user?.data?.servicePlace || [],
   };
 
   const handleAvatarClick = () => {

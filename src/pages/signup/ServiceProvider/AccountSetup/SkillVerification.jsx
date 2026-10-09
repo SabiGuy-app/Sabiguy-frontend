@@ -1,7 +1,7 @@
 import AccountSetupLayout from "./layout";
 import { useState } from "react";
-import Button from "../../../../components/button";
-import InputField from "../../../../components/InputField";
+import Button from "../components/Button";
+import InputField from "../components/InputField";
 import { IoIosArrowBack, IoIosAdd } from "react-icons/io";
 import { jobTitles, allServices } from "./SkillsSection/jobData";
 import { jobSections } from "./SkillsSection/SkillsSection";

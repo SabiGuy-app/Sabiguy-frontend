@@ -48,16 +48,17 @@ export default function ProviderDashboard() {
           activeBookings: raw?.activeBookings ?? 0,
           completedBookings: raw?.completedBookings ?? 0,
 
-          // Revenue Overview — pass the full object so the chart can switch
-          // between week/month/year using revenueOverview.byPeriod.
-          revenueData: raw?.revenueOverview || null,
+          // Revenue Overview — pass object { last7Days, last30Days, total }
+          revenueData: raw?.revenueOverview
+            ? {
+                last7Days: raw.revenueOverview.last7Days || 0,
+                last30Days: raw.revenueOverview.last30Days || 0,
+                total: raw.revenueOverview.total || 0,
+              }
+            : null,
 
-          // Average Response Time — per-period averages in minutes
-          // ({ week, month, threeMonths }); fall back to the flat average.
-          responseTimeData:
-            raw?.averageResponseTimeByPeriodMinutes ??
-            raw?.averageResponseTimeMinutes ??
-            null,
+          // Average Response Time — raw number in minutes
+          responseTimeData: raw?.averageResponseTimeMinutes ?? null,
 
           // Bookings by Day — normalise to { day, bookings }
           bookingsByDay: (raw?.bookingsByDayOfWeek || []).map((d) => ({

@@ -1,4 +1,4 @@
-import InputField from "../../../../components/InputField";
+import InputField from "../components/InputField";
 import { useState } from "react";
 import { Check, CloudUpload, Plus, X } from "lucide-react";
 import { BEAUTY_SERVICE_NAMES } from "../../../../constants/beautyServices";

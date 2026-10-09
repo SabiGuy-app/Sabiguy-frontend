@@ -145,6 +145,11 @@ export const updateProviderWorkVisuals = async (visualsData) => {
   return data;
 };
 
+export const updateProviderServiceDetails = async (serviceDetails) => {
+  const { data } = await api.patch("/provider/service-details", serviceDetails);
+  return data;
+};
+
 export const updateProviderLocation = async (locationData) => {
   const { data } = await api.put("/provider/location", locationData);
   return data;

@@ -1,9 +1,19 @@
-import { Pencil, Trash2, Save } from "lucide-react";
+import {
+  Check,
+  Clock3,
+  House,
+  MapPin,
+  Pencil,
+  Plus,
+  Save,
+  Store,
+  Trash2,
+} from "lucide-react";
 import AddService from "../../pages/signup/ServiceProvider/AccountSetup/SkillsSection/AddService";
 import { useState, useEffect, useRef } from "react";
-import { IoIosArrowBack, IoIosAdd } from "react-icons/io";
 import {
   updateProviderBankInfo,
+  updateProviderServiceDetails,
   updateProviderWorkVisuals,
 } from "../../api/provider";
 import {
@@ -14,6 +24,61 @@ import api from "../../api/axios";
 import toast from "react-hot-toast";
 import UploadBox from "../uploadBox";
 import { useAuthStore } from "../../stores/auth.store";
+
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const SERVICE_LOCATIONS = [
+  { key: "walk_in", value: "walk_in_salon", label: "Walk-in salon", Icon: Store },
+  {
+    key: "provider_address",
+    value: "my_home_address",
+    label: "My home address",
+    Icon: House,
+  },
+  {
+    key: "customer_address",
+    value: "customer_address",
+    label: "Customer's address",
+    Icon: MapPin,
+  },
+];
+
+const toNumberOrEmpty = (value) =>
+  value === "" || value === null || value === undefined ? "" : Number(value);
+
+const normalizeService = (service) => ({
+  serviceName: service?.serviceName || service?.name || "",
+  duration: service?.duration || "",
+  pricingModel: {
+    walk_in: toNumberOrEmpty(
+      service?.pricingModel?.walk_in ?? service?.price,
+    ),
+    provider_address: toNumberOrEmpty(service?.pricingModel?.provider_address),
+    customer_address: toNumberOrEmpty(service?.pricingModel?.customer_address),
+  },
+});
+
+const serializeService = (service) => {
+  const pricingModel = Object.fromEntries(
+    Object.entries(service?.pricingModel || {})
+      .filter(
+        ([, value]) =>
+          value !== "" && value !== null && value !== undefined && !Number.isNaN(Number(value)),
+      )
+      .map(([location, value]) => [location, Number(value)]),
+  );
+
+  return {
+    serviceName: service?.serviceName || service?.name || "",
+    ...(service?.duration ? { duration: service.duration } : {}),
+    ...(Object.keys(pricingModel).length > 0 ? { pricingModel } : {}),
+  };
+};
+
+const formatPrice = (value) =>
+  value === "" || value === null || value === undefined
+    ? "Not set"
+    : `₦${Number(value).toLocaleString("en-NG")}`;
 
 export default function ProviderServiceProfileTab({
   profile,
@@ -35,42 +100,40 @@ export default function ProviderServiceProfileTab({
     vehicleRegNo: profile?.vehicleRegNo || user?.data?.vehicleRegNo || "",
   });
   const [isSavingVehicle, setIsSavingVehicle] = useState(false);
-  console.log(profile);
-  console.log(user?.data);
-  
 
   // Real services from user data (populated during signup via POST /provider/job-service)
   const [services, setServices] = useState(() => {
     const userServices = user?.data?.service || [];
-    return userServices.map((s, i) => ({
-      id: i,
-      name: s.serviceName || s.name || "",
-      price: s.price || 0,
-      pricingModel: s.pricingModel || "fixed",
-      pricingModelLabel: s.pricingModel || "fixed",
-    }));
+    return userServices.map(normalizeService);
   });
+  const [yearsOfExperience, setYearsOfExperience] = useState(
+    profile?.yearsOfExperience ?? user?.data?.yearsOfExperience ?? "",
+  );
+  const [availableDays, setAvailableDays] = useState(
+    profile?.availableDays || user?.data?.availableDays || [],
+  );
+  const [businessHours, setBusinessHours] = useState(
+    profile?.businessHours ||
+      user?.data?.businessHours || { start: "", end: "" },
+  );
+  const [servicePlace, setServicePlace] = useState(
+    profile?.servicePlace || user?.data?.servicePlace || [],
+  );
+  const [isSavingServiceDetails, setIsSavingServiceDetails] = useState(false);
+  const [serviceDetailsDirty, setServiceDetailsDirty] = useState(false);
 
-  // Persist services to backend via POST /provider/job-service
+  // The service-details endpoint replaces the submitted service list.
   const saveServicesToBackend = async (updatedServices) => {
     setIsSavingService(true);
     try {
-      const payload = {
-        job: user?.data?.job || [],
-        service: updatedServices.map((s) => ({
-          serviceName: s.name,
-          pricingModel: s.pricingModel || s.pricingModelLabel || "fixed",
-          price: s.price,
-        })),
-      };
-
-      await api.post("/provider/job-service", payload);
+      const servicePayload = updatedServices.map(serializeService);
+      await updateProviderServiceDetails({ service: servicePayload });
 
       // Update local store
       updateUser({
         data: {
           ...user.data,
-          service: payload.service,
+          service: servicePayload,
         },
       });
     } catch (error) {
@@ -138,12 +201,12 @@ export default function ProviderServiceProfileTab({
   };
 
   const handleSaveService = async (newService) => {
+    const isEditing = Boolean(editingService);
     let updatedServices;
-    if (editingService) {
+    if (isEditing) {
       updatedServices = services.map((s, i) =>
         i === editingService.index ? newService : s,
       );
-      setEditingService(null);
     } else {
       updatedServices = [...services, newService];
     }
@@ -151,10 +214,52 @@ export default function ProviderServiceProfileTab({
     try {
       await saveServicesToBackend(updatedServices);
       setServices(updatedServices);
+      setEditingService(null);
       setAddService(false);
-      toast.success(editingService ? "Service updated" : "Service added");
+      toast.success(isEditing ? "Service updated" : "Service added");
+      return true;
     } catch {
       // Error already handled
+      return false;
+    }
+  };
+
+  const toggleArrayValue = (setter, currentValues, value) => {
+    setter(
+      currentValues.includes(value)
+        ? currentValues.filter((item) => item !== value)
+        : [...currentValues, value],
+    );
+    setServiceDetailsDirty(true);
+  };
+
+  const handleSaveServiceDetails = async () => {
+    setIsSavingServiceDetails(true);
+    try {
+      const payload = {
+        service: services.map(serializeService),
+        yearsOfExperience:
+          yearsOfExperience === "" ? undefined : Number(yearsOfExperience),
+        availableDays,
+        businessHours,
+        servicePlace,
+      };
+
+      await updateProviderServiceDetails(payload);
+      updateUser({
+        data: {
+          ...user.data,
+          ...payload,
+        },
+      });
+      setServiceDetailsDirty(false);
+      toast.success("Service profile updated");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to update service profile",
+      );
+    } finally {
+      setIsSavingServiceDetails(false);
     }
   };
 
@@ -476,7 +581,7 @@ export default function ProviderServiceProfileTab({
 
   return (
     <div className="mb-12">
-      <form className="space-y-6">
+      <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Work Category
@@ -596,6 +701,266 @@ export default function ProviderServiceProfileTab({
         </div>
         <h3 className="font-semibold border-t border-gray-300"></h3>
         */}
+
+        <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="font-semibold text-lg text-gray-900">
+                  Services you provide
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Keep your service list and customer-facing prices up to date.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAddService(true)}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors"
+              >
+                <Plus size={17} />
+                Add service
+              </button>
+            </div>
+
+            {services.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {services.map((service, index) => (
+                  <span
+                    key={`${service.serviceName}-${index}`}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F4EC] px-3 py-1.5 text-sm font-medium text-[#005823]"
+                  >
+                    <Check size={14} />
+                    {service.serviceName}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500">
+                No services have been added yet.
+              </div>
+            )}
+
+            <div className="border-t border-gray-200 pt-6">
+              <div className="mb-4">
+                <h3 className="font-semibold text-lg text-gray-900">
+                  Services &amp; pricing
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Set one service duration and prices for the locations where you work.
+                </p>
+              </div>
+
+              {services.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {services.map((service, index) => (
+                    <article
+                      key={`${service.serviceName}-card-${index}`}
+                      className="rounded-lg border border-gray-200 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">
+                            {service.serviceName}
+                          </h4>
+                          <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-gray-500">
+                            <Clock3 size={15} />
+                            {service.duration || "Duration not set"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleEditService(service, index)}
+                            className="p-2 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                            aria-label={`Edit ${service.serviceName}`}
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteService(index)}
+                            className="p-2 rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600"
+                            aria-label={`Delete ${service.serviceName}`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        {SERVICE_LOCATIONS.map(({ key, label, Icon }) => (
+                          <div
+                            key={key}
+                            className="flex items-center justify-between gap-3 text-sm"
+                          >
+                            <span className="inline-flex items-center gap-2 text-gray-600">
+                              <Icon size={15} />
+                              {label}
+                            </span>
+                            <span className="font-semibold text-[#005823]">
+                              {formatPrice(service.pricingModel[key])}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Add a service to configure pricing.
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="flex flex-col gap-6">
+            <div>
+              <h2 className="font-semibold text-lg text-gray-900">Availability</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Tell customers when and where they can book your services.
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="yearsOfExperience"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Years of experience
+              </label>
+              <input
+                id="yearsOfExperience"
+                type="number"
+                min="0"
+                value={yearsOfExperience}
+                onChange={(event) => {
+                  setYearsOfExperience(event.target.value);
+                  setServiceDetailsDirty(true);
+                }}
+                className="w-full sm:max-w-xs px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                Available days
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {DAYS.map((day) => {
+                  const selected = availableDays.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() =>
+                        toggleArrayValue(setAvailableDays, availableDays, day)
+                      }
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                        selected
+                          ? "bg-[#388659] text-white"
+                          : "border border-gray-300 text-gray-600 hover:border-[#388659] hover:text-[#005823]"
+                      }`}
+                      aria-pressed={selected}
+                    >
+                      {selected && <Check size={14} className="inline mr-1" />}
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                Business hours
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+                <label className="text-sm text-gray-600">
+                  Opening time
+                  <input
+                    type="time"
+                    value={businessHours.start || ""}
+                    onChange={(event) => {
+                      setBusinessHours((previous) => ({
+                        ...previous,
+                        start: event.target.value,
+                      }));
+                      setServiceDetailsDirty(true);
+                    }}
+                    className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Closing time
+                  <input
+                    type="time"
+                    value={businessHours.end || ""}
+                    onChange={(event) => {
+                      setBusinessHours((previous) => ({
+                        ...previous,
+                        end: event.target.value,
+                      }));
+                      setServiceDetailsDirty(true);
+                    }}
+                    className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                Where do you provide your service?
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {SERVICE_LOCATIONS.map(({ value, label, Icon }) => {
+                  const selected = servicePlace.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() =>
+                        toggleArrayValue(setServicePlace, servicePlace, value)
+                      }
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                        selected
+                          ? "bg-[#388659] text-white"
+                          : "border border-gray-300 text-gray-600 hover:border-[#388659] hover:text-[#005823]"
+                      }`}
+                      aria-pressed={selected}
+                    >
+                      {selected ? <Check size={14} /> : <Plus size={14} />}
+                      <Icon size={14} />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {serviceDetailsDirty && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveServiceDetails}
+                  disabled={isSavingServiceDetails}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors disabled:opacity-50"
+                >
+                  {isSavingServiceDetails ? (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Save size={16} />
+                  )}
+                  Save service profile
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
 
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -954,7 +1319,7 @@ export default function ProviderServiceProfileTab({
           onSave={handleSaveService}
           editingService={editingService}
         />
-      </form>
+      </div>
     </div>
   );
 }
