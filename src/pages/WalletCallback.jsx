@@ -31,10 +31,18 @@ export default function WalletCallback() {
         toast.loading("Verifying booking payment...", { id: "verify-booking" });
 
         try {
-            await verifyPayment(ref);
+            const paymentKindKey = `pendingBookingPaymentKind:${currentBookingId}`;
+            const isBeautyPayment = localStorage.getItem(paymentKindKey) === "beauty";
+            await verifyPayment(ref, { strict: isBeautyPayment });
             localStorage.removeItem("pendingBookingPaymentId");
+            localStorage.removeItem(paymentKindKey);
             toast.success("Payment verified!", { id: "verify-booking" });
-            navigate(`/bookings/summary?bookingId=${encodeURIComponent(currentBookingId)}&payment_success=true&reference=${encodeURIComponent(ref)}`, { replace: true });
+            navigate(
+                isBeautyPayment
+                    ? "/bookings?tab=requests"
+                    : `/bookings/summary?bookingId=${encodeURIComponent(currentBookingId)}&payment_success=true&reference=${encodeURIComponent(ref)}`,
+                { replace: true },
+            );
         } catch (error) {
             const message = error?.response?.data?.message || error?.message || "Payment verification failed. Please try again.";
             setVerificationError(message);

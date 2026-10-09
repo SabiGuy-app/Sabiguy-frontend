@@ -22,6 +22,7 @@ export default function Navbar({
   onMenuClick,
   searchValue,
   onSearchChange,
+  onSearchSubmit,
   searchPlaceholder = "Search providers or services...",
 }) {
   const sampleUnread = useBeautyBookingStore((state) => state.notifications.filter((item) => !item.isRead).length);
@@ -571,6 +572,9 @@ export default function Navbar({
             type="text"
             value={searchValue || ""}
             onChange={(event) => onSearchChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onSearchSubmit?.(searchValue || "");
+            }}
             placeholder={searchPlaceholder}
             className="bg-transparent w-full outline-none text-sm text-gray-800 placeholder:text-gray-400"
           />
@@ -662,6 +666,9 @@ export default function Navbar({
                 type="text"
                 value={searchValue || ""}
                 onChange={(event) => onSearchChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") onSearchSubmit?.(searchValue || "");
+                }}
                 placeholder={searchPlaceholder}
                 className="bg-transparent w-full outline-none text-sm"
               />

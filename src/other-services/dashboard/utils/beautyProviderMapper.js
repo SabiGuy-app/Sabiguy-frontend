@@ -89,7 +89,14 @@ export const normalizeSearchBeautyProvider = (provider) => {
   const firstService = services[0];
   const id = provider.id || provider._id;
   const ratingAverage = provider.rating?.average ?? provider.rating;
-  const ratingCount = provider.rating?.count ?? provider.reviews;
+  const recentReviews = Array.isArray(provider.reviews)
+    ? provider.reviews
+    : Array.isArray(provider.recentReviews)
+      ? provider.recentReviews
+      : [];
+  const ratingCount =
+    provider.rating?.count ??
+    (Array.isArray(provider.reviews) ? provider.reviews.length : provider.reviews);
   const gallery = compactImages(
     provider.workVisuals?.flatMap((item) => item.pictures || []),
     provider.studioImages?.flatMap((item) => item.pictures || []),
@@ -124,15 +131,14 @@ export const normalizeSearchBeautyProvider = (provider) => {
       provider.about ||
       `${provider.fullName || "This provider"} offers beauty and personal care services.`,
     services,
-    recentReviews: [],
+    recentReviews,
     completedJobs: toNumber(provider.completedJobs),
     providerETA: provider.providerETA,
     distanceFromPickup: provider.distanceFromPickup,
     isAvailable:
-      provider.availability?.isAvailable ?? provider.locationFresh !== false,
+      provider.availability?.isAvailable === true && provider.locationFresh !== false,
     isUnavailable:
-      provider.availability?.isAvailable === false ||
-      provider.locationFresh === false,
+      provider.availability?.isAvailable !== true || provider.locationFresh === false,
   };
 };
 

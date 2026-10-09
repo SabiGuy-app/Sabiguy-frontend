@@ -12,21 +12,13 @@ import {
   Image,
 } from "lucide-react";
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
-import { getProviderReviews } from "../../../api/provider";
+import { getProviderDirectory } from "../../../api/provider";
 import { beautyProvider as fallbackProvider } from "../data/beautyProvider";
 
 import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
 import BeautyBookingFlow from "..//components/booking/BeautyBookingFlow";
 
 const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v8";
-
-const extractReviews = (response) => {
-  if (Array.isArray(response)) return response;
-  if (Array.isArray(response?.data)) return response.data;
-  if (Array.isArray(response?.data?.reviews)) return response.data.reviews;
-  if (Array.isArray(response?.reviews)) return response.reviews;
-  return [];
-};
 
 function WorkPhoto({ src, alt, className }) {
   const [failed, setFailed] = useState(false);
@@ -54,10 +46,9 @@ export default function BeautyProviderProfile() {
   const [missingProviderId, setMissingProviderId] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
   const [showAll, setShowAll] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const [booking, setBooking] = useState(null);
-  const [reviewsList, setReviewsList] = useState([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [reviewsError, setReviewsError] = useState("");
+  const [reviewState, setReviewState] = useState(null);
   const provider = providerState?.requestedId === providerId ? providerState.data : null;
 
   useEffect(() => {
@@ -66,6 +57,7 @@ export default function BeautyProviderProfile() {
     const loadProvider = async () => {
       setMissingProviderId(null);
       setActiveImage(0);
+      setShowAllReviews(false);
 
       if (providerId === fallbackProvider.id) {
         setProviderState({ requestedId: providerId, data: fallbackProvider });
@@ -99,38 +91,49 @@ export default function BeautyProviderProfile() {
   }, [providerId]);
 
   useEffect(() => {
-    if (!providerId || providerId === fallbackProvider.id) {
-      setReviewsList([]);
-      return;
-    }
+    if (!provider || providerId === fallbackProvider.id) return undefined;
 
     let active = true;
-    setReviewsLoading(true);
-    setReviewsError("");
+    setReviewState({ providerId, reviews: null, loading: true, error: "" });
 
-    getProviderReviews(providerId)
+    getProviderDirectory({
+      service: "beauty_personal_care",
+      page: 1,
+      limit: 100,
+    })
       .then((response) => {
         if (!active) return;
-        setReviewsList(extractReviews(response));
+        const directory = Array.isArray(response?.data) ? response.data : [];
+        const entry = directory.find(
+          (item) => item._id === providerId || item.id === providerId,
+        );
+        setReviewState({
+          providerId,
+          reviews: Array.isArray(entry?.reviews) ? entry.reviews : null,
+          loading: false,
+          error: !entry
+            ? "Reviews are unavailable for this provider."
+            : !Array.isArray(entry.reviews) ||
+                (entry.reviews.length === 0 && Number(entry.rating?.count) > 0)
+              ? "Review details are not included in the provider directory yet."
+              : "",
+        });
       })
       .catch((error) => {
-        console.error("Failed to fetch beauty provider reviews", error);
         if (!active) return;
-        if (error?.response?.data?.message === "Provider not found") {
-          setReviewsList([]);
-          setReviewsError("");
-          return;
-        }
-        setReviewsError("Unable to load reviews");
-      })
-      .finally(() => {
-        if (active) setReviewsLoading(false);
+        console.error("Failed to refresh beauty provider reviews", error);
+        setReviewState({
+          providerId,
+          reviews: null,
+          loading: false,
+          error: "Unable to load reviews",
+        });
       });
 
     return () => {
       active = false;
     };
-  }, [providerId]);
+  }, [provider, providerId]);
 
   if (missingProviderId === providerId)
     return (
@@ -162,6 +165,16 @@ export default function BeautyProviderProfile() {
 
   const services = showAll ? provider.services : provider.services.slice(0, 3);
   const hasMoreServices = provider.services.length > 3;
+  const currentReviewState = reviewState?.providerId === providerId ? reviewState : null;
+  const reviewsLoading = providerId !== fallbackProvider.id &&
+    (!currentReviewState || currentReviewState.loading);
+  const reviewsList = [
+    ...(currentReviewState?.reviews ?? provider.recentReviews ?? []),
+  ].sort(
+    (first, second) =>
+      (Date.parse(second.ratedAt || second.createdAt) || 0) -
+      (Date.parse(first.ratedAt || first.createdAt) || 0),
+  );
   return (
     <DashboardLayout showSidebar={false}>
       <div className="mx-auto max-w-7xl text-[#231F20]">
@@ -255,18 +268,18 @@ export default function BeautyProviderProfile() {
                 Recent Reviews
               </h2>
               <div className="divide-y divide-gray-200">
-                {reviewsLoading ? (
+                {reviewsLoading && reviewsList.length === 0 ? (
+                  <p className="py-6 text-sm text-gray-500">Loading reviews...</p>
+                ) : currentReviewState?.error && reviewsList.length === 0 ? (
                   <p className="py-6 text-sm text-gray-500">
-                    Loading reviews...
+                    {currentReviewState.error}
                   </p>
-                ) : reviewsError ? (
-                  <p className="py-6 text-sm text-red-500">{reviewsError}</p>
                 ) : reviewsList.length === 0 ? (
                   <p className="py-6 text-sm italic text-gray-500">
                     No reviews yet
                   </p>
                 ) : (
-                  reviewsList.map((review, index) => {
+                  (showAllReviews ? reviewsList : reviewsList.slice(0, 3)).map((review, index) => {
                     const reviewer = review.user || review.userId || {};
                     const reviewerName =
                       reviewer.fullName || review.userName || "Anonymous";
@@ -315,9 +328,11 @@ export default function BeautyProviderProfile() {
                               ))}
                             </span>
                           </div>
-                          <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                            {review.review || "No feedback provided."}
-                          </p>
+                          {review.review?.trim() && (
+                            <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                              {review.review}
+                            </p>
+                          )}
                           {createdAt && (
                             <p className="mt-4 text-xs text-gray-500">
                               {createdAt}
@@ -329,6 +344,16 @@ export default function BeautyProviderProfile() {
                   })
                 )}
               </div>
+              {reviewsList.length > 3 && !reviewsLoading && !currentReviewState?.error && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllReviews((value) => !value)}
+                  aria-expanded={showAllReviews}
+                  className="mt-3 w-full rounded border border-gray-200 py-2.5 text-xs hover:bg-gray-50"
+                >
+                  {showAllReviews ? "View less" : "View more"}
+                </button>
+              )}
             </section>
           </main>
           <aside className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">

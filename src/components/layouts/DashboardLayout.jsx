@@ -16,6 +16,7 @@ export default function DashboardLayout({
   showSidebar = true,
   searchValue,
   onSearchChange,
+  onSearchSubmit,
   searchPlaceholder,
 }) {
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ export default function DashboardLayout({
           onMenuClick={toggleSidebar}
           searchValue={searchValue}
           onSearchChange={onSearchChange}
+          onSearchSubmit={onSearchSubmit}
           searchPlaceholder={searchPlaceholder}
         />
 
