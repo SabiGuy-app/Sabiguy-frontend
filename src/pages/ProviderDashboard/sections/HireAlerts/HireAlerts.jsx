@@ -4,12 +4,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 import JobsCard from "../../../../components/provider-dashboard/JobsCard";
 import AlertsCard from "../../../../components/provider-dashboard/AlertsCard";
 import AlertDetailsModal from "./AlertDetails";
+import BeautyAlertsCard from "./BeautyAlertsCard";
+import BeautyAlertDetails from "./BeautyAlertDetails";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import CustomerRatingModal from "../../../../components/provider-dashboard/CustomerRatingModal";
 import {
   cancelBooking as cancelProviderBooking,
   getProviderBookings,
+  rateUser,
 } from "../../../../api/provider";
 import { getAllBookings, getBookingsDetails, acceptBookings, startJob } from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
@@ -33,6 +36,12 @@ const extractBooking = (payload) =>
   payload?.data ||
   payload?.booking ||
   payload;
+
+const isBeautyBooking = (booking) =>
+  String(booking?.originalData?.serviceType || booking?.serviceType || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_") === "beauty_personal_care";
 
 export default function HireAlerts() {
   const navigate = useNavigate();
@@ -464,6 +473,16 @@ export default function HireAlerts() {
     fetchBookings();
   };
 
+  const handleRateCustomer = async (rating) => {
+    const bookingId = ratingJob?.originalData?._id || ratingJob?.id;
+    if (!bookingId) throw new Error("Booking ID is missing.");
+    const response = await rateUser(bookingId, rating);
+    if (response?.success === false) {
+      throw new Error(response.message || "Unable to submit the rating.");
+    }
+    fetchBookings();
+  };
+
   const getBookingId = (booking) =>
     booking?.id || booking?.originalData?._id || booking?._id || "";
 
@@ -540,7 +559,10 @@ export default function HireAlerts() {
     if (!alert?.id) return;
     try {
       setAcceptingAlertId(alert.id);
-      await acceptBookings(alert.id);
+      const response = await acceptBookings(alert.id);
+      if (response?.success === false) {
+        throw new Error(response.message || "Failed to accept booking.");
+      }
       handleCloseAlert();
       navigate("/dashboard/provider/start-navigation", {
         state: { alert },
@@ -604,14 +626,23 @@ export default function HireAlerts() {
 
   return (
     <ProviderDashboardLayout>
-      <AlertDetailsModal
-        isOpen={isAlertModalOpen}
-        onClose={handleCloseAlert}
-        alert={selectedAlert || {}}
-        onAccept={handleAcceptBooking}
-        onDecline={handleDeclineAlert}
-        accepting={acceptingAlertId === selectedAlert?.id}
-      />
+      {isBeautyBooking(selectedAlert) ? (
+        <BeautyAlertDetails
+          isOpen={isAlertModalOpen}
+          onClose={handleCloseAlert}
+          alert={selectedAlert}
+          onAccept={handleAcceptBooking}
+          onDecline={handleDeclineAlert}
+          accepting={acceptingAlertId === selectedAlert?.id}
+        />
+      ) : (
+        <AlertDetailsModal
+          isOpen={isAlertModalOpen}
+          onClose={handleCloseAlert}
+          alert={selectedAlert || {}}
+          onAccept={handleAcceptBooking}
+        />
+      )}
 
       <JobDetailsModal
         isOpen={isJobModalOpen}
@@ -637,7 +668,7 @@ export default function HireAlerts() {
         isOpen={!!ratingJob}
         customerName={ratingJob?.originalData?.userId?.fullName}
         onClose={() => setRatingJob(null)}
-        onSubmit={async () => { throw new Error("Customer rating is not available until the provider rating endpoint is confirmed."); }}
+        onSubmit={handleRateCustomer}
       />
 
       <ProviderCancellationModal
@@ -694,13 +725,23 @@ export default function HireAlerts() {
       {activeTab === "alert" ? (
         <div className="space-y-4 mt-1">
           {alerts.length > 0 ? (
-            alerts.map((alert) => (
-              <AlertsCard
-                key={alert.id}
-                alert={alert}
-                onViewDetails={handleViewAlert}
-              />
-            ))
+            alerts.map((alert) =>
+              isBeautyBooking(alert) ? (
+                <BeautyAlertsCard
+                  key={alert.id}
+                  alert={alert}
+                  onViewDetails={handleViewAlert}
+                />
+              ) : (
+                <AlertsCard
+                  key={alert.id}
+                  alert={alert}
+                  onViewDetails={handleViewAlert}
+                  onAcceptBooking={handleAcceptBooking}
+                  accepting={acceptingAlertId === alert.id}
+                />
+              ),
+            )
           ) : (
             <div className="text-center py-12 bg-white rounded-lg">
               <p className="text-gray-500 text-lg">No new alerts available</p>

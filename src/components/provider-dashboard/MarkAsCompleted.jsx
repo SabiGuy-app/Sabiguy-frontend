@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Loader2, X } from "lucide-react";
+import { Check, ChevronLeft, Loader2, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { markAsComplete } from "../../api/bookings";
 import { uploadCompletionPhoto } from "../../api/completionPhotos";
@@ -55,7 +55,7 @@ export default function MarkAsCompleted({ isOpen, onClose, job, onRefresh }) {
     setSent(false);
     setCompletedWithoutPhotos(false);
     onClose?.();
-    if (sent || completedWithoutPhotos) onRefresh?.();
+    if (isBeauty && (sent || completedWithoutPhotos)) onRefresh?.();
   };
 
   if (!isBeauty) {
@@ -64,25 +64,39 @@ export default function MarkAsCompleted({ isOpen, onClose, job, onRefresh }) {
       try {
         await markAsComplete(job.id);
         setSent(true);
+        onRefresh?.();
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to mark job as complete");
       } finally {
         setSubmitting(false);
       }
     };
-    if (sent) return <ReviewSent isOpen onClose={close} />;
-    return <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50/50 p-4">
-      <section className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-5">
-        <header className="flex items-center justify-between border-b border-gray-200 px-6 py-4"><h2 className="text-xl font-semibold">Review</h2><button type="button" onClick={close} aria-label="Close"><X size={20} /></button></header>
-        <h3 className="mt-4 text-lg font-semibold">Upload Supporting Documents</h3>
-        <p className="mt-2 text-gray-500">To mark this project completed, upload some of the work pictures for customer review</p>
-        <h3 className="mt-5 text-lg font-semibold">Work Photos</h3>
-        <p className="mb-4 mt-2 text-gray-500">Upload 2 - 3 photos of this completed project</p>
-        <UploadBox />
-        <textarea placeholder="Additional Notes (optional)" rows={4} className="my-5 w-full resize-none rounded-md border border-gray-300 bg-gray-50 px-4 py-3" />
-        <button type="button" onClick={completeLegacyJob} disabled={submitting} className="mb-5 w-full rounded-md bg-[#005823BF] p-3 text-white disabled:opacity-50">{submitting ? "Processing..." : "Mark as completed"}</button>
-      </section>
-    </div>;
+    return <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50/50 p-4">
+        <section className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-5">
+          <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={close} className="rounded-full p-1 transition-colors hover:bg-gray-100" aria-label="Back"><ChevronLeft className="h-5 w-5" /></button>
+              <h2 className="text-xl font-semibold">Review</h2>
+            </div>
+          </header>
+          <div>
+            <h3 className="text-lg font-semibold">Upload Supporting Documents</h3>
+            <p className="mt-2 text-gray-500">To mark this project completed, upload some of the work pictures for customer review</p>
+          </div>
+          <div className="mb-4 mt-5">
+            <h3 className="text-lg font-semibold">Work Photos</h3>
+            <p className="mt-2 text-gray-500">Upload 2 - 3 photos of this completed project</p>
+          </div>
+          <UploadBox />
+          <textarea placeholder="Additional Notes (optional)" rows={4} className="mb-5 mt-7 w-full resize-none rounded-md border border-gray-300 bg-gray-50 px-4 py-3 placeholder:text-black focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#8BC53F]" />
+          <button type="button" onClick={completeLegacyJob} disabled={submitting} className="mb-15 flex w-full items-center justify-center gap-2 rounded-md bg-[#005823BF] p-3 text-white hover:bg-[#005823] disabled:cursor-not-allowed disabled:opacity-50">
+            {submitting ? <><Loader2 className="h-4 w-4 animate-spin" />Processing...</> : "Mark as completed"}
+          </button>
+        </section>
+      </div>
+      <ReviewSent isOpen={sent} onClose={close} />
+    </>;
   }
 
   if (sent) return <ReviewSent isOpen compact onClose={close} />;

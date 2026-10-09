@@ -115,7 +115,7 @@ export default function BeautyServiceJourney() {
                 <p className="mt-5 text-xs text-gray-500">Pickup note</p>
                 <p className="mt-1 min-h-12 rounded border border-[#E3EAF0] bg-[#F7FAFC] p-2 text-xs text-gray-500">{booking?.pickupNote || "No additional notes provided."}</p>
                 <div className="mt-5 flex items-end justify-between gap-3">
-                  <div><p className="text-xs text-gray-600">Fare</p><p className="flex items-center gap-1 font-semibold text-[#303030]"><Banknote size={18} className="text-[#8BC53F]" />₦{Number(booking?.agreedPrice ?? booking?.serviceDetails?.price ?? 0).toLocaleString()}</p></div>
+                  <div><p className="text-xs text-gray-600">Service Fee</p><p className="flex items-center gap-1 font-semibold text-[#303030]"><Banknote size={18} className="text-[#8BC53F]" />₦{Number(booking?.agreedPrice ?? booking?.serviceDetails?.price ?? 0).toLocaleString()}</p></div>
                   {needsTravel && stage !== "arrived" && !started && <button onClick={() => { moveTo("arrived"); setModalOpen(true); }} className="rounded bg-[#337E52] px-4 py-2.5 text-sm font-medium text-white">Arrived at Destination</button>}
                 </div>
                 {!started && <button onClick={() => setModalOpen(true)} className="mt-5 w-full rounded bg-[#337E52] px-4 py-2.5 text-sm font-medium text-white">View Service Details</button>}

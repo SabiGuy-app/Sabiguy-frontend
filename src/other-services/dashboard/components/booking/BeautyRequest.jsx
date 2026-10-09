@@ -175,8 +175,17 @@ function BeautyBookingCard({ booking, onRefresh }) {
     isReviewExpanded || !shouldShowReadMore
       ? reviewText
       : `${reviewText.slice(0, 120).trim()}...`;
-  const pickupAddress = booking.address || "";
   const dropoffAddress = booking.address || "";
+  const providerAddress = bookingProvider.currentLocation?.address?.trim() || "";
+  const showRoute =
+    booking.pricingOption === "customer_address" &&
+    providerAddress &&
+    dropoffAddress.trim() &&
+    providerAddress.toLowerCase() !== dropoffAddress.trim().toLowerCase();
+  const serviceLocationAddress =
+    booking.pricingOption === "customer_address"
+      ? dropoffAddress
+      : providerAddress || dropoffAddress;
   const providerArea = provider.currentLocation?.address || provider.city || "";
   const canCancel = ["pending", "accepted"].includes(booking.status);
   const pickupNote = booking.note || "";
@@ -396,31 +405,41 @@ function BeautyBookingCard({ booking, onRefresh }) {
               <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <section>
                   <div className="rounded-xl border border-gray-200 bg-white px-8 py-5">
-                    <div className="relative space-y-7">
-                      <span className="absolute left-[9px] top-5 h-11 border-l border-dashed border-[#00582333]" />
-                      <div className="flex gap-4">
-                        <span className="relative z-10 mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E6EFE9]">
-                          <span className="h-2.5 w-2.5 rounded-full bg-[#005823]" />
-                        </span>
-                        <div>
-                          <p className="text-xs text-[#231F2080]">From</p>
-                          <p className="text-base text-[#231F20BF]">
-                            {pickupAddress}
-                          </p>
+                    {showRoute ? (
+                      <div className="relative space-y-7">
+                        <span className="absolute left-[9px] top-5 h-11 border-l border-dashed border-[#00582333]" />
+                        <div className="flex gap-4">
+                          <span className="relative z-10 mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E6EFE9]">
+                            <span className="h-2.5 w-2.5 rounded-full bg-[#005823]" />
+                          </span>
+                          <div>
+                            <p className="text-xs text-[#231F2080]">From</p>
+                            <p className="text-base text-[#231F20BF]">{providerAddress}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <span className="relative z-10 mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E6EFE9] text-[#005823]">
+                            <MapPin size={14} fill="currentColor" />
+                          </span>
+                          <div>
+                            <p className="text-xs text-[#231F2080]">To</p>
+                            <p className="text-base text-[#231F20BF]">{dropoffAddress}</p>
+                          </div>
                         </div>
                       </div>
+                    ) : (
                       <div className="flex gap-4">
-                        <span className="relative z-10 mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E6EFE9] text-[#005823]">
+                        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E6EFE9] text-[#005823]">
                           <MapPin size={14} fill="currentColor" />
                         </span>
                         <div>
-                          <p className="text-xs text-[#231F2080]">To</p>
+                          <p className="text-xs text-[#231F2080]">Service location</p>
                           <p className="text-base text-[#231F20BF]">
-                            {dropoffAddress}
+                            {serviceLocationAddress || "Location unavailable"}
                           </p>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className="mt-5 flex items-center gap-5">
@@ -497,7 +516,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                   </div>
 
                   <div className="mt-5">
-                    <p className="text-sm font-semibold text-[#231F20]">Fare</p>
+                    <p className="text-sm font-semibold text-[#231F20]">Service Fee</p>
                     <p className="mt-1 flex items-center gap-2 text-lg font-bold text-[#231F20]">
                       <span className="rounded-sm bg-[#8BC53F] px-1.5 py-0.5 text-xs text-white">
                         ₦

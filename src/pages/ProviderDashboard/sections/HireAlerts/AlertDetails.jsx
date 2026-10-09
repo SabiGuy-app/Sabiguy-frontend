@@ -1,274 +1,320 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import {
-  BadgeCheck,
-  Banknote,
-  CalendarDays,
-  Clock3,
+  Calendar,
   MapPin,
-  MapPinned,
+  ChevronLeft,
   Star,
-  Wrench,
-  X,
+  Settings,
+  Copy,
+  Check,
 } from "lucide-react";
-
-const SERVICE_PLACE_LABELS = {
-  customer_address: "Customer's Address",
-  provider_address: "Provider's Address",
-  walk_in: "Walk in Salon",
-};
-
-const ACCEPTANCE_WINDOW_MS = 3 * 60 * 1000;
-
-const getDeadline = (booking, alert) => {
-  const serverDeadline =
-    booking?.providerResponseDeadlineAt ||
-    booking?.responseDeadlineAt ||
-    booking?.acceptanceDeadlineAt ||
-    booking?.acceptanceExpiresAt ||
-    booking?.expiresAt ||
-    booking?.expiryDate ||
-    alert?.providerResponseDeadlineAt ||
-    alert?.acceptanceDeadlineAt;
-  if (serverDeadline) return serverDeadline;
-
-  const createdAt = booking?.createdAt || alert?.createdAt;
-  if (createdAt) {
-    const createdTimestamp = new Date(createdAt).getTime();
-    if (Number.isFinite(createdTimestamp)) {
-      return new Date(createdTimestamp + ACCEPTANCE_WINDOW_MS).toISOString();
-    }
-  }
-
-  const bookingId = booking?._id || alert?.id;
-  if (!bookingId || typeof window === "undefined") return null;
-  const storageKey = `provider_accept_deadline_${bookingId}`;
-  try {
-    const savedDeadline = window.localStorage.getItem(storageKey);
-    if (savedDeadline) return savedDeadline;
-    const fallbackDeadline = new Date(Date.now() + ACCEPTANCE_WINDOW_MS).toISOString();
-    window.localStorage.setItem(storageKey, fallbackDeadline);
-    return fallbackDeadline;
-  } catch {
-    return new Date(Date.now() + ACCEPTANCE_WINDOW_MS).toISOString();
-  }
-};
-
-const formatDateTime = (booking) => {
-  const dateValue = booking?.scheduleDate || booking?.startDate;
-  if (!dateValue) return "Not specified";
-
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return "Not specified";
-  const dateText = date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  const time = booking?.scheduledTime ||
-    date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }).replace(":00", "");
-
-  return `${dateText} - ${time}`;
-};
-
-const formatDuration = (booking) => {
-  const duration = booking?.estimatedDuration?.value;
-  const unit = booking?.estimatedDuration?.unit;
-  if (duration != null) return `${duration} ${unit || "minutes"}`;
-  return booking?.serviceDetails?.duration || booking?.duration || "Not specified";
-};
-
-const formatPrice = (value) =>
-  `₦${Number(value || 0).toLocaleString("en-NG")}`;
-
-function InfoRow({ icon, label, value }) {
-  return (
-    <div className="flex items-start gap-2.5">
-      {icon}
-      <div className="min-w-0">
-        <p className="text-[13px] font-semibold leading-4 text-[#333333]">{label}</p>
-        <p className="mt-0.5 break-words text-[13px] leading-5 text-[#777777]">{value || "Not specified"}</p>
-      </div>
-    </div>
-  );
-}
 
 export default function AlertDetailsModal({
   isOpen,
   onClose,
   alert: alertData,
   onAccept,
-  onDecline,
-  accepting = false,
 }) {
-  const booking = alertData?.originalData || {};
-  const customer = booking?.userId && typeof booking.userId === "object"
-    ? booking.userId
-    : {};
-  const customerName = customer.fullName ||
-    [customer.firstName, customer.lastName].filter(Boolean).join(" ") ||
-    alertData?.customerName ||
-    "Customer";
-  const avatar = customer.profilePicture || customer.avatar || customer.image || "/avatar.png";
-  const rating = customer.rating || booking.userRating || {};
-  const averageRating = Number(rating.average ?? rating.score);
-  const reviewCount = Number(rating.count ?? rating.reviewCount ?? 0);
-  const address = booking?.location?.address ||
-    booking?.pickupLocation?.address || alertData?.location || "Address unavailable";
-  const pricingOption = String(
-    booking?.serviceDetails?.pricingOption || booking?.pricingOption || "customer_address",
-  ).toLowerCase();
-  const serviceLocation = SERVICE_PLACE_LABELS[pricingOption] ||
-    pricingOption.replace(/_/g, " ");
-  const serviceName = booking?.serviceDetails?.serviceName ||
-    booking?.subCategory || alertData?.title || "Service request";
-  const serviceCost = booking?.agreedPrice ?? booking?.budget ?? booking?.totalAmount ?? alertData?.agreedPrice;
-  const note = booking?.additionalNote || booking?.notes || booking?.pickupNote || "";
-  const deadline = getDeadline(booking, alertData);
-  const [currentTime, setCurrentTime] = useState(Date.now());
-  const [actionError, setActionError] = useState("");
+  const [accepting, setAccepting] = useState(false);
+  const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen || !deadline) return undefined;
-    const timer = window.setInterval(() => setCurrentTime(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, [deadline, isOpen]);
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-  const timeRemaining = useMemo(() => {
-    if (!deadline) return null;
-    const seconds = Math.max(0, Math.floor((new Date(deadline).getTime() - currentTime) / 1000));
-    return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-  }, [currentTime, deadline]);
+  const formatDateTime = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
-  if (!isOpen || !alertData) return null;
+  if (!isOpen) return null;
 
-  const handleAccept = async () => {
-    setActionError("");
+  const handleAcceptBooking = async () => {
     try {
+      setAccepting(true);
+      setError(null);
       await onAccept?.(alertData);
-    } catch (error) {
-      setActionError(error?.response?.data?.message || error?.message || "Could not accept this request.");
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          "Failed to accept booking. Please try again.",
+      );
+    } finally {
+      setAccepting(false);
     }
   };
 
-  const handleDecline = () => {
-    setActionError("");
-    onDecline?.(alertData);
-  };
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-5"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose?.();
-      }}
-    >
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="hire-alert-details-title"
-        className="flex max-h-[min(92vh,720px)] w-full max-w-[660px] flex-col overflow-hidden rounded-xl bg-white shadow-xl"
-      >
-        <header className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4 sm:px-6">
-          <h2 id="hire-alert-details-title" className="text-base font-semibold text-[#252525]">
-            Service Details
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close service details"
-            className="rounded p-1 text-[#555555] transition hover:bg-gray-100"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </header>
+    <div>
+      <div className="fixed inset-0 bg-gray-50 bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white p-5 rounded-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto">
+          {/* Header */}
+          <div className="top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <h2 className="text-xl font-semibold">Service Details</h2>
+            </div>
+          </div>
 
-        <div className="min-h-0 overflow-y-auto px-5 py-5 sm:px-6">
-          <div className="flex items-center gap-3.5">
-            <img
-              src={avatar}
-              alt=""
-              className="h-16 w-16 shrink-0 rounded-full bg-gray-100 object-cover"
-              onError={(event) => { event.currentTarget.src = "/avatar.png"; }}
-            />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <h3 className="text-base font-semibold leading-5 text-[#292929]">{customerName}</h3>
-                {(customer.emailVerified || customer.kycVerified) && (
-                  <BadgeCheck className="h-4 w-4 text-[#43875B]" aria-label="Verified customer" />
-                )}
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                {error}
               </div>
-              {Number.isFinite(averageRating) && (
-                <div className="mt-1 flex items-center gap-1 text-xs text-[#777777]">
-                  <Star className="h-3.5 w-3.5 fill-[#F6B400] text-[#F6B400]" />
-                  <span className="font-medium text-[#333333]">{averageRating.toFixed(1)}</span>
-                  {reviewCount > 0 && <span>({reviewCount} reviews)</span>}
+            )}
+
+            {/* Service Title */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">{alertData.title}</h3>
+
+              {/* Provider Info */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={alertData.providerImage || "/avatar.png"}
+                    alt={alertData.providerName || "Provider"}
+                    className="w-18 h-18 rounded-full object-cover"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-[20px]">
+                        {alertData?.subCategory}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">4.6</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm">
+                      <MapPin className="w-4 h-4" />
+                      <span className="font-medium">{alertData.location}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="mt-1 flex min-w-0 items-center gap-1 text-xs text-[#888888]">
-                <MapPin className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{customer.city || customer.currentLocation?.address || address}</span>
+
+                {/* Status Badge */}
+                <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full border border-green-200">
+                  {alertData.status}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 mt-3 gap-3">
+                <button
+                  onClick={handleAcceptBooking}
+                  disabled={accepting}
+                  className="bg-[#005823] text-white font-semibold rounded-md text-sm border border-[#005823] px-2 py-2 hover:bg-[#003d19] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {accepting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Accepting...
+                    </>
+                  ) : (
+                    "Accept Offer"
+                  )}
+                </button>
+                <button
+                  className="text-[#005823] font-semibold rounded-md text-sm border border-[#005823] px-2 py-2 hover:bg-gray-50 transition-colors"
+                  disabled={accepting}
+                >
+                  Send Counter Offer
+                </button>
               </div>
             </div>
-          </div>
 
-          {actionError && (
-            <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {actionError}
+            {/* Booking Information */}
+            <div className="border-t border-gray-200">
+              <h4 className="font-semibold mb-3 mt-2">Booking Information</h4>
+              <div className="space-y-3">
+                {/* Booking ID */}
+                {alertData?.orderId && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#005823] text-[10px] font-bold">
+                        #
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <p className="text-sm font-medium text-gray-700">
+                        Booking ID
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-600 font-bold uppercase transition-all duration-300">
+                          {alertData.orderId}
+                        </p>
+                        <button
+                          onClick={() => handleCopy(alertData.fullOrderId)}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
+                          title="Copy Full Booking ID"
+                        >
+                          {copied ? (
+                            <Check size={14} className="text-green-500" />
+                          ) : (
+                            <Copy size={14} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Service Type */}
+                <div className="flex items-start gap-3">
+                  <Settings className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
+                  <div className="flex gap-2">
+                    <p className="text-sm font-medium text-gray-700">
+                      Service Type:
+                    </p>
+                    <p className="text-sm font-bold text-gray-600">
+                      {alertData.originalData?.serviceType?.toUpperCase() || "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Schedule Type */}
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
+                  <div className="flex gap-2">
+                    <p className="text-sm font-medium text-gray-700">
+                      Schedule Type:
+                    </p>
+                    <p className="text-sm font-bold text-gray-600">
+                      {alertData.originalData?.scheduleType?.toUpperCase() || "N/A"}
+                    </p>
+                  </div>
+                </div>
+                {(alertData.originalData?.scheduleDate || alertData.scheduleDate) && (
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Scheduled Date:
+                      </p>
+                      <p className="text-sm font-bold text-gray-600">
+                        {formatDateTime(
+                          alertData.originalData?.scheduleDate ||
+                            alertData.scheduleDate,
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Pickup Location */}
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Pickup Location:
+                    </p>
+                    <p className="text-sm font-bold text-gray-600">
+                      {alertData.location?.toUpperCase() || "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Dropoff Location */}
+                {alertData.originalData?.dropoffLocation?.address && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-red-500 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Dropoff Location:
+                      </p>
+                      <p className="text-sm font-bold text-gray-600">
+                        {alertData.originalData.dropoffLocation.address.toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Service Cost */}
+                <div className="flex items-start gap-3 border-b border-gray-200 pb-3">
+                  <svg
+                    className="w-5 h-5 text-[#2D6A3E] mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Service Cost
+                    </p>
+                    <p className="text-lg font-bold text-[#2D6A3E]">
+                      ₦
+                      {(
+                        alertData.originalData?.totalAmount ||
+                        alertData.originalData?.budget ||
+                        alertData.price ||
+                        0
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={handleAccept}
-              disabled={accepting}
-              className="min-h-10 rounded-md bg-[#347D53] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#286642] disabled:cursor-wait disabled:opacity-60"
-            >
-              {accepting ? "Accepting..." : "Accept Request"}
-            </button>
-            <button
-              type="button"
-              onClick={handleDecline}
-              disabled={accepting}
-              className="min-h-10 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-[#555555] transition hover:bg-gray-50 disabled:opacity-60"
-            >
-              Decline
-            </button>
-          </div>
+            {/* Project Description */}
+            {alertData.originalData?.description && (
+              <div>
+                <h4 className="font-semibold mb-3">Project Description</h4>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {alertData.originalData.description}
+                </p>
+              </div>
+            )}
 
-          <section className="mt-5 border-t border-gray-100 pt-4">
-            <div className="mb-3 flex items-start justify-between gap-4">
-              <h3 className="text-sm font-semibold text-[#333333]">Booking Information</h3>
-              <div className="shrink-0 text-right">
-                <p className="text-[11px] text-[#777777]">Time left to accept</p>
-                <p className="mt-0.5 text-xl font-bold leading-6 text-[#347D53]">
-                  {timeRemaining || "--:--"}
+            {/* Attached Photos Section */}
+            <div>
+              <h3 className="font-semibold mb-3">Attached photos</h3>
+              <p className="text-sm text-gray-500">No photos attached</p>
+            </div>
+
+            {/* Additional Notes */}
+            <div>
+              <h4 className="font-semibold mb-3">Additional notes</h4>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-gray-600">
+                  {alertData.originalData?.notes || "No additional notes"}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3.5">
-              <InfoRow icon={<Wrench className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Service" value={serviceName} />
-              <InfoRow icon={<MapPinned className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Service Location" value={serviceLocation} />
-              <InfoRow icon={<CalendarDays className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Start Date & Time" value={formatDateTime(booking)} />
-              <InfoRow icon={<Clock3 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Duration" value={formatDuration(booking)} />
-              <InfoRow icon={<MapPin className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Location" value={address} />
-              <InfoRow icon={<Banknote className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Service Cost" value={formatPrice(serviceCost)} />
-            </div>
-
-            <div className="mt-4">
-              <p className="mb-1.5 text-xs text-[#888888]">Additional note</p>
-              <div className="min-h-[56px] rounded-md border border-[#E4EAF0] bg-[#F7FAFC] px-3 py-2.5 text-xs leading-4 text-[#888888]">
-                {note || "No additional note"}
-              </div>
-            </div>
-          </section>
+            <p className="flex mt-6 items-center text-sm text-gray-600 justify-center">
+              💡 First come, first served - Accept quickly to secure this job!
+            </p>
+          </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
