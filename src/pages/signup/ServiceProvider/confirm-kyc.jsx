@@ -1,12 +1,12 @@
-import AuthLayout from "../../../components/layouts/layout";
-import Navbar from "../../../components/layouts/navbar";
-import Button from "../../../components/button";
+import AuthLayout from "./components/AuthLayout";
+import Navbar from "./components/Navbar";
+import Button from "./components/Button";
 import { FaChevronLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import axios from "axios";
-import InputField from "../../../components/InputField";
+import InputField from "./components/InputField";
 
 
 export default function ConfirmKyc({ onNext }) {

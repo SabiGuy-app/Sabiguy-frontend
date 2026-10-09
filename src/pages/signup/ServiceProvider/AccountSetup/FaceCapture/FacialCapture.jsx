@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
 import Webcam from "react-webcam";
 import AccountSetupLayout from "../layout";
-import Button from "../../../../../components/button";
+import Button from "../../components/Button";
 
 export default function FacialCapture({ onNext, onBack }) {
   const navigate = useNavigate();

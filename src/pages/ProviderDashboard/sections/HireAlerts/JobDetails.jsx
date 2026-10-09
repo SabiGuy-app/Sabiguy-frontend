@@ -10,12 +10,8 @@ import {
   Wrench,
   Copy,
   Check,
-  X,
-  MapPinned,
-  Clock3,
-  Banknote,
 } from "lucide-react";
-import { createElement, useEffect, useState } from "react";
+import { useState } from "react";
 import { canMessage } from "../../../../utils/chat.utils";
 import { useCallContext } from "../../../../components/shared/CallContext";
 
@@ -24,21 +20,9 @@ export default function JobDetailsModal({
   onClose,
   job,
   onMessageCustomer,
-  onShowNavigation,
-  onStartService,
-  onArrive,
-  onMarkAsCompleted,
-  onCancel,
 }) {
   const [copied, setCopied] = useState(false);
-  const [clockNow, setClockNow] = useState(Date.now());
   const callContext = useCallContext();
-
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const interval = setInterval(() => setClockNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, [isOpen]);
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
@@ -51,124 +35,6 @@ export default function JobDetailsModal({
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   if (!isOpen) return null;
-
-  const booking = job?.originalData || {};
-  const beautyJob = String(booking?.serviceType || "").toLowerCase().includes("beauty");
-  if (beautyJob) {
-    const serviceName = booking?.serviceDetails?.serviceName || booking?.subCategory || job?.title || "Service";
-    const servicePlace = {
-      walk_in: "Walk in Salon",
-      provider_address: "Provider's Address",
-      customer_address: "Customer's Address",
-    }[booking?.serviceDetails?.pricingOption] || "";
-    const scheduleDate = booking?.scheduleDate || booking?.startDate;
-    const scheduledAt = scheduleDate ? new Date(scheduleDate) : null;
-    const scheduledTime = booking?.scheduledTime || booking?.scheduleTime || "";
-    const timeMatch = scheduledTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (scheduledAt && timeMatch) {
-      let hours = Number(timeMatch[1]) % 12;
-      if (timeMatch[3].toUpperCase() === "PM") hours += 12;
-      scheduledAt.setHours(hours, Number(timeMatch[2]), 0, 0);
-    }
-    const secondsToStart = scheduledAt
-      ? Math.max(0, Math.floor((scheduledAt.getTime() - clockNow) / 1000))
-      : null;
-    const countdown = secondsToStart == null
-      ? "--:--:--"
-      : `${String(Math.floor(secondsToStart / 3600)).padStart(2, "0")}:${String(Math.floor((secondsToStart % 3600) / 60)).padStart(2, "0")}:${String(secondsToStart % 60).padStart(2, "0")}`;
-    const status = String(booking?.status || job?.status || "").toLowerCase().replace(/\s+/g, "_");
-    const inProgress = status === "in_progress";
-    const enRoute = status === "enroute_to_pickup";
-    const atDestination = status === "arrived_at_pickup";
-    const canStartJourney = ["paid_escrow", "paid_escrow_scheduled", "enroute_to_pickup", "arrived_at_pickup"].includes(status);
-    const isClosed = ["completed", "awaiting_confirmation", "waiting_confirmation", "user_accepted_completion", "funds_released", "cancelled", "booking_expired", "expired"].includes(status);
-    const needsTravel = booking?.serviceDetails?.pricingOption === "customer_address";
-    const actionLabel = inProgress ? "Mark as Completed" : atDestination || !needsTravel ? "Start Service" : enRoute ? "Arrived at Destination" : "En Route";
-    const handleAction = () => {
-      if (inProgress) onMarkAsCompleted?.(job);
-      else if (atDestination || !needsTravel) onStartService?.(job);
-      else if (enRoute) onArrive?.(job);
-      else onShowNavigation?.(job);
-    };
-    const customer = booking?.userId && typeof booking.userId === "object" ? booking.userId : {};
-    const serviceDate = scheduleDate && !Number.isNaN(new Date(scheduleDate).getTime())
-      ? new Date(scheduleDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-      : "Not provided";
-    const dateTime = [serviceDate, scheduledTime].filter(Boolean).join(" - ");
-    const duration = booking?.serviceDetails?.duration || (booking?.estimatedDuration?.value ? `${booking.estimatedDuration.value} ${booking.estimatedDuration.unit || "minutes"}` : "Not provided");
-    const details = [
-      { icon: Wrench, label: "Service", value: serviceName },
-      { icon: MapPinned, label: "Service Location", value: servicePlace || "Not provided" },
-      { icon: Calendar, label: "Start Date & Time", value: dateTime },
-      { icon: Clock3, label: "Duration", value: duration },
-      { icon: MapPin, label: "Location", value: booking?.location?.address || job?.location || "Not provided" },
-      { icon: Banknote, label: "Service Cost", value: `₦${Number(booking?.agreedPrice ?? booking?.serviceDetails?.price ?? booking?.budget ?? 0).toLocaleString()}` },
-    ];
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-3 sm:p-5">
-        <section role="dialog" aria-modal="true" aria-labelledby="beauty-job-details-title" className="relative max-h-[94dvh] w-full max-w-[520px] overflow-y-auto rounded-[8px] bg-white shadow-xl">
-          <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-5 py-3">
-            <h2 id="beauty-job-details-title" className="text-[14px] font-semibold text-[#252525]">Service Details</h2>
-            <button onClick={onClose} aria-label="Close service details" className="rounded p-1 text-gray-700 hover:bg-gray-100"><X size={18} /></button>
-          </header>
-
-          <div className="px-5 pb-5 pt-4 sm:px-6">
-            <div className="flex items-center gap-3">
-              <img src={customer?.profilePicture || "/avatar.png"} alt={customer?.fullName || "Customer"} className="h-12 w-12 rounded-full bg-gray-100 object-cover" />
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <p className="truncate text-[14px] font-semibold text-[#333]">{customer?.fullName || "Customer"}</p>
-                  {customer?.emailVerified && <Check className="h-3.5 w-3.5 text-[#438B66]" />}
-                </div>
-                {(customer?.rating?.average != null || customer?.location?.address) && (
-                  <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-[#888]">
-                    {customer?.rating?.average != null && <span><span className="text-[#F2B600]">★</span>{Number(customer.rating.average).toFixed(1)} ({customer?.rating?.count ?? 0} reviews)</span>}
-                    {customer?.location?.address && <span className="inline-flex items-center gap-0.5"><MapPin size={11} />{customer.location.address}</span>}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => callContext?.openCall?.({ booking, targetOverride: { targetId: customer?._id || booking?.userId, targetType: "buyer", targetName: customer?.fullName || "Customer" } })} className="flex h-9 items-center justify-center gap-2 rounded-[4px] border border-gray-200 text-[11px] text-[#777] hover:bg-gray-50"><PhoneCall className="h-3.5 w-3.5" />Call</button>
-              <button onClick={() => onMessageCustomer?.(job)} className="flex h-9 items-center justify-center gap-2 rounded-[4px] border border-gray-200 text-[11px] text-[#777] hover:bg-gray-50"><MessageCircle className="h-3.5 w-3.5" />Message</button>
-            </div>
-            {!isClosed && <button onClick={() => onCancel?.(job)} className="mt-2 w-full text-right text-[10px] font-medium text-red-600 hover:underline">Cancel Request</button>}
-
-            <div className="mt-3 flex items-start justify-between gap-3">
-              <h3 className="pt-1 text-[14px] font-semibold text-[#333]">Booking Information</h3>
-              {canStartJourney && <div className="shrink-0 text-right">
-                <p className="text-[10px] text-[#888]">Service Starts In:</p>
-                <p className="text-[21px] font-semibold leading-7 tabular-nums text-[#438B66]">{countdown}</p>
-              </div>}
-            </div>
-
-            <div className="mt-1 space-y-2.5">
-              {details.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-start gap-2">
-                  {createElement(Icon, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-[#438B66]" })}
-                  <div><p className="text-[11px] font-semibold leading-4 text-[#333]">{label}</p><p className="text-[11px] leading-4 text-[#777]">{value || "Not provided"}</p></div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3">
-              <p className="mb-1 text-[10px] text-[#888]">Additional note</p>
-              <div className="min-h-10 rounded-[4px] border border-gray-200 bg-[#F7FAFC] px-3 py-2 text-[10px] leading-4 text-[#888]">{booking?.pickupNote || "No additional notes provided."}</div>
-            </div>
-
-            {(canStartJourney || inProgress) && <button
-              onClick={handleAction}
-              className="mt-3 w-full rounded-[4px] bg-[#438B66] px-4 py-2.5 text-[11px] font-medium text-white hover:bg-[#347653]"
-            >
-              {actionLabel}
-            </button>}
-          </div>
-        </section>
-      </div>
-    );
-  }
 
   const formatDateTime = (value) => {
     if (!value) return "N/A";

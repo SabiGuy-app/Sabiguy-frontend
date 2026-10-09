@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import AccountSetupLayout from "./layout";
-import InputField from "../../../../components/InputField";
+import InputField from "../components/InputField";
 import { IoIosArrowBack } from "react-icons/io";
 import { trackEvent } from "../../../../services/analytics";
 

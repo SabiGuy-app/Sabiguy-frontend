@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Button from "../../../components/button";
+import Button from "./components/Button";
 import { useNavigate } from "react-router-dom";
 import { getUserByEmail } from "../../../api/auth";
 import { useAuthStore } from "../../../stores/auth.store";

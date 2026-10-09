@@ -1,20 +1,8 @@
 import { useState } from "react";
-import {
-  Calendar,
-  MapPin,
-  ChevronLeft,
-  Star,
-  Settings,
-  Copy,
-  Check,
-} from "lucide-react";
+import { Calendar, MapPin, ChevronLeft, Star, Settings, Copy, Check } from "lucide-react";
+import { acceptBookings } from "../../../../api/bookings";
 
-export default function AlertDetailsModal({
-  isOpen,
-  onClose,
-  alert: alertData,
-  onAccept,
-}) {
+export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, onAcceptSuccess }) {
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -25,34 +13,43 @@ export default function AlertDetailsModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const formatDateTime = (value) => {
-    if (!value) return "N/A";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "N/A";
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   if (!isOpen) return null;
+
+  console.log("📋 Alert details:", alert);
 
   const handleAcceptBooking = async () => {
     try {
       setAccepting(true);
       setError(null);
-      await onAccept?.(alertData);
+
+      console.log("Accepting booking:", alertData.id);
+
+      const response = await acceptBookings(alertData.id);
+
+      console.log(" Accept response:", response);
+
+      if (response.success) {
+        alert(" Booking accepted successfully!");
+
+        onClose();
+
+        if (onAcceptSuccess) {
+          onAcceptSuccess();
+        }
+      } else {
+        setError(response.message || "Failed to accept booking");
+      }
     } catch (err) {
-      setError(
+      console.error("Error accepting booking:", err);
+
+      const errorMessage =
         err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          "Failed to accept booking. Please try again.",
-      );
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to accept booking. Please try again.";
+
+      setError(errorMessage);
+      window.alert(` ${errorMessage}`);
     } finally {
       setAccepting(false);
     }
@@ -86,20 +83,20 @@ export default function AlertDetailsModal({
 
             {/* Service Title */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">{alertData.title}</h3>
+              <h3 className="text-lg font-semibold mb-4">{alert.title}</h3>
 
               {/* Provider Info */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <img
-                    src={alertData.providerImage || "/avatar.png"}
-                    alt={alertData.providerName || "Provider"}
+                    src={alert.providerImage || "/avatar.png"}
+                    alt={alert.providerName || "Provider"}
                     className="w-18 h-18 rounded-full object-cover"
                   />
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-[20px]">
-                        {alertData?.subCategory}
+                        {alert?.subCategory}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-sm">
@@ -108,14 +105,14 @@ export default function AlertDetailsModal({
                     </div>
                     <div className="flex items-center gap-1 text-sm">
                       <MapPin className="w-4 h-4" />
-                      <span className="font-medium">{alertData.location}</span>
+                      <span className="font-medium">{alert.location}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Status Badge */}
                 <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full border border-green-200">
-                  {alertData.status}
+                  {alert.status}
                 </span>
               </div>
 
@@ -184,11 +181,9 @@ export default function AlertDetailsModal({
                 <div className="flex items-start gap-3">
                   <Settings className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div className="flex gap-2">
-                    <p className="text-sm font-medium text-gray-700">
-                      Service Type:
-                    </p>
+                    <p className="text-sm font-medium text-gray-700">Service Type:</p>
                     <p className="text-sm font-bold text-gray-600">
-                      {alertData.originalData?.serviceType?.toUpperCase() || "N/A"}
+                      {alert.originalData?.serviceType?.toUpperCase() || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -197,54 +192,32 @@ export default function AlertDetailsModal({
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div className="flex gap-2">
-                    <p className="text-sm font-medium text-gray-700">
-                      Schedule Type:
-                    </p>
+                    <p className="text-sm font-medium text-gray-700">Schedule Type:</p>
                     <p className="text-sm font-bold text-gray-600">
-                      {alertData.originalData?.scheduleType?.toUpperCase() || "N/A"}
+                      {alert.originalData?.scheduleType?.toUpperCase() || "N/A"}
                     </p>
                   </div>
                 </div>
-                {(alertData.originalData?.scheduleDate || alertData.scheduleDate) && (
-                  <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Scheduled Date:
-                      </p>
-                      <p className="text-sm font-bold text-gray-600">
-                        {formatDateTime(
-                          alertData.originalData?.scheduleDate ||
-                            alertData.scheduleDate,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                )}
 
                 {/* Pickup Location */}
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
-                      Pickup Location:
-                    </p>
+                    <p className="text-sm font-medium text-gray-700">Pickup Location:</p>
                     <p className="text-sm font-bold text-gray-600">
-                      {alertData.location?.toUpperCase() || "N/A"}
+                      {alert.location?.toUpperCase() || "N/A"}
                     </p>
                   </div>
                 </div>
 
                 {/* Dropoff Location */}
-                {alertData.originalData?.dropoffLocation?.address && (
+                {alert.originalData?.dropoffLocation?.address && (
                   <div className="flex items-start gap-3">
                     <MapPin className="w-5 h-5 text-red-500 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Dropoff Location:
-                      </p>
+                      <p className="text-sm font-medium text-gray-700">Dropoff Location:</p>
                       <p className="text-sm font-bold text-gray-600">
-                        {alertData.originalData.dropoffLocation.address.toUpperCase()}
+                        {alert.originalData.dropoffLocation.address.toUpperCase()}
                       </p>
                     </div>
                   </div>
@@ -266,15 +239,13 @@ export default function AlertDetailsModal({
                     />
                   </svg>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
-                      Service Cost
-                    </p>
+                    <p className="text-sm font-medium text-gray-700">Service Cost</p>
                     <p className="text-lg font-bold text-[#2D6A3E]">
                       ₦
                       {(
-                        alertData.originalData?.totalAmount ||
-                        alertData.originalData?.budget ||
-                        alertData.price ||
+                        alert.originalData?.totalAmount ||
+                        alert.originalData?.budget ||
+                        alert.price ||
                         0
                       ).toLocaleString()}
                     </p>
@@ -284,11 +255,11 @@ export default function AlertDetailsModal({
             </div>
 
             {/* Project Description */}
-            {alertData.originalData?.description && (
+            {alert.originalData?.description && (
               <div>
                 <h4 className="font-semibold mb-3">Project Description</h4>
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  {alertData.originalData.description}
+                  {alert.originalData.description}
                 </p>
               </div>
             )}
@@ -304,7 +275,7 @@ export default function AlertDetailsModal({
               <h4 className="font-semibold mb-3">Additional notes</h4>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-gray-600">
-                  {alertData.originalData?.notes || "No additional notes"}
+                  {alert.originalData?.notes || "No additional notes"}
                 </p>
               </div>
             </div>
