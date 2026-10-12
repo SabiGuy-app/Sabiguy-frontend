@@ -122,7 +122,7 @@ const Confetti = ({ isActive }) => {
   }, [isActive]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
+    <div className="pointer-events-none fixed inset-0 z-[100] overflow-hidden">
       {confetti.map((piece) => (
         <div
           key={piece.id}
@@ -180,25 +180,21 @@ const JobCompletedCelebrationModal = ({
 
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"
+        className="fixed inset-0 z-[100] bg-slate-950/45 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-4">
         <div
           role="dialog"
           aria-modal="true"
           aria-label="Job completion confirmed"
-          className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full min-h-0 flex flex-col overflow-hidden shadow-2xl transform transition-all"
-          style={{
-            height: "min(640px, calc(100dvh - 24px))",
-            maxHeight: "calc(100vh - 24px)",
-          }}
+          className="flex max-h-[calc(100dvh-24px)] min-h-0 w-full max-w-[520px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)] transition-all sm:max-h-[calc(100dvh-32px)] sm:rounded-3xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Gradient Header */}
-          <div className="relative h-20 sm:h-36 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 overflow-hidden flex-shrink-0">
+          <div className="relative h-24 shrink-0 overflow-hidden bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 sm:h-28">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative">
                 {/* Animated glow circle */}
@@ -215,7 +211,7 @@ const JobCompletedCelebrationModal = ({
             {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 bg-white/30 hover:bg-white/50 text-white rounded-full transition-colors backdrop-blur-sm"
+              className="absolute right-3 top-3 rounded-full bg-white/30 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/50"
               aria-label="Close modal"
             >
               <X size={20} />
@@ -223,10 +219,10 @@ const JobCompletedCelebrationModal = ({
           </div>
 
           {/* Content */}
-          <div className="min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 sm:py-6 space-y-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6">
             {/* Title with Emoji */}
             <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
+              <h2 className="mb-2 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-xl font-bold leading-tight text-transparent sm:text-2xl">
                 {notification.title}
               </h2>
               <div className="flex items-center justify-center gap-2 text-sm font-semibold text-green-600">
@@ -237,23 +233,24 @@ const JobCompletedCelebrationModal = ({
             </div>
 
             {/* Message */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-3 sm:p-4 border border-green-200">
-              <p className="text-center text-gray-700 text-sm leading-relaxed">
+            <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-3 sm:p-4">
+              <p className="text-center text-sm leading-6 text-gray-700">
                 {notification.message}
               </p>
             </div>
 
-            {/* Highlight Box - Key Info */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-3 sm:p-4 border-2 border-amber-300 shadow-md">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-500">
+            {/* Key payment information */}
+            <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-3.5 shadow-sm">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500">
                     <TrendingUp size={18} className="text-white" />
-                  </div>
-                </div>
-                {/* <h3 className="text-sm font-bold text-amber-900">
-                  Bonus Earned!
-                </h3> */}
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-amber-900">
+                  Payment release
+                </h3>
+                <p className="mt-1 text-xs leading-5 text-amber-800">
+                  Your earnings will be available for withdrawal after 24 hours.
+                </p>
               </div>
               {/* <p className="text-xs text-amber-800">
                 🎁 You've earned a bonus for successfully completing this job!
@@ -327,10 +324,10 @@ const JobCompletedCelebrationModal = ({
             </div>
 
           </div>
-          <div className="flex-shrink-0 px-4 sm:px-6 py-3 border-t border-gray-100 bg-white">
+          <div className="shrink-0 border-t border-gray-100 bg-white px-4 py-3 sm:px-6">
             <button
               onClick={onClose}
-              className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+              className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-emerald-700 hover:shadow-lg"
             >
               <FiCheckCircle size={18} />
               Awesome! Dismiss

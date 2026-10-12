@@ -91,11 +91,11 @@ export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, o
                   <img
                     src={alert.providerImage || "/avatar.png"}
                     alt={alert.providerName || "Provider"}
-                    className="w-18 h-18 rounded-full object-cover"
+                    className="w-16 h-16 rounded-full object-cover"
                   />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-[20px]">
+                      <span className="font-semibold text-base">
                         {alert?.subCategory}
                       </span>
                     </div>
@@ -143,7 +143,7 @@ export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, o
 
             {/* Booking Information */}
             <div className="border-t border-gray-200">
-              <h4 className="font-semibold mb-3 mt-2">Booking Information</h4>
+              <h4 className="text-base font-semibold mb-3 mt-2">Booking Information</h4>
               <div className="space-y-3">
                 {/* Booking ID */}
                 {alertData?.orderId && (
@@ -240,7 +240,7 @@ export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, o
                   </svg>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Service Cost</p>
-                    <p className="text-lg font-bold text-[#2D6A3E]">
+                    <p className="text-sm font-semibold text-[#2D6A3E]">
                       ₦
                       {(
                         alert.originalData?.totalAmount ||

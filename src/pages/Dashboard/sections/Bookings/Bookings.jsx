@@ -1,4 +1,4 @@
-import BeautyRequest from "../../../../other-services/dashboard/components/booking/BeautyRequest";
+import { BeautyBookingCard } from "../../../../other-services/dashboard/components/booking/BeautyRequest";
 import { normalizeBeautyBooking } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
@@ -48,6 +48,29 @@ const isBeautyBooking = (booking) =>
     .trim()
     .toLowerCase()
     .replace(/-/g, "_") === "beauty_personal_care";
+
+const getBookingTimestamp = (booking) => {
+  const value =
+    booking?.createdAt ||
+    booking?.created_at ||
+    booking?.requestedAt ||
+    booking?.requestCreatedAt ||
+    booking?.updatedAt ||
+    booking?.date ||
+    booking?.scheduleDate;
+  const timestamp = Date.parse(value || "");
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
+const sortBookingsNewestFirst = (bookings) =>
+  bookings
+    .map((booking, index) => ({ booking, index }))
+    .sort((a, b) => {
+      const timestampDifference =
+        getBookingTimestamp(b.booking) - getBookingTimestamp(a.booking);
+      return timestampDifference || a.index - b.index;
+    })
+    .map(({ booking }) => booking);
 
 export default function Bookings() {
   const locationForTab = useLocation();
@@ -424,46 +447,50 @@ export default function Bookings() {
     originalData: booking,
   });
 
-  const filteredRequests = userBookings
-    .filter((booking) => !isBeautyBooking(booking))
-    .map(mapBookingToRequest)
-    .filter((request) => {
-      const status = request.status.toLowerCase();
-      if (statusFilter === "all") return true;
-      if (statusFilter === "active")
-        return [
-          "in progress",
-          "enroute to pickup",
-          "arrived at pickup",
-          "enroute to dropoff",
-          "arrived at dropoff",
-          "completed",
-        ].includes(status);
-      if (statusFilter === "pending")
-        return [
-          "payment pending",
-          "awaiting provider acceptance",
-          "provider selected",
-        ].includes(status);
-      if (statusFilter === "completed")
-        return [
-          // "completed",
-          "funds released",
-          "user accepted completion",
-        ].includes(status);
-      return false;
-    });
-  const visibleBeautyBookings = userBookings
-    .filter(isBeautyBooking)
-    .map(normalizeBeautyBooking)
-    .filter((booking) => {
-      if (statusFilter === "pending")
-        return ["pending", "accepted"].includes(booking.status);
-      if (statusFilter === "active")
-        return ["active", "review"].includes(booking.status);
-      if (statusFilter === "completed") return booking.status === "completed";
-      return true;
-    });
+  const matchesLogisticsFilter = (status) => {
+    if (statusFilter === "all") return true;
+    if (statusFilter === "active")
+      return [
+        "in progress",
+        "enroute to pickup",
+        "arrived at pickup",
+        "enroute to dropoff",
+        "arrived at dropoff",
+        "completed",
+      ].includes(status);
+    if (statusFilter === "pending")
+      return [
+        "payment pending",
+        "awaiting provider acceptance",
+        "provider selected",
+      ].includes(status);
+    if (statusFilter === "completed")
+      return ["funds released", "user accepted completion"].includes(status);
+    return false;
+  };
+
+  const matchesBeautyFilter = (status) => {
+    if (statusFilter === "pending") return ["pending", "accepted"].includes(status);
+    if (statusFilter === "active") return ["active", "review"].includes(status);
+    if (statusFilter === "completed") return status === "completed";
+    return true;
+  };
+
+  const visibleUserBookings = sortBookingsNewestFirst(userBookings).flatMap(
+    (booking) => {
+      if (isBeautyBooking(booking)) {
+        const normalizedBooking = normalizeBeautyBooking(booking);
+        return matchesBeautyFilter(normalizedBooking.status)
+          ? [{ type: "beauty", booking: normalizedBooking }]
+          : [];
+      }
+
+      const request = mapBookingToRequest(booking);
+      return matchesLogisticsFilter(request.status.toLowerCase())
+        ? [{ type: "logistics", booking: request }]
+        : [];
+    },
+  );
 
   const handleViewDetails = (request) => {
     setSelectedRequest(request);
@@ -1009,14 +1036,6 @@ export default function Bookings() {
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
             />
-            <BeautyRequest
-              filter={statusFilter}
-              sourceBookings={userBookings}
-              loading={bookingsLoading}
-              loadError={bookingsError}
-              onRefresh={refreshBookings}
-            />
-
             {/* ✅ Loading */}
             {bookingsLoading && (
               <div className="text-center py-12 bg-white rounded-lg">
@@ -1035,20 +1054,26 @@ export default function Bookings() {
             {/* ✅ Real bookings list */}
             {!bookingsLoading && !bookingsError && (
               <div className="space-y-4 w-full">
-                {filteredRequests.length > 0 || visibleBeautyBookings.length > 0 ? (
-                  <>
-                    {filteredRequests.map((request) => (
-                    <RequestCard
-                      key={request.id}
-                      request={request}
-                      onViewDetails={handleViewDetails}
-                      onTrackProvider={handleTrackProvider}
-                      onMessageProvider={handleMessageProvider}
-                      onBookingCancelled={refreshBookings}
-                      onStatusUpdate={refreshBookings}
-                    />
-                    ))}
-                  </>
+                {visibleUserBookings.length > 0 ? (
+                  visibleUserBookings.map(({ type, booking }) =>
+                    type === "beauty" ? (
+                      <BeautyBookingCard
+                        key={booking.id}
+                        booking={booking}
+                        onRefresh={refreshBookings}
+                      />
+                    ) : (
+                      <RequestCard
+                        key={booking.id}
+                        request={booking}
+                        onViewDetails={handleViewDetails}
+                        onTrackProvider={handleTrackProvider}
+                        onMessageProvider={handleMessageProvider}
+                        onBookingCancelled={refreshBookings}
+                        onStatusUpdate={refreshBookings}
+                      />
+                    ),
+                  )
                 ) : (
                   <div className="text-center py-12 bg-white rounded-lg">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -52,7 +52,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
             onClick={onClose}
             className="text-gray-600 hover:text-gray-900"
           >
-            <FiChevronLeft size={24} />
+            <FiChevronLeft size={20} />
           </button>
           <h2 className="text-xl font-semibold text-gray-900">
             Service Details
@@ -90,7 +90,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               />
                <div className="flex-grow w-full text-center lg:text-left">
                   <div className="flex items-center justify-center lg:justify-start gap-2 mb-1">
-                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
+                    <h2 className="text-base font-semibold text-gray-900 capitalize">
                       {request.providerName ?? "Provider"}
                     </h2>
                     <span className="text-[#8BC53F]">
@@ -129,9 +129,9 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                <div className="flex justify-between lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto mt-3 lg:mt-0">
                   <div className="flex flex-col items-center flex-1 md:flex-none">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full">
-                      <Award className="w-[24px] h-[24px] text-[#005823]" />
+                      <Award className="w-5 h-5 text-[#005823]" />
                     </div>
-                    <div className="text-[18px] font-semibold text-[#231F20]">
+                    <div className="text-base font-semibold text-[#231F20]">
                       {request.jobsDone ?? 0}
                     </div>
                     <div className="text-[12px] text-[#231F2080] text-center">
@@ -140,9 +140,9 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   </div>
                   <div className="flex flex-col items-center">
                     <div className="flex items-center justify-center w-10 h-10">
-                      <Clock className="w-[24px] h-[24px] text-[#231F20BF]" />
+                      <Clock className="w-5 h-5 text-[#231F20BF]" />
                     </div>
-                    <div className="text-[18px] font-semibold text-[#231F20]">
+                    <div className="text-base font-semibold text-[#231F20]">
                       {"< 3 Mins"}
                     </div>
                     <div className="text-[12px] text-[#231F2080] text-center">
@@ -173,7 +173,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   }
                   className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <PhoneCall className="w-4 h-4 text-gray-600" />
+                  <PhoneCall className="w-5 h-5 text-gray-600" />
                   <span className="font-medium text-gray-700">Call</span>
                 </button>
                 {request.status?.toLowerCase() !== "cancelled" && (
@@ -181,7 +181,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     onClick={handleMessageProvider}
                     className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <MessageCircle className="w-4 h-4 text-gray-600" />
+                    <MessageCircle className="w-5 h-5 text-gray-600" />
                     <span className="font-medium text-gray-700">Message</span>
                   </button>
                 )}
@@ -205,7 +205,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
 
           <div>
             <div className="border border-[#231F201A] px-6 py-6 rounded-[16px] space-y-6">
-              <h3 className="text-[22px] font-bold text-[#231F20]">
+              <h3 className="text-base font-semibold text-[#231F20]">
                 Job Summary
               </h3>
 
@@ -215,10 +215,10 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     <div className="w-3 h-3 bg-[#005823] rounded-full" />
                   </div>
                   <div>
-                    <div className="font-semibold text-[15px] text-[#231F20]">
+                    <div className="text-sm font-semibold text-[#231F20]">
                       Pickup Location
                     </div>
-                    <div className="text-[15px] text-[#231F20BF]">
+                    <div className="text-sm text-[#231F20BF]">
                       {request.pickupAddress || "—"}
                     </div>
                   </div>
@@ -229,10 +229,10 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     <MapPin className="w-5 h-5 text-[#005823]" />
                   </div>
                   <div>
-                    <div className="font-semibold text-[15px] text-[#231F20]">
+                    <div className="text-sm font-semibold text-[#231F20]">
                       Dropoff Location
                     </div>
-                    <div className="text-[15px] text-[#231F20BF]">
+                    <div className="text-sm text-[#231F20BF]">
                       {request.dropoffAddress || "—"}
                     </div>
                   </div>
@@ -243,10 +243,10 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     <img src={distance} alt="" />
                   </div>
                   <div>
-                    <div className="font-semibold text-[15px] text-[#231F20]">
+                    <div className="text-sm font-semibold text-[#231F20]">
                       Distance
                     </div>
-                    <div className="text-[15px] text-[#231F20BF]">
+                    <div className="text-sm text-[#231F20BF]">
                       {request.distance || "—"}
                     </div>
                   </div>
@@ -269,10 +269,10 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-semibold text-[15px] text-[#231F20]">
+                    <div className="text-sm font-semibold text-[#231F20]">
                       Fare
                     </div>
-                    <div className="text-[15px] text-[#231F20BF]">
+                    <div className="text-sm text-[#231F20BF]">
                       {(request.totalAmount ??
                       request.total_amount ??
                       request.amount ??
@@ -305,10 +305,10 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                       <div className="flex gap-3">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" />
                         <div>
-                          <div className="font-semibold text-[15px] text-[#231F20]">
+                          <div className="text-sm font-semibold text-[#231F20]">
                             Service Charge (10%)
                           </div>
-                          <div className="text-[15px] text-[#231F20BF]">
+                          <div className="text-sm text-[#231F20BF]">
                             ₦{fee.toLocaleString()}
                           </div>
                         </div>
@@ -322,21 +322,21 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               {/* Description */}
               {request.description && (
                 <div className="mt-4">
-                  <h4 className="text-[18px] font-semibold text-[#231F20] mb-2">
+                  <h4 className="text-base font-semibold text-[#231F20] mb-2">
                     Description
                   </h4>
-                  <p className="text-[15px] text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <p className="text-sm text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
                     {request.description}
                   </p>
                 </div>
               )}
 
               <div>
-                <h4 className="text-[18px] font-semibold text-[#231F20] mb-3">
+                <h4 className="text-base font-semibold text-[#231F20] mb-3">
                   Pickup notes{" "}
                   <span className="text-[14px] text-[#231F20BF]"></span>
                 </h4>
-                <p className="text-[15px] text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <p className="text-sm text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
                   {request.pickupNotes || "No pickup notes provided."}
                 </p>
               </div>
