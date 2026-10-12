@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
-import Button from "../../../../components/button";
+import Button from "../components/Button";
 import { FaCamera, FaExclamationCircle } from "react-icons/fa";
 import { IoIosArrowBack } from "react-icons/io";
 import { LuRefreshCw } from "react-icons/lu";

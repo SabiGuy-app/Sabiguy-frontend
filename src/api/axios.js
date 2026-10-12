@@ -34,7 +34,7 @@ api.interceptors.response.use(
   async (err) => {
     const original = err.config;
 
-    if (err.response?.status === 401 && !original._retry) {
+    if (err.response?.status === 401 && original && !original._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -57,7 +57,9 @@ api.interceptors.response.use(
           localStorage.getItem("refreshToken");
 
         if (!refreshToken) {
-          throw new Error("No refresh token available");
+          const error = new Error("No refresh token available");
+          error.code = "NO_REFRESH_TOKEN";
+          throw error;
         }
 
         const { data } = await axios.post(
@@ -70,8 +72,12 @@ api.interceptors.response.use(
           },
         );
 
-        const newAccessToken = data.accessToken || data.token;
-        const newRefreshToken = data.refreshToken;
+        const refreshed = data?.data?.data || data?.data || data;
+        const newAccessToken = refreshed?.accessToken || refreshed?.token;
+        const newRefreshToken = refreshed?.refreshToken;
+        if (!newAccessToken) {
+          throw new Error("Session refresh did not return an access token");
+        }
 
         // Update tokens in store and localStorage
         useAuthStore.getState().setToken(newAccessToken);
@@ -91,6 +97,14 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         isRefreshing = false;
+
+        const refreshRejected = [400, 401, 403].includes(refreshError?.response?.status);
+        if (
+          original.preserveSessionOnRefreshFailure ||
+          (!refreshRejected && refreshError?.code !== "NO_REFRESH_TOKEN")
+        ) {
+          return Promise.reject(refreshError);
+        }
 
         // Force logout on refresh failure
         useAuthStore.getState().logout();

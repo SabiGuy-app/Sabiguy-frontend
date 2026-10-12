@@ -130,6 +130,9 @@ export default function NotificationDrawer({
             : undefined,
           page: 1,
           limit: 20,
+          startDate: null,
+          timeWindow: null,
+          maxDistanceKm: null,
         });
 
         const bookingData = bookingResponse.data || bookingResponse;

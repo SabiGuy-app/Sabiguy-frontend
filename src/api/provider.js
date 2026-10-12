@@ -37,12 +37,17 @@ export const cancelBooking = async (bookingId, reason = "") => {
   return data;
 };
 
+<<<<<<< HEAD
 export const declineBooking = async (bookingId) => {
   const { data } = await api.patch(
     `/provider/bookings/${bookingId}/decline`,
     {},
   );
   trackEvent("booking_declined", { booking_id: bookingId });
+=======
+export const rateUser = async (bookingId, rating) => {
+  const { data } = await api.post(`/provider/bookings/${bookingId}/rate-user`, rating);
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
   return data;
 };
 
@@ -66,7 +71,9 @@ export const getWalletBalance = async (options = {}) => {
   const url = options.bustCache
     ? `/wallet/balance?t=${Date.now()}`
     : "/wallet/balance";
-  const { data } = await api.get(url);
+  const { data } = await api.get(url, {
+    preserveSessionOnRefreshFailure: options.preserveSessionOnRefreshFailure,
+  });
   return data;
 };
 
@@ -152,6 +159,11 @@ export const updateProviderWorkVisuals = async (visualsData) => {
   return data;
 };
 
+export const updateProviderServiceDetails = async (serviceDetails) => {
+  const { data } = await api.patch("/provider/service-details", serviceDetails);
+  return data;
+};
+
 export const updateProviderLocation = async (locationData) => {
   const { data } = await api.put("/provider/location", locationData);
   return data;
@@ -167,8 +179,15 @@ export const getAllProviders = async () => {
   return data;
 };
 
+export const getProviderDirectory = async (params = {}) => {
+  const { data } = await api.get("/provider/all", { params });
+  return data;
+};
+
 export const getProviderReviews = async (providerId) => {
-  const { data } = await api.get(`/provider/${providerId}/reviews`);
+  const { data } = await api.get("/provider/reviews", {
+    params: providerId ? { providerId } : {},
+  });
   return data;
 };
 

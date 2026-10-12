@@ -1,21 +1,8 @@
 import { useState } from "react";
-import {
-  Calendar,
-  MapPin,
-  ChevronLeft,
-  Star,
-  Settings,
-  Copy,
-  Check,
-} from "lucide-react";
+import { Calendar, MapPin, ChevronLeft, Star, Settings, Copy, Check } from "lucide-react";
 import { acceptBookings } from "../../../../api/bookings";
 
-export default function AlertDetailsModal({
-  isOpen,
-  onClose,
-  alert: alertData,
-  onAcceptSuccess,
-}) {
+export default function AlertDetailsModal({ isOpen, onClose, alert: alertData, onAcceptSuccess }) {
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -24,20 +11,6 @@ export default function AlertDetailsModal({
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const formatDateTime = (value) => {
-    if (!value) return "N/A";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "N/A";
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
   };
 
   if (!isOpen) return null;
@@ -118,11 +91,11 @@ export default function AlertDetailsModal({
                   <img
                     src={alert.providerImage || "/avatar.png"}
                     alt={alert.providerName || "Provider"}
-                    className="w-18 h-18 rounded-full object-cover"
+                    className="w-16 h-16 rounded-full object-cover"
                   />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-[20px]">
+                      <span className="font-semibold text-base">
                         {alert?.subCategory}
                       </span>
                     </div>
@@ -170,7 +143,7 @@ export default function AlertDetailsModal({
 
             {/* Booking Information */}
             <div className="border-t border-gray-200">
-              <h4 className="font-semibold mb-3 mt-2">Booking Information</h4>
+              <h4 className="text-base font-semibold mb-3 mt-2">Booking Information</h4>
               <div className="space-y-3">
                 {/* Booking ID */}
                 {alertData?.orderId && (
@@ -208,9 +181,7 @@ export default function AlertDetailsModal({
                 <div className="flex items-start gap-3">
                   <Settings className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div className="flex gap-2">
-                    <p className="text-sm font-medium text-gray-700">
-                      Service Type:
-                    </p>
+                    <p className="text-sm font-medium text-gray-700">Service Type:</p>
                     <p className="text-sm font-bold text-gray-600">
                       {alert.originalData?.serviceType?.toUpperCase() || "N/A"}
                     </p>
@@ -221,38 +192,18 @@ export default function AlertDetailsModal({
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div className="flex gap-2">
-                    <p className="text-sm font-medium text-gray-700">
-                      Schedule Type:
-                    </p>
+                    <p className="text-sm font-medium text-gray-700">Schedule Type:</p>
                     <p className="text-sm font-bold text-gray-600">
                       {alert.originalData?.scheduleType?.toUpperCase() || "N/A"}
                     </p>
                   </div>
                 </div>
-                {(alert.originalData?.scheduleDate || alert.scheduleDate) && (
-                  <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Scheduled Date:
-                      </p>
-                      <p className="text-sm font-bold text-gray-600">
-                        {formatDateTime(
-                          alert.originalData?.scheduleDate ||
-                            alert.scheduleDate,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                )}
 
                 {/* Pickup Location */}
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
-                      Pickup Location:
-                    </p>
+                    <p className="text-sm font-medium text-gray-700">Pickup Location:</p>
                     <p className="text-sm font-bold text-gray-600">
                       {alert.location?.toUpperCase() || "N/A"}
                     </p>
@@ -264,9 +215,7 @@ export default function AlertDetailsModal({
                   <div className="flex items-start gap-3">
                     <MapPin className="w-5 h-5 text-red-500 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Dropoff Location:
-                      </p>
+                      <p className="text-sm font-medium text-gray-700">Dropoff Location:</p>
                       <p className="text-sm font-bold text-gray-600">
                         {alert.originalData.dropoffLocation.address.toUpperCase()}
                       </p>
@@ -290,10 +239,8 @@ export default function AlertDetailsModal({
                     />
                   </svg>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
-                      Service Cost
-                    </p>
-                    <p className="text-lg font-bold text-[#2D6A3E]">
+                    <p className="text-sm font-medium text-gray-700">Service Cost</p>
+                    <p className="text-sm font-semibold text-[#2D6A3E]">
                       ₦
                       {(
                         alert.originalData?.totalAmount ||

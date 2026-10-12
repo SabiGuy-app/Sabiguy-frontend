@@ -1,11 +1,11 @@
 import AccountSetupLayout from "./layout";
-import Button from "../../../../components/button";
-import InputField from "../../../../components/InputField";
+import Button from "../components/Button";
+import InputField from "../components/InputField";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Formik, ErrorMessage } from "formik";
 import { PersonalInfoSchema } from "../schema";
-import CoverageRadius from "../../../../components/Coverage";
+import CoverageRadius from "../components/CoverageRadius";
 import axios from "axios";
 import { trackEvent } from "../../../../services/analytics";
 import { IoIosArrowBack } from "react-icons/io";

@@ -1,5 +1,5 @@
-import BeautyRequest from "../../../../other-services/dashboard/components/booking/BeautyRequest";
-import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
+import { BeautyBookingCard } from "../../../../other-services/dashboard/components/booking/BeautyRequest";
+import { normalizeBeautyBooking } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
@@ -43,9 +43,37 @@ const vehicleOptions = (service) => {
   ];
 };
 
+const isBeautyBooking = (booking) =>
+  String(booking?.serviceType || "")
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, "_") === "beauty_personal_care";
+
+const getBookingTimestamp = (booking) => {
+  const value =
+    booking?.createdAt ||
+    booking?.created_at ||
+    booking?.requestedAt ||
+    booking?.requestCreatedAt ||
+    booking?.updatedAt ||
+    booking?.date ||
+    booking?.scheduleDate;
+  const timestamp = Date.parse(value || "");
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
+const sortBookingsNewestFirst = (bookings) =>
+  bookings
+    .map((booking, index) => ({ booking, index }))
+    .sort((a, b) => {
+      const timestampDifference =
+        getBookingTimestamp(b.booking) - getBookingTimestamp(a.booking);
+      return timestampDifference || a.index - b.index;
+    })
+    .map(({ booking }) => booking);
+
 export default function Bookings() {
   const locationForTab = useLocation();
-  const sampleBooking = useBeautyBookingStore((state) => state.booking);
   const [activeTab, setActiveTab] = useState(() =>
     new URLSearchParams(locationForTab.search).get("tab") === "requests"
       ? "requests"
@@ -424,6 +452,7 @@ export default function Bookings() {
     originalData: booking,
   });
 
+<<<<<<< HEAD
   const filteredRequests = userBookings
     .map(mapBookingToRequest)
     .filter((request) => {
@@ -454,6 +483,52 @@ export default function Bookings() {
         ].includes(status);
       return false;
     });
+=======
+  const matchesLogisticsFilter = (status) => {
+    if (statusFilter === "all") return true;
+    if (statusFilter === "active")
+      return [
+        "in progress",
+        "enroute to pickup",
+        "arrived at pickup",
+        "enroute to dropoff",
+        "arrived at dropoff",
+        "completed",
+      ].includes(status);
+    if (statusFilter === "pending")
+      return [
+        "payment pending",
+        "awaiting provider acceptance",
+        "provider selected",
+      ].includes(status);
+    if (statusFilter === "completed")
+      return ["funds released", "user accepted completion"].includes(status);
+    return false;
+  };
+
+  const matchesBeautyFilter = (status) => {
+    if (statusFilter === "pending") return ["pending", "accepted"].includes(status);
+    if (statusFilter === "active") return ["active", "review"].includes(status);
+    if (statusFilter === "completed") return status === "completed";
+    return true;
+  };
+
+  const visibleUserBookings = sortBookingsNewestFirst(userBookings).flatMap(
+    (booking) => {
+      if (isBeautyBooking(booking)) {
+        const normalizedBooking = normalizeBeautyBooking(booking);
+        return matchesBeautyFilter(normalizedBooking.status)
+          ? [{ type: "beauty", booking: normalizedBooking }]
+          : [];
+      }
+
+      const request = mapBookingToRequest(booking);
+      return matchesLogisticsFilter(request.status.toLowerCase())
+        ? [{ type: "logistics", booking: request }]
+        : [];
+    },
+  );
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
 
   const handleViewDetails = (request) => {
     setSelectedRequest(request);
@@ -586,27 +661,25 @@ export default function Bookings() {
                 {successMessage}
               </div>
             )}
-            <input type="hidden" name="jobTitle" value="transport" />
             <div id="booking-category">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Select work category
-              </label>
-              <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md text-gray-700 flex items-center justify-between">
-                <span>Transport &amp; Logistics</span>
-                <svg
-                  className="w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
+              <InputField
+                name="jobTitle"
+                label="Select work category"
+                select
+                singleChevron
+                options={[
+                  { label: "Transport & Logistics", value: "transport" },
+                  { label: "Beauty & Personal Care", value: "beauty_personal_care" },
+                ]}
+                value={formik.values.jobTitle}
+                onChange={(option) => {
+                  if (option.value === "beauty_personal_care") {
+                    navigate("/dashboard/categories/beauty-personal-care");
+                  } else {
+                    formik.setFieldValue("jobTitle", option.value);
+                  }
+                }}
+              />
             </div>
             <div>
               <InputField
@@ -1001,8 +1074,6 @@ export default function Bookings() {
               activeFilter={statusFilter}
               onFilterChange={setStatusFilter}
             />
-            <BeautyRequest filter={statusFilter} />
-
             {/* ✅ Loading */}
             {bookingsLoading && (
               <div className="text-center py-12 bg-white rounded-lg">
@@ -1021,18 +1092,26 @@ export default function Bookings() {
             {/* ✅ Real bookings list */}
             {!bookingsLoading && !bookingsError && (
               <div className="space-y-4 w-full">
-                {filteredRequests.length > 0 ? (
-                  filteredRequests.map((request) => (
-                    <RequestCard
-                      key={request.id}
-                      request={request}
-                      onViewDetails={handleViewDetails}
-                      onTrackProvider={handleTrackProvider}
-                      onMessageProvider={handleMessageProvider}
-                      onBookingCancelled={refreshBookings}
-                      onStatusUpdate={refreshBookings}
-                    />
-                  ))
+                {visibleUserBookings.length > 0 ? (
+                  visibleUserBookings.map(({ type, booking }) =>
+                    type === "beauty" ? (
+                      <BeautyBookingCard
+                        key={booking.id}
+                        booking={booking}
+                        onRefresh={refreshBookings}
+                      />
+                    ) : (
+                      <RequestCard
+                        key={booking.id}
+                        request={booking}
+                        onViewDetails={handleViewDetails}
+                        onTrackProvider={handleTrackProvider}
+                        onMessageProvider={handleMessageProvider}
+                        onBookingCancelled={refreshBookings}
+                        onStatusUpdate={refreshBookings}
+                      />
+                    ),
+                  )
                 ) : (
                   <div className="text-center py-12 bg-white rounded-lg">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1051,9 +1130,7 @@ export default function Bookings() {
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {sampleBooking
-                        ? "No other requests found"
-                        : "No requests found"}
+                      No requests found
                     </h3>
                     <p className="text-gray-600">
                       {userBookings.length === 0

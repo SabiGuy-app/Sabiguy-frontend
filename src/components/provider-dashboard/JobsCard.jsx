@@ -1,12 +1,4 @@
-import {
-  MapPin,
-  Clock,
-  Star,
-  MessageCircle,
-  Copy,
-  Check,
-  PhoneCall,
-} from "lucide-react";
+import { MapPin, Clock, Star, MessageCircle, Copy, Check, PhoneCall } from "lucide-react";
 import { useState } from "react";
 import { canMessage, canProviderCancel } from "../../utils/chat.utils";
 import { useCallContext } from "../shared/CallContext";
@@ -70,7 +62,6 @@ export default function JobsCard({
       completed: "bg-green-100 text-green-700 border-green-200",
       cancelled: "bg-red-100 text-red-700 border-red-200",
       pending: "bg-gray-100 text-gray-700 border-gray-200",
-      expired: "bg-red-100 text-red-700 border-red-200",
     };
 
     const normalized = String(status || "")
@@ -89,6 +80,7 @@ export default function JobsCard({
     job?.dropoffLocation?.address ||
     job?.originalData?.dropoffLocation?.address ||
     "N/A";
+<<<<<<< HEAD
 
   const scheduleDate = job?.scheduleDate || job?.originalData?.scheduleDate;
   const amount = job?.BookingPrice || job?.originalData?.BookingPrice || 0;
@@ -99,6 +91,12 @@ export default function JobsCard({
   const riderReceives =
     job?.RiderReceives || job?.originalData?.RiderReceives || 0;
 
+=======
+  const amount = job?.BookingPrice || job?.originalData?.BookingPrice || 0;
+  const platformFee =
+    job?.originalData?.pricingBreakdown?.driverCommission || job?.originalData?.pricingBreakdown?.originalProviderCommission || 0;
+  const riderReceives = job?.RiderReceives || job?.originalData?.RiderReceives || 0;
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
   const shouldShowNavigation =
     normalizedStatus === "paid_escrow" ||
     normalizedStatus === "in_progress" ||
@@ -127,13 +125,13 @@ export default function JobsCard({
   ].includes(bookingStatus);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
       <div className="flex flex-col sm:flex-row items-start gap-4">
         <div className="flex-1 w-full">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px] items-start">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-base font-semibold leading-5 text-gray-900">
                   {formatTitle(job?.title)}
                 </h3>
               </div>
@@ -144,9 +142,7 @@ export default function JobsCard({
                 </span>
                 {job?.orderId && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-gray-500">
-                      #{job.orderId}
-                    </span>
+                    <span className="text-xs font-bold text-gray-500">#{job.orderId}</span>
                     <button
                       onClick={() => handleCopy(job.fullOrderId)}
                       className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
@@ -164,25 +160,11 @@ export default function JobsCard({
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#2D6A3E]" />
-                  <span>
-                    {formatDateTime(
-                      job?.createdAt || job?.originalData?.createdAt,
-                    )}
-                  </span>
+                  <span>{formatDateTime(job?.createdAt || job?.originalData?.createdAt)}</span>
                 </div>
                 <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
-                  Delivery:{" "}
-                  {formatTitle(
-                    job?.scheduleType ||
-                      job?.originalData?.scheduleType ||
-                      "N/A",
-                  )}
+                  Delivery: {formatTitle(job?.originalData?.scheduleType || "N/A")}
                 </span>
-                {scheduleDate && (
-                  <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
-                    Schedule: {formatDateTime(scheduleDate)}
-                  </span>
-                )}
               </div>
 
               <div className="relative pl-0 pt-2">
@@ -196,7 +178,7 @@ export default function JobsCard({
                     <span className="text-[#231F2080] text-xs font-bold uppercase tracking-wider">
                       Pickup
                     </span>
-                    <p className="text-[#231F20BF] text-base sm:text-[17px] font-medium leading-snug">
+                    <p className="text-sm font-medium leading-5 text-[#231F20BF]">
                       {pickupAddress}
                     </p>
                   </div>
@@ -204,13 +186,13 @@ export default function JobsCard({
 
                 <div className="flex items-start gap-4 relative z-10">
                   <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
-                    <MapPin className="w-3.5 h-3.5 text-[#005823]" />
+                    <MapPin className="h-4 w-4 text-[#005823]" />
                   </div>
                   <div className="flex-1 mt-0.5">
                     <span className="text-[#231F2080] text-xs font-bold uppercase tracking-wider">
                       Dropoff
                     </span>
-                    <p className="text-[#231F20BF] text-base sm:text-[17px] font-medium leading-snug">
+                    <p className="text-sm font-medium leading-5 text-[#231F20BF]">
                       {dropoffAddress}
                     </p>
                   </div>
@@ -242,15 +224,13 @@ export default function JobsCard({
                   <Clock className="w-4 h-4 text-yellow-500" />
                   <span className="font-medium">
                     Job Completed On:{" "}
-                    {formatDateTime(
-                      job?.completedAt || job?.originalData?.completedAt,
-                    )}
+                    {formatDateTime(job?.completedAt || job?.originalData?.completedAt)}
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="w-full rounded-2xl border border-green-100 bg-gradient-to-br from-[#F8FCF9] to-white p-4 shadow-sm lg:w-1/4 lg:min-w-[260px]">
+            <div className="w-full rounded-lg border border-green-100 bg-gradient-to-br from-[#F8FCF9] to-white p-4 shadow-sm lg:w-1/4 lg:min-w-[260px]">
               <div className="flex flex-col gap-3 sm:text-right">
                 <span
                   className={`inline-flex w-fit px-3 py-1 text-xs font-medium rounded-full border h-fit sm:ml-auto ${getStatusStyles(
@@ -262,28 +242,28 @@ export default function JobsCard({
 
                 <div className="space-y-2">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                    <span className="text-xs uppercase tracking-wide text-gray-500">
                       Booking Price
                     </span>
-                    <span className="text-xl sm:text-2xl font-bold text-[#2D6A3E] leading-none">
+                    <span className="text-lg font-bold leading-none text-[#2D6A3E]">
                       ₦{Number(amount).toLocaleString()}
                     </span>
                   </div>
 
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                    <span className="text-xs uppercase tracking-wide text-gray-500">
                       Platform Fee
                     </span>
-                    <span className="text-lg sm:text-xl font-semibold text-[#2D6A3E] leading-none">
+                    <span className="text-base font-semibold leading-none text-[#2D6A3E]">
                       ₦{Number(platformFee).toLocaleString()}
                     </span>
                   </div>
 
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-                    <span className="text-[11px] uppercase tracking-wide text-gray-500">
+                    <span className="text-xs uppercase tracking-wide text-gray-500">
                       Rider Receives
                     </span>
-                    <span className="text-lg sm:text-xl font-semibold text-[#2D6A3E] leading-none">
+                    <span className="text-base font-semibold leading-none text-[#2D6A3E]">
                       ₦{Number(riderReceives).toLocaleString()}
                     </span>
                   </div>
@@ -296,14 +276,14 @@ export default function JobsCard({
             {normalizedStatus !== "completed" && (
               <button
                 onClick={() => onViewDetails(job)}
-                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-[#2D6A3E] text-white rounded-lg font-semibold hover:bg-[#1f4a2a] transition-all text-sm active:scale-95"
+                className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[4px] bg-[#2D6A3E] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#1f4a2a] active:scale-95 sm:flex-none"
               >
                 View Details
               </button>
             )}
 
             {normalizedStatus === "awaiting_confirmation" && (
-              <button className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-100 text-black rounded-lg font-semibold transition-all text-sm">
+              <button className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[4px] bg-gray-100 px-4 py-2 text-sm font-medium text-black transition-all sm:flex-none">
                 Awaiting Review
               </button>
             )}
@@ -351,20 +331,23 @@ export default function JobsCard({
             {normalizedStatus === "in_progress" && (
               <button
                 onClick={() => onMarkAsCompleted(job)}
-                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95 sm:flex-none"
               >
                 Mark Completed
               </button>
             )}
 
             {normalizedStatus === "pending" && (
-              <button className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm">
+              <button
+                onClick={() => onShowNavigation?.(job)}
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95 sm:flex-none"
+              >
                 En route
               </button>
             )}
 
             {normalizedStatus === "waiting_confirmation" && (
-              <button className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm">
+              <button className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 sm:flex-none">
                 Awaiting review
               </button>
             )}
@@ -372,7 +355,7 @@ export default function JobsCard({
             {shouldShowNavigation && (
               <button
                 onClick={() => onShowNavigation?.(job)}
-                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-white text-[#2D6A3E] border border-[#2D6A3E] rounded-lg font-semibold hover:bg-[#E6EFE9] transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[4px] border border-[#2D6A3E] bg-white px-4 py-2 text-sm font-medium text-[#2D6A3E] transition-all hover:bg-[#E6EFE9] active:scale-95 sm:flex-none"
               >
                 Navigation
               </button>
@@ -381,7 +364,7 @@ export default function JobsCard({
             {shouldShowMessageButton && (
               <button
                 onClick={() => onMessageCustomer?.(job)}
-                className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95"
               >
                 <MessageCircle className="w-4 h-4" />
                 Message 
@@ -413,10 +396,38 @@ export default function JobsCard({
               </button>
             )}
 
+<<<<<<< HEAD
             {/* {shouldShowCancelButton && (
+=======
+            <button
+              onClick={() =>
+                callContext?.openCall?.({
+                  booking: job?.originalData || job,
+                  targetOverride: {
+                    targetId:
+                      job?.originalData?.userId?._id ||
+                      job?.originalData?.userId ||
+                      job?.userId?._id ||
+                      job?.userId,
+                    targetType: "buyer",
+                    targetName:
+                      job?.originalData?.userId?.fullName ||
+                      job?.originalData?.customerName ||
+                      "Customer",
+                  },
+                })
+              }
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95"
+            >
+              <PhoneCall className="w-4 h-4" />
+              Call Customer
+            </button>
+
+            {shouldShowCancelButton && (
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
               <button
                 onClick={() => onCancel?.(job)}
-                className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95"
+                className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[4px] bg-gray-50 px-4 py-2 text-sm font-medium text-[#DC2626] transition-all hover:bg-gray-200 active:scale-95 sm:flex-none"
               >
                 Cancel
               </button>

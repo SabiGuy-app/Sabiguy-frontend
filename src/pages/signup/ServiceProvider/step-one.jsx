@@ -1,7 +1,7 @@
-import AuthLayout from "../../../components/layouts/layout";
-import Button from "../../../components/button";
-import InputField from "../../../components/InputField";
-import Navbar from "../../../components/layouts/navbar";
+import AuthLayout from "./components/AuthLayout";
+import Button from "./components/Button";
+import InputField from "./components/InputField";
+import Navbar from "./components/Navbar";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { BsEye, BsEyeSlash } from "react-icons/bs";

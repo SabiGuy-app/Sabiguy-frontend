@@ -55,11 +55,13 @@ export default function ReviewModal({
 
   const handleSubmit = () => {
     if (!validate()) return;
+    const parsedTipAmount = Number(tipAmount);
     onSubmit({
       score,
       review: review.trim(),
-      tipAmount: tipAmount === "" ? 0 : parseFloat(tipAmount),
-      paymentMethod,
+      ...(Number.isFinite(parsedTipAmount) && parsedTipAmount > 0
+        ? { tipAmount: parsedTipAmount }
+        : {}),
     });
   };
 
@@ -137,8 +139,11 @@ export default function ReviewModal({
                 key={amount}
                 type="button"
                 disabled={isTipDisabled}
+                aria-pressed={Number(tipAmount) === amount}
                 onClick={() => {
-                  setTipAmount(String(amount));
+                  setTipAmount((current) =>
+                    Number(current) === amount ? "" : String(amount),
+                  );
                   if (errors.tipAmount)
                     setErrors((prev) => ({ ...prev, tipAmount: null }));
                 }}

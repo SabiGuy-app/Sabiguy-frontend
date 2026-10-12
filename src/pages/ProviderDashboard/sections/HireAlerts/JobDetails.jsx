@@ -21,6 +21,11 @@ export default function JobDetailsModal({
   onClose,
   job,
   onMessageCustomer,
+  onShowNavigation,
+  onStartService,
+  onArrive,
+  onMarkAsCompleted,
+  onCancel,
 }) {
   const [copied, setCopied] = useState(false);
   const callContext = useCallContext();
@@ -35,6 +40,61 @@ export default function JobDetailsModal({
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+  const getLocationAddress = (location, fallback = "N/A") => {
+    if (typeof location === "string") return location || fallback;
+    return location?.address || location?.formattedAddress || fallback;
+  };
+  const pickupAddress = getLocationAddress(
+    job?.pickupLocation || job?.originalData?.pickupLocation,
+    getLocationAddress(
+      job?.originalData?.providerId?.currentLocation,
+      "Provider's current location",
+    ),
+  );
+  const dropoffAddress = getLocationAddress(
+    job?.dropoffLocation || job?.originalData?.dropoffLocation,
+    getLocationAddress(job?.originalData?.location),
+  );
+  const serviceTitle =
+    job?.title ||
+    job?.originalData?.serviceDetails?.serviceName ||
+    job?.originalData?.serviceType;
+  const ratingValue =
+    typeof job?.ratings === "object"
+      ? job.ratings?.score ?? job.ratings?.average
+      : job?.ratings;
+  const normalizedStatus = String(
+    job?.originalData?.status || job?.status || "",
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  const pricingOption = String(
+    job?.originalData?.serviceDetails?.pricingOption ||
+      job?.originalData?.pricingOption ||
+      "customer_address",
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_");
+  const needsTravel = pricingOption === "customer_address";
+  const actionLabel =
+    normalizedStatus === "in_progress"
+      ? "Mark as Completed"
+      : normalizedStatus === "arrived_at_pickup" || !needsTravel
+        ? "Start Service"
+        : "Arrived at Destination";
+  const handleAction = () => {
+    if (normalizedStatus === "in_progress") {
+      onMarkAsCompleted?.(job);
+    } else if (normalizedStatus === "arrived_at_pickup" || !needsTravel) {
+      onStartService?.(job);
+    } else if (onArrive) {
+      onArrive(job);
+    } else {
+      onShowNavigation?.(job);
+    }
+  };
   if (!isOpen) return null;
 
   const formatDateTime = (value) => {
@@ -50,6 +110,7 @@ export default function JobDetailsModal({
       hour12: true,
     });
   };
+<<<<<<< HEAD
   console.log(job);
 
   const bookingStatus = String(job?.originalData?.status || job?.status || "")
@@ -102,6 +163,8 @@ export default function JobDetailsModal({
     return styles[normalized] || styles.pending;
   };
 
+=======
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
   return (
     <div>
       <div className="fixed inset-0 bg-gray-50  bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -124,7 +187,7 @@ export default function JobDetailsModal({
             {/* Service Title */}
             <div>
               <h3 className="text-lg font-semibold mb-4">
-                {formatTitle(job?.title)}
+                {formatTitle(serviceTitle)}
               </h3>
 
               {/* Provider Info */}
@@ -145,21 +208,30 @@ export default function JobDetailsModal({
                       <Verified className="w-4 h-4 text-[#2D6A3E]" />
                     </div>
                     <div>
-                      {job.ratings && (
+                      {ratingValue != null && (
                         <div className="flex items-center gap-1 text-sm">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+<<<<<<< HEAD
                           <span className="font-medium">
                             {typeof job.ratings === "object"
                               ? job.ratings.score
                               : job.ratings}
                           </span>
+=======
+                          <span className="font-medium">{ratingValue}</span>
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-center gap-1 text-sm">
                       <MapPin className="w-4 h-4" />
-                      <span className="font-medium">{job.location}</span>
+                      <span className="font-medium">
+                        {getLocationAddress(
+                          job?.location || job?.originalData?.location,
+                          "Location unavailable",
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -236,7 +308,7 @@ export default function JobDetailsModal({
 
             {/* Booking Information */}
             <div className="border-t border-gray-200">
-              <h4 className="font-semibold mb-3 mt-2">Booking Information</h4>
+              <h4 className="text-base font-semibold mb-3 mt-2">Booking Information</h4>
               <div className="space-y-3">
                 {/* Booking ID */}
                 {job?.orderId && (
@@ -277,7 +349,7 @@ export default function JobDetailsModal({
                       Service Type
                     </p>
                     <p className="text-sm text-gray-600">
-                      {formatTitle(job?.title)}
+                      {formatTitle(serviceTitle)}
                     </p>
                   </div>
                 </div>
@@ -337,7 +409,7 @@ export default function JobDetailsModal({
                       Pickup Location
                     </p>
                     <p className="text-sm text-gray-600">
-                      {job.pickupLocation.address}
+                      {pickupAddress}
                     </p>
                   </div>
                 </div>
@@ -349,7 +421,7 @@ export default function JobDetailsModal({
                       Dropoff Location
                     </p>
                     <p className="text-sm text-gray-600">
-                      {job.dropoffLocation.address}
+                      {dropoffAddress}
                     </p>
                   </div>
                 </div>
@@ -396,6 +468,25 @@ export default function JobDetailsModal({
             <p className="flex mt-6 items-center text-sm justify-center">
               Update the job status to keep the customer informed
             </p>
+
+            {(onShowNavigation || onStartService || onArrive || onMarkAsCompleted) && (
+              <button
+                type="button"
+                onClick={handleAction}
+                className="mt-4 w-full rounded-lg bg-[#347D53] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#286642]"
+              >
+                {actionLabel}
+              </button>
+            )}
+            {onCancel && normalizedStatus !== "in_progress" && (
+              <button
+                type="button"
+                onClick={() => onCancel(job)}
+                className="mt-2 w-full text-right text-xs font-medium text-red-600 hover:underline"
+              >
+                Cancel Request
+              </button>
+            )}
           </div>
         </div>
       </div>

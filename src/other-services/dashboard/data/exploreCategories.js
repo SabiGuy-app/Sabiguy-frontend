@@ -11,7 +11,7 @@ export const exploreCategories = [
     title: "Beauty & Personal Care",
     image: "/categories/beauty.png",
     imageIncludesTitle: true,
-    tasks: ["Barbing Services", "Body Massage", "Lash Tech"],
+    tasks: ["Barbing Services", "Spa", "Lash Tech"],
     to: "/dashboard/categories/beauty-personal-care",
   },
   {
@@ -58,6 +58,13 @@ export const exploreCategories = [
 ];
 
 export function getCategoryDestination(category, task) {
+  if (category.id === "beauty" && task) {
+    const serviceNames = {
+      "Barbing Services": "Barbing",
+      "Lash Tech": "Lash Tech.",
+    };
+    return `${category.to}?service=${encodeURIComponent(serviceNames[task] || task)}`;
+  }
   if (category.to) return category.to;
   if (category.id === "transport")
     return `/bookings?service=${encodeURIComponent(task === "Package Delivery" ? "package delivery" : "book a ride")}`;

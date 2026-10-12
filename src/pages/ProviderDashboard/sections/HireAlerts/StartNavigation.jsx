@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import {
   Phone,
   MessageCircle,
@@ -13,7 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import DeliveryMap from "../../../../components/dashboard/Map";
 import { useAuthStore } from "../../../../stores/auth.store";
 import useBookingStore from "../../../../stores/booking.store";
-import { startJob, getBookingsDetails } from "../../../../api/bookings";
+import { startJob } from "../../../../api/bookings";
 import { cancelBooking as cancelProviderBooking } from "../../../../api/provider";
 import {
   canMessage,
@@ -23,6 +23,7 @@ import {
 import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
 import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
 import ProviderCancellationModal from "../../../../components/provider-dashboard/ProviderCancellationModal";
+<<<<<<< HEAD
 import WaitingForPaymentModal from "../../../../components/provider-dashboard/WaitingForPaymentModal"; // adjust path to match where you save it
 import PaymentExpiredModal from "../../../../components/provider-dashboard/PaymentExpiredModal"; // adjust path to match where you save it
 import JobCancelledModal from "../../../../components/provider-dashboard/JobCancelledModal"; // adjust path to match where you save it
@@ -43,6 +44,8 @@ const PAID_STATUSES = new Set([
   "funds_released",
   "disputed",
 ]);
+=======
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
 
 // Error Boundary for Map Component
 class MapErrorBoundary extends React.Component {
@@ -116,6 +119,7 @@ export default function StartNavigation() {
     alert?.originalData?.dropoffLocation || bookingDetails?.dropoffLocation,
   );
 
+<<<<<<< HEAD
   const bookingId =
     alert?.id || alert?.originalData?._id || bookingDetails?._id;
   const customer = alert?.originalData?.userId || {};
@@ -294,6 +298,8 @@ export default function StartNavigation() {
   const modalPlatformFee = alert?.platformFee ?? 0;
   const modalRiderReceives = alert?.RiderReceives ?? 0;
 
+=======
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
   const handleStartNavigation = async () => {
     if (!alert?.id) return;
     try {
@@ -311,6 +317,7 @@ export default function StartNavigation() {
     }
   };
 
+<<<<<<< HEAD
   const handleMessageProvider = () => {
     if (!bookingId) return;
 
@@ -330,6 +337,19 @@ export default function StartNavigation() {
   //   "enroute_to_dropoff",
   //   "arrived_at_dropoff",
   // ].includes(normalizedStatus);
+=======
+  const bookingId = alert?.id || alert?.originalData?._id || bookingDetails?._id;
+  const statusForCancel =
+    alert?.originalData?.status || bookingDetails?.status || alert?.status;
+  const isAcceptedUnpaidRoute =
+    normalizeStatus(alert?.status) === "new" &&
+    normalizeStatus(alert?.originalData?.status) ===
+      "awaiting_provider_acceptance";
+  const shouldShowCancelRequest =
+    canProviderCancel(statusForCancel) ||
+    canProviderCancel(alert?.status) ||
+    isAcceptedUnpaidRoute;
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
 
   const handleCancel = async (reason) => {
     if (!bookingId) {
@@ -343,9 +363,12 @@ export default function StartNavigation() {
     navigate("/dashboard/provider/hire-alert");
   };
 
+  const customer = alert?.originalData?.userId || {};
+
   return (
     <ProviderDashboardLayout>
       <div className="py-4">
+<<<<<<< HEAD
         <ProviderCancellationModal
           isOpen={cancelModalOpen}
           onClose={() => setCancelModalOpen(false)}
@@ -379,6 +402,24 @@ export default function StartNavigation() {
         {paymentStatus === "expired" && (
           <PaymentExpiredModal onBackToDashboard={handleBackToDashboard} />
         )}
+=======
+      <ProviderCancellationModal
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        onSubmit={handleCancel}
+        onComplete={handleCancelComplete}
+      />
+
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        <div className="">
+          <h1 className="text-[22px] sm:text-[26px] lg:text-[28px] font-semibold text-[#231F20] mb-4">
+            {alert?.subCategory
+              ? alert.subCategory
+                  .toString()
+                  .replace(/\b\w/g, (char) => char.toUpperCase())
+              : ""}
+          </h1>
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
 
         {/* Pops up automatically if polling detects the customer
           cancelled — separate from the timeout case above. */}
@@ -554,6 +595,17 @@ export default function StartNavigation() {
               />
             </MapErrorBoundary>
           </div>
+<<<<<<< HEAD
+=======
+          {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+          <button
+            onClick={handleStartNavigation}
+            disabled={starting}
+            className="px-4 py-2 rounded-md bg-[#005823] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {starting ? "Starting..." : "Start Navigation"}
+          </button>
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
         </div>
       </div>
     </ProviderDashboardLayout>

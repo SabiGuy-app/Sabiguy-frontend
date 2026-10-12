@@ -186,6 +186,11 @@ export default function ProviderNavbar({ onMenuClick }) {
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
       if (bookingRequestNotificationTypes.includes(notification?.type)) {
+        window.dispatchEvent(
+          new CustomEvent("provider:booking-request", {
+            detail: notification,
+          }),
+        );
         notificationSoundService.play().catch((err) => {
           console.warn("âš ï¸ Sound playback failed:", err);
         });

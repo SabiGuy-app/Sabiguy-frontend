@@ -85,6 +85,9 @@ const HireAlerts = lazy(
 const StartNavigation = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/StartNavigation"),
 );
+const BeautyServiceJourney = lazy(
+  () => import("./pages/ProviderDashboard/sections/HireAlerts/BeautyServiceJourney"),
+);
 const TrackDelivery = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery"),
 );
@@ -458,6 +461,10 @@ function App() {
                 <Route
                   path="/dashboard/provider/start-navigation"
                   element={<StartNavigation />}
+                />
+                <Route
+                  path="/dashboard/provider/beauty-service/:bookingId"
+                  element={<BeautyServiceJourney />}
                 />
                 <Route
                   path="/dashboard/provider/track-delivery"

@@ -1,9 +1,11 @@
 import ProviderDashboardLayout from "../../../../components/layouts/ProviderDashboardLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import JobsCard from "../../../../components/provider-dashboard/JobsCard";
 import AlertsCard from "../../../../components/provider-dashboard/AlertsCard";
 import AlertDetailsModal from "./AlertDetails";
+import BeautyAlertsCard from "./BeautyAlertsCard";
+import BeautyAlertDetails from "./BeautyAlertDetails";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import {
@@ -14,6 +16,48 @@ import {
 import { getAllBookings, acceptBookings } from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
 import ProviderCancellationModal from "../../../../components/provider-dashboard/ProviderCancellationModal";
+
+const normalizeBookingType = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+const isBeautyBooking = (booking) => {
+  const source = booking?.originalData || booking || {};
+  const values = [
+    source.serviceType,
+    source.category,
+    source.service,
+    source.serviceDetails?.category,
+    source.serviceDetails?.serviceType,
+  ];
+
+  return values.some((value) => {
+    const normalized = normalizeBookingType(value);
+    return (
+      normalized === "beauty_personal_care" ||
+      normalized === "beauty" ||
+      (normalized.includes("beauty") && normalized.includes("personal"))
+    );
+  });
+};
+
+const canStartBeautyJourney = (booking) =>
+  [
+    "paid_escrow",
+    "in_progress",
+    "arrived_at_pickup",
+    "enroute_to_pickup",
+    "arrived_at_dropoff",
+    "enroute_to_dropoff",
+  ].includes(
+    String(booking?.originalData?.status || booking?.status || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_"),
+  );
 
 export default function HireAlerts() {
   const navigate = useNavigate();
@@ -33,13 +77,20 @@ export default function HireAlerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
+<<<<<<< HEAD
   const [decliningAlertId, setDecliningAlertId] = useState(null);
+=======
+  const hasConsumedPrefetchedAlerts = useRef(false);
+  const fetchSequence = useRef(0);
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
 
   useEffect(() => {
     fetchBookings();
   }, [user]);
 
   const fetchBookings = async () => {
+    const requestSequence = ++fetchSequence.current;
+
     try {
       setIsLoading(true);
       setError(null);
@@ -48,11 +99,12 @@ export default function HireAlerts() {
       const locationState = location.state;
       let alertBookings = [];
 
-      if (locationState?.fetchedAlerts) {
+      if (!hasConsumedPrefetchedAlerts.current && locationState?.fetchedAlerts) {
         // Use alerts fetched from the notification
         alertBookings = Array.isArray(locationState.fetchedAlerts)
           ? locationState.fetchedAlerts
           : locationState.fetchedAlerts.bookings || [];
+        hasConsumedPrefetchedAlerts.current = true;
       }
 
       const providerJobsPromise = getProviderBookings();
@@ -63,12 +115,23 @@ export default function HireAlerts() {
           .trim()
           .toLowerCase();
         if (normalizedTitle === "car_driver") return "Car";
-        if (normalizedTitle === "motorbike_rider") return "bike";
+        if (normalizedTitle === "motorbike_rider") return "Bike";
         return "";
       };
 
       const alertRequests = userJobs
-        .filter((job) => job?.service && job?.title)
+        .filter((job) => {
+          const normalizedService = String(job?.service || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[\s-]+/g, "_");
+          const isBeautyProviderJob =
+            normalizedService === "beauty_personal_care";
+
+          // Beauty providers are stored with a service but no transport-style
+          // job title. Keep them in the same live alert query as logistics jobs.
+          return job?.service && (job?.title || isBeautyProviderJob);
+        })
         .map((job) => {
           const modeOfDelivery = resolveModeOfDelivery(job);
           return getAllBookings({
@@ -89,8 +152,13 @@ export default function HireAlerts() {
       const providerBookings = Array.isArray(providerBookingsData)
         ? providerBookingsData
         : providerBookingsData.bookings || [];
-      const transformedJobs = transformBookingsData(providerBookings).jobs;
-      setJobs(transformedJobs);
+      const transformedProviderBookings = transformBookingsData(providerBookings);
+
+      // A provider response can contain a newly-created beauty booking before
+      // the filtered alert endpoint includes it. Keep those alert records in
+      // the same list instead of showing them only in the Jobs tab.
+      if (requestSequence !== fetchSequence.current) return;
+      setJobs(transformedProviderBookings.jobs);
 
       // If we don't have pre-fetched alerts, fetch them from responses
       if (!alertBookings || alertBookings.length === 0) {
@@ -104,19 +172,37 @@ export default function HireAlerts() {
 
       const uniqueAlertBookings = Array.from(
         new Map(
-          alertBookings.map((booking) => [booking._id, booking]),
+          [...providerBookings, ...alertBookings].map((booking) => [
+            booking._id,
+            booking,
+          ]),
         ).values(),
       );
       const transformedAlerts =
         transformBookingsData(uniqueAlertBookings).alerts;
+      if (requestSequence !== fetchSequence.current) return;
       setAlerts(transformedAlerts);
     } catch (err) {
+      if (requestSequence !== fetchSequence.current) return;
       console.error("Error fetching bookings:", err);
       setError(err.response?.data?.message || "Failed to load bookings");
     } finally {
-      setIsLoading(false);
+      if (requestSequence === fetchSequence.current) {
+        setIsLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    const handleBookingRequest = () => {
+      fetchBookings();
+    };
+
+    window.addEventListener("provider:booking-request", handleBookingRequest);
+    return () => {
+      window.removeEventListener("provider:booking-request", handleBookingRequest);
+    };
+  }, [user, location.key]);
 
   const transformBookingsData = (bookings) => {
     const alerts = [];
@@ -148,14 +234,9 @@ export default function HireAlerts() {
           booking.serviceType ||
           "Untitled job",
         BookingPrice:
-          booking?.pricingBreakdown?.subtotal ||
-          booking?.pricing?.breakdown?.subtotal ||
-          booking.agreedPrice ||
-          0,
+          booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || booking.agreedPrice || 0,
         platformFee:
-          booking?.pricingBreakdown?.originalProviderCommission ||
-          booking?.pricing?.fees?.driverCommission ||
-          0,
+          booking?.pricingBreakdown?.originalProviderCommission || booking?.pricing?.fees?.driverCommission || 0,
         RiderReceives:
           booking?.driverReceives || booking?.breakdown?.providerReceives || 0,
         calculatedPrice:
@@ -171,27 +252,21 @@ export default function HireAlerts() {
           : booking.scheduleType
             ? String(booking.scheduleType).replace(/_/g, " ")
             : "TBD",
-        scheduleDate: booking.scheduleDate || booking.startDate || null,
-        scheduledDate:
-          booking.scheduleDate || booking.startDate
-            ? new Date(
-                booking.scheduleDate || booking.startDate,
-              ).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              }) +
-              " - " +
-              new Date(
-                booking.scheduleDate || booking.startDate,
-              ).toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              })
-            : booking.scheduleType
-              ? String(booking.scheduleType).replace(/_/g, " ")
-              : "TBD",
+        scheduledDate: booking.startDate
+          ? new Date(booking.startDate).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }) +
+            " - " +
+            new Date(booking.startDate).toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : booking.scheduleType
+            ? String(booking.scheduleType).replace(/_/g, " ")
+            : "TBD",
         orderId: booking._id?.slice(-6)?.toUpperCase() || "—",
         fullOrderId: booking._id || "",
         location:
@@ -211,13 +286,32 @@ export default function HireAlerts() {
         totalAmount: booking.totalAmount || 0,
         modeOfDelivery: booking.modeOfDelivery || "",
         distance: booking.distance || null,
+<<<<<<< HEAD
         originalData: booking,
       };
 
+=======
+        rawStatus: bookingStatus,
+        // Store original data for modal details
+        originalData: booking,
+      };
+
+      const isBeautyNewBooking =
+        isBeautyBooking(booking) &&
+        [
+          "pending",
+          "pending_provider_acceptance",
+          "pending_provider",
+          "new",
+        ].includes(bookingStatus);
+
+      // Categorize based on status
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
       if (
         bookingStatus === "pending_providers" ||
         bookingStatus === "pending_customer" ||
-        bookingStatus === "awaiting_provider_acceptance"
+        bookingStatus === "awaiting_provider_acceptance" ||
+        isBeautyNewBooking
       ) {
         alerts.push({
           ...commonData,
@@ -242,8 +336,13 @@ export default function HireAlerts() {
       } else {
         jobs.push({
           ...commonData,
+<<<<<<< HEAD
           status: mapJobStatus(bookingStatus),
           providerName: "You",
+=======
+          status: mapJobStatus(bookingStatus, isBeautyBooking(booking)),
+          providerName: "You", // Since this is provider dashboard
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
           startsIn:
             bookingStatus === "confirmed"
               ? calculateTimeUntil(booking.startDate)
@@ -264,13 +363,19 @@ export default function HireAlerts() {
 
     return { alerts, jobs };
   };
+<<<<<<< HEAD
   const mapJobStatus = (apiStatus) => {
+=======
+
+  const mapJobStatus = (apiStatus, beauty = false) => {
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
     const statusMap = {
       provider_selected: "Awaiting Payment",
-      in_progress: "Enroute to Pickup",
-      arrived_at_dropoff: "Arrived at Dropoff",
-      arrived_at_pickup: "Arrived at Pickup",
-      enroute_to_dropoff: "Enroute to Dropoff",
+      in_progress: beauty ? "In Progress" : "Enroute to Pickup",
+      arrived_at_dropoff: beauty ? "Arrived at Destination" : "Arrived at Dropoff",
+      arrived_at_pickup: beauty ? "Arrived at Customer" : "Arrived at Pickup",
+      enroute_to_dropoff: beauty ? "En Route to Customer" : "Enroute to Dropoff",
+      enroute_to_pickup: beauty ? "En Route" : "Enroute to Pickup",
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
       pending_customer: "Awaiting Response",
@@ -352,36 +457,48 @@ export default function HireAlerts() {
   };
 
   const filteredJobs = jobs.filter((job) => {
-    const status = (job.status || "").toLowerCase().replace(/_/g, " ");
+    const status = String(job.rawStatus || "")
+      .toLowerCase()
+      .replace(/\s+/g, "_");
 
     if (statusFilter === "all") return true;
 
     if (statusFilter === "active") {
       return (
-        status === "enroute to pickup" ||
-        status === "arrived at pickup" ||
-        status === "enroute to dropoff" ||
-        status === "arrived at dropoff" ||
-        status === "paid escrow" ||
-        status === "awaiting confirmation"
+        [
+          "paid_escrow",
+          "paid_escrow_scheduled",
+          "in_progress",
+          "enroute_to_pickup",
+          "arrived_at_pickup",
+          "enroute_to_dropoff",
+          "arrived_at_dropoff",
+        ].includes(status)
       );
     }
 
     if (statusFilter === "pending") {
+<<<<<<< HEAD
       return (
         status === "awaiting payment" || status === "paid escrow scheduled"
       );
+=======
+      return ["provider_selected", "payment_pending", "pending"].includes(status);
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
     }
 
     if (statusFilter === "completed") {
       return (
-        status === "funds released" ||
-        status === "completed" ||
-        status === "job confirmed"
+        [
+          "completed",
+          "waiting_confirmation",
+          "user_accepted_completion",
+          "funds_released",
+        ].includes(status)
       );
     }
 
-    return status === statusFilter.replace(/_/g, " ");
+    return status === statusFilter.replace(/\s+/g, "_");
   });
 
   const handleViewAlert = (alert) => {
@@ -447,6 +564,11 @@ export default function HireAlerts() {
   };
 
   const handleShowNavigation = (job) => {
+    if (isBeautyBooking(job)) {
+      handleShowBeautyJourney(job);
+      return;
+    }
+
     const rawStatus = String(job?.status || "")
       .trim()
       .toLowerCase()
@@ -454,7 +576,7 @@ export default function HireAlerts() {
     const normalizedStatus =
       rawStatus === "in_progress" ? "enroute_to_pickup" : rawStatus;
 
-    if (normalizedStatus === "paid_escrow") {
+    if (normalizedStatus === "paid_escrow" || normalizedStatus === "pending") {
       navigate("/dashboard/provider/start-navigation", {
         state: { alert: job },
       });
@@ -473,6 +595,15 @@ export default function HireAlerts() {
     }
   };
 
+  const handleShowBeautyJourney = (job) => {
+    const bookingId = getBookingId(job);
+    if (!bookingId) return;
+
+    navigate(`/dashboard/provider/beauty-service/${bookingId}`, {
+      state: { job, booking: job?.originalData },
+    });
+  };
+
   const handleMessageCustomer = (job) => {
     const booking = job?.originalData || {};
     const bookingId = booking?._id || job?.id;
@@ -485,22 +616,35 @@ export default function HireAlerts() {
     });
   };
 
-  const handleAcceptBooking = async (alert) => {
+  const handleAcceptBooking = async (alert, { rethrow = false } = {}) => {
     if (!alert?.id) return;
     try {
       setAcceptingAlertId(alert.id);
-      await acceptBookings(alert.id);
-      navigate("/dashboard/provider/start-navigation", {
-        state: { alert },
-      });
+      const response = await acceptBookings(alert.id);
+      if (response?.success === false) {
+        throw new Error(response.message || "Failed to accept booking.");
+      }
+
+      handleCloseAlert();
+      if (isBeautyBooking(alert)) {
+        navigate(`/dashboard/provider/beauty-service/${alert.id}`, {
+          state: { job: alert, booking: alert.originalData },
+        });
+      } else {
+        navigate("/dashboard/provider/start-navigation", {
+          state: { alert },
+        });
+      }
     } catch (err) {
       console.error("Error accepting booking:", err);
       setError(err.response?.data?.message || "Failed to accept booking");
+      if (rethrow) throw err;
     } finally {
       setAcceptingAlertId(null);
     }
   };
 
+<<<<<<< HEAD
   const handleDeclineBooking = async (alert) => {
     const bookingId = getBookingId(alert);
 
@@ -525,6 +669,12 @@ export default function HireAlerts() {
     } finally {
       setDecliningAlertId(null);
     }
+=======
+  const handleDeclineAlert = (alert) => {
+    handleCloseAlert();
+    setCancelTarget(alert);
+    setIsCancelModalOpen(true);
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
   };
 
   // Loading State
@@ -562,20 +712,43 @@ export default function HireAlerts() {
 
   return (
     <ProviderDashboardLayout>
-      <AlertDetailsModal
-        isOpen={isAlertModalOpen}
-        onClose={handleCloseAlert}
-        alert={selectedAlert || {}}
-        onRefresh={handleRefresh}
-      />
+      {isBeautyBooking(selectedAlert) ? (
+        <BeautyAlertDetails
+          isOpen={isAlertModalOpen}
+          onClose={handleCloseAlert}
+          alert={selectedAlert}
+          onAccept={(alert) => handleAcceptBooking(alert, { rethrow: true })}
+          onDecline={handleDeclineAlert}
+          accepting={acceptingAlertId === selectedAlert?.id}
+        />
+      ) : (
+        <AlertDetailsModal
+          isOpen={isAlertModalOpen}
+          onClose={handleCloseAlert}
+          alert={selectedAlert || {}}
+          onRefresh={handleRefresh}
+        />
+      )}
 
-      <JobDetailsModal
-        isOpen={isJobModalOpen}
-        onClose={handleCloseJob}
-        job={selectedJob || {}}
-        onRefresh={handleRefresh}
-        onMessageCustomer={handleMessageCustomer}
-      />
+      {isBeautyBooking(selectedJob) ? (
+        <BeautyAlertDetails
+          isOpen={isJobModalOpen}
+          onClose={handleCloseJob}
+          alert={selectedJob}
+          variant="job"
+          onAccept={() => handleShowBeautyJourney(selectedJob)}
+          showPrimaryAction={canStartBeautyJourney(selectedJob)}
+          accepting={false}
+        />
+      ) : (
+        <JobDetailsModal
+          isOpen={isJobModalOpen}
+          onClose={handleCloseJob}
+          job={selectedJob || {}}
+          onRefresh={handleRefresh}
+          onMessageCustomer={handleMessageCustomer}
+        />
+      )}
 
       <MarkAsCompleted
         isOpen={isMarkOpen}
@@ -638,6 +811,7 @@ export default function HireAlerts() {
       {activeTab === "alert" ? (
         <div className="space-y-4 mt-1">
           {alerts.length > 0 ? (
+<<<<<<< HEAD
             alerts.map((alert) => (
               <AlertsCard
                 key={alert.id}
@@ -649,6 +823,27 @@ export default function HireAlerts() {
                 declining={decliningAlertId === alert.id}
               />
             ))
+=======
+            alerts.map((alert) =>
+              isBeautyBooking(alert) ? (
+                <BeautyAlertsCard
+                  key={alert.id}
+                  alert={alert}
+                  onViewDetails={handleViewAlert}
+                  onAcceptBooking={handleAcceptBooking}
+                  accepting={acceptingAlertId === alert.id}
+                />
+              ) : (
+                <AlertsCard
+                  key={alert.id}
+                  alert={alert}
+                  onViewDetails={handleViewAlert}
+                  onAcceptBooking={handleAcceptBooking}
+                  accepting={acceptingAlertId === alert.id}
+                />
+              ),
+            )
+>>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
           ) : (
             <div className="text-center py-12 bg-white rounded-lg">
               <p className="text-gray-500 text-lg">No new alerts available</p>
@@ -667,17 +862,29 @@ export default function HireAlerts() {
 
           <div className="space-y-4">
             {filteredJobs.length > 0 ? (
-              filteredJobs.map((job) => (
-                <JobsCard
-                  key={job.id}
-                  job={job}
-                  onViewDetails={handleViewJob}
-                  onMarkAsCompleted={handleMark}
-                  onShowNavigation={handleShowNavigation}
-                  onMessageCustomer={handleMessageCustomer}
-                  onCancel={handleOpenCancel}
-                />
-              ))
+              filteredJobs.map((job) =>
+                isBeautyBooking(job) ? (
+                  <BeautyAlertsCard
+                    key={job.id}
+                    alert={job}
+                    variant="job"
+                    onViewDetails={handleViewJob}
+                    onAcceptBooking={() => handleShowBeautyJourney(job)}
+                    onMarkAsCompleted={handleMark}
+                    showAction={canStartBeautyJourney(job)}
+                  />
+                ) : (
+                  <JobsCard
+                    key={job.id}
+                    job={job}
+                    onViewDetails={handleViewJob}
+                    onMarkAsCompleted={handleMark}
+                    onShowNavigation={handleShowNavigation}
+                    onMessageCustomer={handleMessageCustomer}
+                    onCancel={handleOpenCancel}
+                  />
+                ),
+              )
             ) : (
               <div className="text-center py-12 bg-white rounded-lg">
                 <p className="text-gray-500 text-lg">No jobs found</p>

@@ -1,6 +1,7 @@
 // One sample provider until the beauty directory endpoints are connected.
 export const beautyProvider = {
   id: "phil-crook",
+  backendId: "6ac0bc8c025109c30ab5eef2",
   fullName: "Phil Crook",
   rating: 4.9,
   reviews: 25,
@@ -18,6 +19,11 @@ export const beautyProvider = {
   about:
     "Phil is a hair stylist and beauty therapist offering haircuts, styling, lash treatments, and relaxing spa services. Each appointment is tailored to your preferred look and care needs.",
   services: [
+    {
+      name: "Braiding",
+      price: 10000,
+      description: "Neat braiding service with a fixed salon price.",
+    },
     {
       name: "Hair Cut",
       price: 5000,

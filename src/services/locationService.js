@@ -61,6 +61,12 @@ class LocationService {
       timestamp: new Date(position.timestamp).toLocaleTimeString(),
     });
 
+    localStorage.setItem(
+      "providerCurrentLocation",
+      JSON.stringify({ latitude, longitude, accuracy, timestamp: position.timestamp }),
+    );
+    window.dispatchEvent(new Event("provider-location-updated"));
+
     if (accuracy > 1000) {
       console.warn("⚠️ Very poor accuracy — likely IP-based, not GPS");
     }
