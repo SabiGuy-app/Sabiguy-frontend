@@ -14,7 +14,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body {
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;

@@ -12,10 +12,22 @@ import { FiChevronLeft } from "react-icons/fi";
 import distance from "/distance.png";
 import { useNavigate } from "react-router-dom";
 import { useCallContext } from "../../../components/shared/CallContext";
+import { useState } from "react";
+import UserCancellationModal from "../../../components/UserCancellationModal";
+import CancelBookingButton from "../../../components/CancelBookingButton";
 
 export default function ServiceDetailsModal({ isOpen, onClose, request }) {
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+
   const navigate = useNavigate();
   const callContext = useCallContext();
+  const bookingStatus = String(
+    request?.originalData?.status || request?.status || "",
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+
   if (!isOpen) return null;
   console.log(request);
   const bookingId = request?.id;
@@ -154,10 +166,14 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
               </div>
 
-              {!["cancelled", "funds released", "no provider available", "booking expired", "expired"].includes(
-                request.status?.toLowerCase().trim(),
-              ) && (
-                <div className="grid grid-cols-2 gap-3">
+              {![
+                "cancelled",
+                "funds_released",
+                "no_provider_available",
+                "booking_expired",
+                "expired",
+              ].includes(bookingStatus) && (
+                <div className="flex gap-3">
                   <button
                     onClick={() =>
                       callContext?.openCall?.({
@@ -188,6 +204,32 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     <MessageCircle className="w-4 h-4 text-gray-600" />
                     <span className="font-medium text-gray-700">Message</span>
                   </button>
+                  <CancelBookingButton
+                    bookingId={bookingId}
+                    role="user"
+                    status={request?.originalData?.status || request?.status}
+                    paymentStatus={
+                      request?.originalData?.payment?.status ||
+                      request?.payment?.status ||
+                      request?.paymentStatus ||
+                      request?.payment_status
+                    }
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border   rounded-lg bg-white text-red-600  border-red-300  hover:bg-red-50 transition-colors"
+                    title="Cancel"
+                    onSuccess={() => {
+                      setCancelModalOpen(false);
+                      onClose?.();
+                    }}
+                  />
+                  {/* {showCancelBtn && (
+                    <button
+                      type="button"
+                      onClick={() => setCancelModalOpen(true)}
+                      className="flex-1 flex items-center justify-center px-4 py-2.5 sm:py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-100 transition-all active:scale-95"
+                    >
+                      {cancelling ? "Cancelling..." : "Cancel"}
+                    </button>
+                  )} */}
                 </div>
               )}
               {/* {request.status?.toLowerCase() !== "cancelled" &&  (

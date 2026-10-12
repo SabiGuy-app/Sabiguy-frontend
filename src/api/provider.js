@@ -37,6 +37,15 @@ export const cancelBooking = async (bookingId, reason = "") => {
   return data;
 };
 
+export const declineBooking = async (bookingId) => {
+  const { data } = await api.patch(
+    `/provider/bookings/${bookingId}/decline`,
+    {},
+  );
+  trackEvent("booking_declined", { booking_id: bookingId });
+  return data;
+};
+
 export const counterOffer = async (bookingId, offerData) => {
   const { data } = await api.patch(
     `/provider/bookings/${bookingId}/counter-offer`,

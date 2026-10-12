@@ -1,3 +1,4 @@
+
 import { ChevronLeft, ChevronRight, Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Modal from "./Modal";
@@ -12,11 +13,24 @@ const REASONS = [
 
 const OTHER_REASON = "Other reason";
 
+const PAID_STATUSES = ["paid", "paid_escrow"];
+
+const ACTIVE_JOB_STATUSES = [
+  "active",
+  "enroute to pickup",
+  "arrived at pickup",
+  "enroute to dropoff",
+  "arrived at dropoff",
+  "waiting confirmation",
+];
+
 export default function UserCancellationModal({
   isOpen,
   onClose,
   onSubmit,
   onComplete,
+  paymentStatus,
+  bookingStatus,
 }) {
   const [step, setStep] = useState("reason");
   const [selectedReason, setSelectedReason] = useState("");
@@ -40,6 +54,7 @@ export default function UserCancellationModal({
   };
 
   const finishFlow = () => {
+    if (submitting) return;
     onClose?.();
     onComplete?.();
   };
@@ -52,16 +67,56 @@ export default function UserCancellationModal({
       return;
     }
 
+    if (typeof onSubmit !== "function") {
+      setError("Cancellation is currently unavailable. Please try again.");
+      return;
+    }
+
     try {
       setSubmitting(true);
       setError("");
+
+      // Only continue if the cancellation API call succeeds.
       await onSubmit(normalizedReason);
-      setStep("complete");
+
+      const normalizedPaymentStatus = String(paymentStatus ?? "")
+        .toLowerCase()
+        .trim()
+        .replaceAll("_", " ");
+
+      const normalizedBookingStatus = String(bookingStatus ?? "")
+        .toLowerCase()
+        .trim()
+        .replaceAll("_", " ");
+
+      const isPaid = PAID_STATUSES.some(
+        (status) =>
+          status.replaceAll("_", " ") === normalizedPaymentStatus,
+      );
+
+      const isActiveJob = ACTIVE_JOB_STATUSES.includes(
+        normalizedBookingStatus,
+      );
+
+      console.log("Cancellation submitted successfully:", {
+        paymentStatus,
+        bookingStatus,
+        isPaid,
+        isActiveJob,
+      });
+
+      // Paid active jobs show the review screen.
+      // Other successful cancellations show the confirmation screen.
+      setStep(isPaid && isActiveJob ? "review" : "complete");
     } catch (err) {
-      setError(
+      // Display the real API error when the request fails.
+      const apiMessage =
         err?.response?.data?.message ||
-          err?.message ||
-          "Unable to cancel this booking. Please try again.",
+        err?.response?.data?.error ||
+        err?.message;
+
+      setError(
+        apiMessage || "Unable to submit cancellation request. Please try again.",
       );
     } finally {
       setSubmitting(false);
@@ -69,8 +124,14 @@ export default function UserCancellationModal({
   };
 
   const handleReasonSubmit = () => {
+    if (!selectedReason) {
+      setError("Please select a cancellation reason.");
+      return;
+    }
+
     if (selectedReason === OTHER_REASON) {
       setStep("details");
+      setError("");
       return;
     }
 
@@ -83,11 +144,13 @@ export default function UserCancellationModal({
         <h2 className="text-[20px] font-semibold leading-none text-[#231F20]">
           What went wrong?
         </h2>
+
         <button
           type="button"
           onClick={closeModal}
+          disabled={submitting}
           aria-label="Close cancellation modal"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-[#231F20] transition hover:bg-[#F4F4F4]"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-[#231F20] transition hover:bg-[#F4F4F4] disabled:opacity-50"
         >
           <X size={24} strokeWidth={1.8} />
         </button>
@@ -104,18 +167,22 @@ export default function UserCancellationModal({
                 type="button"
                 role="radio"
                 aria-checked={isSelected}
+                disabled={submitting}
                 onClick={() => {
                   setSelectedReason(reason);
                   setError("");
                 }}
-                className="flex h-[58px] w-full items-center justify-between border-b border-[#231F201A] text-left cursor-pointer"
+                className="flex h-[58px] w-full cursor-pointer items-center justify-between border-b border-[#231F201A] text-left disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <span className="text-[14px] font-normal text-[#5F5F5F]">
                   {reason}
                 </span>
+
                 <span
                   className={`flex h-4 w-4 items-center justify-center rounded-full border ${
-                    isSelected ? "border-[#2F7D4F]" : "border-[#9B9B9B]"
+                    isSelected
+                      ? "border-[#2F7D4F]"
+                      : "border-[#9B9B9B]"
                   }`}
                 >
                   {isSelected && (
@@ -128,27 +195,33 @@ export default function UserCancellationModal({
 
           <button
             type="button"
+            disabled={submitting}
             onClick={() => {
               setSelectedReason(OTHER_REASON);
               setStep("details");
               setError("");
             }}
-            className="flex h-[58px] w-full items-center justify-between border-b border-[#231F201A] text-left cursor-pointer"
+            className="flex h-[58px] w-full cursor-pointer items-center justify-between border-b border-[#231F201A] text-left disabled:opacity-60"
           >
             <span className="text-[14px] font-normal text-[#5F5F5F]">
               {OTHER_REASON}
             </span>
+
             <ChevronRight size={27} className="text-[#5F5F5F]" />
           </button>
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && (
+          <p role="alert" className="mt-4 text-sm text-red-600">
+            {error}
+          </p>
+        )}
 
         <button
           type="button"
           onClick={handleReasonSubmit}
           disabled={!selectedReason || submitting}
-          className="mt-10 flex h-10 w-full items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] disabled:cursor-not-allowed disabled:bg-[#BFC8C2] cursor-pointer"
+          className="mt-10 flex h-10 w-full cursor-pointer items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] disabled:cursor-not-allowed disabled:bg-[#BFC8C2]"
         >
           {submitting ? "Submitting..." : "Submit"}
         </button>
@@ -161,6 +234,7 @@ export default function UserCancellationModal({
       <div className="flex h-[68px] items-center border-b border-[#231F201A] px-7 sm:px-8">
         <button
           type="button"
+          disabled={submitting}
           onClick={() => {
             setStep("reason");
             setError("");
@@ -170,6 +244,7 @@ export default function UserCancellationModal({
         >
           <ChevronLeft size={30} strokeWidth={2} />
         </button>
+
         <h2 className="text-[20px] font-semibold leading-none text-[#231F20]">
           Reason for cancellation
         </h2>
@@ -179,22 +254,27 @@ export default function UserCancellationModal({
         <textarea
           autoFocus
           value={customReason}
+          disabled={submitting}
           onChange={(event) => {
             setCustomReason(event.target.value);
             if (error) setError("");
           }}
           placeholder="Please describe the problem"
-          className="h-[148px] w-full resize-none border-0 px-9 py-6 text-[14px] font-normal text-[#231F20] placeholder:text-[#5F5F5F] focus:outline-none focus:ring-0"
+          className="h-[148px] w-full resize-none border-0 px-9 py-6 text-[14px] font-normal text-[#231F20] placeholder:text-[#5F5F5F] focus:outline-none focus:ring-0 disabled:opacity-60"
         />
 
-        {error && <p className="mx-8 mb-3 text-sm text-red-600">{error}</p>}
+        {error && (
+          <p role="alert" className="mx-8 mb-3 text-sm text-red-600">
+            {error}
+          </p>
+        )}
 
         <div className="px-7 sm:px-8">
           <button
             type="button"
             onClick={() => submitReason(customReason)}
             disabled={!customReason.trim() || submitting}
-            className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] disabled:cursor-not-allowed disabled:bg-[#BFC8C2] cursor-pointer"
+            className="flex h-10 w-full cursor-pointer items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] disabled:cursor-not-allowed disabled:bg-[#BFC8C2]"
           >
             {submitting ? "Submitting..." : "Submit"}
           </button>
@@ -207,31 +287,61 @@ export default function UserCancellationModal({
     <>
       <div className="flex h-[68px] items-center justify-between border-b border-[#231F201A] px-8 sm:px-10">
         <h2 className="text-[18px] font-semibold leading-none text-[#231F20] sm:text-[19px]">
-          Booking cancelled
+          Cancellation request submitted
         </h2>
+
         <Info size={17} strokeWidth={1.7} className="text-[#8A8A8A]" />
       </div>
 
       <div className="px-8 pb-10 pt-9 text-center sm:px-10">
         <p className="mx-auto max-w-[390px] text-[14px] leading-5 text-[#231F20]">
-          We have received your cancellation request. This booking has
-          been cancelled successfully.
+          Your cancellation request has been submitted successfully.
         </p>
 
         <div className="mt-[62px] grid grid-cols-1 gap-4 sm:grid-cols-2">
           <button
             type="button"
             onClick={finishFlow}
-            className="flex h-10 items-center justify-center rounded-[4px] border border-[#D9D9D9] bg-white text-[14px] font-semibold text-[#231F20] transition hover:bg-[#F7F7F7] cursor-pointer"
+            className="flex h-10 cursor-pointer items-center justify-center rounded-[4px] border border-[#D9D9D9] bg-white text-[14px] font-semibold text-[#231F20] transition hover:bg-[#F7F7F7]"
           >
             Close
           </button>
+
           <button
             type="button"
             onClick={finishFlow}
-            className="flex h-10 items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] cursor-pointer"
+            className="flex h-10 cursor-pointer items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43]"
           >
             Continue
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  const renderReviewStep = () => (
+    <>
+      <div className="flex h-[68px] items-center justify-between border-b border-[#231F201A] px-8 sm:px-10">
+        <h2 className="text-[18px] font-semibold leading-none text-[#231F20] sm:text-[19px]">
+          Cancellation under review
+        </h2>
+
+        <Info size={17} strokeWidth={1.7} className="text-[#8A8A8A]" />
+      </div>
+
+      <div className="px-8 pb-10 pt-9 text-center sm:px-10">
+        <p className="mx-auto max-w-[390px] text-[14px] leading-5 text-[#231F20]">
+          Your cancellation request has been received and is being reviewed.
+          We will notify you once a decision has been made.
+        </p>
+
+        <div className="mt-[62px]">
+          <button
+            type="button"
+            onClick={finishFlow}
+            className="flex h-10 w-full cursor-pointer items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43]"
+          >
+            Close
           </button>
         </div>
       </div>
@@ -241,7 +351,11 @@ export default function UserCancellationModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={step === "complete" ? finishFlow : closeModal}
+      onClose={
+        step === "complete" || step === "review"
+          ? finishFlow
+          : closeModal
+      }
       showCloseButton={false}
       overlayClassName="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-3"
       panelClassName="relative w-full max-w-[508px] overflow-hidden rounded-[6px] border border-[#231F201A] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.22)]"
@@ -250,6 +364,7 @@ export default function UserCancellationModal({
       {step === "reason" && renderReasonStep()}
       {step === "details" && renderDetailsStep()}
       {step === "complete" && renderCompleteStep()}
+      {step === "review" && renderReviewStep()}
     </Modal>
   );
 }

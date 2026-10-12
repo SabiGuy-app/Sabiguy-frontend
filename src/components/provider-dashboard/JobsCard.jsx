@@ -114,9 +114,9 @@ export default function JobsCard({
 
   const shouldShowMessageButton =
     bookingStatus !== "funds_released" && canMessage(bookingStatus);
-  const shouldShowCancelButton = canProviderCancel(
-    job?.originalData?.status || job?.status,
-  );
+    // const shouldShowCancelButton = canProviderCancel(
+    //   job?.originalData?.status || job?.status,
+    // );
 
   const shouldShowCallButton = ![
     "cancelled",
@@ -384,7 +384,7 @@ export default function JobsCard({
                 className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
               >
                 <MessageCircle className="w-4 h-4" />
-                Message Customer
+                Message 
               </button>
             )}
             {shouldShowCallButton && (
@@ -409,18 +409,18 @@ export default function JobsCard({
                 className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
               >
                 <PhoneCall className="w-4 h-4" />
-                Call Customer
+                Call 
               </button>
             )}
 
-            {shouldShowCancelButton && (
+            {/* {shouldShowCancelButton && (
               <button
                 onClick={() => onCancel?.(job)}
                 className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-50 text-[#DC2626] rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm active:scale-95"
               >
                 Cancel
               </button>
-            )}
+            )} */}
           </div>
         </div>
       </div>

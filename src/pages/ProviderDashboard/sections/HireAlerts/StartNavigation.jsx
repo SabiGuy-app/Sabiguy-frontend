@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Phone,
   MessageCircle,
+  ChevronLeft,
   ChevronDown,
   ChevronUp,
   MapPin,
@@ -16,7 +17,7 @@ import { startJob, getBookingsDetails } from "../../../../api/bookings";
 import { cancelBooking as cancelProviderBooking } from "../../../../api/provider";
 import {
   canMessage,
-  canProviderCancel,
+  // canProviderCancel,
   normalizeStatus,
 } from "../../../../utils/chat.utils";
 import ProviderNavbar from "../../../../components/provider-dashboard/Navbar";
@@ -25,6 +26,23 @@ import ProviderCancellationModal from "../../../../components/provider-dashboard
 import WaitingForPaymentModal from "../../../../components/provider-dashboard/WaitingForPaymentModal"; // adjust path to match where you save it
 import PaymentExpiredModal from "../../../../components/provider-dashboard/PaymentExpiredModal"; // adjust path to match where you save it
 import JobCancelledModal from "../../../../components/provider-dashboard/JobCancelledModal"; // adjust path to match where you save it
+import CancelBookingButton from "../../../../components/CancelBookingButton";
+
+// FIX 1 ─ every status at or after payment counts as "paid", so coming back
+// to this page later (even after the job has started) never shows the
+// waiting or expired modal for a job that is already paid.
+const PAID_STATUSES = new Set([
+  "paid_escrow",
+  "paid_escrow_scheduled",
+  "in_progress",
+  "arrived_at_pickup",
+  "enroute_to_dropoff",
+  "arrived_at_dropoff",
+  "completed",
+  "user_accepted_completion",
+  "funds_released",
+  "disputed",
+]);
 
 // Error Boundary for Map Component
 class MapErrorBoundary extends React.Component {
@@ -105,54 +123,48 @@ export default function StartNavigation() {
   // ---------------------------------------------------------------
   // PAYMENT STATUS — single source of truth for the modal(s) AND the
   // Start Navigation button's disabled state below.
-  //   "pending"   -> WaitingForPaymentModal shows, button disabled
+  //   "checking"  -> haven't asked the server yet: show nothing, time nothing
+  //   "pending"   -> server says unpaid: WaitingForPaymentModal + countdown
   //   "paid"      -> all modals unmount, button enabled
   //   "expired"   -> PaymentExpiredModal shows, button stays disabled
   //   "cancelled" -> JobCancelledModal shows, button stays disabled
   // ---------------------------------------------------------------
-  const [paymentStatus, setPaymentStatus] = useState("pending");
+  // FIX 2 ─ start at "checking", not "pending". Starting at "pending" meant
+  // every visit (even to a paid job) showed the modal and started the
+  // timer before the server had answered.
+  const [paymentStatus, setPaymentStatus] = useState("checking");
   const [latestBooking, setLatestBooking] = useState(null);
   const [waitingModalDismissed, setWaitingModalDismissed] = useState(false);
   const pollRef = useRef(null);
 
+  // FIX 3 ─ poll while "checking" (first look) or "pending" (waiting on
+  // payment). The first answer decides which one the page really is in.
   useEffect(() => {
-    if (!alert?.id || paymentStatus !== "pending") return;
+    if (!alert?.id || !["checking", "pending"].includes(paymentStatus)) return;
 
     const poll = async () => {
       try {
         const data = await getBookingsDetails(alert.id);
-        const latestBookingData = data?.data?.booking;
+        const latestBookingData = data?.data?.booking || data?.booking;
         setLatestBooking(latestBookingData);
+        const status = normalizeStatus(latestBookingData?.status);
 
-        // Confirmed: /api/v1/bookings/{id} returns one of these status
-        // values once payment is complete — "paid_escrow" for immediate
-        // bookings, "paid_escrow_scheduled" for scheduled ones — held
-        // in escrow until the job wraps.
-        const status = latestBookingData?.status;
-
-        const paidStatuses = ["paid_escrow", "paid_escrow_scheduled"];
-        if (paidStatuses.includes(status)) {
+        if (PAID_STATUSES.has(status)) {
           setPaymentStatus("paid");
-          return;
-        }
-
-        // Confirmed from the backend's booking-status enum.
-        if (status === "cancelled") {
+        } else if (status === "cancelled") {
           setPaymentStatus("cancelled");
-          return;
-        }
-
-        // The backend also independently tracks "expired" ("Payment
-        // window expired before user paid"), separate from our own
-        // client-side countdown. Checking it here means an expiry the
-        // backend detects first (e.g. on another device) still gets
-        // caught, instead of relying only on this page's local timer.
-        if (status === "expired") {
+        } else if (status === "expired") {
+          // the backend tracks its own "expired" ("Payment window expired
+          // before user paid"), separate from this page's local countdown
           setPaymentStatus("expired");
+        } else {
+          // first look is done and it isn't paid: now it really is pending
+          setPaymentStatus((cur) => (cur === "checking" ? "pending" : cur));
         }
       } catch (err) {
         console.error("Failed to fetch booking status:", err);
-        // a failed check just tries again on the next tick
+        // can't tell: show the waiting modal and keep polling
+        setPaymentStatus((cur) => (cur === "checking" ? "pending" : cur));
       }
     };
 
@@ -164,18 +176,27 @@ export default function StartNavigation() {
 
   // Note: checked the payment API module (initializePayment, verifyPayment,
   // payWithWallet) — it's REST-only (axios calls), no socket/push mechanism
-  // exists in this codebase. Polling above is the only way to detect
-  // payment confirmation right now, not a temporary fallback.
+  // exists in that module. Polling above is how payment is detected.
 
-  const handlePaymentExpire = () => {
-    clearInterval(pollRef.current); // stop polling a dead job
+  // FIX 4 ─ before declaring "expired", take one last look at the server.
+  // Without this, a payment that landed between two polls (or just before
+  // the timer hit 0) would still be shown as expired, and since polling
+  // stops at "expired" the page would never find out.
+  const handlePaymentExpire = async () => {
+    clearInterval(pollRef.current);
+    try {
+      const data = await getBookingsDetails(alert.id);
+      if (PAID_STATUSES.has(normalizeStatus(data?.data?.booking?.status))) {
+        setPaymentStatus("paid");
+        return;
+      }
+    } catch (err) {
+      // can't check, so fall through to expired
+    }
     setPaymentStatus("expired");
   };
 
   const handlePaymentModalClose = () => {
-    // X icon just hides the popup — stays on this page, keeps polling
-    // AND keeps counting down in the background, since both now live
-    // in this parent component instead of inside the modal.
     setWaitingModalDismissed(true);
   };
 
@@ -201,8 +222,11 @@ export default function StartNavigation() {
   const [secondsLeft, setSecondsLeft] = useState(PAYMENT_WINDOW_SECONDS);
   const hasExpiredRef = useRef(false);
 
+  // FIX 5 ─ only read or create a deadline once the server has confirmed the
+  // job is unpaid ("pending"). Before, this ran for every visit, so a paid
+  // job could pick up an old saved deadline and expire on the first tick.
   useEffect(() => {
-    if (!alert?.id) return;
+    if (!alert?.id || paymentStatus !== "pending") return;
 
     const storageKey = `payment_deadline_${alert.id}`;
     const stored = localStorage.getItem(storageKey);
@@ -217,7 +241,7 @@ export default function StartNavigation() {
     ).toISOString();
     localStorage.setItem(storageKey, fresh);
     setDeadline(fresh);
-  }, [alert?.id]);
+  }, [alert?.id, paymentStatus]);
 
   useEffect(() => {
     if (!deadline || paymentStatus !== "pending") return; // stop once paid/expired
@@ -244,6 +268,14 @@ export default function StartNavigation() {
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadline, paymentStatus]);
+
+  // FIX 6 ─ once the job is paid or cancelled, delete its saved deadline so
+  // a later visit can never read it.
+  useEffect(() => {
+    if (alert?.id && ["paid", "cancelled"].includes(paymentStatus)) {
+      localStorage.removeItem(`payment_deadline_${alert.id}`);
+    }
+  }, [paymentStatus, alert?.id]);
 
   // Same fields AlertsCard.jsx reads off `alert` for pickup, dropoff,
   // price breakdown and delivery date — reused so the modal shows the
@@ -279,16 +311,25 @@ export default function StartNavigation() {
     }
   };
 
-  const statusForCancel =
-    alert?.originalData?.status || bookingDetails?.status || alert?.status;
-  const isAcceptedUnpaidRoute =
-    normalizeStatus(alert?.status) === "new" &&
-    normalizeStatus(alert?.originalData?.status) ===
-      "awaiting_provider_acceptance";
-  const shouldShowCancelRequest =
-    canProviderCancel(statusForCancel) ||
-    canProviderCancel(alert?.status) ||
-    isAcceptedUnpaidRoute;
+  const handleMessageProvider = () => {
+    if (!bookingId) return;
+
+    navigate(`/dashboard/chat?bookingId=${bookingId}`);
+  };
+
+  // const shouldShowCancelRequest = [
+  //   "awaiting_payment",
+  //   "payment_pending",
+  //   "provider_selected",
+
+  //   "paid_escrow",
+  //   "paid_escrow_scheduled",
+  //   "provider_accepted",
+  //   "in_progress",
+  //   "arrived_at_pickup",
+  //   "enroute_to_dropoff",
+  //   "arrived_at_dropoff",
+  // ].includes(normalizedStatus);
 
   const handleCancel = async (reason) => {
     if (!bookingId) {
@@ -312,8 +353,9 @@ export default function StartNavigation() {
           onComplete={handleCancelComplete}
         />
 
-        {/* Pops up on load and unmounts once paymentStatus flips, or once
-          the provider dismisses it early with the X icon. */}
+        {/* Only while the server says the job is unpaid ("pending").
+          Never during "checking", and gone once paid/expired/cancelled
+          or dismissed early with the X icon. */}
         {paymentStatus === "pending" && !waitingModalDismissed && (
           <WaitingForPaymentModal
             secondsLeft={secondsLeft}
@@ -332,8 +374,8 @@ export default function StartNavigation() {
           />
         )}
 
-        {/* Separate modal — pops up automatically the moment the
-          countdown above hits 0 with no payment confirmed. */}
+        {/* Separate modal — pops up automatically once the countdown above
+          hits 0 and the server confirms the job is still unpaid. */}
         {paymentStatus === "expired" && (
           <PaymentExpiredModal onBackToDashboard={handleBackToDashboard} />
         )}
@@ -343,6 +385,15 @@ export default function StartNavigation() {
         {paymentStatus === "cancelled" && (
           <JobCancelledModal onBackToDashboard={handleBackToDashboard} />
         )}
+
+        <button
+          type="button"
+          onClick={handleBackToDashboard}
+          className="mb-4 inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Hire Alerts
+        </button>
 
         <div className="min-h-screen bg-gray-50 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
           <div className="">
@@ -357,7 +408,7 @@ export default function StartNavigation() {
             <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                  <div className="w-3 h-3 bg-[#005823] rounded-full"></div>
+                  <div className="w-3 h-3 bg-[#005823] roundmb-full"></div>
                 </div>
                 <div>
                   <span className="text-[#231F2080] text-[16px]">Pickup</span>
@@ -427,22 +478,37 @@ export default function StartNavigation() {
                     Call
                   </span>
                 </button>
-                {canMessage(alert?.status || bookingDetails?.status) && (
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    <MessageCircle className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Message
-                    </span>
-                  </button>
-                )}
-                {shouldShowCancelRequest && (
+                <button
+                  onClick={handleMessageProvider}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Message
+                  </span>
+                </button>
+                {/* {shouldShowCancelRequest && (
                   <button
                     onClick={() => setCancelModalOpen(true)}
                     className="text-[#E90000] font-medium text-[16px] px-3 py-3 rounded-[10px] hover:text-red-600 transition-colors hover:bg-red-200"
                   >
                     Cancel Request
                   </button>
-                )}
+                )} */}
+
+                <CancelBookingButton
+                  bookingId={bookingId}
+                  role="provider"
+                  status={
+                    latestBooking?.status ||
+                    bookingDetails?.status ||
+                    alert?.status
+                  }
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border  rounded-lg  transition-colors text-red-600  border-red-300  hover:bg-red-50"
+                  title="Cancel"
+                  paymentStatus={latestBooking?.payment?.status}
+                  onSuccess={handleCancelComplete}
+                />
               </div>
             </div>
 
@@ -463,8 +529,8 @@ export default function StartNavigation() {
             </div>
             {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
 
-            {/* Disabled until the customer has paid (isPaid false while
-              "pending" or "expired"), same as while starting=true. */}
+            {/* Disabled until the customer has paid (isPaid is false while
+              "checking", "pending" or "expired"), same as while starting=true. */}
             <button
               onClick={handleStartNavigation}
               disabled={starting || !isPaid}

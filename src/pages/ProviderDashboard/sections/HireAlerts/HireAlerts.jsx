@@ -8,6 +8,7 @@ import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import {
   cancelBooking as cancelProviderBooking,
+  declineBooking as declineProviderBooking,
   getProviderBookings,
 } from "../../../../api/provider";
 import { getAllBookings, acceptBookings } from "../../../../api/bookings";
@@ -32,6 +33,7 @@ export default function HireAlerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
+  const [decliningAlertId, setDecliningAlertId] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -124,9 +126,20 @@ export default function HireAlerts() {
       const bookingStatus = String(booking.status || "")
         .trim()
         .toLowerCase();
+
+      const providerResponse = String(booking.providerResponse || "")
+        .trim()
+        .toLowerCase();
+
+      // Don't show bookings this provider has declined.
+      if (providerResponse === "declined") {
+        return;
+      }
+
       const formattedSubCategory = booking.subCategory
         ? String(booking.subCategory).replace(/_/g, " ")
         : "";
+
       const commonData = {
         id: booking._id,
         title:
@@ -198,17 +211,14 @@ export default function HireAlerts() {
         totalAmount: booking.totalAmount || 0,
         modeOfDelivery: booking.modeOfDelivery || "",
         distance: booking.distance || null,
-        // Store original data for modal details
         originalData: booking,
       };
 
-      // Categorize based on status
       if (
         bookingStatus === "pending_providers" ||
         bookingStatus === "pending_customer" ||
         bookingStatus === "awaiting_provider_acceptance"
       ) {
-        // These are alerts (new job opportunities)
         alerts.push({
           ...commonData,
           subCategory: formattedSubCategory || commonData.title,
@@ -230,11 +240,10 @@ export default function HireAlerts() {
               : null,
         });
       } else {
-        // These are active jobs
         jobs.push({
           ...commonData,
           status: mapJobStatus(bookingStatus),
-          providerName: "You", // Since this is provider dashboard
+          providerName: "You",
           startsIn:
             bookingStatus === "confirmed"
               ? calculateTimeUntil(booking.startDate)
@@ -255,7 +264,6 @@ export default function HireAlerts() {
 
     return { alerts, jobs };
   };
-
   const mapJobStatus = (apiStatus) => {
     const statusMap = {
       provider_selected: "Awaiting Payment",
@@ -360,7 +368,9 @@ export default function HireAlerts() {
     }
 
     if (statusFilter === "pending") {
-      return (status === "awaiting payment" || status === "paid escrow scheduled");
+      return (
+        status === "awaiting payment" || status === "paid escrow scheduled"
+      );
     }
 
     if (statusFilter === "completed") {
@@ -491,6 +501,32 @@ export default function HireAlerts() {
     }
   };
 
+  const handleDeclineBooking = async (alert) => {
+    const bookingId = getBookingId(alert);
+
+    if (!bookingId) {
+      setError("Booking details are unavailable.");
+      return;
+    }
+
+    try {
+      setDecliningAlertId(bookingId);
+      setError(null);
+
+      await declineProviderBooking(bookingId);
+
+      // Remove the declined booking from Hire Alerts after API success.
+      setAlerts((currentAlerts) =>
+        currentAlerts.filter((item) => getBookingId(item) !== bookingId),
+      );
+    } catch (err) {
+      console.error("Error declining booking:", err);
+      setError(err.response?.data?.message || "Failed to decline booking");
+    } finally {
+      setDecliningAlertId(null);
+    }
+  };
+
   // Loading State
   if (isLoading) {
     return (
@@ -608,8 +644,9 @@ export default function HireAlerts() {
                 alert={alert}
                 onViewDetails={handleViewAlert}
                 onAcceptBooking={handleAcceptBooking}
-                onCancel={handleOpenCancel}
+                onDeclineBooking={handleDeclineBooking}
                 accepting={acceptingAlertId === alert.id}
+                declining={decliningAlertId === alert.id}
               />
             ))
           ) : (

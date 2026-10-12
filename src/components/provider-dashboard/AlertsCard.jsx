@@ -6,8 +6,9 @@ export default function AlertsCard({
   alert,
   onViewDetails,
   onAcceptBooking,
-  onCancel,
+  onDeclineBooking,
   accepting,
+  declining,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -205,10 +206,11 @@ export default function AlertsCard({
 
             <button
               type="button"
-              onClick={() => onCancel?.(alert)}
-              className="w-full sm:w-auto px-8 py-3 bg-white text-red-700 border border-red-200 cursor-pointer rounded-xl font-bold hover:bg-red-50 transition-all text-sm sm:text-base active:scale-95"
+              onClick={() => onDeclineBooking?.(alert)}
+              disabled={accepting || declining}
+              className="w-full sm:w-auto px-8 py-3 bg-white text-red-700 border border-red-200 cursor-pointer rounded-xl font-bold hover:bg-red-50 transition-all text-sm sm:text-base active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Cancel
+              {declining ? "Declining..." : "Decline"}
             </button>
 
             {String(alert?.status || "").toLowerCase() ===

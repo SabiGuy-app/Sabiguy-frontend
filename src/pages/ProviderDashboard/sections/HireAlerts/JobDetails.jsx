@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import { canMessage } from "../../../../utils/chat.utils";
 import { useCallContext } from "../../../../components/shared/CallContext";
+import CancelBookingButton from "../../../../components/CancelBookingButton";
 
 export default function JobDetailsModal({
   isOpen,
@@ -56,7 +57,15 @@ export default function JobDetailsModal({
     .toLowerCase()
     .replace(/\s+/g, "_");
 
-  const ShowBtn = ![
+  const ShowCallBtn = ![
+    "cancelled",
+    "expired",
+    "booking_expired",
+    "funds_released",
+    "no_provider_available",
+  ].includes(bookingStatus);
+
+  const ShowMessageBtn = ![
     "cancelled",
     "expired",
     "booking_expired",
@@ -166,8 +175,8 @@ export default function JobDetailsModal({
                 </span>
               </div>
 
-              {ShowBtn && (
-                <div className="flex mt-3 gap-3 w-full">
+              <div className="flex flex-wrap mt-3 gap-3 w-full">
+                {ShowCallBtn && (
                   <button
                     onClick={() =>
                       callContext?.openCall?.({
@@ -186,22 +195,43 @@ export default function JobDetailsModal({
                         },
                       })
                     }
-                    className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 min-w-[100px] py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   >
                     <PhoneCall className="w-4 h-4" />
                     Call
                   </button>
-                  {canMessage(job?.status || job?.originalData?.status) && (
+                )}
+
+                {ShowMessageBtn &&
+                  canMessage(job?.status || job?.originalData?.status) && (
                     <button
-                      className="flex-1 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 min-w-[100px] py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                       onClick={() => onMessageCustomer?.(job)}
                     >
                       <MessageCircle className="w-4 h-4" />
                       Message
                     </button>
                   )}
-                </div>
-              )}
+
+                <CancelBookingButton
+                  bookingId={
+                    job?.originalData?._id ||
+                    job?.originalData?.id ||
+                    job?.fullBookingId ||
+                    job?.bookingId
+                  }
+                  className="flex-1 min-w-[100px] py-2 mt-3  rounded-lg font-medium  flex items-center justify-center gap-2  bg-white text-red-600 border border-red-300  hover:bg-red-50 transition-colors"
+                  role="provider"
+                  status={job?.originalData?.status || job?.status}
+                  paymentStatus={
+                    job?.originalData?.payment?.status ||
+                    job?.originalData?.paymentStatus
+                  }
+                  onSuccess={() => {
+                    onClose?.();
+                  }}
+                />
+              </div>
             </div>
 
             {/* Booking Information */}
