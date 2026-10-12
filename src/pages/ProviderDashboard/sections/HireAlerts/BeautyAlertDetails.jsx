@@ -86,11 +86,11 @@ const formatPrice = (value) =>
 
 function InfoRow({ icon, label, value }) {
   return (
-    <div className="flex items-start gap-2.5">
+    <div className="flex items-start gap-3">
       {icon}
       <div className="min-w-0">
-        <p className="text-[13px] font-semibold leading-4 text-[#333333]">{label}</p>
-        <p className="mt-0.5 break-words text-[13px] leading-5 text-[#777777]">{value || "Not specified"}</p>
+        <p className="text-sm font-semibold leading-5 text-[#333333]">{label}</p>
+        <p className="mt-0.5 break-words text-sm leading-5 text-[#777777]">{value || "Not specified"}</p>
       </div>
     </div>
   );
@@ -103,7 +103,10 @@ export default function AlertDetailsModal({
   onAccept,
   onDecline,
   accepting = false,
+  variant = "alert",
+  showPrimaryAction = true,
 }) {
+  const isJob = variant === "job";
   const booking = alertData?.originalData || {};
   const customer = booking?.userId && typeof booking.userId === "object"
     ? booking.userId
@@ -128,6 +131,15 @@ export default function AlertDetailsModal({
   const serviceCost = booking?.agreedPrice ?? booking?.budget ?? booking?.totalAmount ?? alertData?.agreedPrice;
   const note = booking?.additionalNote || booking?.notes || booking?.pickupNote || "";
   const deadline = getDeadline(booking, alertData);
+  const normalizedStatus = String(booking?.status || alertData?.status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  const primaryActionLabel = !isJob
+    ? "Accept Request"
+    : normalizedStatus === "in_progress"
+      ? "Open Service"
+      : "Open Journey";
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [actionError, setActionError] = useState("");
 
@@ -173,7 +185,7 @@ export default function AlertDetailsModal({
         className="flex max-h-[min(92vh,720px)] w-full max-w-[660px] flex-col overflow-hidden rounded-xl bg-white shadow-xl"
       >
         <header className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4 sm:px-6">
-          <h2 id="hire-alert-details-title" className="text-base font-semibold text-[#252525]">
+          <h2 id="hire-alert-details-title" className="text-xl font-semibold text-[#252525]">
             Service Details
           </h2>
           <button
@@ -208,8 +220,8 @@ export default function AlertDetailsModal({
                   {reviewCount > 0 && <span>({reviewCount} reviews)</span>}
                 </div>
               )}
-              <div className="mt-1 flex min-w-0 items-center gap-1 text-xs text-[#888888]">
-                <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <div className="mt-1 flex min-w-0 items-center gap-1 text-sm text-[#888888]">
+                <MapPin className="h-4 w-4 shrink-0" />
                 <span className="truncate">{customer.city || customer.currentLocation?.address || address}</span>
               </div>
             </div>
@@ -221,48 +233,54 @@ export default function AlertDetailsModal({
             </div>
           )}
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={handleAccept}
-              disabled={accepting}
-              className="min-h-10 rounded-md bg-[#347D53] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#286642] disabled:cursor-wait disabled:opacity-60"
-            >
-              {accepting ? "Accepting..." : "Accept Request"}
-            </button>
-            <button
-              type="button"
-              onClick={handleDecline}
-              disabled={accepting}
-              className="min-h-10 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-[#555555] transition hover:bg-gray-50 disabled:opacity-60"
-            >
-              Decline
-            </button>
-          </div>
+          {(showPrimaryAction || !isJob) && (
+            <div className={`mt-4 grid gap-3 ${isJob ? "grid-cols-1" : "grid-cols-2"}`}>
+              <button
+                type="button"
+                onClick={handleAccept}
+                disabled={accepting}
+                className="min-h-10 rounded-md bg-[#347D53] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#286642] disabled:cursor-wait disabled:opacity-60"
+              >
+                {accepting ? "Loading..." : primaryActionLabel}
+              </button>
+              {!isJob && (
+                <button
+                  type="button"
+                  onClick={handleDecline}
+                  disabled={accepting}
+                  className="min-h-10 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-[#555555] transition hover:bg-gray-50 disabled:opacity-60"
+                >
+                  Decline
+                </button>
+              )}
+            </div>
+          )}
 
           <section className="mt-5 border-t border-gray-100 pt-4">
             <div className="mb-3 flex items-start justify-between gap-4">
-              <h3 className="text-sm font-semibold text-[#333333]">Booking Information</h3>
-              <div className="shrink-0 text-right">
-                <p className="text-[11px] text-[#777777]">Time left to accept</p>
-                <p className="mt-0.5 text-xl font-bold leading-6 text-[#347D53]">
-                  {timeRemaining || "--:--"}
-                </p>
-              </div>
+              <h3 className="text-base font-semibold text-[#333333]">Booking Information</h3>
+              {!isJob && (
+                <div className="shrink-0 text-right">
+                  <p className="text-[11px] text-[#777777]">Time left to accept</p>
+                  <p className="mt-0.5 text-xl font-bold leading-6 text-[#347D53]">
+                    {timeRemaining || "--:--"}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3.5">
-              <InfoRow icon={<Wrench className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Service" value={serviceName} />
-              <InfoRow icon={<MapPinned className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Service Location" value={serviceLocation} />
-              <InfoRow icon={<CalendarDays className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Start Date & Time" value={formatDateTime(booking)} />
-              <InfoRow icon={<Clock3 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Duration" value={formatDuration(booking)} />
-              <InfoRow icon={<MapPin className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Location" value={address} />
-              <InfoRow icon={<Banknote className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#43875B]" />} label="Service Cost" value={formatPrice(serviceCost)} />
+              <InfoRow icon={<Wrench className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Service" value={serviceName} />
+              <InfoRow icon={<MapPinned className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Service Location" value={serviceLocation} />
+              <InfoRow icon={<CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Start Date & Time" value={formatDateTime(booking)} />
+              <InfoRow icon={<Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Duration" value={formatDuration(booking)} />
+              <InfoRow icon={<MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Location" value={address} />
+              <InfoRow icon={<Banknote className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Service Cost" value={formatPrice(serviceCost)} />
             </div>
 
             <div className="mt-4">
-              <p className="mb-1.5 text-xs text-[#888888]">Additional note</p>
-              <div className="min-h-[56px] rounded-md border border-[#E4EAF0] bg-[#F7FAFC] px-3 py-2.5 text-xs leading-4 text-[#888888]">
+              <p className="mb-1.5 text-sm text-[#888888]">Additional note</p>
+              <div className="min-h-[56px] rounded-md border border-[#E4EAF0] bg-[#F7FAFC] px-3 py-2.5 text-sm leading-5 text-[#888888]">
                 {note || "No additional note"}
               </div>
             </div>

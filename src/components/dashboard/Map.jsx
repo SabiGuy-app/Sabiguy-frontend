@@ -33,22 +33,24 @@ const isBikeVehicleType = (vehicleType) => {
 const extractPointFromCurrentLocation = (currentLocation) => {
   if (!currentLocation) return null;
 
-  const coords = currentLocation.coordinates;
+  const coords =
+    currentLocation.coordinates?.coordinates || currentLocation.coordinates;
   if (Array.isArray(coords) && coords.length >= 2) {
+    const [longitude, latitude] = coords.map(Number);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
     return {
-      latitude: coords[1],
-      longitude: coords[0],
+      latitude,
+      longitude,
       address: currentLocation.address || "",
     };
   }
 
-  if (
-    typeof currentLocation.latitude === "number" &&
-    typeof currentLocation.longitude === "number"
-  ) {
+  const latitude = Number(currentLocation.latitude ?? currentLocation.lat);
+  const longitude = Number(currentLocation.longitude ?? currentLocation.lng);
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
     return {
-      latitude: currentLocation.latitude,
-      longitude: currentLocation.longitude,
+      latitude,
+      longitude,
       address: currentLocation.address || "",
     };
   }
@@ -230,6 +232,7 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
     GOOGLE_MAPS_API_KEY ? "loading" : "missing",
   );
   const [loadError, setLoadError] = useState("");
+  const [geocodedPoints, setGeocodedPoints] = useState({ pickup: null, dropoff: null });
   const riderLocation = useMemo(
     () => getBookingRiderLocation(bookingDetails),
     [bookingDetails?.providerId?.currentLocation],
@@ -239,20 +242,66 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
     [bookingDetails?.modeOfDelivery],
   );
 
+  useEffect(() => {
+    if (loadState !== "ready" || !window.google?.maps?.Geocoder) return undefined;
+
+    let cancelled = false;
+    const geocoder = new window.google.maps.Geocoder();
+    const geocode = (point) => {
+      if (isValidCoordinate(point) || !point?.address) return Promise.resolve(point);
+
+      return new Promise((resolve) => {
+        geocoder.geocode({ address: point.address }, (results, status) => {
+          if (status !== "OK" || !results?.[0]?.geometry?.location) {
+            console.warn("Google Maps geocoding failed:", status, point.address);
+            resolve(null);
+            return;
+          }
+
+          const location = results[0].geometry.location;
+          resolve({
+            ...point,
+            latitude: location.lat(),
+            longitude: location.lng(),
+          });
+        });
+      });
+    };
+
+    Promise.all([geocode(pickup), geocode(dropoff)]).then(([nextPickup, nextDropoff]) => {
+      if (!cancelled) setGeocodedPoints({ pickup: nextPickup, dropoff: nextDropoff });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    loadState,
+    pickup?.latitude,
+    pickup?.longitude,
+    pickup?.address,
+    dropoff?.latitude,
+    dropoff?.longitude,
+    dropoff?.address,
+  ]);
+
+  const resolvedPickup = isValidCoordinate(pickup) ? pickup : geocodedPoints.pickup;
+  const resolvedDropoff = isValidCoordinate(dropoff) ? dropoff : geocodedPoints.dropoff;
+
   const getCenter = () => {
     if (isValidCoordinate(riderLocation)) {
       return toLatLngLiteral(riderLocation);
     }
 
-    if (isValidCoordinate(pickup)) {
-      return toLatLngLiteral(pickup);
+    if (isValidCoordinate(resolvedPickup)) {
+      return toLatLngLiteral(resolvedPickup);
     }
 
-    if (isValidCoordinate(dropoff)) {
-      return toLatLngLiteral(dropoff);
+    if (isValidCoordinate(resolvedDropoff)) {
+      return toLatLngLiteral(resolvedDropoff);
     }
 
-    return null;
+    return { lat: 6.5244, lng: 3.3792 };
   };
 
   const updateBounds = () => {
@@ -262,11 +311,11 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
     if (isValidCoordinate(riderLocation)) {
       points.push(toLatLngLiteral(riderLocation));
     }
-    if (isValidCoordinate(pickup)) {
-      points.push(toLatLngLiteral(pickup));
+    if (isValidCoordinate(resolvedPickup)) {
+      points.push(toLatLngLiteral(resolvedPickup));
     }
-    if (isValidCoordinate(dropoff)) {
-      points.push(toLatLngLiteral(dropoff));
+    if (isValidCoordinate(resolvedDropoff)) {
+      points.push(toLatLngLiteral(resolvedDropoff));
     }
 
     if (points.length >= 2) {
@@ -331,14 +380,14 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
 
     directionsService.current = new window.google.maps.DirectionsService();
     updateBounds();
-  }, [loadState, pickup, dropoff, riderLocation]);
+  }, [loadState, resolvedPickup, resolvedDropoff, riderLocation]);
 
   useEffect(() => {
-    if (!map.current || !window.google?.maps || !isValidCoordinate(pickup)) {
+    if (!map.current || !window.google?.maps || !isValidCoordinate(resolvedPickup)) {
       return;
     }
 
-    const position = toLatLngLiteral(pickup);
+    const position = toLatLngLiteral(resolvedPickup);
 
     if (pickupMarker.current) {
       pickupMarker.current.setPosition(position);
@@ -355,14 +404,14 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
         anchor: new window.google.maps.Point(24, 52),
       },
     });
-  }, [pickup, loadState]);
+  }, [resolvedPickup, loadState]);
 
   useEffect(() => {
-    if (!map.current || !window.google?.maps || !isValidCoordinate(dropoff)) {
+    if (!map.current || !window.google?.maps || !isValidCoordinate(resolvedDropoff)) {
       return;
     }
 
-    const position = toLatLngLiteral(dropoff);
+    const position = toLatLngLiteral(resolvedDropoff);
 
     if (dropoffMarker.current) {
       dropoffMarker.current.setPosition(position);
@@ -379,7 +428,7 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
         anchor: new window.google.maps.Point(24, 52),
       },
     });
-  }, [dropoff, loadState]);
+  }, [resolvedDropoff, loadState]);
 
   useEffect(() => {
     if (
@@ -436,16 +485,16 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
       !map.current ||
       !window.google?.maps ||
       !directionsService.current ||
-      !isValidCoordinate(pickup) ||
-      !isValidCoordinate(dropoff)
+      !isValidCoordinate(resolvedPickup) ||
+      !isValidCoordinate(resolvedDropoff)
     ) {
       return;
     }
 
       directionsService.current.route(
       {
-        origin: toLatLngLiteral(pickup),
-        destination: toLatLngLiteral(dropoff),
+        origin: toLatLngLiteral(resolvedPickup),
+        destination: toLatLngLiteral(resolvedDropoff),
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
@@ -470,12 +519,12 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
         });
       },
     );
-  }, [pickup, dropoff, loadState, routeColor]);
+  }, [resolvedPickup, resolvedDropoff, loadState, routeColor]);
 
   useEffect(() => {
     if (!map.current) return;
     updateBounds();
-  }, [pickup, dropoff, riderLocation, loadState]);
+  }, [resolvedPickup, resolvedDropoff, riderLocation, loadState]);
 
   useEffect(() => {
     return () => {
@@ -531,7 +580,13 @@ const DeliveryMap = ({ pickup, dropoff, bookingDetails, routeColor = "#005823" }
     <div
       ref={mapContainer}
       className="w-full h-full rounded-lg overflow-hidden shadow-lg bg-[#f5f7f6]"
-    />
+    >
+      {loadState === "loading" && (
+        <div className="flex h-full items-center justify-center text-sm text-gray-500">
+          Loading map...
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -10,7 +10,7 @@ import {
   Clock,
   Copy,
   MapPin,
-  MapPinned,
+  Home,
   MessageCircle,
   Navigation,
   Phone,
@@ -100,7 +100,7 @@ export default function BeautyRequest({
   );
 }
 
-function BeautyBookingCard({ booking, onRefresh }) {
+export function BeautyBookingCard({ booking, onRefresh }) {
   const { cancel, complete, error } = useBeautyBookingStore();
   const [params, setParams] = useSearchParams();
   const [screen, setScreen] = useState(null);
@@ -248,7 +248,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
 
   return (
     <>
-      <article className="rounded-md bg-white px-4 py-4 shadow-sm sm:px-5">
+      <article className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
           {(error || actionError) && (
             <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
               {actionError || error}
@@ -258,29 +258,29 @@ function BeautyBookingCard({ booking, onRefresh }) {
             <img
               src={booking.providerImage || "/avatar.png"}
               alt={booking.providerName || provider.fullName}
-              className="h-9 w-9 shrink-0 rounded-full object-cover"
+              className="h-10 w-10 shrink-0 rounded-full object-cover"
             />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-sm font-semibold text-[#231F20]">
+                <h3 className="text-base font-semibold leading-5 text-[#231F20]">
                   {booking.service}
                 </h3>
                 <span
-                  className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${booking.status === "completed" ? "border-[#34805A] bg-[#34805A1A] text-[#34805A]" : booking.status === "active" ? "border-blue-200 bg-blue-50 text-blue-600" : ["expired", "cancelled"].includes(booking.status) ? "border-gray-200 bg-gray-50 text-gray-500" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+                  className={`rounded-full border px-2 py-0.5 text-xs font-medium ${booking.status === "completed" ? "border-[#34805A] bg-[#34805A1A] text-[#34805A]" : booking.status === "active" ? "border-blue-200 bg-blue-50 text-blue-600" : ["expired", "cancelled"].includes(booking.status) ? "border-gray-200 bg-gray-50 text-gray-500" : "border-amber-200 bg-amber-50 text-amber-700"}`}
                 >
                   {statuses[booking.status] || booking.apiStatus || booking.status}
                 </span>
               </div>
-              <p className="mt-1 inline-flex items-center gap-1 rounded-sm bg-[#34805A1A] px-1.5 py-0.5 text-[10px] text-[#34805A]">
-                <MapPinned size={11} />
+              <p className="mt-1 inline-flex items-center gap-1 rounded-sm bg-[#EAF3FF] px-1.5 py-1 text-[11px] text-[#1674E8]">
+                <Home size={16} />
                 {booking.label}
               </p>
-              {booking.address && <p className="mt-1 flex items-center gap-1.5 text-xs text-[#231F20BF]">
-                <MapPin size={14} className="text-[#34805A]" />
+              {booking.address && <p className="mt-1 flex items-center gap-1.5 text-xs text-[#231F20BF] sm:text-sm">
+                <MapPin size={16} className="text-[#34805A]" />
                 {booking.address}
               </p>}
-              {booking.date && <p className="mt-1 flex items-center gap-1.5 text-xs text-[#231F20BF]">
-                <CalendarDays size={14} className="text-[#34805A]" />
+              {booking.date && <p className="mt-1 flex items-center gap-1.5 text-xs text-[#231F20BF] sm:text-sm">
+                <CalendarDays size={16} className="text-[#34805A]" />
                 {new Date(booking.date).toLocaleString("en-NG", {
                   month: "short",
                   day: "numeric",
@@ -289,16 +289,16 @@ function BeautyBookingCard({ booking, onRefresh }) {
                   minute: "2-digit",
                 })}
               </p>}
-              {booking.distance?.value != null && <p className="mt-1 flex items-center gap-1.5 text-xs text-[#231F20BF]">
+              {booking.distance?.value != null && <p className="mt-1 flex items-center gap-1.5 text-xs text-[#231F20BF] sm:text-sm">
                 <img
                   src={distance}
                   alt=""
-                  className="h-3.5 w-3.5 object-contain"
+                  className="h-4 w-4 object-contain"
                 />
                 Distance: {booking.distance.value} {booking.distance.unit || "km"}
               </p>}
             </div>
-            <p className="shrink-0 text-sm font-semibold text-[#005823]">{formatMoney(booking.price)}</p>
+            <p className="shrink-0 text-base font-bold text-[#005823] sm:text-lg">{formatMoney(booking.price)}</p>
           </div>
           <div className="mt-3 border-t border-gray-200 pt-2.5">
             {booking.review && (booking.review.review || booking.review.score) && (
@@ -325,20 +325,35 @@ function BeautyBookingCard({ booking, onRefresh }) {
               )}
             </div>
           )}
-          {!["completed", "expired", "cancelled"].includes(booking.status) && (
-            <div className="mt-4 flex flex-wrap gap-3 border-t border-gray-100 pt-4">
-              <Button size="sm" type="button" onClick={() => setScreen("details")}>
+          {!["completed", "cancelled"].includes(booking.status) && (
+            <div className="mt-3 flex flex-wrap gap-3 border-t border-gray-200 pt-2.5">
+              <Button
+                size="sm"
+                type="button"
+                className="inline-flex min-h-10 items-center justify-center rounded-[4px] bg-[#347D53] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#286642]"
+                onClick={() => setScreen("details")}
+              >
                 View Details
               </Button>
               {booking.status === "review" && (
-                <Button size="sm" type="button" onClick={() => setScreen("review")}>
+                <Button
+                  size="sm"
+                  type="button"
+                  className="inline-flex min-h-10 items-center justify-center rounded-[4px] bg-[#347D53] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#286642]"
+                  onClick={() => setScreen("review")}
+                >
                   Review
                 </Button>
               )}
               {booking.status === "accepted" && (
-                <Button size="sm" type="button" onClick={() => setScreen("payment")}>
+                <Button
+                  size="sm"
+                  type="button"
+                  className="inline-flex min-h-10 items-center justify-center rounded-[4px] bg-[#347D53] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#286642]"
+                  onClick={() => setScreen("payment")}
+                >
                   <span className="flex items-center justify-center gap-2">
-                  <Wallet size={14} />
+                  <Wallet size={16} />
                     Make Payment
                   </span>
                 </Button>
@@ -348,10 +363,11 @@ function BeautyBookingCard({ booking, onRefresh }) {
                   size="sm"
                   type="button"
                   variant="outline"
+                  className="inline-flex min-h-10 items-center justify-center rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
                   onClick={() => setScreen("track")}
                 >
                   <span className="flex items-center justify-center gap-2">
-                    <Navigation size={14} />
+                    <Navigation size={16} />
                     Track provider
                   </span>
                 </Button>
@@ -383,7 +399,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                   aria-label="Notifications"
                   className="relative text-[#231F20BF]"
                 >
-                  <Bell size={22} />
+                  <Bell size={20} />
                   <span className="absolute -right-1 top-0 h-2 w-2 rounded-full bg-red-500" />
                 </button>
                 <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#8BC53F] bg-[#8BC53F33] text-[#78B936]">
@@ -541,7 +557,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4 py-4">
           <div className="relative flex max-h-[92vh] w-full max-w-[670px] flex-col overflow-hidden rounded-xl bg-white shadow-xl">
             <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
-              <h2 className="text-lg font-semibold text-[#231F20]">
+              <h2 className="text-xl font-semibold text-[#231F20]">
                 Service Details
               </h2>
               <button
@@ -550,7 +566,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                 aria-label="Close service details"
                 className="text-[#231F20BF] hover:text-[#231F20]"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
@@ -563,7 +579,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                 />
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-[#231F20]">
+                    <h3 className="text-base font-semibold text-[#231F20]">
                       {provider.fullName}
                     </h3>
                     <BadgeCheck size={18} className="text-[#2F7B4F]" />
@@ -628,7 +644,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                   </h3>
                   <dl className="space-y-3.5">
                     <div className="flex gap-4">
-                      <Wrench size={22} className="mt-1 text-[#2F7B4F]" />
+                      <Wrench size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="text-sm font-semibold text-[#231F20]">
                           Service
@@ -639,7 +655,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <MapPinHouse size={22} className="mt-1 text-[#2F7B4F]" />
+                      <MapPinHouse size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="text-sm font-semibold text-[#231F20]">
                           Service Location
@@ -650,7 +666,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <CalendarDays size={22} className="mt-1 text-[#2F7B4F]" />
+                      <CalendarDays size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="text-sm font-semibold text-[#231F20]">
                           Start Date &amp; Time
@@ -661,7 +677,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <Clock size={22} className="mt-1 text-[#2F7B4F]" />
+                      <Clock size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="text-sm font-semibold text-[#231F20]">
                           Duration
@@ -672,7 +688,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <MapPin size={22} className="mt-1 text-[#2F7B4F]" />
+                      <MapPin size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="text-sm font-semibold text-[#231F20]">
                           Location
@@ -683,7 +699,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <Banknote size={22} className="mt-1 text-[#2F7B4F]" />
+                      <Banknote size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="text-sm font-semibold text-[#231F20]">
                           Service Cost
@@ -696,7 +712,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                   </dl>
                   <dl className="hidden">
                     <div className="flex gap-4">
-                      <Wrench size={22} className="mt-1 text-[#2F7B4F]" />
+                      <Wrench size={20} className="mt-1 text-[#2F7B4F]" />
                       <div className="[&>dd:last-child]:hidden">
                         <dt className="font-semibold text-[#231F20]">
                           Service Type
@@ -712,7 +728,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <CalendarDays size={22} className="mt-1 text-[#2F7B4F]" />
+                      <CalendarDays size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="font-semibold text-[#231F20]">
                           Start Date &amp; Time
@@ -723,7 +739,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <Clock size={22} className="mt-1 text-[#2F7B4F]" />
+                      <Clock size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="font-semibold text-[#231F20]">
                           Duration
@@ -734,7 +750,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <MapPin size={22} className="mt-1 text-[#2F7B4F]" />
+                      <MapPin size={20} className="mt-1 text-[#2F7B4F]" />
                       <div>
                         <dt className="font-semibold text-[#231F20]">
                           Location
@@ -745,7 +761,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
                       </div>
                     </div>
                     <div className="flex gap-4 [&>span]:hidden">
-                      <Banknote size={22} className="mt-1 text-[#2F7B4F]" />
+                      <Banknote size={20} className="mt-1 text-[#2F7B4F]" />
                       <span className="mt-1 text-2xl font-bold text-[#2F7B4F]">
                         ₦
                       </span>
@@ -773,7 +789,7 @@ function BeautyBookingCard({ booking, onRefresh }) {
 
               <div className="mt-5">
                 <p className="mb-2 text-xs text-[#231F2080]">Additional note</p>
-                <p className="min-h-[54px] rounded-lg border border-gray-100 bg-[#F7FAFC] px-4 py-3 text-xs leading-relaxed text-[#231F2080]">
+                <p className="min-h-[54px] rounded-lg border border-gray-100 bg-[#F7FAFC] px-4 py-3 text-sm leading-relaxed text-[#231F2080]">
                   {pickupNote}
                 </p>
               </div>
