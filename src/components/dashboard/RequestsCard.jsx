@@ -95,6 +95,9 @@ export default function RequestCard({
       completed: "bg-green-100 text-green-700 border-green-200",
       user_accepted_completion: "bg-green-100 text-green-700 border-green-200",
       "funds released": "bg-green-100 text-green-700 border-green-200",
+      expired: "bg-red-100 text-red-700 border-red-200",
+      "booking expired": "bg-red-100 text-red-700 border-red-200",
+      "no provider available": "bg-red-50 text-red-700 border-red-200",
     };
     return styles[status.toLowerCase()] || styles.pending;
   };
@@ -224,7 +227,7 @@ export default function RequestCard({
                       {request.title}
                     </h3>
                     <span
-                      className={`inline-flex items-center justify-center text-center px-1 py-1 text-xs font-medium rounded-full border max-w-30 break-words ${getStatusStyles(request.status)}`}
+                      className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-medium rounded-full border min-w-20 w-fit wrap-break-word ${getStatusStyles(request.status)}`}
                     >
                       {request.status}
                     </span>
@@ -309,7 +312,7 @@ export default function RequestCard({
 
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                 <div className="w-2 h-2 bg-[#005823] rounded-full" />
               </div>
               <div>
@@ -322,7 +325,7 @@ export default function RequestCard({
 
             <div className="flex flex-col sm:flex-row sm:items-end sm:gap-8 gap-2">
               <div className="flex items-start gap-3">
-                <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                   <MapPin className="h-4 w-4 text-[#005823]" />
                 </div>
                 <div>
@@ -348,7 +351,7 @@ export default function RequestCard({
               <button
                 type="button"
                 onClick={() => onViewDetails(request)}
-                className="inline-flex min-h-10 w-full items-center justify-center rounded-[4px] bg-[#2D6A3E] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1f4a2a] md:w-fit"
+                className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-sm font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
               >
                 View Details
               </button>
@@ -357,7 +360,7 @@ export default function RequestCard({
               ) && (
                 <button
                   onClick={handleMakePayment}
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[4px] bg-[#2D6A3E] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1f4a2a] md:w-fit"
+                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-sm font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4" />
                   Make Payment
@@ -369,6 +372,7 @@ export default function RequestCard({
                 "provider selected",
                 "payment pending",
                 "awaiting provider acceptance",
+                "paid_escrow",
               ].includes(request.status.toLowerCase()) && (
                 <CancelRequestButton
                   bookingId={request.id}
@@ -377,6 +381,7 @@ export default function RequestCard({
               )}
 
               {[
+                "paid escrow",
                 "in progress",
                 "enroute to pickup",
                 "arrived at pickup",
@@ -387,10 +392,10 @@ export default function RequestCard({
                 <button
                   type="button"
                   onClick={() => onTrackProvider(request.id)}
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 md:w-fit"
+                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
                   <Navigation className="w-4 h-4" />
-                  Track provider
+                  Track
                 </button>
               )}
 
@@ -403,10 +408,10 @@ export default function RequestCard({
               ].includes(request.status.toLowerCase()) && (
                 <button
                   onClick={() => onMessageProvider?.(request)}
-                  className="col-span-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:col-span-3 md:col-auto md:w-fit"
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Message Provider
+                  Message
                 </button>
               )}
 
@@ -431,12 +436,30 @@ export default function RequestCard({
                       },
                     })
                   }
-                  className="col-span-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:col-span-3 md:col-auto md:w-fit"
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
                   <PhoneCall className="w-4 h-4" />
-                  Call Provider
+                  Call
                 </button>
               )}
+
+              {/* {[
+                "paid escrow",
+                "enroute to pickup",
+                "arrived at pickup",
+                "enroute to dropoff",
+                "arrived at dropoff",
+                "no provider available"
+              ].includes(request.status.toLowerCase()) && (
+             <button
+    onClick={() => {
+    
+    }}
+    className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 bg-white text-[#DC2626] border border-red-200 rounded-lg font-medium hover:bg-red-50 text-xs sm:px-3 sm:py-2 sm:text-sm transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+  >
+    Cancel
+  </button>
+              )} */}
 
               {request.status.toLowerCase() === "completed" &&
                 !request.ratings &&
@@ -445,14 +468,14 @@ export default function RequestCard({
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                       <button
                         onClick={() => setDisputeModalOpen(true)}
-                        className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                       >
                         Dispute Job Completion
                       </button>
                       <button
                         type="button"
                         onClick={() => setModalOpen(true)}
-                        className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                       >
                         Accept Job Completion
                       </button>

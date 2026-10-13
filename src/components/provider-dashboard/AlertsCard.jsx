@@ -10,9 +10,11 @@ import { useState } from "react";
 
 export default function AlertsCard({
   alert,
-  onViewDetails,
+  // onViewDetails,
   onAcceptBooking,
+  onDeclineBooking,
   accepting,
+  declining,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -107,10 +109,10 @@ export default function AlertsCard({
               </div>
 
               <div className="relative pl-0 pt-2">
-                <div className="absolute left-4 top-[16px] bottom-[16px] w-[1.5px] bg-[#00582326] z-0" />
+                <div className="absolute left-4 top-4 bottom-4 w-[1.5px] bg-[#00582326] z-0" />
 
                 <div className="flex items-start gap-4 mb-4 relative z-10">
-                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0 shadow-sm border border-[#0058231A]">
                     <div className="w-2.5 h-2.5 bg-[#005823] rounded-full shadow-inner" />
                   </div>
                   <div className="flex-1 mt-0.5">
@@ -124,7 +126,7 @@ export default function AlertsCard({
                 </div>
 
                 <div className="flex items-start gap-4 relative z-10">
-                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0 shadow-sm border border-[#0058231A]">
                     <MapPin className="w-3.5 h-3.5 text-[#005823]" />
                   </div>
                   <div className="flex-1 mt-0.5">
@@ -139,7 +141,7 @@ export default function AlertsCard({
               </div>
             </div>
 
-            <div className="w-full rounded-2xl border border-green-100 bg-gradient-to-br from-[#F8FCF9] to-white p-4 shadow-sm lg:w-1/4 lg:min-w-[260px]">
+            <div className="w-full rounded-2xl border border-green-100 bg-linear-to-br from-[#F8FCF9] to-white p-4 shadow-sm lg:w-1/4 lg:min-w-65">
               <div className="flex flex-col gap-3 sm:text-right">
                 <span
                   className={`inline-flex w-fit px-3 py-1 text-xs font-medium rounded-full border h-fit sm:ml-auto ${getStatusStyles(
@@ -183,6 +185,7 @@ export default function AlertsCard({
 
           <div className="flex flex-col sm:flex-row gap-3 border-t pt-4 mt-3">
             <button
+              type="button"
               onClick={() => onAcceptBooking?.(alert)}
               disabled={accepting}
               className="w-full sm:w-auto px-8 py-3 bg-[#2D6A3E] text-white cursor-pointer rounded-xl font-bold hover:bg-[#1f4a2a] transition-all text-sm sm:text-base active:scale-95 shadow-md shadow-green-900/10"
@@ -190,7 +193,17 @@ export default function AlertsCard({
               {accepting ? "Accepting..." : "Accept Booking"}
             </button>
 
-            {String(alert?.status || "").toLowerCase() === "awaiting response" && (
+            <button
+              type="button"
+              onClick={() => onDeclineBooking?.(alert)}
+              disabled={accepting || declining}
+              className="w-full sm:w-auto px-8 py-3 bg-white text-red-700 border border-red-200 cursor-pointer rounded-xl font-bold hover:bg-red-50 transition-all text-sm sm:text-base active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {declining ? "Declining..." : "Decline"}
+            </button>
+
+            {String(alert?.status || "").toLowerCase() ===
+              "awaiting response" && (
               <button className="w-full sm:w-auto px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95">
                 Awaiting Response
               </button>

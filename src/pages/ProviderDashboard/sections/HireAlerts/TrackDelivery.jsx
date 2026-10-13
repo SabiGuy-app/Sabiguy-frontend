@@ -149,7 +149,6 @@ export default function TrackDelivery() {
 
   const booking = useBookingStore((state) => state.booking);
   const bookingDetails = booking?.data?.booking || {};
-  console.log(bookingDetails);
   
   const selectedProviderId = useBookingStore(
     (state) => state.selectedProviderId,

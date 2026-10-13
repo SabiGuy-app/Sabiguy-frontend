@@ -10,6 +10,7 @@ import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import {
   cancelBooking as cancelProviderBooking,
+  declineBooking as declineProviderBooking,
   getProviderBookings,
 } from "../../../../api/provider";
 import { getAllBookings, acceptBookings } from "../../../../api/bookings";
@@ -76,6 +77,7 @@ export default function HireAlerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
+  const [decliningAlertId, setDecliningAlertId] = useState(null);
   const hasConsumedPrefetchedAlerts = useRef(false);
   const fetchSequence = useRef(0);
 
@@ -94,7 +96,10 @@ export default function HireAlerts() {
       const locationState = location.state;
       let alertBookings = [];
 
-      if (!hasConsumedPrefetchedAlerts.current && locationState?.fetchedAlerts) {
+      if (
+        !hasConsumedPrefetchedAlerts.current &&
+        locationState?.fetchedAlerts
+      ) {
         // Use alerts fetched from the notification
         alertBookings = Array.isArray(locationState.fetchedAlerts)
           ? locationState.fetchedAlerts
@@ -147,7 +152,8 @@ export default function HireAlerts() {
       const providerBookings = Array.isArray(providerBookingsData)
         ? providerBookingsData
         : providerBookingsData.bookings || [];
-      const transformedProviderBookings = transformBookingsData(providerBookings);
+      const transformedProviderBookings =
+        transformBookingsData(providerBookings);
 
       // A provider response can contain a newly-created beauty booking before
       // the filtered alert endpoint includes it. Keep those alert records in
@@ -195,7 +201,10 @@ export default function HireAlerts() {
 
     window.addEventListener("provider:booking-request", handleBookingRequest);
     return () => {
-      window.removeEventListener("provider:booking-request", handleBookingRequest);
+      window.removeEventListener(
+        "provider:booking-request",
+        handleBookingRequest,
+      );
     };
   }, [user, location.key]);
 
@@ -207,9 +216,20 @@ export default function HireAlerts() {
       const bookingStatus = String(booking.status || "")
         .trim()
         .toLowerCase();
+
+      const providerResponse = String(booking.providerResponse || "")
+        .trim()
+        .toLowerCase();
+
+      // Don't show bookings this provider has declined.
+      if (providerResponse === "declined") {
+        return;
+      }
+
       const formattedSubCategory = booking.subCategory
         ? String(booking.subCategory).replace(/_/g, " ")
         : "";
+
       const commonData = {
         id: booking._id,
         title:
@@ -218,9 +238,14 @@ export default function HireAlerts() {
           booking.serviceType ||
           "Untitled job",
         BookingPrice:
-          booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || booking.agreedPrice || 0,
+          booking?.pricingBreakdown?.subtotal ||
+          booking?.pricing?.breakdown?.subtotal ||
+          booking.agreedPrice ||
+          0,
         platformFee:
-          booking?.pricingBreakdown?.originalProviderCommission || booking?.pricing?.fees?.driverCommission || 0,
+          booking?.pricingBreakdown?.originalProviderCommission ||
+          booking?.pricing?.fees?.driverCommission ||
+          0,
         RiderReceives:
           booking?.driverReceives || booking?.breakdown?.providerReceives || 0,
         calculatedPrice:
@@ -291,7 +316,6 @@ export default function HireAlerts() {
         bookingStatus === "awaiting_provider_acceptance" ||
         isBeautyNewBooking
       ) {
-        // These are alerts (new job opportunities)
         alerts.push({
           ...commonData,
           subCategory: formattedSubCategory || commonData.title,
@@ -313,7 +337,6 @@ export default function HireAlerts() {
               : null,
         });
       } else {
-        // These are active jobs
         jobs.push({
           ...commonData,
           status: mapJobStatus(bookingStatus, isBeautyBooking(booking)),
@@ -343,9 +366,13 @@ export default function HireAlerts() {
     const statusMap = {
       provider_selected: "Awaiting Payment",
       in_progress: beauty ? "In Progress" : "Enroute to Pickup",
-      arrived_at_dropoff: beauty ? "Arrived at Destination" : "Arrived at Dropoff",
+      arrived_at_dropoff: beauty
+        ? "Arrived at Destination"
+        : "Arrived at Dropoff",
       arrived_at_pickup: beauty ? "Arrived at Customer" : "Arrived at Pickup",
-      enroute_to_dropoff: beauty ? "En Route to Customer" : "Enroute to Dropoff",
+      enroute_to_dropoff: beauty
+        ? "En Route to Customer"
+        : "Enroute to Dropoff",
       enroute_to_pickup: beauty ? "En Route" : "Enroute to Pickup",
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
@@ -435,32 +462,33 @@ export default function HireAlerts() {
     if (statusFilter === "all") return true;
 
     if (statusFilter === "active") {
-      return (
-        [
-          "paid_escrow",
-          "paid_escrow_scheduled",
-          "in_progress",
-          "enroute_to_pickup",
-          "arrived_at_pickup",
-          "enroute_to_dropoff",
-          "arrived_at_dropoff",
-        ].includes(status)
-      );
+      return [
+        "paid_escrow",
+        "paid_escrow_scheduled",
+        "in_progress",
+        "enroute_to_pickup",
+        "arrived_at_pickup",
+        "enroute_to_dropoff",
+        "arrived_at_dropoff",
+      ].includes(status);
     }
 
     if (statusFilter === "pending") {
-      return ["provider_selected", "payment_pending", "pending"].includes(status);
+      return [
+        "provider_selected",
+        "payment_pending",
+        "awaiting_payment",
+        "paid_escrow_scheduled",
+      ].includes(status);
     }
 
     if (statusFilter === "completed") {
-      return (
-        [
-          "completed",
-          "waiting_confirmation",
-          "user_accepted_completion",
-          "funds_released",
-        ].includes(status)
-      );
+      return [
+        "completed",
+        "waiting_confirmation",
+        "user_accepted_completion",
+        "funds_released",
+      ].includes(status);
     }
 
     return status === statusFilter.replace(/\s+/g, "_");
@@ -609,10 +637,30 @@ export default function HireAlerts() {
     }
   };
 
-  const handleDeclineAlert = (alert) => {
-    handleCloseAlert();
-    setCancelTarget(alert);
-    setIsCancelModalOpen(true);
+  const handleDeclineBooking = async (alert) => {
+    const bookingId = getBookingId(alert);
+
+    if (!bookingId) {
+      setError("Booking details are unavailable.");
+      return;
+    }
+
+    try {
+      setDecliningAlertId(bookingId);
+      setError(null);
+
+      await declineProviderBooking(bookingId);
+
+      // Remove the declined booking from Hire Alerts after API success.
+      setAlerts((currentAlerts) =>
+        currentAlerts.filter((item) => getBookingId(item) !== bookingId),
+      );
+    } catch (err) {
+      console.error("Error declining booking:", err);
+      setError(err.response?.data?.message || "Failed to decline booking");
+    } finally {
+      setDecliningAlertId(null);
+    }
   };
 
   // Loading State
@@ -656,7 +704,7 @@ export default function HireAlerts() {
           onClose={handleCloseAlert}
           alert={selectedAlert}
           onAccept={(alert) => handleAcceptBooking(alert, { rethrow: true })}
-          onDecline={handleDeclineAlert}
+          onDecline={handleDeclineBooking}
           accepting={acceptingAlertId === selectedAlert?.id}
         />
       ) : (
@@ -765,6 +813,8 @@ export default function HireAlerts() {
                   onViewDetails={handleViewAlert}
                   onAcceptBooking={handleAcceptBooking}
                   accepting={acceptingAlertId === alert.id}
+                  onDeclineBooking={handleDeclineBooking}
+                  declining={decliningAlertId === alert.id}
                 />
               ),
             )

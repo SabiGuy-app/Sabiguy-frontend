@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProviderStore } from "../../../stores/provider.store";
 import {
@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Loader2,
 } from "lucide-react";
-import { useEffect } from "react";
 import { getProviderReviews } from "../../../api/provider";
 import StarRating from "../../../components/dashboard/StarRating";
 
@@ -28,6 +27,24 @@ export default function ProviderDetails() {
   const [reviewsList, setReviewsList] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [reviewsError, setReviewsError] = useState(null);
+
+  useEffect(() => {
+    if (providerId) {
+      setReviewsLoading(true);
+      getProviderReviews(providerId)
+        .then((res) => {
+          setReviewsList(res.data || []);
+          setReviewsError(null);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch reviews:", err);
+          setReviewsError("Unable to load reviews");
+        })
+        .finally(() => {
+          setReviewsLoading(false);
+        });
+    }
+  }, [providerId]);
 
   // Find the provider by ID
   const provider = providers.find(
@@ -63,24 +80,6 @@ export default function ProviderDetails() {
     // Handle payment logic here
     console.log("Payment initiated for:", selectedService);
   };
-
-  useEffect(() => {
-    if (providerId) {
-      setReviewsLoading(true);
-      getProviderReviews(providerId)
-        .then((res) => {
-          setReviewsList(res.data || []);
-          setReviewsError(null);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch reviews:", err);
-          setReviewsError("Unable to load reviews");
-        })
-        .finally(() => {
-          setReviewsLoading(false);
-        });
-    }
-  }, [providerId]);
 
   const getStatusConfig = (status) => {
     const configs = {
@@ -274,7 +273,7 @@ export default function ProviderDetails() {
                       key={idx}
                       className="flex gap-4 pb-4 border-b last:border-b-0"
                     >
-                      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
                         <img
                           src={review.user?.profilePicture || "/avatar.png"}
                           alt={review.user?.fullName || "User"}
@@ -424,7 +423,7 @@ export default function ProviderDetails() {
                     $50,000 - $100,000/month
                   </p>
                   <button className="w-full mt-10 bg-[#005823CC] text-white py-3 rounded-lg hover:bg-green-700 font-medium">
-                    Book Now{" "}
+                    Book Now
                   </button>
                 </div>
               )}
