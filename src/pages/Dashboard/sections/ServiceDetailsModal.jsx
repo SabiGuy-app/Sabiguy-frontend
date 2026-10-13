@@ -92,7 +92,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
 
         <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
           <div className="space-y-6">
-            <div className="shadow-sm p-6 rounded-[16px] space-y-6">
+            <div className="shadow-sm p-6 rounded-2xl space-y-6">
               <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
                 <img
                   src={
@@ -100,15 +100,15 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
                   }
                   alt={request.providerName}
-                  className="w-16 h-16 rounded-full object-cover flex-shrink-0 self-center lg:self-start"
+                  className="w-16 h-16 rounded-full object-cover shrink-0 self-center lg:self-start"
                 />
-                <div className="flex-grow w-full text-center lg:text-left">
+                <div className="grow w-full text-center lg:text-left">
                   <div className="flex items-center justify-center lg:justify-start gap-2 mb-1">
                     <h2 className="text-base font-semibold text-gray-900 capitalize">
                       {request.providerName ?? "Provider"}
                     </h2>
                     <span className="text-[#8BC53F]">
-                      <BadgeCheck className="w-[20px] h-[20px]" />
+                      <BadgeCheck className="w-5 h-5" />
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mb-1 capitalize">
@@ -166,7 +166,6 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
               </div>
 
-<<<<<<< HEAD
               {![
                 "cancelled",
                 "funds_released",
@@ -198,33 +197,6 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                     <PhoneCall className="w-4 h-4 text-gray-600" />
                     <span className="font-medium text-gray-700">Call</span>
                   </button>
-=======
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() =>
-                    callContext?.openCall?.({
-                      booking: request?.originalData || request,
-                      targetOverride: {
-                        targetId:
-                          request?.originalData?.providerId?._id ||
-                          request?.originalData?.providerId ||
-                          request?.providerId?._id ||
-                          request?.providerId,
-                        targetType: "provider",
-                        targetName:
-                          request?.providerName ||
-                          request?.originalData?.providerId?.fullName ||
-                          "Provider",
-                      },
-                    })
-                  }
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <PhoneCall className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium text-gray-700">Call</span>
-                </button>
-                {request.status?.toLowerCase() !== "cancelled" && (
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
                   <button
                     onClick={handleMessageProvider}
                     className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -281,20 +253,20 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               <img
                 src={request.providerVehicleImage}
                 alt="Vehicle"
-                className="w-full h-auto object-contain rounded-[16px] bg-gray-50"
+                className="w-full h-auto object-contain rounded-2xl bg-gray-50"
               />
             )}
           </div>
 
           <div>
-            <div className="border border-[#231F201A] px-6 py-6 rounded-[16px] space-y-6">
+            <div className="border border-[#231F201A] px-6 py-6 rounded-2xl space-y-6">
               <h3 className="text-base font-semibold text-[#231F20]">
                 Job Summary
               </h3>
 
               <div className="space-y-4">
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                     <div className="w-3 h-3 bg-[#005823] rounded-full" />
                   </div>
                   <div>
@@ -308,7 +280,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                     <MapPin className="w-5 h-5 text-[#005823]" />
                   </div>
                   <div>
@@ -322,7 +294,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-10 h-10  rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10  rounded-full flex items-center justify-center shrink-0">
                     <img src={distance} alt="" />
                   </div>
                   <div>
@@ -336,7 +308,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
                     <svg
                       className="w-5 h-5 text-[#005823]"
                       fill="none"
@@ -386,7 +358,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                   if (fee > 0) {
                     return (
                       <div className="flex gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" />
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" />
                         <div>
                           <div className="text-sm font-semibold text-[#231F20]">
                             Service Charge (10%)

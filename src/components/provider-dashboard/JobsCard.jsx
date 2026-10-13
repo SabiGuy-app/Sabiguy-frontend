@@ -1,6 +1,14 @@
-import { MapPin, Clock, Star, MessageCircle, Copy, Check, PhoneCall } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  Star,
+  MessageCircle,
+  Copy,
+  Check,
+  PhoneCall,
+} from "lucide-react";
 import { useState } from "react";
-import { canMessage, canProviderCancel } from "../../utils/chat.utils";
+import { canMessage } from "../../utils/chat.utils";
 import { useCallContext } from "../shared/CallContext";
 
 export default function JobsCard({
@@ -9,7 +17,7 @@ export default function JobsCard({
   onMarkAsCompleted,
   onShowNavigation,
   onMessageCustomer,
-  onCancel,
+  // onCancel,
 }) {
   const [copied, setCopied] = useState(false);
   const callContext = useCallContext();
@@ -80,7 +88,6 @@ export default function JobsCard({
     job?.dropoffLocation?.address ||
     job?.originalData?.dropoffLocation?.address ||
     "N/A";
-<<<<<<< HEAD
 
   const scheduleDate = job?.scheduleDate || job?.originalData?.scheduleDate;
   const amount = job?.BookingPrice || job?.originalData?.BookingPrice || 0;
@@ -91,12 +98,6 @@ export default function JobsCard({
   const riderReceives =
     job?.RiderReceives || job?.originalData?.RiderReceives || 0;
 
-=======
-  const amount = job?.BookingPrice || job?.originalData?.BookingPrice || 0;
-  const platformFee =
-    job?.originalData?.pricingBreakdown?.driverCommission || job?.originalData?.pricingBreakdown?.originalProviderCommission || 0;
-  const riderReceives = job?.RiderReceives || job?.originalData?.RiderReceives || 0;
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
   const shouldShowNavigation =
     normalizedStatus === "paid_escrow" ||
     normalizedStatus === "in_progress" ||
@@ -112,9 +113,9 @@ export default function JobsCard({
 
   const shouldShowMessageButton =
     bookingStatus !== "funds_released" && canMessage(bookingStatus);
-    // const shouldShowCancelButton = canProviderCancel(
-    //   job?.originalData?.status || job?.status,
-    // );
+  // const shouldShowCancelButton = canProviderCancel(
+  //   job?.originalData?.status || job?.status,
+  // );
 
   const shouldShowCallButton = ![
     "cancelled",
@@ -142,7 +143,9 @@ export default function JobsCard({
                 </span>
                 {job?.orderId && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-gray-500">#{job.orderId}</span>
+                    <span className="text-xs font-bold text-gray-500">
+                      #{job.orderId}
+                    </span>
                     <button
                       onClick={() => handleCopy(job.fullOrderId)}
                       className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400"
@@ -160,18 +163,23 @@ export default function JobsCard({
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#2D6A3E]" />
-                  <span>{formatDateTime(job?.createdAt || job?.originalData?.createdAt)}</span>
+                  <span>
+                    {formatDateTime(
+                      job?.createdAt || job?.originalData?.createdAt,
+                    )}
+                  </span>
                 </div>
                 <span className="inline-flex items-center rounded-full bg-[#E6EFE9] px-3 py-1 text-xs font-medium text-[#2D6A3E]">
-                  Delivery: {formatTitle(job?.originalData?.scheduleType || "N/A")}
+                  Delivery:{" "}
+                  {formatTitle(job?.originalData?.scheduleType || "N/A")}
                 </span>
               </div>
 
               <div className="relative pl-0 pt-2">
-                <div className="absolute left-4 top-[16px] bottom-[16px] w-[1.5px] bg-[#00582326] z-0" />
+                <div className="absolute left-4 top-4 bottom-4 w-[1.5px] bg-[#00582326] z-0" />
 
                 <div className="flex items-start gap-4 mb-4 relative z-10">
-                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0 shadow-sm border border-[#0058231A]">
                     <div className="w-2.5 h-2.5 bg-[#005823] rounded-full shadow-inner" />
                   </div>
                   <div className="flex-1 mt-0.5">
@@ -185,7 +193,7 @@ export default function JobsCard({
                 </div>
 
                 <div className="flex items-start gap-4 relative z-10">
-                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-[#0058231A]">
+                  <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0 shadow-sm border border-[#0058231A]">
                     <MapPin className="h-4 w-4 text-[#005823]" />
                   </div>
                   <div className="flex-1 mt-0.5">
@@ -224,13 +232,15 @@ export default function JobsCard({
                   <Clock className="w-4 h-4 text-yellow-500" />
                   <span className="font-medium">
                     Job Completed On:{" "}
-                    {formatDateTime(job?.completedAt || job?.originalData?.completedAt)}
+                    {formatDateTime(
+                      job?.completedAt || job?.originalData?.completedAt,
+                    )}
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="w-full rounded-lg border border-green-100 bg-gradient-to-br from-[#F8FCF9] to-white p-4 shadow-sm lg:w-1/4 lg:min-w-[260px]">
+            <div className="w-full rounded-lg border border-green-100 bg-linear-to-br from-[#F8FCF9] to-white p-4 shadow-sm lg:w-1/4 lg:min-w-65">
               <div className="flex flex-col gap-3 sm:text-right">
                 <span
                   className={`inline-flex w-fit px-3 py-1 text-xs font-medium rounded-full border h-fit sm:ml-auto ${getStatusStyles(
@@ -276,14 +286,14 @@ export default function JobsCard({
             {normalizedStatus !== "completed" && (
               <button
                 onClick={() => onViewDetails(job)}
-                className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[4px] bg-[#2D6A3E] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#1f4a2a] active:scale-95 sm:flex-none"
+                className="inline-flex min-h-10 flex-1 items-center justify-center rounded-sm bg-[#2D6A3E] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#1f4a2a] active:scale-95 sm:flex-none"
               >
                 View Details
               </button>
             )}
 
             {normalizedStatus === "awaiting_confirmation" && (
-              <button className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[4px] bg-gray-100 px-4 py-2 text-sm font-medium text-black transition-all sm:flex-none">
+              <button className="inline-flex min-h-10 flex-1 items-center justify-center rounded-sm bg-gray-100 px-4 py-2 text-sm font-medium text-black transition-all sm:flex-none">
                 Awaiting Review
               </button>
             )}
@@ -331,7 +341,7 @@ export default function JobsCard({
             {normalizedStatus === "in_progress" && (
               <button
                 onClick={() => onMarkAsCompleted(job)}
-                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95 sm:flex-none"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-sm border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95 sm:flex-none"
               >
                 Mark Completed
               </button>
@@ -340,14 +350,14 @@ export default function JobsCard({
             {normalizedStatus === "pending" && (
               <button
                 onClick={() => onShowNavigation?.(job)}
-                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95 sm:flex-none"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-sm border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95 sm:flex-none"
               >
                 En route
               </button>
             )}
 
             {normalizedStatus === "waiting_confirmation" && (
-              <button className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 sm:flex-none">
+              <button className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-sm border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 sm:flex-none">
                 Awaiting review
               </button>
             )}
@@ -355,7 +365,7 @@ export default function JobsCard({
             {shouldShowNavigation && (
               <button
                 onClick={() => onShowNavigation?.(job)}
-                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[4px] border border-[#2D6A3E] bg-white px-4 py-2 text-sm font-medium text-[#2D6A3E] transition-all hover:bg-[#E6EFE9] active:scale-95 sm:flex-none"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-sm border border-[#2D6A3E] bg-white px-4 py-2 text-sm font-medium text-[#2D6A3E] transition-all hover:bg-[#E6EFE9] active:scale-95 sm:flex-none"
               >
                 Navigation
               </button>
@@ -364,10 +374,10 @@ export default function JobsCard({
             {shouldShowMessageButton && (
               <button
                 onClick={() => onMessageCustomer?.(job)}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-sm border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95"
               >
                 <MessageCircle className="w-4 h-4" />
-                Message 
+                Message
               </button>
             )}
             {shouldShowCallButton && (
@@ -392,39 +402,11 @@ export default function JobsCard({
                 className="px-4 py-2.5 sm:py-2 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
               >
                 <PhoneCall className="w-4 h-4" />
-                Call 
+                Call
               </button>
             )}
 
-<<<<<<< HEAD
             {/* {shouldShowCancelButton && (
-=======
-            <button
-              onClick={() =>
-                callContext?.openCall?.({
-                  booking: job?.originalData || job,
-                  targetOverride: {
-                    targetId:
-                      job?.originalData?.userId?._id ||
-                      job?.originalData?.userId ||
-                      job?.userId?._id ||
-                      job?.userId,
-                    targetType: "buyer",
-                    targetName:
-                      job?.originalData?.userId?.fullName ||
-                      job?.originalData?.customerName ||
-                      "Customer",
-                  },
-                })
-              }
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-95"
-            >
-              <PhoneCall className="w-4 h-4" />
-              Call Customer
-            </button>
-
-            {shouldShowCancelButton && (
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
               <button
                 onClick={() => onCancel?.(job)}
                 className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[4px] bg-gray-50 px-4 py-2 text-sm font-medium text-[#DC2626] transition-all hover:bg-gray-200 active:scale-95 sm:flex-none"

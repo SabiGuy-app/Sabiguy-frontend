@@ -77,12 +77,9 @@ export default function HireAlerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
-<<<<<<< HEAD
   const [decliningAlertId, setDecliningAlertId] = useState(null);
-=======
   const hasConsumedPrefetchedAlerts = useRef(false);
   const fetchSequence = useRef(0);
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
 
   useEffect(() => {
     fetchBookings();
@@ -99,7 +96,10 @@ export default function HireAlerts() {
       const locationState = location.state;
       let alertBookings = [];
 
-      if (!hasConsumedPrefetchedAlerts.current && locationState?.fetchedAlerts) {
+      if (
+        !hasConsumedPrefetchedAlerts.current &&
+        locationState?.fetchedAlerts
+      ) {
         // Use alerts fetched from the notification
         alertBookings = Array.isArray(locationState.fetchedAlerts)
           ? locationState.fetchedAlerts
@@ -152,7 +152,8 @@ export default function HireAlerts() {
       const providerBookings = Array.isArray(providerBookingsData)
         ? providerBookingsData
         : providerBookingsData.bookings || [];
-      const transformedProviderBookings = transformBookingsData(providerBookings);
+      const transformedProviderBookings =
+        transformBookingsData(providerBookings);
 
       // A provider response can contain a newly-created beauty booking before
       // the filtered alert endpoint includes it. Keep those alert records in
@@ -200,7 +201,10 @@ export default function HireAlerts() {
 
     window.addEventListener("provider:booking-request", handleBookingRequest);
     return () => {
-      window.removeEventListener("provider:booking-request", handleBookingRequest);
+      window.removeEventListener(
+        "provider:booking-request",
+        handleBookingRequest,
+      );
     };
   }, [user, location.key]);
 
@@ -234,9 +238,14 @@ export default function HireAlerts() {
           booking.serviceType ||
           "Untitled job",
         BookingPrice:
-          booking?.pricingBreakdown?.subtotal || booking?.pricing?.breakdown?.subtotal || booking.agreedPrice || 0,
+          booking?.pricingBreakdown?.subtotal ||
+          booking?.pricing?.breakdown?.subtotal ||
+          booking.agreedPrice ||
+          0,
         platformFee:
-          booking?.pricingBreakdown?.originalProviderCommission || booking?.pricing?.fees?.driverCommission || 0,
+          booking?.pricingBreakdown?.originalProviderCommission ||
+          booking?.pricing?.fees?.driverCommission ||
+          0,
         RiderReceives:
           booking?.driverReceives || booking?.breakdown?.providerReceives || 0,
         calculatedPrice:
@@ -286,11 +295,6 @@ export default function HireAlerts() {
         totalAmount: booking.totalAmount || 0,
         modeOfDelivery: booking.modeOfDelivery || "",
         distance: booking.distance || null,
-<<<<<<< HEAD
-        originalData: booking,
-      };
-
-=======
         rawStatus: bookingStatus,
         // Store original data for modal details
         originalData: booking,
@@ -306,7 +310,6 @@ export default function HireAlerts() {
         ].includes(bookingStatus);
 
       // Categorize based on status
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
       if (
         bookingStatus === "pending_providers" ||
         bookingStatus === "pending_customer" ||
@@ -336,13 +339,8 @@ export default function HireAlerts() {
       } else {
         jobs.push({
           ...commonData,
-<<<<<<< HEAD
-          status: mapJobStatus(bookingStatus),
-          providerName: "You",
-=======
           status: mapJobStatus(bookingStatus, isBeautyBooking(booking)),
           providerName: "You", // Since this is provider dashboard
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
           startsIn:
             bookingStatus === "confirmed"
               ? calculateTimeUntil(booking.startDate)
@@ -363,18 +361,18 @@ export default function HireAlerts() {
 
     return { alerts, jobs };
   };
-<<<<<<< HEAD
-  const mapJobStatus = (apiStatus) => {
-=======
 
   const mapJobStatus = (apiStatus, beauty = false) => {
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
     const statusMap = {
       provider_selected: "Awaiting Payment",
       in_progress: beauty ? "In Progress" : "Enroute to Pickup",
-      arrived_at_dropoff: beauty ? "Arrived at Destination" : "Arrived at Dropoff",
+      arrived_at_dropoff: beauty
+        ? "Arrived at Destination"
+        : "Arrived at Dropoff",
       arrived_at_pickup: beauty ? "Arrived at Customer" : "Arrived at Pickup",
-      enroute_to_dropoff: beauty ? "En Route to Customer" : "Enroute to Dropoff",
+      enroute_to_dropoff: beauty
+        ? "En Route to Customer"
+        : "Enroute to Dropoff",
       enroute_to_pickup: beauty ? "En Route" : "Enroute to Pickup",
       completed: "Awaiting Confirmation",
       cancelled: "Cancelled",
@@ -464,38 +462,33 @@ export default function HireAlerts() {
     if (statusFilter === "all") return true;
 
     if (statusFilter === "active") {
-      return (
-        [
-          "paid_escrow",
-          "paid_escrow_scheduled",
-          "in_progress",
-          "enroute_to_pickup",
-          "arrived_at_pickup",
-          "enroute_to_dropoff",
-          "arrived_at_dropoff",
-        ].includes(status)
-      );
+      return [
+        "paid_escrow",
+        "paid_escrow_scheduled",
+        "in_progress",
+        "enroute_to_pickup",
+        "arrived_at_pickup",
+        "enroute_to_dropoff",
+        "arrived_at_dropoff",
+      ].includes(status);
     }
 
     if (statusFilter === "pending") {
-<<<<<<< HEAD
-      return (
-        status === "awaiting payment" || status === "paid escrow scheduled"
-      );
-=======
-      return ["provider_selected", "payment_pending", "pending"].includes(status);
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
+      return [
+        "provider_selected",
+        "payment_pending",
+        "awaiting_payment",
+        "paid_escrow_scheduled",
+      ].includes(status);
     }
 
     if (statusFilter === "completed") {
-      return (
-        [
-          "completed",
-          "waiting_confirmation",
-          "user_accepted_completion",
-          "funds_released",
-        ].includes(status)
-      );
+      return [
+        "completed",
+        "waiting_confirmation",
+        "user_accepted_completion",
+        "funds_released",
+      ].includes(status);
     }
 
     return status === statusFilter.replace(/\s+/g, "_");
@@ -644,7 +637,6 @@ export default function HireAlerts() {
     }
   };
 
-<<<<<<< HEAD
   const handleDeclineBooking = async (alert) => {
     const bookingId = getBookingId(alert);
 
@@ -669,12 +661,6 @@ export default function HireAlerts() {
     } finally {
       setDecliningAlertId(null);
     }
-=======
-  const handleDeclineAlert = (alert) => {
-    handleCloseAlert();
-    setCancelTarget(alert);
-    setIsCancelModalOpen(true);
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
   };
 
   // Loading State
@@ -718,7 +704,7 @@ export default function HireAlerts() {
           onClose={handleCloseAlert}
           alert={selectedAlert}
           onAccept={(alert) => handleAcceptBooking(alert, { rethrow: true })}
-          onDecline={handleDeclineAlert}
+          onDecline={handleDeclineBooking}
           accepting={acceptingAlertId === selectedAlert?.id}
         />
       ) : (
@@ -811,19 +797,6 @@ export default function HireAlerts() {
       {activeTab === "alert" ? (
         <div className="space-y-4 mt-1">
           {alerts.length > 0 ? (
-<<<<<<< HEAD
-            alerts.map((alert) => (
-              <AlertsCard
-                key={alert.id}
-                alert={alert}
-                onViewDetails={handleViewAlert}
-                onAcceptBooking={handleAcceptBooking}
-                onDeclineBooking={handleDeclineBooking}
-                accepting={acceptingAlertId === alert.id}
-                declining={decliningAlertId === alert.id}
-              />
-            ))
-=======
             alerts.map((alert) =>
               isBeautyBooking(alert) ? (
                 <BeautyAlertsCard
@@ -840,10 +813,11 @@ export default function HireAlerts() {
                   onViewDetails={handleViewAlert}
                   onAcceptBooking={handleAcceptBooking}
                   accepting={acceptingAlertId === alert.id}
+                  onDeclineBooking={handleDeclineBooking}
+                  declining={decliningAlertId === alert.id}
                 />
               ),
             )
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
           ) : (
             <div className="text-center py-12 bg-white rounded-lg">
               <p className="text-gray-500 text-lg">No new alerts available</p>

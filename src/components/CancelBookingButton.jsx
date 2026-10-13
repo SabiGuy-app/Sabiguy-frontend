@@ -203,7 +203,7 @@ export function CancelBookingModal({
 
   const renderReasonStep = () => (
     <>
-      <div className="flex h-[68px] items-center justify-between border-b border-[#231F201A] px-8 sm:px-10">
+      <div className="flex h-17 items-center justify-between border-b border-[#231F201A] px-8 sm:px-10">
         <h2 className="text-[20px] font-semibold leading-none text-[#231F20]">
           What went wrong?
         </h2>
@@ -237,7 +237,7 @@ export function CancelBookingModal({
                     setSelectedReason(reason);
                     setError("");
                   }}
-                  className="flex h-[58px] w-full items-center justify-between border-b border-[#231F201A] text-left disabled:opacity-60"
+                  className="flex h-14.5 w-full items-center justify-between border-b border-[#231F201A] text-left disabled:opacity-60"
                 >
                   <span className="text-[14px] text-[#5F5F5F]">{reason}</span>
 
@@ -262,7 +262,7 @@ export function CancelBookingModal({
               setStep("details");
               setError("");
             }}
-            className="flex h-[58px] w-full items-center justify-between border-b border-[#231F201A] text-left disabled:opacity-60"
+            className="flex h-14.5 w-full items-center justify-between border-b border-[#231F201A] text-left disabled:opacity-60"
           >
             <span className="text-[14px] text-[#5F5F5F]">{OTHER_REASON}</span>
             <ChevronRight size={27} className="text-[#5F5F5F]" />
@@ -279,7 +279,7 @@ export function CancelBookingModal({
           type="button"
           onClick={handleReasonSubmit}
           disabled={!selectedReason || submitting}
-          className="mt-10 flex h-10 w-full items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] disabled:cursor-not-allowed disabled:bg-[#BFC8C2]"
+          className="mt-10 flex h-10 w-full items-center justify-center rounded-sm bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] disabled:cursor-not-allowed disabled:bg-[#BFC8C2]"
         >
           {submitting ? "Submitting..." : "Submit"}
         </button>
@@ -289,7 +289,7 @@ export function CancelBookingModal({
 
   const renderDetailsStep = () => (
     <>
-      <div className="flex h-[68px] items-center border-b border-[#231F201A] px-7 sm:px-8">
+      <div className="flex h-17 items-center border-b border-[#231F201A] px-7 sm:px-8">
         <button
           type="button"
           disabled={submitting}
@@ -318,7 +318,7 @@ export function CancelBookingModal({
             if (error) setError("");
           }}
           placeholder="Please describe the problem"
-          className="h-[148px] w-full resize-none border-0 px-9 py-6 text-[14px] text-[#231F20] placeholder:text-[#5F5F5F] focus:outline-none focus:ring-0 disabled:opacity-60"
+          className="h-37 w-full resize-none border-0 px-9 py-6 text-[14px] text-[#231F20] placeholder:text-[#5F5F5F] focus:outline-none focus:ring-0 disabled:opacity-60"
         />
 
         {error && (
@@ -332,7 +332,7 @@ export function CancelBookingModal({
             type="button"
             onClick={() => submitReason(customReason)}
             disabled={!customReason.trim() || submitting}
-            className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] disabled:cursor-not-allowed disabled:bg-[#BFC8C2]"
+            className="flex h-10 w-full items-center justify-center rounded-sm bg-[#2F7D4F] text-[14px] font-semibold text-white transition hover:bg-[#286A43] disabled:cursor-not-allowed disabled:bg-[#BFC8C2]"
           >
             {submitting ? "Submitting..." : "Submit"}
           </button>
@@ -343,7 +343,7 @@ export function CancelBookingModal({
 
   const renderCompleteStep = () => (
     <>
-      <div className="flex h-[68px] items-center justify-between border-b border-[#231F201A] px-8 sm:px-10">
+      <div className="flex h-17 items-center justify-between border-b border-[#231F201A] px-8 sm:px-10">
         <h2 className="text-[18px] font-semibold leading-none text-[#231F20] sm:text-[19px]">
           Cancellation request submitted
         </h2>
@@ -351,16 +351,16 @@ export function CancelBookingModal({
       </div>
 
       <div className="px-8 pb-10 pt-9 text-center sm:px-10">
-        <p className="mx-auto max-w-[390px] text-[14px] leading-5 text-[#231F20]">
+        <p className="mx-auto max-w-97.5 text-[14px] leading-5 text-[#231F20]">
           Your cancellation request has been received and is being reviewed.
           We will notify you once a decision has been made.
         </p>
 
-        <div className="mt-[62px] grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-15.5 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <button
             type="button"
             onClick={finishFlow}
-            className="flex h-10 items-center justify-center rounded-[4px] border border-[#D9D9D9] bg-white text-[14px] font-semibold text-[#231F20] hover:bg-[#F7F7F7]"
+            className="flex h-10 items-center justify-center rounded-sm border border-[#D9D9D9] bg-white text-[14px] font-semibold text-[#231F20] hover:bg-[#F7F7F7]"
           >
             Close
           </button>
@@ -368,7 +368,7 @@ export function CancelBookingModal({
           <button
             type="button"
             onClick={finishFlow}
-            className="flex h-10 items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white hover:bg-[#286A43]"
+            className="flex h-10 items-center justify-center rounded-sm bg-[#2F7D4F] text-[14px] font-semibold text-white hover:bg-[#286A43]"
           >
             Continue
           </button>
@@ -379,7 +379,7 @@ export function CancelBookingModal({
 
   const renderReviewStep = () => (
     <>
-      <div className="flex h-[68px] items-center justify-between border-b border-[#231F201A] px-8 sm:px-10">
+      <div className="flex h-17 items-center justify-between border-b border-[#231F201A] px-8 sm:px-10">
         <h2 className="text-[18px] font-semibold leading-none text-[#231F20] sm:text-[19px]">
           Cancellation under review
         </h2>
@@ -387,16 +387,16 @@ export function CancelBookingModal({
       </div>
 
       <div className="px-8 pb-10 pt-9 text-center sm:px-10">
-        <p className="mx-auto max-w-[390px] text-[14px] leading-5 text-[#231F20]">
+        <p className="mx-auto max-w-97.5 text-[14px] leading-5 text-[#231F20]">
           Your cancellation request has been received and is being reviewed. We
           will notify you once a decision has been made.
         </p>
 
-        <div className="mt-[62px]">
+        <div className="mt-15.5">
           <button
             type="button"
             onClick={finishFlow}
-            className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#2F7D4F] text-[14px] font-semibold text-white hover:bg-[#286A43]"
+            className="flex h-10 w-full items-center justify-center rounded-sm bg-[#2F7D4F] text-[14px] font-semibold text-white hover:bg-[#286A43]"
           >
             Close
           </button>

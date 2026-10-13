@@ -37,17 +37,20 @@ export const cancelBooking = async (bookingId, reason = "") => {
   return data;
 };
 
-<<<<<<< HEAD
 export const declineBooking = async (bookingId) => {
   const { data } = await api.patch(
     `/provider/bookings/${bookingId}/decline`,
     {},
   );
   trackEvent("booking_declined", { booking_id: bookingId });
-=======
+  return data;
+};
+
 export const rateUser = async (bookingId, rating) => {
-  const { data } = await api.post(`/provider/bookings/${bookingId}/rate-user`, rating);
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
+  const { data } = await api.post(
+    `/provider/bookings/${bookingId}/rate-user`,
+    rating,
+  );
   return data;
 };
 

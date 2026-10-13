@@ -110,7 +110,6 @@ export default function JobDetailsModal({
       hour12: true,
     });
   };
-<<<<<<< HEAD
   console.log(job);
 
   const bookingStatus = String(job?.originalData?.status || job?.status || "")
@@ -163,8 +162,6 @@ export default function JobDetailsModal({
     return styles[normalized] || styles.pending;
   };
 
-=======
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
   return (
     <div>
       <div className="fixed inset-0 bg-gray-50  bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -211,15 +208,11 @@ export default function JobDetailsModal({
                       {ratingValue != null && (
                         <div className="flex items-center gap-1 text-sm">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-<<<<<<< HEAD
                           <span className="font-medium">
                             {typeof job.ratings === "object"
                               ? job.ratings.score
                               : job.ratings}
                           </span>
-=======
-                          <span className="font-medium">{ratingValue}</span>
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
                         </div>
                       )}
                     </div>
@@ -267,7 +260,7 @@ export default function JobDetailsModal({
                         },
                       })
                     }
-                    className="flex-1 min-w-[100px] py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 min-w-25 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   >
                     <PhoneCall className="w-4 h-4" />
                     Call
@@ -277,7 +270,7 @@ export default function JobDetailsModal({
                 {ShowMessageBtn &&
                   canMessage(job?.status || job?.originalData?.status) && (
                     <button
-                      className="flex-1 min-w-[100px] py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 min-w-25 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                       onClick={() => onMessageCustomer?.(job)}
                     >
                       <MessageCircle className="w-4 h-4" />
@@ -292,7 +285,7 @@ export default function JobDetailsModal({
                     job?.fullBookingId ||
                     job?.bookingId
                   }
-                  className="flex-1 min-w-[100px] py-2 mt-3  rounded-lg font-medium  flex items-center justify-center gap-2  bg-white text-red-600 border border-red-300  hover:bg-red-50 transition-colors"
+                  className="flex-1 min-w-25 py-2 mt-3  rounded-lg font-medium  flex items-center justify-center gap-2  bg-white text-red-600 border border-red-300  hover:bg-red-50 transition-colors"
                   role="provider"
                   status={job?.originalData?.status || job?.status}
                   paymentStatus={
@@ -313,7 +306,7 @@ export default function JobDetailsModal({
                 {/* Booking ID */}
                 {job?.orderId && (
                   <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                       <span className="text-[#005823] text-[10px] font-bold">
                         #
                       </span>
@@ -401,7 +394,7 @@ export default function JobDetailsModal({
 
                 {/* Location */}
                 <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                     <div className="w-2 h-2 bg-[#005823] rounded-full" />
                   </div>
                   <div>

@@ -452,38 +452,6 @@ export default function Bookings() {
     originalData: booking,
   });
 
-<<<<<<< HEAD
-  const filteredRequests = userBookings
-    .map(mapBookingToRequest)
-    .filter((request) => {
-      const status = request.status.toLowerCase();
-      if (statusFilter === "all") return true;
-      if (statusFilter === "active")
-        return [
-          "in progress",
-          "enroute to pickup",
-          "arrived at pickup",
-          "enroute to dropoff",
-          "arrived at dropoff",
-          "completed",
-        ].includes(status);
-      if (statusFilter === "pending")
-        return [
-          "payment pending",
-          "awaiting provider acceptance",
-          "paid escrow scheduled",
-          
-          "provider selected",
-        ].includes(status);
-      if (statusFilter === "completed")
-        return [
-          // "completed",
-          "funds released",
-          "user accepted completion",
-        ].includes(status);
-      return false;
-    });
-=======
   const matchesLogisticsFilter = (status) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "active")
@@ -528,7 +496,6 @@ export default function Bookings() {
         : [];
     },
   );
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
 
   const handleViewDetails = (request) => {
     setSelectedRequest(request);

@@ -227,7 +227,7 @@ export default function RequestCard({
                       {request.title}
                     </h3>
                     <span
-                      className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-medium rounded-full border min-w-20 w-fit break-words ${getStatusStyles(request.status)}`}
+                      className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-medium rounded-full border min-w-20 w-fit wrap-break-word ${getStatusStyles(request.status)}`}
                     >
                       {request.status}
                     </span>
@@ -312,7 +312,7 @@ export default function RequestCard({
 
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                 <div className="w-2 h-2 bg-[#005823] rounded-full" />
               </div>
               <div>
@@ -325,7 +325,7 @@ export default function RequestCard({
 
             <div className="flex flex-col sm:flex-row sm:items-end sm:gap-8 gap-2">
               <div className="flex items-start gap-3">
-                <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                   <MapPin className="h-4 w-4 text-[#005823]" />
                 </div>
                 <div>
@@ -351,11 +351,7 @@ export default function RequestCard({
               <button
                 type="button"
                 onClick={() => onViewDetails(request)}
-<<<<<<< HEAD
-                className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
-=======
-                className="inline-flex min-h-10 w-full items-center justify-center rounded-[4px] bg-[#2D6A3E] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1f4a2a] md:w-fit"
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
+                className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-sm font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
               >
                 View Details
               </button>
@@ -364,11 +360,7 @@ export default function RequestCard({
               ) && (
                 <button
                   onClick={handleMakePayment}
-<<<<<<< HEAD
-                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
-=======
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[4px] bg-[#2D6A3E] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1f4a2a] md:w-fit"
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
+                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-sm font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4" />
                   Make Payment
@@ -400,11 +392,7 @@ export default function RequestCard({
                 <button
                   type="button"
                   onClick={() => onTrackProvider(request.id)}
-<<<<<<< HEAD
-                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base cursor-pointer"
-=======
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 md:w-fit"
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
+                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
                   <Navigation className="w-4 h-4" />
                   Track
@@ -420,11 +408,7 @@ export default function RequestCard({
               ].includes(request.status.toLowerCase()) && (
                 <button
                   onClick={() => onMessageProvider?.(request)}
-<<<<<<< HEAD
-                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base cursor-pointer"
-=======
-                  className="col-span-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:col-span-3 md:col-auto md:w-fit"
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Message
@@ -452,11 +436,7 @@ export default function RequestCard({
                       },
                     })
                   }
-<<<<<<< HEAD
-                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base cursor-pointer"
-=======
-                  className="col-span-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[4px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:col-span-3 md:col-auto md:w-fit"
->>>>>>> 326f2bd7ed38a9a58e9d203d972a6d982f588a80
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
                   <PhoneCall className="w-4 h-4" />
                   Call
