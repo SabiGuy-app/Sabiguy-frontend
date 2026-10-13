@@ -2,7 +2,7 @@ import api from "./axios";
 import { trackEvent } from "../services/analytics";
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("token")   ;
+  const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -24,4 +24,13 @@ export const submitUserNin = async (nin) => {
     });
     throw error;
   }
+};
+
+export const updateUserLocation = async ({ latitude, longitude }) => {
+  const { data } = await api.put("/users/location", {
+    latitude,
+    longitude,
+    timestamp: Date.now(),
+  });
+  return data;
 };

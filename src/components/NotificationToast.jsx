@@ -18,7 +18,7 @@ export default function NotificationToast({ notification, onClose, onClick }) {
 
   const getIcon = (type) => {
     const iconMap = {
-      new_booking_request: <FiCalendar className="text-blue-500" size={20} />,
+      new_booking_request: <FiCalendar className="text-green-500" size={20} />,
       provider_accepted: <CheckCircle2 className="text-green-500" size={20} />,
       booking_selected: <FiCalendar className="text-blue-500" size={20} />,
       booking_taken: <FiCalendar className="text-purple-500" size={20} />,
@@ -26,8 +26,9 @@ export default function NotificationToast({ notification, onClose, onClick }) {
       job_started: <FiCalendar className="text-orange-500" size={20} />,
       payment_received: <CheckCircle2 className="text-green-500" size={20} />,
       booking_completed: <CheckCircle2 className="text-green-500" size={20} />,
-      message_received: <MessageCircle className="text-blue-600" size={20} />,
-      new_message: <MessageCircle className="text-blue-600" size={20} />,
+      message_received: <MessageCircle className="text-green-600" size={20} />,
+      new_message: <MessageCircle className="text-green-600" size={20} />,
+      booking_status_updated: <FiCalendar className="text-blue-500" size={20} />,
       counter_offer: <FiBell className="text-blue-500" size={20} />,
       job_completed_confirmed: (
         <CheckCircle2 className="text-green-500" size={20} />

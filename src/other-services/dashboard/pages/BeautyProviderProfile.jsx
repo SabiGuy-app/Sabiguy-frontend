@@ -12,13 +12,39 @@ import {
   Image,
 } from "lucide-react";
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
-import { getProviderDirectory } from "../../../api/provider";
+import { getProviderById } from "../../../api/provider";
 import { beautyProvider as fallbackProvider } from "../data/beautyProvider";
+import { normalizeSearchBeautyProvider } from "../utils/beautyProviderMapper";
 
 import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
 import BeautyBookingFlow from "..//components/booking/BeautyBookingFlow";
 
 const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v8";
+const PRICING_OPTIONS = [
+  { value: "walk_in", label: "Walk in Salon" },
+  { value: "customer_address", label: "My Address" },
+  { value: "provider_address", label: "Provider's Address" },
+];
+
+const getServiceId = (service) =>
+  service._id || service.id || service.name || service.serviceName;
+
+const getServicePrice = (service, pricingOption) => {
+  const rawPrice =
+    service.pricingModel?.[pricingOption] ??
+    (!service.pricingModel ? service.price : null);
+  const price = Number(rawPrice);
+  return Number.isFinite(price) && price > 0 ? price : null;
+};
+
+const getDurationMinutes = (duration) => {
+  const match = String(duration || "").match(
+    /(\d+(?:\.\d+)?)\s*(hour|hr|min)/i,
+  );
+  if (!match) return 45;
+  const amount = Number(match[1]);
+  return /hour|hr/i.test(match[2]) ? amount * 60 : amount;
+};
 
 function WorkPhoto({ src, alt, className }) {
   const [failed, setFailed] = useState(false);
@@ -45,11 +71,13 @@ export default function BeautyProviderProfile() {
   const [providerState, setProviderState] = useState(null);
   const [missingProviderId, setMissingProviderId] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
-  const [showAll, setShowAll] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [booking, setBooking] = useState(null);
+  const [pricingOption, setPricingOption] = useState("walk_in");
+  const [selectedServiceIds, setSelectedServiceIds] = useState([]);
   const [reviewState, setReviewState] = useState(null);
-  const provider = providerState?.requestedId === providerId ? providerState.data : null;
+  const provider =
+    providerState?.requestedId === providerId ? providerState.data : null;
 
   useEffect(() => {
     let active = true;
@@ -96,17 +124,43 @@ export default function BeautyProviderProfile() {
     let active = true;
     setReviewState({ providerId, reviews: null, loading: true, error: "" });
 
-    getProviderDirectory({
-      service: "beauty_personal_care",
-      page: 1,
-      limit: 100,
-    })
+    getProviderById(providerId)
       .then((response) => {
         if (!active) return;
-        const directory = Array.isArray(response?.data) ? response.data : [];
-        const entry = directory.find(
-          (item) => item._id === providerId || item.id === providerId,
-        );
+        const entry =
+          response?.data?.provider ||
+          response?.data?.data ||
+          response?.data ||
+          response?.provider ||
+          response;
+        if (entry) {
+          const schedule =
+            entry.providerProfile ||
+            entry.profile ||
+            entry.userId?.data ||
+            entry;
+          const services = normalizeSearchBeautyProvider(entry).services;
+          setProviderState((current) => {
+            if (current?.requestedId !== providerId || !current.data) {
+              return current;
+            }
+
+            const availableDays =
+              schedule.availableDays ?? current.data.availableDays;
+            const businessHours =
+              schedule.businessHours ?? current.data.businessHours;
+
+            return {
+              ...current,
+              data: {
+                ...current.data,
+                availableDays,
+                businessHours,
+                services: services.length ? services : current.data.services,
+              },
+            };
+          });
+        }
         setReviewState({
           providerId,
           reviews: Array.isArray(entry?.reviews) ? entry.reviews : null,
@@ -133,7 +187,7 @@ export default function BeautyProviderProfile() {
     return () => {
       active = false;
     };
-  }, [provider, providerId]);
+  }, [provider?.id, providerId]);
 
   if (missingProviderId === providerId)
     return (
@@ -153,7 +207,10 @@ export default function BeautyProviderProfile() {
   if (!provider)
     return (
       <DashboardLayout showSidebar={false}>
-        <div className="mx-auto max-w-7xl animate-pulse" aria-label="Loading provider profile">
+        <div
+          className="mx-auto max-w-7xl animate-pulse"
+          aria-label="Loading provider profile"
+        >
           <div className="mb-6 h-6 w-48 rounded bg-gray-200" />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)]">
             <div className="aspect-[814/453] rounded-xl bg-gray-200" />
@@ -163,10 +220,49 @@ export default function BeautyProviderProfile() {
       </DashboardLayout>
     );
 
-  const services = showAll ? provider.services : provider.services.slice(0, 3);
-  const hasMoreServices = provider.services.length > 3;
-  const currentReviewState = reviewState?.providerId === providerId ? reviewState : null;
-  const reviewsLoading = providerId !== fallbackProvider.id &&
+  const services = provider.services || [];
+  const availablePricingOptions = PRICING_OPTIONS.filter((option) =>
+    services.some((service) => getServicePrice(service, option.value) !== null),
+  );
+  const selectedServices = services.filter((service) =>
+    selectedServiceIds.includes(getServiceId(service)),
+  );
+  const selectedTotal = selectedServices.reduce(
+    (total, service) => total + (getServicePrice(service, pricingOption) || 0),
+    0,
+  );
+  const selectedDuration = selectedServices.reduce(
+    (total, service) => total + getDurationMinutes(service.duration),
+    0,
+  );
+  const toggleService = (service) => {
+    const serviceId = getServiceId(service);
+    setSelectedServiceIds((current) =>
+      current.includes(serviceId)
+        ? current.filter((id) => id !== serviceId)
+        : [...current, serviceId],
+    );
+  };
+  const startSelectedBooking = () => {
+    if (!selectedServices.length) return;
+    const option = PRICING_OPTIONS.find((item) => item.value === pricingOption);
+    setBooking({
+      service: selectedServices.map((service) => service.name).join(", "),
+      services: selectedServices.map((service) => ({
+        serviceName: service.name || service.serviceName,
+      })),
+      id: pricingOption,
+      label: option?.label || "Service location",
+      price: selectedTotal,
+      duration: selectedDuration,
+      pricingOption,
+      mode: "later",
+    });
+  };
+  const currentReviewState =
+    reviewState?.providerId === providerId ? reviewState : null;
+  const reviewsLoading =
+    providerId !== fallbackProvider.id &&
     (!currentReviewState || currentReviewState.loading);
   const reviewsList = [
     ...(currentReviewState?.reviews ?? provider.recentReviews ?? []),
@@ -237,29 +333,82 @@ export default function BeautyProviderProfile() {
               <h2 id="service-prices" className="mb-4 text-xl font-bold">
                 Services &amp; Pricing
               </h2>
+              <fieldset className="mb-4">
+                <legend className="mb-2 text-sm font-medium text-gray-700">
+                  Choose where the service will take place
+                </legend>
+                <div className="flex flex-wrap gap-2">
+                  {PRICING_OPTIONS.map((option) => {
+                    const available = availablePricingOptions.some(
+                      (item) => item.value === option.value,
+                    );
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        disabled={!available}
+                        aria-pressed={pricingOption === option.value}
+                        onClick={() => {
+                          setPricingOption(option.value);
+                          setSelectedServiceIds((current) =>
+                            current.filter((id) => {
+                              const service = services.find(
+                                (item) => getServiceId(item) === id,
+                              );
+                              return (
+                                service &&
+                                getServicePrice(service, option.value) !== null
+                              );
+                            }),
+                          );
+                        }}
+                        className={`rounded-md border px-3 py-2 text-sm ${
+                          pricingOption === option.value
+                            ? "border-[#34805A] bg-[#34805A] text-white"
+                            : "border-gray-200 text-gray-700"
+                        } disabled:cursor-not-allowed disabled:opacity-40`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
               <div className="space-y-3">
-                {services.map((service, index) => (
+                {services.map((service) => (
                   <ServiceBookingOptions
-                    key={service.name}
+                    key={getServiceId(service)}
                     service={service}
-                    defaultOpen={index === 0}
-                    onBook={setBooking}
+                    pricingOption={pricingOption}
+                    selected={selectedServiceIds.includes(
+                      getServiceId(service),
+                    )}
+                    onToggle={toggleService}
                   />
                 ))}
                 {provider.services.length === 0 && (
                   <p className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                    Service and pricing details are not available yet, so booking cannot be started.
+                    Service and pricing details are not available yet, so
+                    booking cannot be started.
                   </p>
                 )}
               </div>
-              {hasMoreServices && (
+              {services.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setShowAll(!showAll)}
-                  aria-expanded={showAll}
-                  className="mt-3 w-full rounded border border-gray-200 py-2.5 text-xs hover:bg-gray-50"
+                  disabled={!selectedServices.length}
+                  onClick={startSelectedBooking}
+                  className="mt-4 flex w-full items-center justify-between rounded-md bg-[#34805A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2d6f4f] disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
-                  {showAll ? "View less" : "View all"}
+                  <span>
+                    Book {selectedServices.length || "selected"} service
+                    {selectedServices.length === 1 ? "" : "s"}
+                  </span>
+                  <span>
+                    {selectedTotal > 0
+                      ? `₦${selectedTotal.toLocaleString("en-NG")}`
+                      : ""}
+                  </span>
                 </button>
               )}
             </section>
@@ -269,7 +418,9 @@ export default function BeautyProviderProfile() {
               </h2>
               <div className="divide-y divide-gray-200">
                 {reviewsLoading && reviewsList.length === 0 ? (
-                  <p className="py-6 text-sm text-gray-500">Loading reviews...</p>
+                  <p className="py-6 text-sm text-gray-500">
+                    Loading reviews...
+                  </p>
                 ) : currentReviewState?.error && reviewsList.length === 0 ? (
                   <p className="py-6 text-sm text-gray-500">
                     {currentReviewState.error}
@@ -279,81 +430,84 @@ export default function BeautyProviderProfile() {
                     No reviews yet
                   </p>
                 ) : (
-                  (showAllReviews ? reviewsList : reviewsList.slice(0, 3)).map((review, index) => {
-                    const reviewer = review.user || review.userId || {};
-                    const reviewerName =
-                      reviewer.fullName || review.userName || "Anonymous";
-                    const reviewerAvatar =
-                      reviewer.profilePicture || review.userAvatar || "/avatar.png";
-                    const score = Number(review.score || review.rating || 0);
-                    const reviewDate = review.ratedAt || review.createdAt;
-                    const createdAt = reviewDate
-                      ? new Date(reviewDate).toLocaleDateString(
-                          undefined,
-                          {
+                  (showAllReviews ? reviewsList : reviewsList.slice(0, 3)).map(
+                    (review, index) => {
+                      const reviewer = review.user || review.userId || {};
+                      const reviewerName =
+                        reviewer.fullName || review.userName || "Anonymous";
+                      const reviewerAvatar =
+                        reviewer.profilePicture ||
+                        review.userAvatar ||
+                        "/avatar.png";
+                      const score = Number(review.score || review.rating || 0);
+                      const reviewDate = review.ratedAt || review.createdAt;
+                      const createdAt = reviewDate
+                        ? new Date(reviewDate).toLocaleDateString(undefined, {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
-                          },
-                        )
-                      : "";
+                          })
+                        : "";
 
-                    return (
-                      <article
-                        key={review._id || review.id || index}
-                        className="flex gap-3 py-6 first:pt-0"
-                      >
-                        <img
-                          src={reviewerAvatar}
-                          alt={reviewerName}
-                          className="h-11 w-11 shrink-0 rounded-full object-cover"
-                          onError={(event) => {
-                            event.currentTarget.onerror = null;
-                            event.currentTarget.src = "/avatar.png";
-                          }}
-                        />
-                        <div>
-                          <div className="flex flex-wrap items-center gap-3">
-                            <h3 className="font-medium">{reviewerName}</h3>
-                            <span
-                              aria-label={`${score} out of 5 stars`}
-                              className="flex gap-1 text-amber-400"
-                            >
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <Star
-                                  key={i}
-                                  size={15}
-                                  fill={i < score ? "currentColor" : "none"}
-                                />
-                              ))}
-                            </span>
+                      return (
+                        <article
+                          key={review._id || review.id || index}
+                          className="flex gap-3 py-6 first:pt-0"
+                        >
+                          <img
+                            src={reviewerAvatar}
+                            alt={reviewerName}
+                            className="h-11 w-11 shrink-0 rounded-full object-cover"
+                            onError={(event) => {
+                              event.currentTarget.onerror = null;
+                              event.currentTarget.src = "/avatar.png";
+                            }}
+                          />
+                          <div>
+                            <div className="flex flex-wrap items-center gap-3">
+                              <h3 className="font-medium">{reviewerName}</h3>
+                              <span
+                                aria-label={`${score} out of 5 stars`}
+                                className="flex gap-1 text-amber-400"
+                              >
+                                {Array.from({ length: 5 }, (_, i) => (
+                                  <Star
+                                    key={i}
+                                    size={15}
+                                    fill={i < score ? "currentColor" : "none"}
+                                  />
+                                ))}
+                              </span>
+                            </div>
+                            {review.review?.trim() && (
+                              <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                                {review.review}
+                              </p>
+                            )}
+                            {createdAt && (
+                              <p className="mt-4 text-xs text-gray-500">
+                                {createdAt}
+                              </p>
+                            )}
                           </div>
-                          {review.review?.trim() && (
-                            <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                              {review.review}
-                            </p>
-                          )}
-                          {createdAt && (
-                            <p className="mt-4 text-xs text-gray-500">
-                              {createdAt}
-                            </p>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })
+                        </article>
+                      );
+                    },
+                  )
                 )}
               </div>
-              {reviewsList.length > 3 && !reviewsLoading && !currentReviewState?.error && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllReviews((value) => !value)}
-                  aria-expanded={showAllReviews}
-                  className="mt-3 w-full rounded border border-gray-200 py-2.5 text-xs hover:bg-gray-50"
-                >
-                  {showAllReviews ? "View less" : "View more"}
-                </button>
-              )}
+              {reviewsList.length > 3 &&
+                !reviewsLoading &&
+                !currentReviewState?.error && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllReviews((value) => !value)}
+                    aria-expanded={showAllReviews}
+                    className="mt-3 w-full rounded border border-gray-200 py-2.5 text-xs hover:bg-gray-50"
+                  >
+                    {showAllReviews ? "View less" : "View more"}
+                  </button>
+                )}
             </section>
           </main>
           <aside className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">

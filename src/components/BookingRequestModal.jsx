@@ -1,6 +1,48 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, MapPin, X } from "lucide-react";
 
+const getScheduledDateTime = (payload) => {
+  const dateValue =
+    payload?.scheduleDate || payload?.schedule_date || payload?.date;
+  const timeValue =
+    payload?.scheduledTime || payload?.scheduleTime || payload?.time;
+
+  if (dateValue && timeValue) {
+    const dateParts = String(dateValue).slice(0, 10).split("-").map(Number);
+    const timeMatch = String(timeValue)
+      .trim()
+      .match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+
+    if (
+      dateParts.length === 3 &&
+      dateParts.every(Number.isFinite) &&
+      timeMatch
+    ) {
+      let hour = Number(timeMatch[1]);
+      const minute = Number(timeMatch[2]);
+      const period = timeMatch[3]?.toUpperCase();
+      if (period === "PM" && hour !== 12) hour += 12;
+      if (period === "AM" && hour === 12) hour = 0;
+      return new Date(
+        dateParts[0],
+        dateParts[1] - 1,
+        dateParts[2],
+        hour,
+        minute,
+      );
+    }
+  }
+
+  if (!dateValue) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateValue))) {
+    const [year, month, day] = String(dateValue).split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const parsed = new Date(dateValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 export default function BookingRequestModal({
   isOpen,
   onClose,
@@ -12,22 +54,22 @@ export default function BookingRequestModal({
   const message =
     payload?.message || "You have a new booking request to review.";
   const serviceType = payload?.serviceType || "Booking";
+  const rawSubCategory = payload?.serviceName || payload?.category || "";
+  const subCategory = rawSubCategory
+    ? String(rawSubCategory).toLowerCase().replace(/[_-]+/g, " ") ===
+      "beauty personal care"
+      ? "Beauty & Personal Care"
+      : String(rawSubCategory)
+          .replace(/[_-]+/g, " ")
+          .replace(/\b\w/g, (character) => character.toUpperCase())
+    : null;
   const scheduleType = payload?.scheduleType || payload?.schedule_type || null;
-  const scheduleDate =
-    payload?.scheduleDate ||
-    payload?.schedule_date ||
-    payload?.scheduleTime ||
-    null;
+  const scheduledDateTime = getScheduledDateTime(payload);
   const pickupAddress =
     payload?.pickupAddress || payload?.pickupLocation?.address || null;
   const dropoffAddress =
     payload?.dropoffAddress || payload?.dropoffLocation?.address || null;
-  const calculatedPrice =
-    payload?.calculatedPrice ??
-    payload?.budget ??
-    payload?.driverReceives ??
-    payload?.amount ??
-    null;
+  const calculatedPrice = payload?.budget ?? null;
 
   return (
     <AnimatePresence>
@@ -81,7 +123,9 @@ export default function BookingRequestModal({
                 </h2>
 
                 <p className="mt-1 text-sm font-medium text-[#005823]">
-                  {serviceType}
+                  {subCategory
+                    ? `${serviceType} - ${subCategory}`
+                    : serviceType}
                 </p>
 
                 <p className="mt-3 max-w-md text-sm leading-6 text-[#231F20BF]">
@@ -95,24 +139,32 @@ export default function BookingRequestModal({
                   <div className="mt-3 space-y-2.5">
                     {scheduleType && (
                       <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
-                        <CalendarDays size={16} className="mt-0.5 shrink-0 text-[#005823]" />
+                        <CalendarDays
+                          size={16}
+                          className="mt-0.5 shrink-0 text-[#005823]"
+                        />
                         <span className="capitalize">
                           Schedule: {String(scheduleType).replace(/_/g, " ")}
                         </span>
                       </div>
                     )}
-                    {scheduleDate && (
+                    {scheduledDateTime && (
                       <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
-                        <CalendarDays size={16} className="mt-0.5 shrink-0 text-[#005823]" />
+                        <CalendarDays
+                          size={16}
+                          className="mt-0.5 shrink-0 text-[#005823]"
+                        />
                         <span>
-                          Scheduled for:{" "}
-                          {new Date(scheduleDate).toLocaleString()}
+                          Scheduled for: {scheduledDateTime.toLocaleString()}
                         </span>
                       </div>
                     )}
                     {pickupAddress && (
                       <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
-                        <MapPin size={16} className="mt-0.5 shrink-0 text-[#005823]" />
+                        <MapPin
+                          size={16}
+                          className="mt-0.5 shrink-0 text-[#005823]"
+                        />
                         <span className="line-clamp-2">
                           Pickup: {pickupAddress}
                         </span>
@@ -120,7 +172,10 @@ export default function BookingRequestModal({
                     )}
                     {dropoffAddress && (
                       <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
-                        <MapPin size={16} className="mt-0.5 shrink-0 text-[#005823]" />
+                        <MapPin
+                          size={16}
+                          className="mt-0.5 shrink-0 text-[#005823]"
+                        />
                         <span className="line-clamp-2">
                           Dropoff: {dropoffAddress}
                         </span>

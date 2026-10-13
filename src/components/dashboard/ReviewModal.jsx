@@ -190,18 +190,7 @@ export default function ReviewModal({
             <Wallet size={18} />
             Wallet
           </button>
-          <button
-            type="button"
-            onClick={() => setPaymentMethod("card")}
-            className={`flex h-10 w-full items-center justify-center gap-2 rounded-xl text-sm transition-colors sm:w-[132px] md:h-11 ${
-              paymentMethod === "card"
-                ? "bg-[#635BFF] text-white"
-                : "bg-[#F5F5F5] text-[#231F20]"
-            }`}
-          >
-            <CreditCard size={18} />
-            Card
-          </button>
+        
         </div>
 
         {apiError && (

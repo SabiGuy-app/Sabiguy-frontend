@@ -14,7 +14,7 @@ export default function BeautyCompletionReviewModal({ isOpen, booking, loading, 
     (entry?.pictures || []).filter((url) => typeof url === "string" && /^https?:\/\//i.test(url)),
   );
   const serviceName = booking?.serviceDetails?.serviceName || booking?.subCategory || "service";
-  const note = booking?.additionalNote || booking?.completionNote || booking?.providerNote ||
+  const note = booking?.jobCompletedNotes?.[0] ||
     `Your ${serviceName.toLowerCase()} service has been completed successfully.`;
 
   return <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/35 p-3 sm:p-5">

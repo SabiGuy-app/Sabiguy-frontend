@@ -48,7 +48,7 @@ export default function WaitingForPaymentModal({
     { icon: MapPinned, label: "Service Location", value: serviceLocation },
     { icon: CalendarDays, label: "Start Date & Time", value: dateTime },
     { icon: Clock3, label: "Duration", value: duration },
-    { icon: MapPin, label: "Location", value: location },
+    // { icon: MapPin, label: "Location", value: location },
     { icon: Banknote, label: "Service Cost", value: formatNaira(serviceCost) },
   ];
 
@@ -100,12 +100,12 @@ export default function WaitingForPaymentModal({
                 {customer?.rating?.count != null && ` (${customer.rating.count} reviews)`}
               </p>
             )}
-            {customer?.location && (
+            {/* {customer?.location && (
               <p className="mt-0.5 flex items-center gap-1 text-[12px] text-[#999]">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{customer.location}</span>
               </p>
-            )}
+            )} */}
           </div>
         </div>
 

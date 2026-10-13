@@ -4,12 +4,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import JobsCard from "../../../../components/provider-dashboard/JobsCard";
 import AlertsCard from "../../../../components/provider-dashboard/AlertsCard";
 import AlertDetailsModal from "./AlertDetails";
-import BeautyAlertsCard from "./BeautyAlertsCard";
-import BeautyAlertDetails from "./BeautyAlertDetails";
+import BeautyAlertsCard from "../../../../other-services/dashboard-provider/pages/BeautyAlertsCard";
+import BeautyAlertDetails from "../../../../other-services/dashboard-provider/pages/BeautyAlertDetails";
+import BeautyWaitingForPaymentModal from "../../../../other-services/dashboard-provider/pages/BeautyWaitingForPaymentModal";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import {
   cancelBooking as cancelProviderBooking,
+  getBookingDetails,
   declineBooking as declineProviderBooking,
   getProviderBookings,
 } from "../../../../api/provider";
@@ -46,6 +48,7 @@ const isBeautyBooking = (booking) => {
 
 const canStartBeautyJourney = (booking) =>
   [
+    "paid_escrow_scheduled",
     "paid_escrow",
     "in_progress",
     "arrived_at_pickup",
@@ -77,9 +80,70 @@ export default function HireAlerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
+  const [paymentWaiting, setPaymentWaiting] = useState(null);
+  const [paymentClock, setPaymentClock] = useState(Date.now());
   const [decliningAlertId, setDecliningAlertId] = useState(null);
   const hasConsumedPrefetchedAlerts = useRef(false);
   const fetchSequence = useRef(0);
+
+  useEffect(() => {
+    if (!paymentWaiting) return undefined;
+    const timer = window.setInterval(() => setPaymentClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [paymentWaiting]);
+
+  useEffect(() => {
+    if (!paymentWaiting) return undefined;
+
+    const bookingId =
+      paymentWaiting.booking?._id ||
+      paymentWaiting.booking?.id ||
+      paymentWaiting.alert?.id;
+    if (!bookingId) return undefined;
+
+    let active = true;
+    let timeoutId;
+    const pollBookingStatus = async () => {
+      try {
+        const response = await getBookingDetails(bookingId);
+        const booking =
+          response?.data?.booking ||
+          response?.data?.data?.booking ||
+          response?.data?.data ||
+          response?.data ||
+          response?.booking ||
+          response;
+        const status = String(booking?.status || "")
+          .trim()
+          .toLowerCase()
+          .replace(/[\s-]+/g, "_");
+
+        if (active && status === "paid_escrow_scheduled") {
+          setPaymentWaiting(null);
+          const job = {
+            ...paymentWaiting.alert,
+            id: bookingId,
+            status: booking.status,
+            originalData: booking,
+          };
+          navigate(`/dashboard/provider/beauty-service/${bookingId}`, {
+            state: { job, booking },
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to check beauty booking payment status", error);
+      }
+
+      if (active) timeoutId = window.setTimeout(pollBookingStatus, 30000);
+    };
+
+    pollBookingStatus();
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [paymentWaiting, navigate]);
 
   useEffect(() => {
     fetchBookings();
@@ -620,9 +684,21 @@ export default function HireAlerts() {
 
       handleCloseAlert();
       if (isBeautyBooking(alert)) {
-        navigate(`/dashboard/provider/beauty-service/${alert.id}`, {
-          state: { job: alert, booking: alert.originalData },
-        });
+        const responseData =
+          response?.data?.data ||
+          response?.data ||
+          response?.booking ||
+          response;
+        const acceptedBooking = responseData?.booking || responseData;
+        const booking = { ...(alert.originalData || {}), ...acceptedBooking };
+        const deadlineValue =
+          booking.paymentDeadlineAt ||
+          booking.paymentExpiresAt ||
+          booking.payment?.deadlineAt ||
+          booking.payment?.expiresAt;
+        const deadline = Date.parse(deadlineValue || "") || Date.now() + 300000;
+        setPaymentWaiting({ booking, deadline, alert });
+        setPaymentClock(Date.now());
       } else {
         navigate("/dashboard/provider/start-navigation", {
           state: { alert },
@@ -698,6 +774,79 @@ export default function HireAlerts() {
 
   return (
     <ProviderDashboardLayout>
+      {paymentWaiting &&
+        (() => {
+          const booking = paymentWaiting.booking;
+          const serviceDetails = booking.serviceDetails || {};
+          const bookingServices = Array.isArray(booking.service)
+            ? booking.service.map((item) => item.serviceName).filter(Boolean)
+            : [];
+          const pricingOption = String(
+            serviceDetails.pricingOption || booking.pricingOption || "",
+          )
+            .trim()
+            .toLowerCase()
+            .replace(/[\s-]+/g, "_");
+          const serviceLocation =
+            {
+              customer_address: "Customer's Address",
+              provider_address: "Provider's Address",
+              walk_in: "Walk in Salon",
+            }[pricingOption] || pricingOption.replace(/_/g, " ");
+          const scheduleDate = booking.scheduleDate || booking.startDate;
+          const dateTime = scheduleDate
+            ? `${new Date(scheduleDate).toLocaleDateString()} - ${booking.scheduledTime || new Date(scheduleDate).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+            : "Not specified";
+          const locationAddress =
+            (typeof booking.location === "string"
+              ? booking.location
+              : booking.location?.address) || "Not provided";
+          const customer =
+            booking.userId && typeof booking.userId === "object"
+              ? {
+                  ...booking.userId,
+                  location:
+                    booking.userId.currentLocation?.address ||
+                    booking.userId.location?.address,
+                }
+              : {};
+
+          return (
+            <BeautyWaitingForPaymentModal
+              secondsLeft={Math.max(
+                0,
+                Math.ceil((paymentWaiting.deadline - paymentClock) / 1000),
+              )}
+              onClose={() => {
+                setPaymentWaiting(null);
+                fetchBookings();
+              }}
+              customer={customer}
+              service={
+                serviceDetails.serviceName ||
+                bookingServices.join(", ") ||
+                booking.subCategory ||
+                booking.title ||
+                "Beauty service"
+              }
+              serviceLocation={serviceLocation}
+              dateTime={dateTime}
+              duration={
+                booking.estimatedDuration?.value ||
+                booking.bookingDuration?.value ||
+                serviceDetails.duration ||
+                "Not specified"
+              }
+              location={locationAddress}
+              serviceCost={
+                booking.agreedPrice ||
+                booking.budget ||
+                booking.totalAmount ||
+                0
+              }
+            />
+          );
+        })()}
       {isBeautyBooking(selectedAlert) ? (
         <BeautyAlertDetails
           isOpen={isAlertModalOpen}
@@ -844,7 +993,7 @@ export default function HireAlerts() {
                     variant="job"
                     onViewDetails={handleViewJob}
                     onAcceptBooking={() => handleShowBeautyJourney(job)}
-                    onMarkAsCompleted={handleMark}
+                    onMarkAsCompleted={() => handleShowBeautyJourney(job)}
                     showAction={canStartBeautyJourney(job)}
                   />
                 ) : (

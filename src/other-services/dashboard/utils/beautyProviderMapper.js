@@ -33,7 +33,10 @@ const getServicePrice = (service = {}) => {
 
 export const isBeautyBusiness = (business = {}) => {
   const category = String(
-    business.businessCategory || business.category || business.serviceType || "",
+    business.businessCategory ||
+      business.category ||
+      business.serviceType ||
+      "",
   )
     .replaceAll("_", " ")
     .toLowerCase();
@@ -44,7 +47,8 @@ export const isBeautyBusiness = (business = {}) => {
 export const extractBusinesses = (response) => {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.data)) return response.data;
-  if (Array.isArray(response?.data?.businesses)) return response.data.businesses;
+  if (Array.isArray(response?.data?.businesses))
+    return response.data.businesses;
   if (Array.isArray(response?.businesses)) return response.businesses;
   return [];
 };
@@ -96,7 +100,12 @@ export const normalizeSearchBeautyProvider = (provider) => {
       : [];
   const ratingCount =
     provider.rating?.count ??
-    (Array.isArray(provider.reviews) ? provider.reviews.length : provider.reviews);
+    (Array.isArray(provider.reviews)
+      ? provider.reviews.length
+      : provider.reviews);
+  const isUnavailable =
+    provider.availability?.isAvailable === false ||
+    provider.locationFresh === false;
   const gallery = compactImages(
     provider.workVisuals?.flatMap((item) => item.pictures || []),
     provider.studioImages?.flatMap((item) => item.pictures || []),
@@ -121,9 +130,9 @@ export const normalizeSearchBeautyProvider = (provider) => {
       provider.city ||
       provider.currentLocation?.address ||
       provider.location?.address ||
-      (Number.isFinite(Number(provider.distanceFromPickup))
-        ? `${provider.distanceFromPickup} km away`
-        : "Location unavailable"),
+      provider.address ||
+      provider.cityOfOperation ||
+      "Location unavailable",
     job: [{ service: firstService?.name || "Beauty & Personal Care" }],
     profilePath: `/dashboard/beauty/${id}`,
     gallery: gallery.length ? gallery : ["/avatar.png"],
@@ -135,14 +144,15 @@ export const normalizeSearchBeautyProvider = (provider) => {
     completedJobs: toNumber(provider.completedJobs),
     providerETA: provider.providerETA,
     distanceFromPickup: provider.distanceFromPickup,
-    isAvailable:
-      provider.availability?.isAvailable === true && provider.locationFresh !== false,
-    isUnavailable:
-      provider.availability?.isAvailable !== true || provider.locationFresh === false,
+    isAvailable: !isUnavailable,
+    isUnavailable,
   };
 };
 
-export const normalizeBeautyProvider = (business, fallback = beautyProvider) => {
+export const normalizeBeautyProvider = (
+  business,
+  fallback = beautyProvider,
+) => {
   if (!business) return fallback;
 
   const rawServices = Array.isArray(business.service) ? business.service : [];
