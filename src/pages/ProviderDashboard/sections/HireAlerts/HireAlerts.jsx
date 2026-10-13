@@ -12,6 +12,7 @@ import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCom
 import {
   cancelBooking as cancelProviderBooking,
   getBookingDetails,
+  declineBooking as declineProviderBooking,
   getProviderBookings,
 } from "../../../../api/provider";
 import { getAllBookings, acceptBookings } from "../../../../api/bookings";
@@ -81,6 +82,7 @@ export default function HireAlerts() {
   const [acceptingAlertId, setAcceptingAlertId] = useState(null);
   const [paymentWaiting, setPaymentWaiting] = useState(null);
   const [paymentClock, setPaymentClock] = useState(Date.now());
+  const [decliningAlertId, setDecliningAlertId] = useState(null);
   const hasConsumedPrefetchedAlerts = useRef(false);
   const fetchSequence = useRef(0);
 
@@ -278,9 +280,20 @@ export default function HireAlerts() {
       const bookingStatus = String(booking.status || "")
         .trim()
         .toLowerCase();
+
+      const providerResponse = String(booking.providerResponse || "")
+        .trim()
+        .toLowerCase();
+
+      // Don't show bookings this provider has declined.
+      if (providerResponse === "declined") {
+        return;
+      }
+
       const formattedSubCategory = booking.subCategory
         ? String(booking.subCategory).replace(/_/g, " ")
         : "";
+
       const commonData = {
         id: booking._id,
         title:
@@ -367,7 +380,6 @@ export default function HireAlerts() {
         bookingStatus === "awaiting_provider_acceptance" ||
         isBeautyNewBooking
       ) {
-        // These are alerts (new job opportunities)
         alerts.push({
           ...commonData,
           subCategory: formattedSubCategory || commonData.title,
@@ -389,7 +401,6 @@ export default function HireAlerts() {
               : null,
         });
       } else {
-        // These are active jobs
         jobs.push({
           ...commonData,
           status: mapJobStatus(bookingStatus, isBeautyBooking(booking)),
@@ -527,9 +538,12 @@ export default function HireAlerts() {
     }
 
     if (statusFilter === "pending") {
-      return ["provider_selected", "payment_pending", "pending"].includes(
-        status,
-      );
+      return [
+        "provider_selected",
+        "payment_pending",
+        "awaiting_payment",
+        "paid_escrow_scheduled",
+      ].includes(status);
     }
 
     if (statusFilter === "completed") {
@@ -699,10 +713,30 @@ export default function HireAlerts() {
     }
   };
 
-  const handleDeclineAlert = (alert) => {
-    handleCloseAlert();
-    setCancelTarget(alert);
-    setIsCancelModalOpen(true);
+  const handleDeclineBooking = async (alert) => {
+    const bookingId = getBookingId(alert);
+
+    if (!bookingId) {
+      setError("Booking details are unavailable.");
+      return;
+    }
+
+    try {
+      setDecliningAlertId(bookingId);
+      setError(null);
+
+      await declineProviderBooking(bookingId);
+
+      // Remove the declined booking from Hire Alerts after API success.
+      setAlerts((currentAlerts) =>
+        currentAlerts.filter((item) => getBookingId(item) !== bookingId),
+      );
+    } catch (err) {
+      console.error("Error declining booking:", err);
+      setError(err.response?.data?.message || "Failed to decline booking");
+    } finally {
+      setDecliningAlertId(null);
+    }
   };
 
   // Loading State
@@ -819,7 +853,7 @@ export default function HireAlerts() {
           onClose={handleCloseAlert}
           alert={selectedAlert}
           onAccept={(alert) => handleAcceptBooking(alert, { rethrow: true })}
-          onDecline={handleDeclineAlert}
+          onDecline={handleDeclineBooking}
           accepting={acceptingAlertId === selectedAlert?.id}
         />
       ) : (
@@ -928,6 +962,8 @@ export default function HireAlerts() {
                   onViewDetails={handleViewAlert}
                   onAcceptBooking={handleAcceptBooking}
                   accepting={acceptingAlertId === alert.id}
+                  onDeclineBooking={handleDeclineBooking}
+                  declining={decliningAlertId === alert.id}
                 />
               ),
             )

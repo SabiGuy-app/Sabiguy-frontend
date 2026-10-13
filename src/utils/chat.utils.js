@@ -15,6 +15,13 @@ export const MESSAGING_ALLOWED_STATUSES = [
 export const PROVIDER_CANCEL_ALLOWED_STATUSES = [
   "provider_selected",
   "awaiting_payment",
+  "paid_escrow",
+  "in_progress",
+  "enroute_to_pickup",
+  "arrived_at_pickup",
+  "enroute_to_dropoff",
+  "arrived_at_dropoff",
+  
 ];
 
 /**

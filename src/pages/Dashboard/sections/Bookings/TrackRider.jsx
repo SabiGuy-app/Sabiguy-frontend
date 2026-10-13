@@ -103,7 +103,10 @@ export default function TrackRider() {
   const providerDistanceInfo = bookingDetails?.providerDistances?.find(
     (p) => p.providerId === acceptedProviderId,
   );
-  const providerETA = providerDistanceInfo?.providerETAMinutes || bookingDetails?.providerETA?.value || null;
+  const providerETA =
+    providerDistanceInfo?.providerETAMinutes ||
+    bookingDetails?.providerETA?.value ||
+    null;
 
   const getArrivalText = () => {
     switch (bookingStatus) {
@@ -253,7 +256,9 @@ export default function TrackRider() {
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
   const dropoffAddress = bookingDetails?.dropoffLocation?.address || "—";
   const fareDisplay =
-    bookingDetails?.pricingBreakdown?.riderPaysFinal ?? bookingDetails?.totalAmount ?? 0;
+    bookingDetails?.pricingBreakdown?.riderPaysFinal ??
+    bookingDetails?.totalAmount ??
+    0;
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -263,9 +268,7 @@ export default function TrackRider() {
     }).format(amount);
 
   const formatTitle = (text) =>
-    text
-      ?.replace(/_/g, " ")
-      .replace(/\b\w/g, (char) => char.toUpperCase());
+    text?.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
   const normalizedSubCategory = String(bookingDetails?.subCategory || "")
     .trim()
@@ -351,7 +354,10 @@ export default function TrackRider() {
       />
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:grid md:grid-cols-2 md:gap-10 space-y-8">
         <div>
-          <Link to={"/bookings"} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 w-fit">
+          <Link
+            to={"/bookings"}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 w-fit"
+          >
             <ChevronLeft size={20} />
             <span className="font-medium text-sm">Back to Bookings</span>
           </Link>
@@ -362,9 +368,9 @@ export default function TrackRider() {
             {STATUS_LABELS[bookingStatus]}
           </p>
 
-          <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
+          <div className="mb-6 space-y-3 border-2 border-[#231F201A] px-5 py-3 rounded-2xl">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                 <div className="w-3 h-3 bg-[#005823] rounded-full" />
               </div>
               <div>
@@ -373,7 +379,7 @@ export default function TrackRider() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                 <MapPin className="w-3 h-3 text-[#005823]" />
               </div>
               <div>
@@ -394,24 +400,22 @@ export default function TrackRider() {
                   e.target.src = "/avatar.png";
                 }}
               />
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="font-semibold text-[20px] text-[#231F20]">
                     {providerDetails?.fullName || "Provider"}
                   </span>
                   <span className="text-[#8BC53F]">
-                    <BadgeCheck className="w-[20px] h-[20px]" />
+                    <BadgeCheck className="w-5 h-5" />
                   </span>
                 </div>
                 <div className="text-[#231F20BF] text-[16px] mb-1">
-                  <p>
-                        {title}
-                  </p>
+                  <p>{title}</p>
                 </div>
               </div>
             </div>
 
-            <div className="md:grid md:grid-cols-3 gap-6">
+            <div className="md:grid md:grid-cols-3 lg:flex gap-6">
               <TrackRiderCallButton
                 booking={booking}
                 bookingDetails={bookingDetails}
@@ -439,7 +443,7 @@ export default function TrackRider() {
             {bookingDetails?.pickupNote || "No note provided."}
           </p>
 
-          <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4 border-2 border-[#231F201A] px-5 py-3 rounded-[16px]">
+          <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4 border-2 border-[#231F201A] px-5 py-3 rounded-2xl">
             <div>
               <h3 className="text-[14px] font-semibold text-[#231F20BF] mb-1">
                 Fare
@@ -564,7 +568,7 @@ export default function TrackRider() {
         </div>
 
         {/* Replace the image with the map */}
-        <div className="h-[660px]">
+        <div className="h-165">
           <DeliveryMap
             pickup={pickupCoords}
             dropoff={dropoffCoords}

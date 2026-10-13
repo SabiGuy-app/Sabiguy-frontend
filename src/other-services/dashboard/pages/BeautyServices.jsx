@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useLocation } from "react-router-dom";
@@ -96,14 +97,12 @@ const mergeProviderResults = (providers) => {
   return Array.from(providersById.values());
 };
 
-const searchProvidersForService = async (location, query) => {
+const searchProvidersForService = async (location, query, searchResponse = null) => {
   const serviceName = query.trim();
   if (!serviceName) return [];
 
-  const response = await searchServiceProviders({
-    location,
-    serviceName,
-  });
+  const response = searchResponse ||
+    await searchServiceProviders({ location, serviceName });
 
   const providers = extractNearbyProviders(response);
 
@@ -169,6 +168,7 @@ function ProviderCardSkeleton() {
 
 export default function BeautyServices() {
   const routeLocation = useLocation();
+  const initialBeautySearch = useRef(routeLocation.state?.beautySearch || null);
   const [providers, setProviders] = useState([]);
   const [searchLocation, setSearchLocation] = useState(null);
   const [serviceSearchResults, setServiceSearchResults] = useState(null);
@@ -194,37 +194,55 @@ export default function BeautyServices() {
     );
   }, [routeLocation.search]);
 
-  const loadProviders = useCallback(async (signal) => {
-    setLoading(true);
+  const loadProviders = useCallback(async (signal, requestedSearch) => {
+    const requestedLocation = requestedSearch?.location;
+    const hasRequestedLocation =
+      Number.isFinite(Number(requestedLocation?.latitude)) &&
+      Number.isFinite(Number(requestedLocation?.longitude));
+    if (hasRequestedLocation) {
+      const location = {
+        latitude: Number(requestedLocation.latitude),
+        longitude: Number(requestedLocation.longitude),
+      };
+      setSearchLocation(location);
+      setLocationAddress(requestedSearch.address || "Selected location");
+      setLocationDraft(requestedSearch.address || "");
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setError("");
-    setSearchLocation(null);
     setProviders([]);
 
     try {
       const location = await getCurrentLocation();
       if (!signal.aborted) {
         setCurrentLocation(location);
-        setSearchLocation(location);
-        setLocationAddress("Current location");
+        if (!hasRequestedLocation) {
+          setSearchLocation(location);
+          setLocationAddress("Current location");
+        }
       }
     } catch (requestError) {
       if (signal.aborted) return;
-      console.error("Failed to get current location", requestError);
-      setError(
-        requestError?.response?.data?.message ||
-          requestError?.message ||
-          "We could not load beauty providers. Please try again.",
-      );
+      console.warn("Could not load current location shortcut", requestError);
+      if (!hasRequestedLocation) {
+        setError(
+          requestError?.response?.data?.message ||
+            requestError?.message ||
+            "We could not load beauty providers. Please try again.",
+        );
+      }
     } finally {
-      if (!signal.aborted) setLoading(false);
+      if (!signal.aborted && !hasRequestedLocation) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    loadProviders(controller.signal);
+    loadProviders(controller.signal, initialBeautySearch.current);
     return () => controller.abort();
-  }, [loadProviders, reloadKey]);
+  }, [loadProviders, reloadKey, routeLocation.key]);
 
   useEffect(() => {
     const query = searchTerm.trim();
@@ -239,10 +257,19 @@ export default function BeautyServices() {
     let active = true;
     setServiceSearchLoading(true);
     setServiceSearchError("");
+    const pendingSearch = initialBeautySearch.current;
+    const matchesPendingSearch =
+      pendingSearch &&
+      String(pendingSearch.serviceName || "").trim().toLowerCase() === query.toLowerCase();
+    initialBeautySearch.current = null;
 
     const timeoutId = setTimeout(async () => {
       try {
-        const results = await searchProvidersForService(searchLocation, query);
+        const results = await searchProvidersForService(
+          searchLocation,
+          query,
+          matchesPendingSearch ? pendingSearch.response : null,
+        );
         if (active) {
           setServiceSearchResults(results);
           try {
@@ -273,7 +300,7 @@ export default function BeautyServices() {
       } finally {
         if (active) setServiceSearchLoading(false);
       }
-    }, 400);
+    }, matchesPendingSearch ? 0 : 400);
 
     return () => {
       active = false;
