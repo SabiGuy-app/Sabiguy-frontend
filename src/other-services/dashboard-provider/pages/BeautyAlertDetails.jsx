@@ -45,7 +45,9 @@ const getDeadline = (booking, alert) => {
   try {
     const savedDeadline = window.localStorage.getItem(storageKey);
     if (savedDeadline) return savedDeadline;
-    const fallbackDeadline = new Date(Date.now() + ACCEPTANCE_WINDOW_MS).toISOString();
+    const fallbackDeadline = new Date(
+      Date.now() + ACCEPTANCE_WINDOW_MS,
+    ).toISOString();
     window.localStorage.setItem(storageKey, fallbackDeadline);
     return fallbackDeadline;
   } catch {
@@ -64,33 +66,38 @@ const formatDateTime = (booking) => {
     day: "numeric",
     year: "numeric",
   });
-  const time = booking?.scheduledTime ||
-    date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }).replace(":00", "");
+  const time =
+    booking?.scheduledTime ||
+    date
+      .toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .replace(":00", "");
 
   return `${dateText} - ${time}`;
 };
 
 const formatDuration = (booking) => {
-  const duration = booking?.estimatedDuration?.value;
-  const unit = booking?.estimatedDuration?.unit;
-  if (duration != null) return `${duration} ${unit || "minutes"}`;
-  return booking?.serviceDetails?.duration || booking?.duration || "Not specified";
+  const duration = booking?.serviceDetails?.duration;
+  if (duration != null) return `${duration}`;
+  return booking?.serviceDetails?.duration || "Not specified";
 };
 
-const formatPrice = (value) =>
-  `₦${Number(value || 0).toLocaleString("en-NG")}`;
+const formatPrice = (value) => `₦${Number(value || 0).toLocaleString("en-NG")}`;
 
 function InfoRow({ icon, label, value }) {
   return (
     <div className="flex items-start gap-3">
       {icon}
       <div className="min-w-0">
-        <p className="text-sm font-semibold leading-5 text-[#333333]">{label}</p>
-        <p className="mt-0.5 break-words text-sm leading-5 text-[#777777]">{value || "Not specified"}</p>
+        <p className="text-sm font-semibold leading-5 text-[#333333]">
+          {label}
+        </p>
+        <p className="mt-0.5 break-words text-sm leading-5 text-[#777777]">
+          {value || "Not specified"}
+        </p>
       </div>
     </div>
   );
@@ -108,28 +115,52 @@ export default function AlertDetailsModal({
 }) {
   const isJob = variant === "job";
   const booking = alertData?.originalData || {};
-  const customer = booking?.userId && typeof booking.userId === "object"
-    ? booking.userId
-    : {};
-  const customerName = customer.fullName ||
+  const customer =
+    booking?.userId && typeof booking.userId === "object" ? booking.userId : {};
+  const customerName =
+    customer.fullName ||
     [customer.firstName, customer.lastName].filter(Boolean).join(" ") ||
     alertData?.customerName ||
     "Customer";
-  const avatar = customer.profilePicture || customer.avatar || customer.image || "/avatar.png";
+  const avatar =
+    customer.profilePicture ||
+    customer.avatar ||
+    customer.image ||
+    "/avatar.png";
   const rating = customer.rating || booking.userRating || {};
   const averageRating = Number(rating.average ?? rating.score);
   const reviewCount = Number(rating.count ?? rating.reviewCount ?? 0);
-  const address = booking?.location?.address ||
-    booking?.pickupLocation?.address || alertData?.location || "Address unavailable";
+  const address =
+    (typeof booking?.location === "string"
+      ? booking.location
+      : booking?.location?.address) ||
+    booking?.pickupLocation?.address ||
+    alertData?.location ||
+    "Address unavailable";
   const pricingOption = String(
-    booking?.serviceDetails?.pricingOption || booking?.pricingOption || "customer_address",
-  ).toLowerCase();
-  const serviceLocation = SERVICE_PLACE_LABELS[pricingOption] ||
-    pricingOption.replace(/_/g, " ");
-  const serviceName = booking?.serviceDetails?.serviceName ||
-    booking?.subCategory || alertData?.title || "Service request";
-  const serviceCost = booking?.agreedPrice ?? booking?.budget ?? booking?.totalAmount ?? alertData?.agreedPrice;
-  const note = booking?.additionalNote || booking?.notes || booking?.pickupNote || "";
+    booking?.serviceDetails?.pricingOption || booking?.pricingOption || "",
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  const isCustomerAddress = pricingOption === "customer_address";
+  const serviceLocation =
+    SERVICE_PLACE_LABELS[pricingOption] || pricingOption.replace(/_/g, " ");
+  const customerLocation = isCustomerAddress
+    ? customer.city || customer.currentLocation?.address || address
+    : "";
+  const serviceName =
+    booking?.serviceDetails?.serviceName ||
+    booking?.subCategory ||
+    alertData?.title ||
+    "Service request";
+  const serviceCost =
+    booking?.agreedPrice ??
+    booking?.budget ??
+    booking?.totalAmount ??
+    alertData?.agreedPrice;
+  const note =
+    booking?.additionalNote || booking?.notes || booking?.pickupNote || "";
   const deadline = getDeadline(booking, alertData);
   const normalizedStatus = String(booking?.status || alertData?.status || "")
     .trim()
@@ -151,7 +182,10 @@ export default function AlertDetailsModal({
 
   const timeRemaining = useMemo(() => {
     if (!deadline) return null;
-    const seconds = Math.max(0, Math.floor((new Date(deadline).getTime() - currentTime) / 1000));
+    const seconds = Math.max(
+      0,
+      Math.floor((new Date(deadline).getTime() - currentTime) / 1000),
+    );
     return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   }, [currentTime, deadline]);
 
@@ -162,7 +196,11 @@ export default function AlertDetailsModal({
     try {
       await onAccept?.(alertData);
     } catch (error) {
-      setActionError(error?.response?.data?.message || error?.message || "Could not accept this request.");
+      setActionError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Could not accept this request.",
+      );
     }
   };
 
@@ -185,7 +223,10 @@ export default function AlertDetailsModal({
         className="flex max-h-[min(92vh,720px)] w-full max-w-[660px] flex-col overflow-hidden rounded-xl bg-white shadow-xl"
       >
         <header className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4 sm:px-6">
-          <h2 id="hire-alert-details-title" className="text-xl font-semibold text-[#252525]">
+          <h2
+            id="hire-alert-details-title"
+            className="text-xl font-semibold text-[#252525]"
+          >
             Service Details
           </h2>
           <button
@@ -204,37 +245,53 @@ export default function AlertDetailsModal({
               src={avatar}
               alt=""
               className="h-16 w-16 shrink-0 rounded-full bg-gray-100 object-cover"
-              onError={(event) => { event.currentTarget.src = "/avatar.png"; }}
+              onError={(event) => {
+                event.currentTarget.src = "/avatar.png";
+              }}
             />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
-                <h3 className="text-base font-semibold leading-5 text-[#292929]">{customerName}</h3>
+                <h3 className="text-base font-semibold leading-5 text-[#292929]">
+                  {customerName}
+                </h3>
                 {(customer.emailVerified || customer.kycVerified) && (
-                  <BadgeCheck className="h-4 w-4 text-[#43875B]" aria-label="Verified customer" />
+                  <BadgeCheck
+                    className="h-4 w-4 text-[#43875B]"
+                    aria-label="Verified customer"
+                  />
                 )}
               </div>
               {Number.isFinite(averageRating) && (
                 <div className="mt-1 flex items-center gap-1 text-xs text-[#777777]">
                   <Star className="h-3.5 w-3.5 fill-[#F6B400] text-[#F6B400]" />
-                  <span className="font-medium text-[#333333]">{averageRating.toFixed(1)}</span>
+                  <span className="font-medium text-[#333333]">
+                    {averageRating.toFixed(1)}
+                  </span>
                   {reviewCount > 0 && <span>({reviewCount} reviews)</span>}
                 </div>
               )}
-              <div className="mt-1 flex min-w-0 items-center gap-1 text-sm text-[#888888]">
-                <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate">{customer.city || customer.currentLocation?.address || address}</span>
-              </div>
+              {customerLocation && (
+                <div className="mt-1 flex min-w-0 items-center gap-1 text-sm text-[#888888]">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{customerLocation}</span>
+                </div>
+              )}
             </div>
           </div>
 
           {actionError && (
-            <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div
+              role="alert"
+              className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+            >
               {actionError}
             </div>
           )}
 
           {(showPrimaryAction || !isJob) && (
-            <div className={`mt-4 grid gap-3 ${isJob ? "grid-cols-1" : "grid-cols-2"}`}>
+            <div
+              className={`mt-4 grid gap-3 ${isJob ? "grid-cols-1" : "grid-cols-2"}`}
+            >
               <button
                 type="button"
                 onClick={handleAccept}
@@ -258,10 +315,14 @@ export default function AlertDetailsModal({
 
           <section className="mt-5 border-t border-gray-100 pt-4">
             <div className="mb-3 flex items-start justify-between gap-4">
-              <h3 className="text-base font-semibold text-[#333333]">Booking Information</h3>
+              <h3 className="text-base font-semibold text-[#333333]">
+                Booking Information
+              </h3>
               {!isJob && (
                 <div className="shrink-0 text-right">
-                  <p className="text-[11px] text-[#777777]">Time left to accept</p>
+                  <p className="text-[11px] text-[#777777]">
+                    Time left to accept
+                  </p>
                   <p className="mt-0.5 text-xl font-bold leading-6 text-[#347D53]">
                     {timeRemaining || "--:--"}
                   </p>
@@ -270,12 +331,50 @@ export default function AlertDetailsModal({
             </div>
 
             <div className="space-y-3.5">
-              <InfoRow icon={<Wrench className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Service" value={serviceName} />
-              <InfoRow icon={<MapPinned className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Service Location" value={serviceLocation} />
-              <InfoRow icon={<CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Start Date & Time" value={formatDateTime(booking)} />
-              <InfoRow icon={<Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Duration" value={formatDuration(booking)} />
-              <InfoRow icon={<MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Location" value={address} />
-              <InfoRow icon={<Banknote className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />} label="Service Cost" value={formatPrice(serviceCost)} />
+              <InfoRow
+                icon={
+                  <Wrench className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />
+                }
+                label="Service"
+                value={serviceName}
+              />
+              <InfoRow
+                icon={
+                  <MapPinned className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />
+                }
+                label="Service Location"
+                value={serviceLocation}
+              />
+              <InfoRow
+                icon={
+                  <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />
+                }
+                label="Start Date & Time"
+                value={formatDateTime(booking)}
+              />
+              <InfoRow
+                icon={
+                  <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />
+                }
+                label="Duration"
+                value={formatDuration(booking)}
+              />
+              {isCustomerAddress && (
+                <InfoRow
+                  icon={
+                    <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />
+                  }
+                  label="Location"
+                  value={address}
+                />
+              )}
+              <InfoRow
+                icon={
+                  <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-[#43875B]" />
+                }
+                label="Service Cost"
+                value={formatPrice(serviceCost)}
+              />
             </div>
 
             <div className="mt-4">

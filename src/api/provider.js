@@ -13,7 +13,7 @@ export const getProviderBookings = async (status = null) => {
 };
 
 export const getBookingDetails = async (bookingId) => {
-  const { data } = await api.get(`/provider/bookings/${bookingId}`);
+  const { data } = await api.get(`/bookings/${bookingId}`);
   return data;
 };
 
@@ -38,7 +38,10 @@ export const cancelBooking = async (bookingId, reason = "") => {
 };
 
 export const rateUser = async (bookingId, rating) => {
-  const { data } = await api.post(`/provider/bookings/${bookingId}/rate-user`, rating);
+  const { data } = await api.post(
+    `/provider/bookings/${bookingId}/rate-user`,
+    rating,
+  );
   return data;
 };
 
@@ -172,6 +175,11 @@ export const getAllProviders = async () => {
 
 export const getProviderDirectory = async (params = {}) => {
   const { data } = await api.get("/provider/all", { params });
+  return data;
+};
+
+export const getProviderById = async (providerId) => {
+  const { data } = await api.get(`/provider/${providerId}`);
   return data;
 };
 

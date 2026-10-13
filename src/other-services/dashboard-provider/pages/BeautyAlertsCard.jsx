@@ -19,18 +19,22 @@ const formatScheduledDate = (booking) => {
     day: "numeric",
     year: "numeric",
   });
-  const timeText = booking?.scheduledTime ||
-    date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }).replace(":00", "");
+  const timeText =
+    booking?.scheduledTime ||
+    date
+      .toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .replace(":00", "");
 
   return `${dateText} - ${timeText}`;
 };
 
 const formatDistanceAndEta = (booking) => {
-  const distanceValue = booking?.distance?.value ?? booking?.distanceFromPickup?.value;
+  const distanceValue =
+    booking?.distance?.value ?? booking?.distanceFromPickup?.value;
   const distanceUnit = booking?.distance?.unit || "km";
   const etaValue = booking?.providerETA?.value ?? booking?.providerEta?.value;
   const parts = [];
@@ -58,26 +62,43 @@ export default function AlertsCard({
   const booking = alert?.originalData || {};
   const pricingOption = String(
     booking?.serviceDetails?.pricingOption || booking?.pricingOption || "",
-  ).toLowerCase();
-  const servicePlace = SERVICE_PLACE_LABELS[pricingOption] ||
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  const isCustomerAddress = pricingOption === "customer_address";
+  const servicePlace =
+    SERVICE_PLACE_LABELS[pricingOption] ||
     (pricingOption ? pricingOption.replace(/_/g, " ") : "Customer's Address");
-  const serviceAddress = booking?.location?.address ||
-    booking?.pickupLocation?.address || alert?.location || "Address unavailable";
+  const serviceAddress =
+    (typeof booking?.location === "string"
+      ? booking.location
+      : booking?.location?.address) ||
+    booking?.pickupLocation?.address ||
+    alert?.location ||
+    "Address unavailable";
   const scheduledDate = formatScheduledDate(booking);
   const distanceAndEta = formatDistanceAndEta(booking);
   const bookingPrice = Number(
-    booking?.agreedPrice ?? booking?.budget ?? booking?.totalAmount ?? alert?.agreedPrice ?? 0,
+    booking?.agreedPrice ??
+      booking?.budget ??
+      booking?.totalAmount ??
+      alert?.agreedPrice ??
+      0,
   );
   const rawStatus = String(booking?.status || alert?.rawStatus || "")
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, "_");
+    .replace(/[\s-]+/g, "_");
   const isInProgress = rawStatus === "in_progress";
+  const isPaidScheduled = rawStatus === "paid_escrow_scheduled" || "paid_escrow";
   const actionLabel = !isJob
     ? "Accept Request"
     : isInProgress
-      ? "Mark Completed"
-      : "Open Journey";
+      ? "Complete Service"
+      : isPaidScheduled
+        ? "Start Job"
+        : "Open Journey";
 
   return (
     <article className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
@@ -100,7 +121,9 @@ export default function AlertsCard({
                 <Home className="h-4 w-4" />
                 <span className="hidden sm:inline">{servicePlace}</span>
               </span>
-              <span className="min-w-0 break-words">{serviceAddress}</span>
+              {isCustomerAddress && (
+                <span className="min-w-0 break-words">{serviceAddress}</span>
+              )}
             </div>
             {scheduledDate && (
               <div className="flex items-center gap-1.5">
@@ -108,12 +131,16 @@ export default function AlertsCard({
                 <span>{scheduledDate}</span>
               </div>
             )}
-            {distanceAndEta && (
+            {/* {distanceAndEta && (
               <div className="flex items-center gap-1.5">
-                <img src={distanceIcon} alt="" className="h-4 w-4 object-contain" />
+                <img
+                  src={distanceIcon}
+                  alt=""
+                  className="h-4 w-4 object-contain"
+                />
                 <span>{distanceAndEta}</span>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 

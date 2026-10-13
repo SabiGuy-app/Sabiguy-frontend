@@ -66,6 +66,24 @@ export const normalizeBeautyBooking = (booking) => {
 
   const provider = booking.providerId || {};
   const serviceDetails = booking.serviceDetails || {};
+  const serviceEntries = [
+    ...(Array.isArray(booking.service) ? booking.service : []),
+    ...(Array.isArray(booking.services) ? booking.services : []),
+    ...(Array.isArray(serviceDetails.services) ? serviceDetails.services : []),
+  ];
+  const serviceNames = serviceEntries
+    .map((service) =>
+      typeof service === "string"
+        ? service
+        : service?.serviceName || service?.name,
+    )
+    .filter(Boolean);
+  if (serviceDetails.serviceName) serviceNames.unshift(serviceDetails.serviceName);
+  const uniqueServiceNames = Array.from(
+    new Map(
+      serviceNames.map((name) => [String(name).trim().toLowerCase(), String(name).trim()]),
+    ).values(),
+  );
   const price =
     serviceDetails.price ||
     booking.agreedPrice ||
@@ -87,7 +105,11 @@ export const normalizeBeautyBooking = (booking) => {
     provider,
     providerName: provider.fullName || "Provider",
     providerImage: provider.profilePicture || "/avatar.png",
-    service: serviceDetails.serviceName || booking.subCategory || booking.title,
+    service:
+      uniqueServiceNames.join(", ") ||
+      (typeof booking.service === "string" ? booking.service : "") ||
+      booking.subCategory ||
+      booking.title,
     label: getPricingLabel(serviceDetails.pricingOption),
     pricingOption: serviceDetails.pricingOption,
     price,

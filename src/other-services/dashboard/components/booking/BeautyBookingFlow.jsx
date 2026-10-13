@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { initializePayment, payWithWallet } from "../../../../api/payment";
 import { getWalletBalance } from "../../../../api/provider";
+import { reverseGeocodeCoordinates } from "../../../../services/reverseGeocode";
 import {
   BadgeCheck,
   CalendarDays,
@@ -48,16 +49,156 @@ const formatBookingTime = (value) => {
   return `${twelveHour}:${minute} ${period}`;
 };
 
-const parseTimeToDate = (day, timeLabel) => {
-  const [time, period] = timeLabel.split(" ");
-  const [hourValue, minuteValue] = time.split(":");
-  let hour = Number(hourValue);
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const parseTimeToMinutes = (value) => {
+  const match = String(value || "")
+    .trim()
+    .match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+  if (!match) return null;
+
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const period = match[3]?.toUpperCase();
+  if (minute > 59 || hour > (period ? 12 : 23) || (period && hour === 0)) {
+    return null;
+  }
   if (period === "PM" && hour !== 12) hour += 12;
   if (period === "AM" && hour === 12) hour = 0;
+  return hour * 60 + minute;
+};
 
-  const date = new Date(2026, 9, day, hour, Number(minuteValue));
-  return localDateTime(date);
+const formatMinutesAsTime = (minutes) => {
+  const hour = Math.floor(minutes / 60);
+  const period = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${String(minutes % 60).padStart(2, "0")} ${period}`;
+};
+
+const getDurationMinutes = (duration) => {
+  if (typeof duration === "number") return duration;
+  const match = String(duration || "").match(
+    /(\d+(?:\.\d+)?)\s*(hour|hr|min)/i,
+  );
+  if (!match) return 45;
+  const amount = Number(match[1]);
+  return /hour|hr/i.test(match[2]) ? amount * 60 : amount;
+};
+
+const getProviderAvailability = (provider) => {
+  const businessHours =
+    provider.businessHours || provider.availability?.businessHours || {};
+  return {
+    days: Array.isArray(provider.availableDays)
+      ? provider.availableDays.map((day) =>
+          String(day).slice(0, 3).toLowerCase(),
+        )
+      : [],
+    start: parseTimeToMinutes(businessHours.start),
+    end: parseTimeToMinutes(businessHours.end),
+  };
+};
+
+const getAvailableTimeOptions = (
+  provider,
+  date,
+  duration,
+  now = new Date(),
+) => {
+  const availability = getProviderAvailability(provider);
+  const weekday = WEEKDAYS[date.getDay()].toLowerCase();
+  if (
+    !availability.days.includes(weekday) ||
+    availability.start === null ||
+    availability.end === null
+  ) {
+    return [];
+  }
+
+  const latestStart = availability.end - getDurationMinutes(duration);
+  const options = [];
+  for (let time = availability.start; time <= latestStart; time += 30) {
+    const slotDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      Math.floor(time / 60),
+      time % 60,
+    );
+    if (slotDate > now) options.push(formatMinutesAsTime(time));
+  }
+  return options;
+};
+
+const makeScheduledDate = (date, timeLabel) => {
+  const minutes = parseTimeToMinutes(timeLabel);
+  if (minutes === null) return "";
+  return localDateTime(
+    new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      Math.floor(minutes / 60),
+      minutes % 60,
+    ),
+  );
+};
+
+const getInitialSchedule = (provider, booking) => {
+  const now = new Date();
+  if (booking.date) {
+    const requestedDate = new Date(booking.date);
+    const requestedTime = formatMinutesAsTime(
+      requestedDate.getHours() * 60 + requestedDate.getMinutes(),
+    );
+    if (
+      getAvailableTimeOptions(
+        provider,
+        requestedDate,
+        booking.duration,
+        now,
+      ).includes(requestedTime)
+    ) {
+      return {
+        month: new Date(
+          requestedDate.getFullYear(),
+          requestedDate.getMonth(),
+          1,
+        ),
+        day: requestedDate.getDate(),
+        time: requestedTime,
+        date: localDateTime(requestedDate),
+      };
+    }
+  }
+
+  for (let offset = 0; offset <= 365; offset += 1) {
+    const candidate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + offset,
+    );
+    const [time] = getAvailableTimeOptions(
+      provider,
+      candidate,
+      booking.duration,
+      now,
+    );
+    if (time) {
+      return {
+        month: new Date(candidate.getFullYear(), candidate.getMonth(), 1),
+        day: candidate.getDate(),
+        time,
+        date: makeScheduledDate(candidate, time),
+      };
+    }
+  }
+
+  return {
+    month: new Date(now.getFullYear(), now.getMonth(), 1),
+    day: now.getDate(),
+    time: "",
+    date: "",
+  };
 };
 
 const responseCountdown = (seconds) =>
@@ -157,19 +298,16 @@ export default function BeautyBookingFlow({
   const [stage, setStage] = useState(initialStage);
   const [createdBookingId, setCreatedBookingId] = useState(null);
   const [bookingRecord, setBookingRecord] = useState(null);
-  const [selectedDay, setSelectedDay] = useState(8);
-  const [selectedTime, setSelectedTime] = useState("11:00 AM");
-  const [date, setDate] = useState(
-    () =>
-      booking.date ||
-      (booking.mode === "now"
-        ? localDateTime(new Date(Date.now() + 3600000))
-        : parseTimeToDate(8, "11:00 AM")),
+  const [initialSchedule] = useState(() =>
+    getInitialSchedule(provider, booking),
   );
-  const [address, setAddress] = useState(
-    booking.address ||
-      (booking.id === "home" ? "" : "24 Palm Avenue, Lekki Phase 1, Lagos"),
-  );
+  const [calendarMonth, setCalendarMonth] = useState(initialSchedule.month);
+  const [selectedDay, setSelectedDay] = useState(initialSchedule.day);
+  const [selectedTime, setSelectedTime] = useState(initialSchedule.time);
+  const [date, setDate] = useState(initialSchedule.date);
+  const [address, setAddress] = useState("");
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState("");
   const [note, setNote] = useState(booking.note || "");
   const [method, setMethod] = useState("wallet");
   const [expiresAt, setExpiresAt] = useState(
@@ -185,6 +323,55 @@ export default function BeautyBookingFlow({
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletLoading, setWalletLoading] = useState(false);
+  useEffect(() => {
+    let active = true;
+    const location = provider.buyerSearchLocation;
+
+    if (
+      !Number.isFinite(Number(location?.latitude)) ||
+      !Number.isFinite(Number(location?.longitude))
+    ) {
+      setLocationError("Search location is unavailable. Please search again.");
+      setLocationLoading(false);
+      return undefined;
+    }
+
+    setAddress("");
+    setLocationError("");
+    setLocationLoading(true);
+    reverseGeocodeCoordinates(location)
+      .then((resolvedAddress) => {
+        if (active) setAddress(resolvedAddress);
+      })
+      .catch((error) => {
+        if (active) {
+          setLocationError(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Could not resolve the search location. Please try again.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setLocationLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    provider.buyerSearchLocation?.latitude,
+    provider.buyerSearchLocation?.longitude,
+  ]);
+
+  useEffect(() => {
+    const schedule = getInitialSchedule(provider, booking);
+    setCalendarMonth(schedule.month);
+    setSelectedDay(schedule.day);
+    setSelectedTime(schedule.time);
+    setDate(schedule.date);
+  }, [provider.availableDays, provider.businessHours, booking.duration]);
+
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -267,7 +454,18 @@ export default function BeautyBookingFlow({
   );
   const serviceCharge = Math.max(0, total - Number(booking.price || 0));
   const canContinue = Boolean(
-    address.trim() && date && new Date(date).getTime() > now,
+    address.trim() &&
+    date &&
+    new Date(date).getTime() > now &&
+    getAvailableTimeOptions(
+      provider,
+      new Date(date),
+      booking.duration,
+    ).includes(
+      formatMinutesAsTime(
+        new Date(date).getHours() * 60 + new Date(date).getMinutes(),
+      ),
+    ),
   );
   const openPayment = () => {
     setExpiresAt(Date.now() + 300000);
@@ -293,11 +491,10 @@ export default function BeautyBookingFlow({
 
       const response = await store.submit({
         category: "beauty_personal_care",
-        service: [
-          {
-            serviceName: booking.service,
-          },
-        ],
+        service:
+          booking.services?.length > 0
+            ? booking.services
+            : [{ serviceName: booking.service }],
         pricingOption: booking.pricingOption || "walk_in",
         date: formatBookingDate(date),
         time: formatBookingTime(date),
@@ -325,9 +522,22 @@ export default function BeautyBookingFlow({
     }
   };
   const selectSchedule = (day, timeLabel = selectedTime) => {
+    const selectedDate = new Date(
+      calendarMonth.getFullYear(),
+      calendarMonth.getMonth(),
+      day,
+    );
+    const timeOptions = getAvailableTimeOptions(
+      provider,
+      selectedDate,
+      booking.duration,
+    );
+    const nextTime = timeOptions.includes(timeLabel)
+      ? timeLabel
+      : timeOptions[0] || "";
     setSelectedDay(day);
-    setSelectedTime(timeLabel);
-    setDate(parseTimeToDate(day, timeLabel));
+    setSelectedTime(nextTime);
+    setDate(nextTime ? makeScheduledDate(selectedDate, nextTime) : "");
   };
   const handlePayment = async () => {
     if (!remaining || paymentLoading) return;
@@ -374,21 +584,26 @@ export default function BeautyBookingFlow({
   };
 
   if (stage === "schedule") {
-    const days = Array.from({ length: 31 }, (_, index) => index + 1);
-    const timeOptions = [
-      "9:00 AM",
-      "9:30 AM",
-      "11:00 AM",
-      "11:30 AM",
-      "12:00 PM",
-      "12:30 PM",
-      "02:00 AM",
-      "3:30 AM",
-      "4:30 PM",
-      "5:00 PM",
-      "5:30 PM",
-      "06:00 PM",
-    ];
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const days = Array.from(
+      { length: new Date(year, month + 1, 0).getDate() },
+      (_, index) => index + 1,
+    );
+    const leadingDays = (new Date(year, month, 1).getDay() + 6) % 7;
+    const hasSelectedDayInMonth =
+      date &&
+      new Date(date).getFullYear() === year &&
+      new Date(date).getMonth() === month &&
+      new Date(date).getDate() === selectedDay;
+    const timeOptions = hasSelectedDayInMonth
+      ? getAvailableTimeOptions(
+          provider,
+          new Date(year, month, selectedDay),
+          booking.duration,
+        )
+      : [];
+    const availability = getProviderAvailability(provider);
 
     return (
       <Modal
@@ -418,22 +633,57 @@ export default function BeautyBookingFlow({
           </button>
         </div>
 
+        <div className="border-b border-gray-200 px-4 py-3 sm:px-5">
+          <label
+            htmlFor="beauty-booking-location"
+            className="mb-1 block text-sm font-medium text-gray-700"
+          >
+            Booking address
+          </label>
+          <input
+            id="beauty-booking-location"
+            type="text"
+            value={address}
+            readOnly
+            placeholder={
+              locationLoading
+                ? "Resolving search location..."
+                : "Address unavailable"
+            }
+            className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none"
+          />
+          {locationError && (
+            <p role="alert" className="mt-2 text-sm text-red-600">
+              {locationError}
+            </p>
+          )}
+        </div>
+
         <div className="grid divide-y divide-gray-200 md:grid-cols-[1fr_0.95fr] md:divide-x md:divide-y-0">
           <section className="px-4 py-4 sm:px-5 sm:py-5">
             <div className="mb-4 flex items-center justify-between sm:mb-6">
               <button
                 type="button"
                 aria-label="Previous month"
+                disabled={
+                  year === new Date().getFullYear() &&
+                  month <= new Date().getMonth()
+                }
+                onClick={() => setCalendarMonth(new Date(year, month - 1, 1))}
                 className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-100 text-gray-500"
               >
                 <ChevronLeft size={17} />
               </button>
               <h3 className="text-sm font-semibold text-gray-700">
-                October 2026
+                {calendarMonth.toLocaleDateString("en-NG", {
+                  month: "long",
+                  year: "numeric",
+                })}
               </h3>
               <button
                 type="button"
                 aria-label="Next month"
+                onClick={() => setCalendarMonth(new Date(year, month + 1, 1))}
                 className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-100 text-gray-500"
               >
                 <ChevronRight size={17} />
@@ -445,23 +695,42 @@ export default function BeautyBookingFlow({
                   {day}
                 </span>
               ))}
-              <span />
-              <span />
-              <span />
-              {days.map((day) => (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => selectSchedule(day)}
-                  className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm sm:h-9 sm:w-9 ${
-                    selectedDay === day
-                      ? "bg-[#34805A] font-semibold text-white"
-                      : "text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  {day}
-                </button>
+              {Array.from({ length: leadingDays }, (_, index) => (
+                <span key={`empty-${index}`} />
               ))}
+              {days.map((day) =>
+                (() => {
+                  const dayDate = new Date(year, month, day);
+                  const canSelectDay =
+                    availability.days.includes(
+                      WEEKDAYS[dayDate.getDay()].toLowerCase(),
+                    ) &&
+                    new Date(
+                      dayDate.getFullYear(),
+                      dayDate.getMonth(),
+                      dayDate.getDate() + 1,
+                    ).getTime() > now;
+                  const isSelected =
+                    hasSelectedDayInMonth && selectedDay === day;
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      disabled={!canSelectDay}
+                      onClick={() => selectSchedule(day, "")}
+                      className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm sm:h-9 sm:w-9 ${
+                        isSelected
+                          ? "bg-[#34805A] font-semibold text-white"
+                          : canSelectDay
+                            ? "text-gray-500 hover:bg-gray-50"
+                            : "cursor-not-allowed text-gray-300"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })(),
+              )}
             </div>
           </section>
 
@@ -485,6 +754,15 @@ export default function BeautyBookingFlow({
                 </button>
               ))}
             </div>
+            {timeOptions.length === 0 && (
+              <p className="mt-3 text-sm text-gray-500">
+                {!availability.days.length
+                  ? "Provider availability has not been added yet."
+                  : availability.start === null || availability.end === null
+                    ? "Provider business hours are not available yet, so time slots cannot be shown."
+                    : "No available times for this day."}
+              </p>
+            )}
           </section>
         </div>
 
@@ -495,7 +773,7 @@ export default function BeautyBookingFlow({
           </p>
           <button
             type="button"
-            disabled={!canContinue || store.loading}
+            disabled={!canContinue || locationLoading || store.loading}
             onClick={createBooking}
             className="w-full rounded-md bg-[#34805A] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#2d6f4f] disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
           >
@@ -621,9 +899,7 @@ export default function BeautyBookingFlow({
             alt="SabiGuy"
             className="mx-auto mb-6 h-20 w-20 object-contain"
           />
-          <h2 className="text-2xl font-bold text-gray-800">
-            Request Received
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">Request Received</h2>
           <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-gray-500">
             This provider is reviewing your booking.
             <br />
@@ -632,9 +908,7 @@ export default function BeautyBookingFlow({
           <p className="mt-8 text-2xl font-bold tabular-nums text-[#34805A]">
             {responseCountdown(responseRemaining)}
           </p>
-          <p className="mt-1 text-xs text-gray-400">
-            Response time remaining
-          </p>
+          <p className="mt-1 text-xs text-gray-400">Response time remaining</p>
         </div>
       </Modal>
     );
@@ -769,16 +1043,7 @@ export default function BeautyBookingFlow({
                   </label>
                 ))}
               </fieldset>
-              <button
-                onClick={() =>
-                  setMessage(
-                    "Adding payment methods will be available when payments are connected.",
-                  )
-                }
-                className="mt-3 w-full rounded border border-gray-100 bg-gray-50 py-2 text-xs"
-              >
-                + Add Payment Method
-              </button>
+
               {message && (
                 <p role="status" className="mt-2 text-xs text-gray-500">
                   {message}

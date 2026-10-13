@@ -86,7 +86,7 @@ const StartNavigation = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/StartNavigation"),
 );
 const BeautyServiceJourney = lazy(
-  () => import("./pages/ProviderDashboard/sections/HireAlerts/BeautyServiceJourney"),
+  () => import("./other-services/dashboard-provider/pages/BeautyServiceJourney"),
 );
 const TrackDelivery = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery"),
