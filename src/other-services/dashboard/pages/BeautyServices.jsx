@@ -20,14 +20,16 @@ import Breadcrumbs from "../../../components/dashboard/BreadCrumbs";
 import ProviderCard from "../../../components/dashboard/ProviderCard";
 import LocationAutocomplete from "../../../components/LocationAutocomplete";
 import { searchServiceProviders } from "../../../api/bookings";
+import { getProviderById } from "../../../api/provider";
 import {
   extractNearbyProviders,
+  mergeBeautyServices,
   normalizeSearchBeautyProvider,
 } from "../utils/beautyProviderMapper";
 import { mergeProviderAvailability } from "../utils/providerAvailability";
 import { BEAUTY_PROVIDER_SEARCH_NAMES } from "../../../constants/beautyServices";
 
-const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v8";
+const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v9";
 
 const getCurrentLocation = () =>
   new Promise((resolve, reject) => {
@@ -106,10 +108,42 @@ const searchProvidersForService = async (location, query, searchResponse = null)
 
   const providers = extractNearbyProviders(response);
 
-  return providers
-    .map(normalizeSearchBeautyProvider)
-    .filter((provider) => provider?.id)
-    .map((provider) => ({ ...provider, buyerSearchLocation: location }));
+  return Promise.all(
+    providers.map(async (provider) => {
+      const id = provider.id || provider._id;
+      if (!id) return null;
+
+      let details = {};
+      try {
+        const response = await getProviderById(id);
+        const entry = response?.data?.provider || response?.data?.data ||
+          response?.data || response?.provider || response || {};
+        const profile = entry.providerProfile || entry.profile || entry.userId?.data || {};
+        details = { ...profile, ...entry };
+      } catch (error) {
+        console.warn(`Could not load details for provider ${id}`, error);
+      }
+
+      const normalized = normalizeSearchBeautyProvider({
+        ...provider,
+        ...details,
+        id,
+        availability: provider.availability ?? details.availability,
+        locationFresh: provider.locationFresh ?? details.locationFresh,
+        distanceFromPickup: provider.distanceFromPickup,
+        providerETA: provider.providerETA,
+        service: mergeBeautyServices(
+          Array.isArray(details.service) && details.service.length
+            ? details.service
+            : details.services,
+          Array.isArray(provider.service) && provider.service.length
+            ? provider.service
+            : provider.services,
+        ),
+      });
+      return normalized && { ...normalized, buyerSearchLocation: location };
+    }),
+  ).then((results) => results.filter(Boolean));
 };
 
 const FILTER_OPTIONS = {

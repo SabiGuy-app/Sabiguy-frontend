@@ -1,4 +1,4 @@
-import { beautyProvider } from "../data/beautyProvider";
+import { beautyProvider } from "../data/beautyProvider.js";
 
 const BEAUTY_CATEGORY = "beauty & personal care";
 
@@ -62,10 +62,42 @@ export const extractNearbyProviders = (response) => {
   return [];
 };
 
+export const mergeBeautyServices = (detailServices, searchServices) => {
+  const fallback = Array.isArray(searchServices) ? searchServices : [];
+  if (!Array.isArray(detailServices) || detailServices.length === 0) return fallback;
+
+  const fallbackByName = new Map(
+    fallback.map((service) => [
+      String(service.serviceName || service.name || "").trim().toLowerCase(),
+      service,
+    ]),
+  );
+
+  return detailServices.map((service) => {
+    const previous = fallbackByName.get(
+      String(service.serviceName || service.name || "").trim().toLowerCase(),
+    );
+    if (!previous) return service;
+
+    const pricingModel = { ...previous.pricingModel };
+    Object.entries(service.pricingModel || {}).forEach(([key, value]) => {
+      if (value != null) pricingModel[key] = value;
+    });
+
+    return {
+      ...previous,
+      ...service,
+      price: service.price ?? previous.price,
+      fixedPrice: service.fixedPrice ?? previous.fixedPrice,
+      ...((previous.pricingModel || service.pricingModel) && { pricingModel }),
+    };
+  });
+};
+
 export const normalizeSearchBeautyProvider = (provider) => {
   if (!provider) return null;
 
-  const sourceServices = Array.isArray(provider.service)
+  const sourceServices = Array.isArray(provider.service) && provider.service.length
     ? provider.service
     : Array.isArray(provider.services)
       ? provider.services
@@ -80,9 +112,7 @@ export const normalizeSearchBeautyProvider = (provider) => {
         ...service,
         name,
         price,
-        description:
-          service.description ||
-          `${name} service${service.duration ? ` lasting ${service.duration}` : ""}.`,
+        description: service.description || "",
       };
     })
     .filter(Boolean);
@@ -91,6 +121,7 @@ export const normalizeSearchBeautyProvider = (provider) => {
     .map((service) => toNumber(service.price))
     .filter((price) => price > 0);
   const firstService = services[0];
+  const providerJob = Array.isArray(provider.job) ? provider.job[0] : null;
   const id = provider.id || provider._id;
   const ratingAverage = provider.rating?.average ?? provider.rating;
   const recentReviews = Array.isArray(provider.reviews)
@@ -108,9 +139,9 @@ export const normalizeSearchBeautyProvider = (provider) => {
     provider.locationFresh === false;
   const gallery = compactImages(
     provider.workVisuals?.flatMap((item) => item.pictures || []),
-    provider.studioImages?.flatMap((item) => item.pictures || []),
-    provider.profilePicture,
   );
+  const businessAddress =
+    provider.businessAddress || provider.BusinessAddress || "";
 
   return {
     ...provider,
@@ -122,26 +153,20 @@ export const normalizeSearchBeautyProvider = (provider) => {
       provider.businessName ||
       provider.BusinessName ||
       "Beauty provider",
-    profilePicture: provider.profilePicture || gallery[0] || "/avatar.png",
+    profilePicture: provider.profilePicture || "/avatar.png",
     rating: toNumber(ratingAverage),
     reviews: toNumber(ratingCount),
     price: prices.length ? Math.min(...prices) : null,
-    city:
-      provider.city ||
-      provider.currentLocation?.address ||
-      provider.location?.address ||
-      provider.address ||
-      provider.cityOfOperation ||
-      "Location unavailable",
-    job: [{ service: firstService?.name || "Beauty & Personal Care" }],
+    businessAddress,
+    city: businessAddress || "Business address not provided",
+    job: [{ ...providerJob, service: firstService?.name || "Beauty & Personal Care" }],
     profilePath: `/dashboard/beauty/${id}`,
-    gallery: gallery.length ? gallery : ["/avatar.png"],
-    about:
-      provider.about ||
-      `${provider.fullName || "This provider"} offers beauty and personal care services.`,
+    gallery,
+    about: provider.about || provider.bio || "",
     services,
     recentReviews,
-    completedJobs: toNumber(provider.completedJobs),
+    completedJobs:
+      provider.completedJobs == null ? null : toNumber(provider.completedJobs),
     providerETA: provider.providerETA,
     distanceFromPickup: provider.distanceFromPickup,
     isAvailable: !isUnavailable,
