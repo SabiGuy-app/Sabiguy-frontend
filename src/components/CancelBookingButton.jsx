@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { cancelBooking as cancelProviderBooking } from "../api/provider";
 import { cancelBooking as cancelUserBooking } from "../api/bookings";
-import { ChevronLeft, ChevronRight, Info, X} from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, X } from "lucide-react";
 import Modal from "./Modal";
 
 const HIDDEN_CANCEL_STATUSES = [
@@ -12,16 +12,20 @@ const HIDDEN_CANCEL_STATUSES = [
   "disputed",
   "user_accepted_completion",
   "funds_released",
+  "awaiting_provider_acceptance",
+  "declined",
+  "review "
 ];
+
 
 export default function CancelBookingButton({
   bookingId,
   role = "user",
   status,
-  title="Cancel Request",
+  title = "Cancel Request",
   paymentStatus,
   onSuccess,
-  className = "",
+  className = "flex w-full min-w-25 items-center justify-center gap-3 rounded border bg-white text-red-600  border-red-300  hover:bg-red-50 transition-colors",
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -32,6 +36,8 @@ export default function CancelBookingButton({
   if (HIDDEN_CANCEL_STATUSES.includes(normalizedStatus)) {
     return null;
   }
+
+  
 
   const handleSubmit = (reason) => {
     const cancelRequest =
@@ -352,8 +358,8 @@ export function CancelBookingModal({
 
       <div className="px-8 pb-10 pt-9 text-center sm:px-10">
         <p className="mx-auto max-w-97.5 text-[14px] leading-5 text-[#231F20]">
-          Your cancellation request has been received and is being reviewed.
-          We will notify you once a decision has been made.
+          Your cancellation request has been received and is being reviewed. We
+          will notify you once a decision has been made.
         </p>
 
         <div className="mt-15.5 grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -25,6 +25,8 @@ import Modal from "../../../../components/Modal";
 import Button from "../../../../components/button";
 import InputField from "../../../../components/InputField";
 import { formatMoney } from "../../utils/bookingFormat";
+import CancelBookingButton from "../../../../components/CancelBookingButton";
+import { useCallContext } from "../../../../components/shared/CallContext";
 
 const countdown = (seconds) =>
   [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60]
@@ -293,6 +295,7 @@ export default function BeautyBookingFlow({
   initialStage = "schedule",
 }) {
   const navigate = useNavigate();
+  const callContext = useCallContext();
   const store = useBeautyBookingStore();
   const fetchBookings = store.fetchBookings;
   const [stage, setStage] = useState(initialStage);
@@ -389,6 +392,24 @@ export default function BeautyBookingFlow({
         );
         if (!active || !currentBooking) return;
 
+        const providerResponse = String(
+          currentBooking.providerResponse ||
+            currentBooking.raw?.providerResponse ||
+            "",
+        )
+          .trim()
+          .toLowerCase();
+
+        if (
+          ["declined", "decline"].includes(providerResponse) ||
+          currentBooking.status === "declined"
+        ) {
+          setBookingRecord(currentBooking);
+          setReceivedExpiresAt(null); // Stop the countdown
+          setStage("declined"); // Show the decline modal
+          return;
+        }
+
         if (currentBooking.status === "accepted") {
           setBookingRecord(currentBooking);
           setExpiresAt(
@@ -449,6 +470,36 @@ export default function BeautyBookingFlow({
     ? Math.max(0, Math.ceil((receivedExpiresAt - now) / 1000))
     : 300;
   const paymentBooking = bookingRecord || booking;
+  const rawPaymentBooking = paymentBooking.raw || paymentBooking;
+  const paymentBookingId =
+    rawPaymentBooking?._id || paymentBooking.id || paymentBooking._id;
+  const providerId =
+    provider.backendId ||
+    provider.providerId?._id ||
+    provider.providerId ||
+    provider._id ||
+    rawPaymentBooking?.providerId?._id ||
+    rawPaymentBooking?.providerId ||
+    provider.id;
+  const handleCallProvider = () => {
+    if (!paymentBookingId || !providerId) return;
+
+    callContext?.openCall?.({
+      booking: rawPaymentBooking,
+      targetOverride: {
+        targetId: providerId,
+        targetType: "provider",
+        targetName: provider.fullName || "Provider",
+      },
+    });
+  };
+  const handleMessageProvider = () => {
+    if (!paymentBookingId) return;
+
+    navigate(`/dashboard/chat?bookingId=${paymentBookingId}`, {
+      state: { booking: rawPaymentBooking, provider },
+    });
+  };
   const total = Number(
     paymentBooking.totalAmount || paymentBooking.price + 100 || 0,
   );
@@ -858,6 +909,59 @@ export default function BeautyBookingFlow({
       </Modal>
     );
 
+  if (stage === "declined")
+    return (
+      <Modal
+        isOpen
+        onClose={onClose}
+        title="Provider Unavailable"
+        panelClassName="relative w-[94%] max-w-md rounded-xl bg-white p-6 shadow-xl"
+      >
+        <div className="flex flex-col items-center py-4 text-center">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+            <X size={32} />
+          </span>
+          <h3 className="text-lg font-semibold text-gray-800">
+            {provider.fullName} Declined
+          </h3>
+          <p className="mt-2 text-sm text-gray-600">
+            This provider is currently unavailable and declined your request.
+            Would you like to select another provider for{" "}
+            <strong>{booking.service}</strong>?
+          </p>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              // Only cancel if they explicitly choose to close/cancel the request
+              if (createdBookingId || booking.id) {
+                await store
+                  .cancel(createdBookingId || booking.id, "Provider declined")
+                  .catch(() => {});
+              }
+              onClose();
+              navigate("/bookings?tab=requests");
+            }}
+            className="border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+          >
+            View Bookings
+          </Button>
+          <Button
+            onClick={() => {
+              // Just close the modal and navigate to find another provider without cancelling
+              onClose();
+              navigate(
+                `/dashboard/categories/beauty-personal-care?service=${encodeURIComponent(booking.service)}`,
+              );
+            }}
+          >
+            Find Another Provider
+          </Button>
+        </div>
+      </Modal>
+    );
+
   if (stage === "expired")
     return (
       <Modal
@@ -870,14 +974,16 @@ export default function BeautyBookingFlow({
           This booking request was {bookingRecord?.status || "closed"}. You can
           return to your bookings to review its status.
         </p>
-        <Button
-          onClick={() => {
-            onClose();
-            navigate("/bookings?tab=requests");
-          }}
-        >
-          View bookings
-        </Button>
+        <div className="grid">
+          <Button
+            onClick={() => {
+              onClose();
+              navigate("/bookings?tab=requests");
+            }}
+          >
+            View bookings
+          </Button>
+        </div>
       </Modal>
     );
 
@@ -946,30 +1052,35 @@ export default function BeautyBookingFlow({
             <section>
               <div className="rounded-2xl border border-gray-200 p-5">
                 <ProviderSummary provider={provider} />
-                <div className="mt-6 flex flex-wrap items-center gap-3">
+                <div className="w-full mt-6 flex justify-center items-center gap-3">
                   <button
-                    disabled
-                    className="flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2 text-sm text-gray-400"
+                    type="button"
+                    onClick={handleCallProvider}
+                    disabled={!paymentBookingId || !providerId}
+                    className="w-full flex justify-center items-center gap-2 rounded-lg border border-gray-200 px-5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
                   >
                     <Phone size={16} />
                     Call
                   </button>
                   <button
-                    disabled
-                    className="flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2 text-sm text-gray-400"
+                    type="button"
+                    onClick={handleMessageProvider}
+                    disabled={!paymentBookingId}
+                    className="w-full flex justify-center items-center gap-2 rounded-lg border border-gray-200 px-5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
                   >
                     <MessageCircle size={16} />
                     Message
                   </button>
-                  <button
-                    onClick={() => {
-                      store.cancel();
+                  <CancelBookingButton
+                    bookingId={paymentBooking.id || paymentBooking._id}
+                    status={paymentBooking.status}
+                    role="user"
+                    onSuccess={async () => {
+                      await store.fetchBookings();
                       onClose();
                     }}
-                    className="ml-auto text-sm text-red-600"
-                  >
-                    Cancel Request
-                  </button>
+                    className="w-full flex justify-center items-center gap-2 rounded-lg border border-red-200 px-5 py-2 text-sm text-red-600 bg-red-50"
+                  />
                 </div>
               </div>
               <h2 className="mb-5 mt-8 text-lg font-semibold">

@@ -85,11 +85,35 @@ const getStoredProviderLocation = () => {
   }
 };
 
+function CallCustomerButton({ booking, customerId, customerName }) {
+  const callContext = useCallContext();
+
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        callContext?.openCall?.({
+          booking,
+          targetOverride: {
+            targetId: customerId,
+            targetType: "buyer",
+            targetName: customerName || "Customer",
+          },
+        })
+      }
+      disabled={!customerId}
+      className="flex h-10 items-center justify-center gap-2 rounded border border-gray-200 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <PhoneCall size={16} />
+      Call
+    </button>
+  );
+}
+
 export default function BeautyServiceJourney() {
   const { bookingId } = useParams();
   const route = useLocation();
   const navigate = useNavigate();
-  const callContext = useCallContext();
   const user = useAuthStore((state) => state.user);
   const [booking, setBooking] = useState(
     route.state?.job?.originalData || route.state?.booking || null,
@@ -194,6 +218,14 @@ export default function BeautyServiceJourney() {
   const started = status === "in_progress";
   const arrived = ["arrived_at_pickup", "arrived_at_dropoff"].includes(status);
   const customer = typeof booking?.userId === "object" ? booking.userId : {};
+  const customerId =
+    customer?._id ||
+    customer?.id ||
+    (typeof booking?.userId === "string" ? booking.userId : null) ||
+    booking?.buyerId?._id ||
+    booking?.buyerId ||
+    booking?.customerId?._id ||
+    booking?.customerId;
   const provider =
     typeof booking?.providerId === "object" ? booking.providerId : {};
   const destinationCandidates = [
@@ -281,7 +313,6 @@ export default function BeautyServiceJourney() {
       handleStart();
     }
   };
-
   const handleCompletionClose = () => {
     setCompletionOpen(false);
     navigate("/dashboard/provider/hire-alert", { replace: true });
@@ -349,22 +380,11 @@ export default function BeautyServiceJourney() {
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() =>
-                      callContext?.openCall?.({
-                        booking,
-                        targetOverride: {
-                          targetId: customer?._id || booking?.userId,
-                          targetType: "buyer",
-                          targetName: customer?.fullName || "Customer",
-                        },
-                      })
-                    }
-                    className="flex h-10 items-center justify-center gap-2 rounded border border-gray-200 text-sm text-gray-600"
-                  >
-                    <PhoneCall size={16} />
-                    Call
-                  </button>
+                  <CallCustomerButton
+                    booking={booking}
+                    customerId={customerId}
+                    customerName={customer?.fullName}
+                  />
                   <button
                     onClick={() =>
                       navigate(

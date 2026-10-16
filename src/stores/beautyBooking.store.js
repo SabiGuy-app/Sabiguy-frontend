@@ -40,7 +40,13 @@ const toTwentyFourHourTime = (time = "12:00 AM") => {
   return `${String(hours).padStart(2, "0")}:${minutes}`;
 };
 
-const getBookingStatus = (status) => {
+const getBookingStatus = (status, providerResponse) => {
+  const normalizedResponse = String(providerResponse || "")
+    .trim()
+    .toLowerCase();
+  if (["declined", "decline", "rejected"].includes(normalizedResponse)) {
+    return "declined";
+  }
   const normalized = String(status || "pending").toLowerCase();
   const statusMap = {
     pending_providers: "pending",
@@ -56,6 +62,7 @@ const getBookingStatus = (status) => {
     user_accepted_completion: "completed",
     funds_released: "completed",
     cancelled: "cancelled",
+    declined: "declined",
   };
 
   return statusMap[normalized] || normalized;
@@ -78,10 +85,14 @@ export const normalizeBeautyBooking = (booking) => {
         : service?.serviceName || service?.name,
     )
     .filter(Boolean);
-  if (serviceDetails.serviceName) serviceNames.unshift(serviceDetails.serviceName);
+  if (serviceDetails.serviceName)
+    serviceNames.unshift(serviceDetails.serviceName);
   const uniqueServiceNames = Array.from(
     new Map(
-      serviceNames.map((name) => [String(name).trim().toLowerCase(), String(name).trim()]),
+      serviceNames.map((name) => [
+        String(name).trim().toLowerCase(),
+        String(name).trim(),
+      ]),
     ).values(),
   );
   const price =
@@ -101,7 +112,8 @@ export const normalizeBeautyBooking = (booking) => {
     raw: booking,
     id: booking._id,
     apiStatus: booking.status,
-    status: getBookingStatus(booking.status),
+    providerResponse: booking.providerResponse,
+    status: getBookingStatus(booking.status, booking.providerResponse),
     provider,
     providerName: provider.fullName || "Provider",
     providerImage: provider.profilePicture || "/avatar.png",
@@ -191,7 +203,10 @@ export const useBeautyBookingStore = create((set, get) => ({
       set((state) => ({
         booking,
         bookings: booking
-          ? [booking, ...state.bookings.filter((item) => item.id !== booking.id)]
+          ? [
+              booking,
+              ...state.bookings.filter((item) => item.id !== booking.id),
+            ]
           : state.bookings,
         loading: false,
         notifications: [],
