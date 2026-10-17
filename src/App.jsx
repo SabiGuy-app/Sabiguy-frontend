@@ -19,10 +19,10 @@ import { listenForMessages } from "./services/fcmService";
 import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
 import { Analytics } from "@vercel/analytics/react";
-import BusinessForm from "./business-transport/signup/BusinessForm";
-import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
-import GroupsManagement from "./business-transport/dashboard/pages/GroupsPage";
-import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
+import BusinessForm from "./businessess/signup/BusinessForm";
+import VehiclesPage from "./businessess/business-transport/dashboard/pages/VehiclesPage";
+import GroupsManagement from "./businessess/business-transport/dashboard/pages/GroupsPage";
+import PoliciesPage from "./businessess/business-transport/dashboard/pages/PoliciesPage";
 import NotFound from "./pages/Not-found/NotFound";
 import ProviderNotFound from "./pages/Not-found/ProviderNotFound";
 import UserNotFound from "./pages/Not-found/UserNotFound";
@@ -44,7 +44,7 @@ const ResetPassword = lazy(
 );
 const Success = lazy(() => import("./pages/Forgot-Password/success"));
 const FleetDrivers = lazy(
-  () => import("./business-transport/dashboard/pages/Drivers"),
+  () => import("./businessess/business-transport/dashboard/pages/Drivers"),
 );
 const SignupPage = lazy(() => import("./pages/signup/ServiceUser"));
 const SignupForm = lazy(() => import("./pages/signup/ServiceProvider"));
@@ -152,26 +152,26 @@ const NotificationTest = lazy(() => import("./services/testNotify"));
 const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
 const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
-  () => import("./business-transport/dashboard/pages/FleetOverview"),
+  () => import("./businessess/business-transport/dashboard/pages/FleetOverview"),
 );
 const Earnings = lazy(
-  () => import("./business-transport/dashboard/pages/Earnings"),
+  () => import("./businessess/business-transport/dashboard/pages/Earnings"),
 );
 const FleetComingSoon = lazy(
-  () => import("./business-transport/dashboard/pages/ComingSoonPage"),
+  () => import("./businessess/business-transport/dashboard/pages/ComingSoonPage"),
 );
 const FleetPerformance = lazy(
-  () => import("./business-transport/dashboard/pages/Performance"),
+  () => import("./businessess/business-transport/dashboard/pages/Performance"),
 );
 const FleetDocuments = lazy(
-  () => import("./business-transport/dashboard/pages/Documents"),
+  () => import("./businessess/business-transport/dashboard/pages/Documents"),
 );
 const FleetSettings = lazy(
-  () => import("./business-transport/dashboard/pages/Settings"),
+  () => import("./businessess/business-transport/dashboard/pages/Settings"),
 );
 
 const AddYourVehicle = lazy(
-  () => import("./business-transport/components/AddVehicle"),
+  () => import("./businessess/business-transport/components/AddVehicle"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects

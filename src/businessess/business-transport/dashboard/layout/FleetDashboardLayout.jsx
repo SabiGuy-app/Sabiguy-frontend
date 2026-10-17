@@ -2,13 +2,13 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FleetTopbar from "./FleetTopbar";
 import FleetSidebar from "./FleetSidebar";
-import Modal from "../../../components/Modal";
-import Button from "../../../components/button";
-import { handleLogout } from "../../../api/auth";
+import Modal from "../../../../components/Modal";
+import Button from "../../../../components/button";
+import { handleLogout } from "../../../../api/auth";
 import useInactivityLogout, {
   PROVIDER_INACTIVITY_MS,
   PROVIDER_WARNING_GRACE_MS,
-} from "../../../hooks/useInactivityLogout";
+} from "../../../../hooks/useInactivityLogout";
 import { mockWallet } from "../data/mockFleetOverview";
 
 export default function FleetDashboardLayout({ children }) {

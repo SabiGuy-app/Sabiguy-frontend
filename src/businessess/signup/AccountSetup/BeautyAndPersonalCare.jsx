@@ -23,7 +23,11 @@ const DEFAULT_SERVICES = BEAUTY_SERVICE_OPTIONS;
 
 const SERVICE_LOCATIONS = [
   { id: "walk-in-salon", name: "Walk in Salon", value: "Walk in Salon" },
-  { id: "customer-address", name: "Customer Address", value: "Customer Address" },
+  {
+    id: "customer-address",
+    name: "Customer Address",
+    value: "Customer Address",
+  },
 ];
 
 const TIME_OPTIONS = [
@@ -75,7 +79,8 @@ export default function BeautyAndPersonalCare({ onBack, onNext }) {
   const [newService, setNewService] = useState("");
   const [addingService, setAddingService] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState(
-    () => draft?.selectedLocations || SERVICE_LOCATIONS.map((item) => item.value),
+    () =>
+      draft?.selectedLocations || SERVICE_LOCATIONS.map((item) => item.value),
   );
   const [studioPictures, setStudioPictures] = useState(
     () => draft?.studioPictures || [],
@@ -493,7 +498,9 @@ export default function BeautyAndPersonalCare({ onBack, onNext }) {
             )}
           </section>
 
-          {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+          {errorMessage && (
+            <p className="text-sm text-red-600">{errorMessage}</p>
+          )}
 
           <div className="grid grid-cols-2 gap-4 pt-4">
             <button

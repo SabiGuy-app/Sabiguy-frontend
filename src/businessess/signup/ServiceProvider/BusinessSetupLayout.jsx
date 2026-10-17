@@ -4,7 +4,11 @@ import { motion } from "framer-motion";
 const MotionDiv = motion.div;
 const MotionMain = motion.main;
 
-export default function BusinessSetupLayout({ currentStep, children, contentClassName = "" }) {
+export default function BusinessSetupLayout({
+  currentStep,
+  children,
+  contentClassName = "",
+}) {
   const steps = [
     // "Account Type",
     "Business Info",

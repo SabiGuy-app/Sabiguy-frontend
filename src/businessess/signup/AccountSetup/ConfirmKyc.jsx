@@ -38,8 +38,7 @@ export default function ConfirmKyc({ onNext }) {
       );
       const data = response.data;
 
-      const token =
-        data?.token || data?.data?.token || data?.accessToken;
+      const token = data?.token || data?.data?.token || data?.accessToken;
       if (token) {
         localStorage.setItem("token", token);
         useAuthStore.getState().setToken(token);
@@ -50,10 +49,7 @@ export default function ConfirmKyc({ onNext }) {
       const message = String(data?.message || "").toLowerCase();
       const isNewBusiness =
         message.includes("new customer") || message.includes("new business");
-      const level =
-        data?.kycLevel ??
-        data?.data?.kycLevel ??
-        data?.level;
+      const level = data?.kycLevel ?? data?.data?.kycLevel ?? data?.level;
 
       if (isNewBusiness) {
         localStorage.setItem("kycLevel", "0");
@@ -62,7 +58,9 @@ export default function ConfirmKyc({ onNext }) {
       }
 
       if (level === undefined || level === null) {
-        setErrorMessage("Unable to determine your onboarding progress. Please try again.");
+        setErrorMessage(
+          "Unable to determine your onboarding progress. Please try again.",
+        );
         return;
       }
 
@@ -118,7 +116,10 @@ export default function ConfirmKyc({ onNext }) {
             Enter your business email address to continue.
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 items-center">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4 items-center"
+          >
             <div className="w-full max-w-md">
               <InputField
                 name="email"
@@ -130,7 +131,9 @@ export default function ConfirmKyc({ onNext }) {
             </div>
 
             {errorMessage && (
-              <p className="text-center text-sm text-red-500 mt-2">{errorMessage}</p>
+              <p className="text-center text-sm text-red-500 mt-2">
+                {errorMessage}
+              </p>
             )}
 
             <Button variant="secondary" type="submit" disabled={loading}>
