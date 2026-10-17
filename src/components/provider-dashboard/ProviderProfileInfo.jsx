@@ -134,9 +134,29 @@ export default function ProviderProfileInfoTab({ user }) {
             value={formData.email}
             onChange={handleChange}
             readOnly
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F]
+             focus:border-transparent bg-gray-50"
           />
         </div>
+
+            {/*About us  */} 
+        <div>
+          <label
+            htmlFor="textarea-message"
+          >
+            About us
+          </label>
+
+          <textarea
+             name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            placeholder="Give us a summary for your work."
+            aria-invalid="true"
+            className="min-h-20 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 
+             focus:outline-none focus:ring-2 focus:ring-lime-300 "
+          />
+      </div>
 
         {/* Phone Number */}
         <div>
