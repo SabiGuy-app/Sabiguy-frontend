@@ -1,5 +1,5 @@
-import ShoppingBag from "../../../assets/streamline-ultimate-color_shopping-bag-check.svg";
-import MoneyIcon from "../../../assets/noto_money-with-wings.svg";
+import ShoppingBag from "../../../../assets/streamline-ultimate-color_shopping-bag-check.svg";
+import MoneyIcon from "../../../../assets/noto_money-with-wings.svg";
 
 // ===============================
 // Earnings Summary
