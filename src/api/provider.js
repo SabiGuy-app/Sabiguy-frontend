@@ -13,7 +13,7 @@ export const getProviderBookings = async (status = null) => {
 };
 
 export const getBookingDetails = async (bookingId) => {
-  const { data } = await api.get(`/provider/bookings/${bookingId}`);
+  const { data } = await api.get(`/bookings/${bookingId}`);
   return data;
 };
 
@@ -37,6 +37,23 @@ export const cancelBooking = async (bookingId, reason = "") => {
   return data;
 };
 
+export const declineBooking = async (bookingId) => {
+  const { data } = await api.patch(
+    `/provider/bookings/${bookingId}/decline`,
+    {},
+  );
+  trackEvent("booking_declined", { booking_id: bookingId });
+  return data;
+};
+
+export const rateUser = async (bookingId, rating) => {
+  const { data } = await api.post(
+    `/provider/bookings/${bookingId}/rate-user`,
+    rating,
+  );
+  return data;
+};
+
 export const counterOffer = async (bookingId, offerData) => {
   const { data } = await api.patch(
     `/provider/bookings/${bookingId}/counter-offer`,
@@ -57,7 +74,9 @@ export const getWalletBalance = async (options = {}) => {
   const url = options.bustCache
     ? `/wallet/balance?t=${Date.now()}`
     : "/wallet/balance";
-  const { data } = await api.get(url);
+  const { data } = await api.get(url, {
+    preserveSessionOnRefreshFailure: options.preserveSessionOnRefreshFailure,
+  });
   return data;
 };
 
@@ -143,6 +162,11 @@ export const updateProviderWorkVisuals = async (visualsData) => {
   return data;
 };
 
+export const updateProviderServiceDetails = async (serviceDetails) => {
+  const { data } = await api.patch("/provider/service-details", serviceDetails);
+  return data;
+};
+
 export const updateProviderLocation = async (locationData) => {
   const { data } = await api.put("/provider/location", locationData);
   return data;
@@ -158,8 +182,20 @@ export const getAllProviders = async () => {
   return data;
 };
 
+export const getProviderDirectory = async (params = {}) => {
+  const { data } = await api.get("/provider/all", { params });
+  return data;
+};
+
+export const getProviderById = async (providerId) => {
+  const { data } = await api.get(`/provider/${providerId}`);
+  return data;
+};
+
 export const getProviderReviews = async (providerId) => {
-  const { data } = await api.get(`/provider/${providerId}/reviews`);
+  const { data } = await api.get("/provider/reviews", {
+    params: providerId ? { providerId } : {},
+  });
   return data;
 };
 

@@ -8,11 +8,10 @@ import { ForgotPasswordSchema } from "./schema";
 import OtpInput from "./OtpInput";
 import { requestPasswordReset } from "../../api/auth";
 
-export default function ForgotPassword({ isOpen = true, onClose = () => {}, accountType = "user" }) {
+export default function ForgotPassword({ isOpen = true, onClose = () => {} }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [resetAccountType, setResetAccountType] = useState(accountType);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setLoading(true);
@@ -20,8 +19,7 @@ export default function ForgotPassword({ isOpen = true, onClose = () => {}, acco
 
     try {
       const normalizedEmail = values.email.trim().toLowerCase();
-      const resetRequest = await requestPasswordReset(normalizedEmail, accountType);
-      const { data, accountType: resolvedAccountType } = resetRequest;
+      const data = await requestPasswordReset(normalizedEmail);
 
       localStorage.setItem("passwordEmail", normalizedEmail);
 
@@ -29,7 +27,6 @@ export default function ForgotPassword({ isOpen = true, onClose = () => {}, acco
       if (data) {
         onClose(); // Close forgot password modal
         setShowOtpModal(true); // Open OTP modal
-        setResetAccountType(resolvedAccountType);
       }
     } catch (error) {
       console.error("Forgot password error:", error);
@@ -100,7 +97,6 @@ export default function ForgotPassword({ isOpen = true, onClose = () => {}, acco
       <OtpInput
         isOpen={showOtpModal}
         onClose={() => setShowOtpModal(false)}
-        accountType={resetAccountType}
       />
     </>
 

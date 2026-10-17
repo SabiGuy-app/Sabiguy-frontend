@@ -1,6 +1,48 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, MapPin, X } from "lucide-react";
 
+const getScheduledDateTime = (payload) => {
+  const dateValue =
+    payload?.scheduleDate || payload?.schedule_date || payload?.date;
+  const timeValue =
+    payload?.scheduledTime || payload?.scheduleTime || payload?.time;
+
+  if (dateValue && timeValue) {
+    const dateParts = String(dateValue).slice(0, 10).split("-").map(Number);
+    const timeMatch = String(timeValue)
+      .trim()
+      .match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+
+    if (
+      dateParts.length === 3 &&
+      dateParts.every(Number.isFinite) &&
+      timeMatch
+    ) {
+      let hour = Number(timeMatch[1]);
+      const minute = Number(timeMatch[2]);
+      const period = timeMatch[3]?.toUpperCase();
+      if (period === "PM" && hour !== 12) hour += 12;
+      if (period === "AM" && hour === 12) hour = 0;
+      return new Date(
+        dateParts[0],
+        dateParts[1] - 1,
+        dateParts[2],
+        hour,
+        minute,
+      );
+    }
+  }
+
+  if (!dateValue) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateValue))) {
+    const [year, month, day] = String(dateValue).split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const parsed = new Date(dateValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 export default function BookingRequestModal({
   isOpen,
   onClose,
@@ -12,27 +54,34 @@ export default function BookingRequestModal({
   const message =
     payload?.message || "You have a new booking request to review.";
   const serviceType = payload?.serviceType || "Booking";
-  const scheduleDate = payload?.scheduleDate || payload?.scheduleTime || null;
-  const pickupAddress = payload?.pickupAddress || payload?.pickupLocation?.address || null;
-  const dropoffAddress = payload?.dropoffAddress || payload?.dropoffLocation?.address || null;
-  const calculatedPrice =
-    payload?.calculatedPrice ??
-    payload?.budget ??
-    payload?.driverReceives ??
-    payload?.amount ??
-    null;
+  const rawSubCategory = payload?.serviceName || payload?.category || "";
+  const subCategory = rawSubCategory
+    ? String(rawSubCategory).toLowerCase().replace(/[_-]+/g, " ") ===
+      "beauty personal care"
+      ? "Beauty & Personal Care"
+      : String(rawSubCategory)
+          .replace(/[_-]+/g, " ")
+          .replace(/\b\w/g, (character) => character.toUpperCase())
+    : null;
+  const scheduleType = payload?.scheduleType || payload?.schedule_type || null;
+  const scheduledDateTime = getScheduledDateTime(payload);
+  const pickupAddress =
+    payload?.pickupAddress || payload?.pickupLocation?.address || null;
+  const dropoffAddress =
+    payload?.dropoffAddress || payload?.dropoffLocation?.address || null;
+  const calculatedPrice = payload?.budget ?? null;
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[70] flex items-center justify-center px-4"
+          className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+            className="absolute inset-0 z-0 bg-slate-950/45 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -44,93 +93,118 @@ export default function BookingRequestModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 280, damping: 24 }}
-            className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.28)]"
+            className="relative z-10 flex max-h-[calc(100dvh-24px)] min-h-0 w-full max-w-[520px] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)] sm:max-h-[calc(100dvh-32px)] sm:rounded-3xl"
           >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,88,35,0.14),_transparent_42%),linear-gradient(135deg,_rgba(230,239,233,0.92),_rgba(255,255,255,1))]" />
 
-            <div className="relative p-6 sm:p-8">
+            <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden p-5 sm:p-6">
               <button
                 onClick={onClose}
                 aria-label="Close modal"
-                className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
               >
                 <X size={18} />
               </button>
 
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-6">
+              <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto overscroll-contain text-center">
+                <div className="relative mb-4 shrink-0">
                   <div className="absolute inset-0 rounded-full bg-[#005823]/10 blur-2xl" />
-                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-[#005823] text-white shadow-[0_18px_40px_rgba(0,88,35,0.35)]">
-                    <CalendarDays className="h-12 w-12" />
+                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#005823] text-white shadow-[0_14px_32px_rgba(0,88,35,0.3)]">
+                    <CalendarDays className="h-10 w-10" />
                   </div>
                 </div>
 
-                <span className="mb-3 inline-flex items-center rounded-full border border-[#005823]/15 bg-[#005823]/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#005823]">
+                <span className="mb-2 inline-flex items-center rounded-full border border-[#005823]/15 bg-[#005823]/5 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#005823]">
                   New booking
                 </span>
 
-                <h2 className="text-3xl font-semibold text-[#231F20] sm:text-[34px]">
+                <h2 className="text-2xl font-semibold leading-tight text-[#231F20] sm:text-3xl">
                   {title}
                 </h2>
 
-                <p className="mt-2 text-sm font-medium text-[#005823]">
-                  {serviceType}
+                <p className="mt-1 text-sm font-medium text-[#005823]">
+                  {subCategory
+                    ? `${serviceType} - ${subCategory}`
+                    : serviceType}
                 </p>
 
-                <p className="mt-4 max-w-md text-[15px] leading-7 text-[#231F20BF] sm:text-base">
+                <p className="mt-3 max-w-md text-sm leading-6 text-[#231F20BF]">
                   {message}
                 </p>
 
-                <div className="mt-6 w-full rounded-2xl border border-[#005823]/10 bg-white/80 p-4 text-left shadow-sm">
+                <div className="mt-5 w-full shrink-0 rounded-xl border border-[#005823]/10 bg-white/80 p-3.5 text-left shadow-sm">
                   <p className="text-sm font-semibold text-[#231F20]">
                     Booking details
                   </p>
-                  <div className="mt-3 space-y-3">
-                    {scheduleDate && (
-                      <div className="flex items-center gap-2 text-sm text-[#231F20BF]">
-                        <CalendarDays size={14} className="text-[#005823]" />
-                        <span>{new Date(scheduleDate).toLocaleString()}</span>
+                  <div className="mt-3 space-y-2.5">
+                    {scheduleType && (
+                      <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
+                        <CalendarDays
+                          size={16}
+                          className="mt-0.5 shrink-0 text-[#005823]"
+                        />
+                        <span className="capitalize">
+                          Schedule: {String(scheduleType).replace(/_/g, " ")}
+                        </span>
+                      </div>
+                    )}
+                    {scheduledDateTime && (
+                      <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
+                        <CalendarDays
+                          size={16}
+                          className="mt-0.5 shrink-0 text-[#005823]"
+                        />
+                        <span>
+                          Scheduled for: {scheduledDateTime.toLocaleString()}
+                        </span>
                       </div>
                     )}
                     {pickupAddress && (
-                      <div className="flex items-center gap-2 text-sm text-[#231F20BF]">
-                        <MapPin size={14} className="text-[#005823]" />
+                      <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
+                        <MapPin
+                          size={16}
+                          className="mt-0.5 shrink-0 text-[#005823]"
+                        />
                         <span className="line-clamp-2">
                           Pickup: {pickupAddress}
                         </span>
                       </div>
                     )}
                     {dropoffAddress && (
-                      <div className="flex items-center gap-2 text-sm text-[#231F20BF]">
-                        <MapPin size={14} className="text-[#005823]" />
+                      <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
+                        <MapPin
+                          size={16}
+                          className="mt-0.5 shrink-0 text-[#005823]"
+                        />
                         <span className="line-clamp-2">
                           Dropoff: {dropoffAddress}
                         </span>
                       </div>
                     )}
-                    {calculatedPrice !== null && calculatedPrice !== undefined && (
-                      <div className="flex items-center gap-2 text-sm text-[#231F20BF]">
-                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#005823] text-[10px] font-bold text-white">
-                          ₦
-                        </span>
-                        <span>
-                          Price: {Number(calculatedPrice).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
+                    {calculatedPrice !== null &&
+                      calculatedPrice !== undefined && (
+                        <div className="flex items-start gap-2 text-sm leading-5 text-[#231F20BF]">
+                          <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#005823] text-[10px] font-bold text-white">
+                            ₦
+                          </span>
+                          <span>
+                            Price: {Number(calculatedPrice).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
 
-                <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row">
+                <div className="mt-6 flex w-full shrink-0 flex-col gap-2 sm:flex-row">
                   <button
                     onClick={onClose}
-                    className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#231F201A] bg-white px-5 py-3 text-sm font-semibold text-[#231F20] transition hover:bg-[#F7F8F7]"
+                    className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-[#231F201A] bg-white px-4 py-2.5 text-sm font-semibold text-[#231F20] transition hover:bg-[#F7F8F7]"
                   >
                     Close
                   </button>
                   <button
                     onClick={onViewBooking}
-                    className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#005823] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#005823]/25 transition hover:bg-[#00461d]"
+                    className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-[#005823] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#005823]/25 transition hover:bg-[#00461d]"
                   >
                     View Booking
                   </button>

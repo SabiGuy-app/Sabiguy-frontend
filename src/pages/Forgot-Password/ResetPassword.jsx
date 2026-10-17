@@ -4,11 +4,10 @@ import Button from "../../components/button";
 import Modal from "../../components/Modal";
 import { useState } from "react";
 import Success from "./success";
-import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
-import { resetBusinessPassword } from "../../api/auth";
+import { resetPassword } from "../../api/auth";
 
-export default function ResetPassword({ isOpen, onClose, accountType = "user" }) {
+export default function ResetPassword({ isOpen, onClose }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,12 +31,7 @@ export default function ResetPassword({ isOpen, onClose, accountType = "user" })
     }
 
     try {
-      const data = accountType === "business"
-        ? await resetBusinessPassword({ email, otp: savedOtp, newPassword })
-        : (await axios.post(
-            `${import.meta.env.VITE_BASE_URL}/auth/reset`,
-            { newPassword, otp: savedOtp, email },
-          )).data;
+      const data = await resetPassword({ email, otp: savedOtp, newPassword });
 
       setMessage(data?.message);
       if (data) {

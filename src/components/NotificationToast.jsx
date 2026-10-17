@@ -2,9 +2,23 @@ import { X, MessageCircle, CheckCircle2, AlertCircle } from "lucide-react";
 import { FiMessageSquare, FiCalendar, FiBell } from "react-icons/fi";
 
 export default function NotificationToast({ notification, onClose, onClick }) {
+  const safeNotification = notification || {};
+  const title =
+    safeNotification.title ||
+    safeNotification.notification?.title ||
+    safeNotification.data?.title ||
+    "New notification";
+  const message =
+    safeNotification.message ||
+    safeNotification.body ||
+    safeNotification.notification?.body ||
+    safeNotification.data?.message ||
+    safeNotification.data?.body ||
+    "You have a new notification.";
+
   const getIcon = (type) => {
     const iconMap = {
-      new_booking_request: <FiCalendar className="text-blue-500" size={20} />,
+      new_booking_request: <FiCalendar className="text-green-500" size={20} />,
       provider_accepted: <CheckCircle2 className="text-green-500" size={20} />,
       booking_selected: <FiCalendar className="text-blue-500" size={20} />,
       booking_taken: <FiCalendar className="text-purple-500" size={20} />,
@@ -12,8 +26,9 @@ export default function NotificationToast({ notification, onClose, onClick }) {
       job_started: <FiCalendar className="text-orange-500" size={20} />,
       payment_received: <CheckCircle2 className="text-green-500" size={20} />,
       booking_completed: <CheckCircle2 className="text-green-500" size={20} />,
-      message_received: <MessageCircle className="text-blue-600" size={20} />,
-      new_message: <MessageCircle className="text-blue-600" size={20} />,
+      message_received: <MessageCircle className="text-green-600" size={20} />,
+      new_message: <MessageCircle className="text-green-600" size={20} />,
+      booking_status_updated: <FiCalendar className="text-blue-500" size={20} />,
       counter_offer: <FiBell className="text-blue-500" size={20} />,
       job_completed_confirmed: (
         <CheckCircle2 className="text-green-500" size={20} />
@@ -43,7 +58,7 @@ export default function NotificationToast({ notification, onClose, onClick }) {
         relative overflow-hidden rounded-2xl shadow-2xl border p-4 max-w-sm w-full cursor-pointer
         hover:shadow-3xl transition-all duration-300 
         transform hover:scale-105 animate-slideInDown
-        ${getBackgroundColor(notification.type)}
+        ${getBackgroundColor(safeNotification.type)}
       `}
       style={{
         animation: "slideInDown 0.4s ease-out",
@@ -64,13 +79,13 @@ export default function NotificationToast({ notification, onClose, onClick }) {
 
       <div className="flex items-start gap-3">
         <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-white/50 backdrop-blur">
-          {getIcon(notification.type)}
+          {getIcon(safeNotification.type)}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h4 className="font-bold text-gray-900 text-sm leading-tight">
-              {notification.title}
+              {title}
             </h4>
             <button
               onClick={(e) => {
@@ -83,7 +98,7 @@ export default function NotificationToast({ notification, onClose, onClick }) {
             </button>
           </div>
           <p className="text-sm text-gray-600 line-clamp-2 leading-snug">
-            {notification.message}
+            {message}
           </p>
         </div>
       </div>

@@ -18,9 +18,8 @@ import Loader from "../../components/Loader";
 import {
   login,
   googleLogin,
-  businessLogin,
-  businessGoogleLogin,
   getUserByEmail,
+  getBusinessProfile,
 } from "../../api/auth";
 import { requestNotificationPermission } from "../../services/fcmService";
 import { registerUserFCMToken } from "../../api/fcm";
@@ -37,7 +36,7 @@ const registerFCM = async () => {
     const fcmToken = await Promise.race([
       requestNotificationPermission(),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("FCM timeout")), 3000)
+        setTimeout(() => reject(new Error("FCM timeout")), 3000),
       ),
     ]);
     if (fcmToken) {
@@ -66,10 +65,7 @@ const extractErrorMessage = (error) => {
     }
   } else {
     message =
-      raw?.message ||
-      raw?.error ||
-      raw?.error?.message ||
-      raw?.data?.message;
+      raw?.message || raw?.error || raw?.error?.message || raw?.data?.message;
   }
 
   // Strip axios internal noise
@@ -102,7 +98,7 @@ const getProviderKycStatus = async (email) => {
   try {
     const { data } = await axios.post(
       `${import.meta.env.VITE_BASE_URL}/provider/kyc-level`,
-      { email }
+      { email },
     );
 
     // Persist token if the KYC endpoint returns a fresher one
@@ -137,23 +133,51 @@ const getProviderKycStatus = async (email) => {
   return "done";
 };
 
+// Service details completes onboarding at level 4; anything below still has a
+// step to finish. Completion is authoritative regardless of level.
+const BUSINESS_ONBOARDING_COMPLETE_LEVEL = 4;
+
+// The login response already carries the business owner's KYC progress, so use
+// it directly instead of a second lookup. Returns null when the response did
+// not include progress, so the caller can fall back to the endpoint.
+const businessKycStatusFromLogin = (email, kycLevel, kycCompleted) => {
+  if (kycCompleted) return "done";
+
+  if (kycLevel === undefined || kycLevel === null) return null;
+  const level = Number(kycLevel);
+  if (Number.isNaN(level)) return null;
+
+  if (level < BUSINESS_ONBOARDING_COMPLETE_LEVEL) {
+    localStorage.setItem("kycLevel", String(level));
+    localStorage.setItem("email", email);
+    return "incomplete";
+  }
+
+  return "done";
+};
+
 const getBusinessKycStatus = async (email) => {
   try {
     const { data } = await axios.post(
       `${import.meta.env.VITE_BASE_URL}/businesses/kyc-level`,
       { email },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      },
     );
 
     const token = data?.token || data?.data?.token || data?.accessToken;
-    if (token) localStorage.setItem("token", token);
+    if (token) {
+      localStorage.setItem("token", token);
+      useAuthStore.getState().setToken(token);
+    }
 
     const message = String(data?.message || "").toLowerCase();
     const isNewBusiness =
       message.includes("new customer") || message.includes("new business");
-    const rawLevel =
-      data?.kycLevel ??
-      data?.data?.kycLevel ??
-      data?.level;
+    const rawLevel = data?.kycLevel ?? data?.data?.kycLevel ?? data?.level;
     const level = Number(rawLevel);
 
     if (isNewBusiness) {
@@ -162,8 +186,8 @@ const getBusinessKycStatus = async (email) => {
       return "incomplete";
     }
 
-    // Business onboarding maps level 3 to the completed/congrats step.
-    if (level < 3) {
+    // Service details completes level 4; level 3 still needs that setup step.
+    if (level < 4) {
       localStorage.setItem("kycLevel", String(level));
       localStorage.setItem("email", email);
       return "incomplete";
@@ -196,7 +220,14 @@ export default function Login() {
   /**
    * Shared post-login flow: store user, register FCM, navigate by role.
    */
-  const finaliseLogin = async ({ role, email, token, message }) => {
+  const finaliseLogin = async ({
+    role,
+    email,
+    token,
+    message,
+    kycLevel,
+    kycCompleted,
+  }) => {
     if (message) setSuccessMessage(message);
 
     // Store token (login/googleLogin already do this, but be explicit)
@@ -230,13 +261,26 @@ export default function Login() {
       return;
     }
 
-    if (userRole === "business") {
-      const kycStatus = await getBusinessKycStatus(email);
+    if (userRole === "business" || userRole === "businessOwner") {
+      const kycStatus =
+        businessKycStatusFromLogin(email, kycLevel, kycCompleted) ??
+        (await getBusinessKycStatus(email));
 
       if (kycStatus === "incomplete") {
+        // Restore the saved business category so onboarding resumes on the
+        // correct setup screen (Beauty vs. Transport) even on a fresh device.
+        try {
+          const profile = await getBusinessProfile();
+          if (profile?.businessCategory) {
+            localStorage.setItem("businessCategory", profile.businessCategory);
+          }
+        } catch (err) {
+          console.warn("Could not load business category:", err.message);
+        }
+
         setRedirecting(true);
         setErrorMessage(
-          "You are yet to complete your onboarding process. You will be redirected to where you stopped..."
+          "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
         );
         setTimeout(() => navigate("/business-provider/signup"), 2000);
         return;
@@ -253,7 +297,7 @@ export default function Login() {
       if (kycStatus === "incomplete") {
         setRedirecting(true);
         setErrorMessage(
-          "You are yet to complete your onboarding process. You will be redirected to where you stopped..."
+          "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
         );
         setTimeout(() => navigate("/service-provider/signup"), 2000);
         return;
@@ -284,32 +328,19 @@ export default function Login() {
         email: res.email || email,
         token: res.token,
         message: res.message,
+        kycLevel: res.user?.kycLevel ?? res.kycLevel,
+        kycCompleted: res.user?.kycCompleted ?? res.kycCompleted,
       });
     } catch (error) {
-      // Not a buyer/provider account — try the business login before giving up.
-      try {
-        const bizRes = await businessLogin({ email, password: values.password });
+      console.error("Login error:", error);
 
-        if (!bizRes?.token) {
-          setErrorMessage("Login failed. Please try again.");
-          return;
-        }
-
-        await finaliseLogin({
-          role: "business",
-          email: bizRes.email || email,
-          token: bizRes.token,
-          message: bizRes.message,
-        });
-      } catch (bizError) {
-        console.error("Login error:", error, bizError);
-
-        if (error.request && !error.response) {
-          setErrorMessage("No response from server. Please check your connection.");
-        } else {
-          const raw = extractErrorMessage(error);
-          setErrorMessage(normaliseMessage(raw, "Login failed. Try again."));
-        }
+      if (error.request && !error.response) {
+        setErrorMessage(
+          "No response from server. Please check your connection.",
+        );
+      } else {
+        const raw = extractErrorMessage(error);
+        setErrorMessage(normaliseMessage(raw, "Login failed. Try again."));
       }
     } finally {
       // Always reset loading — this was the primary bug causing infinite loading
@@ -343,39 +374,13 @@ export default function Login() {
           role: data.user?.role,
           email,
           token: data.token,
+          kycLevel: data.user?.kycLevel ?? data.kycLevel,
+          kycCompleted: data.user?.kycCompleted ?? data.kycCompleted,
         });
       } catch (err) {
-        // Not a buyer/provider account — try the business Google login before giving up.
-        try {
-          const bizData = await businessGoogleLogin(tokenResponse.access_token);
-
-          if (!bizData?.token) {
-            const msg =
-              typeof bizData === "string"
-                ? bizData
-                : bizData?.message || bizData?.error;
-            setErrorMessage(normaliseMessage(msg, "Google login failed."));
-            return;
-          }
-
-          // The business endpoint only returns a token, no email — read it
-          // straight from Google since we already have the access token.
-          const userInfo = await fetch(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
-            { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } },
-          );
-          const profile = await userInfo.json();
-
-          await finaliseLogin({
-            role: "business",
-            email: bizData.email || profile?.email || "",
-            token: bizData.token,
-          });
-        } catch (bizErr) {
-          console.error("Google login error:", err, bizErr);
-          const raw = extractErrorMessage(err);
-          setErrorMessage(normaliseMessage(raw, "Google login failed."));
-        }
+        console.error("Google login error:", err);
+        const raw = extractErrorMessage(err);
+        setErrorMessage(normaliseMessage(raw, "Google login failed."));
       } finally {
         setGoogleLoading(false);
       }
@@ -463,7 +468,9 @@ export default function Login() {
                       type="button"
                       onClick={() => setShowPassword((p) => !p)}
                       className="absolute top-11 right-3"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? <BsEye /> : <BsEyeSlash />}
                     </button>

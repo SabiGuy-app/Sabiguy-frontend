@@ -3,6 +3,19 @@ import individual from "/public/Individual.svg";
 import business from "/public/Business.svg";
 import { Link } from "react-router-dom";
 
+// Choosing an account type starts a brand-new signup, so drop any saved
+// business onboarding progress. Resuming an existing account happens through
+// login (never this modal), so this does not affect resume.
+const startFreshBusinessSignup = () => {
+  try {
+    localStorage.removeItem("business-onboarding-draft");
+    localStorage.removeItem("business-service-details-draft");
+    localStorage.removeItem("kycLevel");
+  } catch {
+    // Ignore storage access errors (private mode, disabled storage).
+  }
+};
+
 const AccountTypeModal = ({ isOpen, setIsOpen }) => {
   const heading = "Account Type";
   const subHeading =
@@ -48,6 +61,11 @@ const AccountTypeModal = ({ isOpen, setIsOpen }) => {
             <Link
               to={path}
               key={id}
+              onClick={() => {
+                if (path === "/business-provider/signup") {
+                  startFreshBusinessSignup();
+                }
+              }}
               className="flex gap-3 rounded-lg border p-3.5 sm:p-4.5 border-[#231F2026] transition hover:shadow-xl hover:border-green-600"
             >
               <img

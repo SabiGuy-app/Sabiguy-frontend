@@ -1,49 +1,22 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 
-export default function ServicesCard({ logo, title, onClick, image, disabled }) {
-  const handleClick = (e) => {
-    if (disabled) {
-      e.preventDefault();
-      if (onClick) {
-        onClick();
-      }
-    } else if (onClick) {
-      onClick();
-    }
-  };
-
+export default function ServicesCard({ title, onClick, image, imageIncludesTitle = false, tasks = [], onTaskClick }) {
+  const [imageFailed, setImageFailed] = useState(false);
   return (
-    <div 
-      className={`bg-white relative w-full h-56 sm:h-60 rounded-xl overflow-hidden group ${disabled ? 'cursor-pointer opacity-60' : 'cursor-pointer'}`}
-    >
-      {disabled && (
-        <div className="absolute top-3 right-3 bg-[#F6821F1A] text-[#F6821F] text-[11px] px-2 py-1 rounded-full z-10 font-medium">
-          Coming Soon
-        </div>
-      )}
-
-      {disabled ? (
-        <div 
-          onClick={handleClick}
-          className="absolute p-4 pt-10 inset-0 flex flex-col items-center justify-center"
-        >
-          <div className="transition-transform duration-300 ease-out bg-[#f7faf8] p-2 sm:p-3 rounded-full">
-            <img src={image} alt="" className="w-[40px] h-[40px] sm:w-[50px] sm:h-[50px]"/>
-          </div>
-          <p className="text-[15px] sm:text-[18px] font-semibold mt-3 text-[#231F20]">{title}</p>
-        </div>
-      ) : (
-        <div 
-          className="absolute p-4 inset-0 flex flex-col items-center justify-center"
-          onClick={handleClick}
-        >
-          <div className="transition-transform duration-300 ease-out group-hover:scale-105 group-hover:-translate-y-1 bg-[#f7faf8] p-2 sm:p-3 rounded-full">
-            <img src={image} alt="" className="w-[40px] h-[40px] sm:w-[50px] sm:h-[50px]"/>
-          </div>
-          <p className="text-[15px] sm:text-[18px] font-semibold mt-3 text-[#231F20]">{title}</p>
-        </div>
-      )}
-    </div>
+    <article className="overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-md">
+      <button type="button" onClick={onClick} aria-label={`Explore ${title}`}
+        className="relative block aspect-[401/229] w-full overflow-hidden bg-[#F5F8F6] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#005823]">
+        {!imageFailed && <img src={image} alt={imageIncludesTitle ? title : ""} loading="lazy" onError={() => setImageFailed(true)}
+          className={`h-full w-full ${imageIncludesTitle || image.endsWith(".jpg") ? "object-cover" : "object-contain p-8"}`} />}
+        {(!imageIncludesTitle || imageFailed) && <><div className="absolute inset-0 bg-black/45" /><h3 className="absolute inset-0 flex items-center justify-center px-5 text-center text-xl font-bold leading-snug text-white lg:text-2xl">{title}</h3></>}
+      </button>
+      <div className="min-h-[152px] px-4 pb-5 pt-3">
+        <h4 className="mb-3 border-b border-gray-200 pb-2 text-sm font-medium text-[#231F20]">Featured Tasks</h4>
+        <ul className="space-y-1.5 text-sm text-[#231F20BF]">
+          {tasks.map((task) => <li key={task}><button type="button" onClick={() => onTaskClick ? onTaskClick(task) : onClick?.()}
+            className="text-left hover:text-[#005823] focus-visible:outline-2 focus-visible:outline-[#005823]">{task}</button></li>)}
+        </ul>
+      </div>
+    </article>
   );
 }

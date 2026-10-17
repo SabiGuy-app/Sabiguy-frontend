@@ -1,4 +1,4 @@
-import SidebarProgress from "../../../../components/SidebarProgress";
+import SidebarProgress from "../components/SidebarProgress";
 import { motion } from "framer-motion";
 
 export default function AccountSetupLayout({ currentStep, children }) {

@@ -4,12 +4,16 @@
  * Provides a single socket connection shared across the app
  * (Navbar notifications + useChat messaging).
  * Always reads the token from the Zustand auth store (fixes 2.5).
- * Falls back to localhost if VITE_WS_URL is not set (fixes 2.3).
+ * Uses the API host when a dedicated socket URL is not configured.
  */
 import { io } from "socket.io-client";
 import { useAuthStore } from "../stores/auth.store";
 
-const SOCKET_URL = import.meta.env.VITE_WS_URL || "http://localhost:3000";
+const SOCKET_URL =
+  import.meta.env.VITE_WS_URL ||
+  (import.meta.env.VITE_BASE_URL
+    ? new URL(import.meta.env.VITE_BASE_URL).origin
+    : null);
 
 let socket = null;
 let consumerCount = 0;
@@ -21,7 +25,7 @@ let consumerCount = 0;
  */
 export const getSharedSocket = () => {
   const token = useAuthStore.getState().token;
-  if (!token) return null;
+  if (!token || !SOCKET_URL) return null;
 
   if (!socket || socket.disconnected) {
     socket = io(SOCKET_URL, {

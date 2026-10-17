@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import api from "../../api/axios";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../stores/auth.store";
@@ -7,7 +8,9 @@ import { useAuthStore } from "../../stores/auth.store";
 export default function PasswordTab() {
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     oldPassword: "",
@@ -74,6 +77,27 @@ export default function PasswordTab() {
     setFormData({ oldPassword: "", newPassword: "", confirmPassword: "" });
   };
 
+  const allPasswordsVisible =
+    showOldPassword && showNewPassword && showConfirmPassword;
+
+  const toggleAllPasswords = (e) => {
+    const isVisible = e.target.checked;
+    setShowOldPassword(isVisible);
+    setShowNewPassword(isVisible);
+    setShowConfirmPassword(isVisible);
+  };
+
+  const PasswordVisibilityToggle = ({ isVisible, onToggle }) => (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={isVisible ? "Hide password" : "Show password"}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+    >
+      {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+    </button>
+  );
+
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-900 mb-2">Password</h2>
@@ -82,46 +106,64 @@ export default function PasswordTab() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Old Password</label>
-          <input
-            type={showPassword ? "text" : "password"}
-            name="oldPassword"
-            value={formData.oldPassword}
-            onChange={handleChange}
-            placeholder="Enter your current password"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
-          />
+          <div className="relative">
+            <input
+              type={showOldPassword ? "text" : "password"}
+              name="oldPassword"
+              value={formData.oldPassword}
+              onChange={handleChange}
+              placeholder="Enter your current password"
+              className="w-full px-4 py-3 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
+            />
+            <PasswordVisibilityToggle
+              isVisible={showOldPassword}
+              onToggle={() => setShowOldPassword((visible) => !visible)}
+            />
+          </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-          <input
-            type={showPassword ? "text" : "password"}
-            name="newPassword"
-            value={formData.newPassword}
-            onChange={handleChange}
-            placeholder="Enter your new password"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
-          />
+          <div className="relative">
+            <input
+              type={showNewPassword ? "text" : "password"}
+              name="newPassword"
+              value={formData.newPassword}
+              onChange={handleChange}
+              placeholder="Enter your new password"
+              className="w-full px-4 py-3 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
+            />
+            <PasswordVisibilityToggle
+              isVisible={showNewPassword}
+              onToggle={() => setShowNewPassword((visible) => !visible)}
+            />
+          </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-          <input
-            type={showPassword ? "text" : "password"}
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            placeholder="Re-enter your new password"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
-          />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Re-enter your new password"
+              className="w-full px-4 py-3 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
+            />
+            <PasswordVisibilityToggle
+              isVisible={showConfirmPassword}
+              onToggle={() => setShowConfirmPassword((visible) => !visible)}
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
             id="showPassword"
-            checked={showPassword}
-            onChange={(e) => setShowPassword(e.target.checked)}
+            checked={allPasswordsVisible}
+            onChange={toggleAllPasswords}
             className="w-4 h-4 text-[#005823] border-gray-300 rounded focus:ring-[#8BC53F]"
           />
           <label htmlFor="showPassword" className="text-sm text-gray-700">

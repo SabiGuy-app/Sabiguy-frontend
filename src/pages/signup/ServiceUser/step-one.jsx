@@ -91,7 +91,7 @@ export default function StepOne({ onNext }) {
             `Email already in use. Please login to continue your sign-up process.`,
           );
         } else {
-          setErrorMessage( "Something went wrong");
+          setErrorMessage("Something went wrong");
         }
       }
     } catch (error) {
@@ -165,9 +165,7 @@ export default function StepOne({ onNext }) {
           data?.email || data?.newUser?.email || profile?.email || "";
 
         if (
-          data?.message?.startsWith(
-            "Email not verified. OTP sent to email",
-          )
+          data?.message?.startsWith("Email not verified. OTP sent to email")
         ) {
           trackEvent("signup_otp_sent", { role: "buyer", method: "google" });
           setSuccessMessage(
@@ -184,7 +182,9 @@ export default function StepOne({ onNext }) {
         if (!res.ok) {
           trackEvent("signup_failed", { role: "buyer", method: "google" });
           setGoogleLoading(false);
-          setErrorMessage(data?.message || "An error occurred. Please try again.");
+          setErrorMessage(
+            data?.message || "An error occurred. Please try again.",
+          );
           return;
         }
 
@@ -194,7 +194,9 @@ export default function StepOne({ onNext }) {
 
         if (!googleEmail) {
           trackEvent("signup_failed", { role: "buyer", method: "google" });
-          setErrorMessage("Google did not return an email address for this account.");
+          setErrorMessage(
+            "Google did not return an email address for this account.",
+          );
           setGoogleLoading(false);
           return;
         }
@@ -207,13 +209,11 @@ export default function StepOne({ onNext }) {
       } catch (error) {
         console.error("Google login failed:", error);
         trackEvent("signup_failed", { role: "buyer", method: "google" });
-        setErrorMessage("Google login failed")
+        setErrorMessage("Google login failed");
         setGoogleLoading(false);
-
       }
     },
   });
-
 
   // Keep page visible; we'll disable Google button while loading
 
@@ -223,7 +223,7 @@ export default function StepOne({ onNext }) {
       <AuthLayout
         title="Let's Get Started!"
         // description="Sign up and get up to ₦500 off your rides!"
-        description= "Join us to discover reliable professionals anytime, anywhere."
+        description="Join us to discover reliable professionals anytime, anywhere."
       >
         <MotionDiv
           key="step-one"
@@ -261,218 +261,229 @@ export default function StepOne({ onNext }) {
                 termAccepted;
               const showPasswordFeedback =
                 values.password.trim().length > 0 && !passwordFocused;
-              const isStrongPassword = evaluatePasswordStrength(values.password);
+              const isStrongPassword = evaluatePasswordStrength(
+                values.password,
+              );
               return (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div>
-                  <InputField
-                    name="fullName"
-                    label="Full Name"
-                    placeholder="Enter your first and last name"
-                    value={values.fullName}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                  <ErrorMessage
-                    name="fullName"
-                    component="span"
-                    className="text-[#db3a3a]"
-                  />
-                </div>
-                <div>
-                  <InputField
-                    name="email"
-                    label="Email"
-                    placeholder="Enter your email"
-                    value={values.email}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                  <ErrorMessage
-                    name="email"
-                    component="span"
-                    className="text-[#db3a3a]"
-                  />
-                </div>
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                  <div>
+                    <InputField
+                      name="fullName"
+                      label="Full Name"
+                      placeholder="Enter your first and last name"
+                      value={values.fullName}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                    <ErrorMessage
+                      name="fullName"
+                      component="span"
+                      className="text-[#db3a3a]"
+                    />
+                  </div>
+                  <div>
+                    <InputField
+                      name="email"
+                      label="Email"
+                      placeholder="Enter your email"
+                      value={values.email}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                    <ErrorMessage
+                      name="email"
+                      component="span"
+                      className="text-[#db3a3a]"
+                    />
+                  </div>
 
-                <div>
-                  <InputField
-                    name="city"
-                    label="Address"
-                    placeholder="Enter your address"
-                    value={values.city}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                  <ErrorMessage
-                    name="city"
-                    component="span"
-                    className="text-[#db3a3a]"
-                  />
-                </div>
+                  <div>
+                    <InputField
+                      name="city"
+                      label="Address"
+                      placeholder="Enter your address"
+                      value={values.city}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                    <ErrorMessage
+                      name="city"
+                      component="span"
+                      className="text-[#db3a3a]"
+                    />
+                  </div>
 
-                <div>
-                  <InputField
-                    name="phoneNumber"
-                    label="Phone number"
-                    placeholder="Enter your phone number"
-                    value={values.phoneNumber}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                  <ErrorMessage
-                    name="phoneNumber"
-                    component="span"
-                    className="text-[#db3a3a]"
-                  />
-                </div>
+                  <div>
+                    <InputField
+                      name="phoneNumber"
+                      label="Phone number"
+                      placeholder="Enter your phone number"
+                      value={values.phoneNumber}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                    <ErrorMessage
+                      name="phoneNumber"
+                      component="span"
+                      className="text-[#db3a3a]"
+                    />
+                  </div>
 
-                <div className="relative">
-                  <InputField
-                    name="password"
-                    label="Password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={values.password}
-                    onChange={handleChange}
-                    onFocus={() => setPasswordFocused(true)}
-                    onBlur={(e) => {
-                      handleBlur(e);
-                      setPasswordFocused(false);
-                    }}
-                  />
-                  <ErrorMessage
-                    name="password"
-                    component="span"
-                    className="text-[#db3a3a]"
-                  />
-                  {showPasswordFeedback && (
-                    <div
-                      className={`mt-2 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 ${
-                        isStrongPassword
-                          ? "border-emerald-200 bg-emerald-50/90 text-emerald-800"
-                          : "border-amber-200 bg-amber-50/90 text-amber-900"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`mt-0.5 h-2.5 w-2.5 rounded-full ${
-                            isStrongPassword ? "bg-emerald-500" : "bg-amber-500"
-                          }`}
-                        />
-                        <p className="leading-relaxed">
-                          {isStrongPassword
-                            ? "Nice, that's a strong password. You're doing great."
-                            : "Whoops, that's a rather weak password, but you can continue with it."}
-                        </p>
+                  <div className="relative">
+                    <InputField
+                      name="password"
+                      label="Password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={values.password}
+                      onChange={handleChange}
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={(e) => {
+                        handleBlur(e);
+                        setPasswordFocused(false);
+                      }}
+                    />
+                    <ErrorMessage
+                      name="password"
+                      component="span"
+                      className="text-[#db3a3a]"
+                    />
+                    {showPasswordFeedback && (
+                      <div
+                        className={`mt-2 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 ${
+                          isStrongPassword
+                            ? "border-emerald-200 bg-emerald-50/90 text-emerald-800"
+                            : "border-amber-200 bg-amber-50/90 text-amber-900"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`mt-0.5 h-2.5 w-2.5 rounded-full ${
+                              isStrongPassword
+                                ? "bg-emerald-500"
+                                : "bg-amber-500"
+                            }`}
+                          />
+                          <p className="leading-relaxed">
+                            {isStrongPassword
+                              ? "Nice, that's a strong password. You're doing great."
+                              : "Whoops, that's a rather weak password, but you can continue with it."}
+                          </p>
+                        </div>
                       </div>
+                    )}
+                    {showPassword ? (
+                      <BsEye
+                        onClick={handleShowPassword}
+                        className="absolute top-11 right-3 cursor-pointer"
+                      />
+                    ) : (
+                      <BsEyeSlash
+                        onClick={handleShowPassword}
+                        className="absolute top-11 right-3 cursor-pointer"
+                      />
+                    )}
+                  </div>
+
+                  {errorMessage && (
+                    <div className="text-center text-[#db3a3a] mt-2">
+                      {errorMessage}
                     </div>
                   )}
-                  {showPassword ? (
-                    <BsEye
-                      onClick={handleShowPassword}
-                      className="absolute top-11 right-3 cursor-pointer"
-                    />
-                  ) : (
-                    <BsEyeSlash
-                      onClick={handleShowPassword}
-                      className="absolute top-11 right-3 cursor-pointer"
-                    />
+                  {successMessage && (
+                    <div className="text-center font-medium text-[#005823BF] mt-2">
+                      {successMessage}
+                    </div>
                   )}
-                </div>
 
-                {errorMessage && (
-                  <div className="text-center text-[#db3a3a] mt-2">
-                    {errorMessage}
+                  <div className="">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="terms"
+                        checked={termAccepted}
+                        onChange={() => {
+                          setTermAccepted((prev) => !prev);
+                          setTermError("");
+                        }}
+                        className="accent-[#005823BF]"
+                      />
+                      <label htmlFor="terms" className="text-sm text-gray-600">
+                        I agree to the{" "}
+                        <Link
+                          to="/policies/privacy"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#005823BF] font-medium"
+                        >
+                          Privacy Policy
+                        </Link>
+                        ,{" "}
+                        <Link
+                          to="/policies/terms"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#005823BF] font-medium"
+                        >
+                          Terms of Use
+                        </Link>
+                        , and{" "}
+                        <Link
+                          to="/policies"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#005823BF] font-medium"
+                        >
+                          related policies
+                        </Link>
+                        .
+                      </label>
+                    </div>
+                    {termError && (
+                      <span className="text-[#db3a3a] text-sm">
+                        {termError}
+                      </span>
+                    )}
                   </div>
-                )}
-                {successMessage && (
-                  <div className="text-center font-medium text-[#005823BF] mt-2">
-                    {successMessage}
+
+                  <Button type="submit" disabled={!isFormComplete}>
+                    {loading ? "Loading..." : "Continue"}
+                  </Button>
+
+                  <div className="flex items-center my-4">
+                    <div className="flex-grow border-t border-gray-300"></div>
+                    <span className="mx-2 text-gray-500 text-sm">or</span>
+                    <div className="flex-grow border-t border-gray-300"></div>
                   </div>
-                )}
 
-                <div className="">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="terms"
-                      checked={termAccepted}
-                      onChange={() => {
-                        setTermAccepted((prev) => !prev);
-                        setTermError("");
-                      }}
-                      className="accent-[#005823BF]"
-                    />
-                    <label htmlFor="terms" className="text-sm text-gray-600">
-                      I agree to the{" "}
-                      <Link
-                        to="/policies/privacy"
-                        className="text-[#005823BF] font-medium"
-                      >
-                        Privacy Policy
-                      </Link>
-                      ,{" "}
-                      <Link
-                        to="/policies/terms"
-                        className="text-[#005823BF] font-medium"
-                      >
-                        Terms of Use
-                      </Link>
-                      , and{" "}
-                      <Link
-                        to="/policies"
-                        className="text-[#005823BF] font-medium"
-                      >
-                        related policies
-                      </Link>
-                      .
-                    </label>
-                  </div>
-                  {termError && (
-                    <span className="text-[#db3a3a] text-sm">{termError}</span>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={!isFormComplete}
-                >
-                  {loading ? "Loading..." : "Continue"}
-                </Button>
-
-                <div className="flex items-center my-4">
-                  <div className="flex-grow border-t border-gray-300"></div>
-                  <span className="mx-2 text-gray-500 text-sm">or</span>
-                  <div className="flex-grow border-t border-gray-300"></div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => googleLogin()}
-                  disabled={googleLoading}
-                  className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
-                >
-                  <img src="/Google.svg" alt="Google" className="w-5 h-5" />
-                  <span className="text-gray-700 font-medium">
-                    {googleLoading ? "Just a moment..." : "Continue with Google"}
-                  </span>
-                </button>
-
-                <p className="text-center text-sm mb-5">
-                  Already have an account?
-                  <Link
-                    to="/login"
-                    className="text-[#005823] font-medium hover:text-black transition-all duration-200 inline-flex items-center group ml-1"
+                  <button
+                    type="button"
+                    onClick={() => googleLogin()}
+                    disabled={googleLoading}
+                    className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
                   >
-                    Login
-                    <FaArrowRight
-                      size={18}
-                      className="ml-2 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-                    />
-                  </Link>
-                </p>
-              </form>
+                    <img src="/Google.svg" alt="Google" className="w-5 h-5" />
+                    <span className="text-gray-700 font-medium">
+                      {googleLoading
+                        ? "Just a moment..."
+                        : "Continue with Google"}
+                    </span>
+                  </button>
+
+                  <p className="text-center text-sm mb-5">
+                    Already have an account?
+                    <Link
+                      to="/login"
+                      className="text-[#005823] font-medium hover:text-black transition-all duration-200 inline-flex items-center group ml-1"
+                    >
+                      Login
+                      <FaArrowRight
+                        size={18}
+                        className="ml-2 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+                      />
+                    </Link>
+                  </p>
+                </form>
               );
             }}
           </Formik>

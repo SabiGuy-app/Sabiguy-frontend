@@ -1,7 +1,6 @@
 import {
   Calendar,
   MapPin,
-  Send,
   Clock,
   Star,
   PhoneCall,
@@ -9,6 +8,7 @@ import {
   Copy,
   Check,
   CreditCard,
+  Navigation,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -95,6 +95,9 @@ export default function RequestCard({
       completed: "bg-green-100 text-green-700 border-green-200",
       user_accepted_completion: "bg-green-100 text-green-700 border-green-200",
       "funds released": "bg-green-100 text-green-700 border-green-200",
+      expired: "bg-red-100 text-red-700 border-red-200",
+      "booking expired": "bg-red-100 text-red-700 border-red-200",
+      "no provider available": "bg-red-50 text-red-700 border-red-200",
     };
     return styles[status.toLowerCase()] || styles.pending;
   };
@@ -203,7 +206,7 @@ export default function RequestCard({
         providerName={request.providerName}
       />
 
-      <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-lg transition-shadow">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
         <div className="flex-1">
           <div className="flex gap-2 border-b pb-3 border-[#231F2080]">
             <img
@@ -220,17 +223,17 @@ export default function RequestCard({
               <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2 w-full">
                 <div>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                    <h3 className="text-xl font-semibold text-gray-900">
+                    <h3 className="text-base font-semibold leading-5 text-gray-900">
                       {request.title}
                     </h3>
                     <span
-                      className={`inline-flex items-center justify-center text-center px-1 py-1 text-xs font-medium rounded-full border max-w-30 break-words ${getStatusStyles(request.status)}`}
+                      className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-medium rounded-full border min-w-20 w-fit wrap-break-word ${getStatusStyles(request.status)}`}
                     >
                       {request.status}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[16px] text-[#231F20BF]">
+                    <p className="text-sm text-[#231F20BF]">
                       {request.providerName}
                     </p>
                     {request.providerIdDisplay &&
@@ -247,9 +250,9 @@ export default function RequestCard({
                             title="Copy Full Provider ID"
                           >
                             {copiedId === "provider" ? (
-                              <Check size={10} className="text-green-500" />
+                              <Check size={14} className="text-green-500" />
                             ) : (
-                              <Copy size={10} />
+                                <Copy size={14} />
                             )}
                           </button>
                         </div>
@@ -257,7 +260,7 @@ export default function RequestCard({
                   </div>
                 </div>
                 <div className="flex flex-col sm:items-end items-start">
-                  <div className="text-2xl font-bold text-[#2D6A3E]">
+                  <div className="text-lg font-bold text-[#2D6A3E]">
                     ₦{request.price.toLocaleString()}
                   </div>
                   <div className="flex items-center gap-1 mt-1 justify-end">
@@ -270,9 +273,9 @@ export default function RequestCard({
                       title="Copy Full Booking ID"
                     >
                       {copiedId === "booking" ? (
-                        <Check size={10} className="text-green-500" />
+                        <Check size={14} className="text-green-500" />
                       ) : (
-                        <Copy size={10} />
+                        <Copy size={14} />
                       )}
                     </button>
                   </div>
@@ -282,10 +285,21 @@ export default function RequestCard({
           </div>
 
           <div className="flex flex-col gap-2 mb-4 text-sm text-gray-600 mt-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#2D6A3E]" />
-              <span>{request.scheduledDate}</span>
-            </div>
+            {(request.scheduleType || request.scheduledDate) && (
+              <div className="flex items-start gap-2">
+                <Calendar className="w-4 h-4 text-[#2D6A3E] mt-0.5" />
+                <div className="flex flex-col">
+                  {request.scheduleType && (
+                    <span className="capitalize">
+                      Schedule: {request.scheduleType}
+                    </span>
+                  )}
+                  {request.scheduledDate && (
+                    <span>Scheduled for: {request.scheduledDate}</span>
+                  )}
+                </div>
+              </div>
+            )}
             {request.startsIn && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-yellow-500" />
@@ -298,7 +312,7 @@ export default function RequestCard({
 
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
                 <div className="w-2 h-2 bg-[#005823] rounded-full" />
               </div>
               <div>
@@ -311,8 +325,8 @@ export default function RequestCard({
 
             <div className="flex flex-col sm:flex-row sm:items-end sm:gap-8 gap-2">
               <div className="flex items-start gap-3">
-                <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-3 h-3 text-[#005823]" />
+                <div className="w-5 h-5 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
+                  <MapPin className="h-4 w-4 text-[#005823]" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">
@@ -324,7 +338,7 @@ export default function RequestCard({
                 </div>
               </div>
               <div className="flex items-center gap-2 ml-8 sm:ml-0">
-                <img src={distance} alt="" />
+                <img src={distance} alt="" className="h-4 w-4 object-contain" />
                 <p className="text-[#231F20BF] text-sm">
                   Distance: <span>{request.distance}</span>
                 </p>
@@ -335,8 +349,9 @@ export default function RequestCard({
           <div className="mt-5">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:flex md:items-center md:gap-3">
               <button
+                type="button"
                 onClick={() => onViewDetails(request)}
-                className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base"
+                className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-sm font-medium hover:bg-[#1f4a2a] transition-colors md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
               >
                 View Details
               </button>
@@ -345,7 +360,7 @@ export default function RequestCard({
               ) && (
                 <button
                   onClick={handleMakePayment}
-                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-[4px] font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base"
+                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E] text-white rounded-sm font-medium hover:bg-[#1f4a2a] transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4" />
                   Make Payment
@@ -357,6 +372,7 @@ export default function RequestCard({
                 "provider selected",
                 "payment pending",
                 "awaiting provider acceptance",
+                "paid_escrow",
               ].includes(request.status.toLowerCase()) && (
                 <CancelRequestButton
                   bookingId={request.id}
@@ -365,6 +381,7 @@ export default function RequestCard({
               )}
 
               {[
+                "paid escrow",
                 "in progress",
                 "enroute to pickup",
                 "arrived at pickup",
@@ -373,11 +390,12 @@ export default function RequestCard({
                 "completed",
               ].includes(request.status.toLowerCase()) && (
                 <button
+                  type="button"
                   onClick={() => onTrackProvider(request.id)}
-                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base"
+                  className="w-full px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
-                  <Send className="w-4 h-4" />
-                  Track provider
+                  <Navigation className="w-4 h-4" />
+                  Track
                 </button>
               )}
 
@@ -390,14 +408,14 @@ export default function RequestCard({
               ].includes(request.status.toLowerCase()) && (
                 <button
                   onClick={() => onMessageProvider?.(request)}
-                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Message Provider
+                  Message
                 </button>
               )}
 
-              {[ 
+              {[
                 "paid escrow",
                 "enroute to pickup",
                 "arrived at pickup",
@@ -418,12 +436,30 @@ export default function RequestCard({
                       },
                     })
                   }
-                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-[4px] font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+                  className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm bg-white text-gray-700 border border-gray-300 rounded-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base cursor-pointer"
                 >
                   <PhoneCall className="w-4 h-4" />
-                  Call Provider
+                  Call
                 </button>
               )}
+
+              {/* {[
+                "paid escrow",
+                "enroute to pickup",
+                "arrived at pickup",
+                "enroute to dropoff",
+                "arrived at dropoff",
+                "no provider available"
+              ].includes(request.status.toLowerCase()) && (
+             <button
+    onClick={() => {
+    
+    }}
+    className="w-full col-span-2 sm:col-span-3 px-2 py-1.5 bg-white text-[#DC2626] border border-red-200 rounded-lg font-medium hover:bg-red-50 text-xs sm:px-3 sm:py-2 sm:text-sm transition-colors flex items-center justify-center gap-0.5 sm:gap-2 md:w-fit md:col-auto md:px-4 md:py-2 md:text-base"
+  >
+    Cancel
+  </button>
+              )} */}
 
               {request.status.toLowerCase() === "completed" &&
                 !request.ratings &&
@@ -432,13 +468,14 @@ export default function RequestCard({
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                       <button
                         onClick={() => setDisputeModalOpen(true)}
-                        className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-3 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                       >
                         Dispute Job Completion
                       </button>
                       <button
+                        type="button"
                         onClick={() => setModalOpen(true)}
-                        className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                       >
                         Accept Job Completion
                       </button>

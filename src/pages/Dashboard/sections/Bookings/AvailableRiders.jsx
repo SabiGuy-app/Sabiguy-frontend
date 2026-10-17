@@ -172,7 +172,7 @@ function TimeoutBanner({ providerName, onDismiss }) {
 
   return (
     <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm mb-4 animate-fadeIn">
-      <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+      <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
       <div className="flex-1">
         <p className="font-semibold text-amber-800">Provider didn't respond</p>
         <p className="text-amber-700 mt-0.5">
@@ -191,6 +191,7 @@ function TimeoutBanner({ providerName, onDismiss }) {
 }
 
 export default function AvailableRiders() {
+  const [isProviderDeclined, setIsProviderDeclined] = useState(false);
   const navigate = useNavigate();
   const booking = useBookingStore((state) => state.booking);
   const setSelectedProviderId = useBookingStore(
@@ -328,12 +329,27 @@ export default function AvailableRiders() {
       pollRef.current = setInterval(async () => {
         try {
           const data = await getBookingsDetails(bookingId);
-          const status = (
-            data?.data?.booking?.status ||
-            data?.booking?.status ||
-            ""
-          ).toLowerCase();
 
+          const booking =
+            data?.data?.booking ?? data?.booking ?? data?.data ?? data;
+
+          const status = String(booking?.status || "")
+            .trim()
+            .toLowerCase();
+
+          const providerResponse = String(booking?.providerResponse || "")
+            .trim()
+            .toLowerCase();
+
+          // Provider declined the booking
+          if (providerResponse === "declined") {
+            stopPolling();
+            setWaitingProvider(null);
+            setIsProviderDeclined(true);
+            return;
+          }
+
+          // Provider accepted the booking
           if (ACCEPTED_STATUSES.has(status)) {
             stopPolling();
             setWaitingProvider(null);
@@ -352,6 +368,7 @@ export default function AvailableRiders() {
   const handleAccept = async (provider) => {
     const providerId = getProviderId(provider);
     setAcceptingId(providerId);
+    setIsProviderDeclined(false);
     setError("");
 
     try {
@@ -446,7 +463,7 @@ export default function AvailableRiders() {
                   >
                     <div className="flex flex-col md:flex-row gap-6 md:gap-4">
                       <div className="w-full md:w-1/2">
-                        <div className="w-full h-[200px] sm:h-[250px] bg-gray-100 rounded-lg overflow-hidden">
+                        <div className="w-full h-50 sm:h-62.5 bg-gray-100 rounded-lg overflow-hidden">
                           <img
                             src={provider.profilePicture || "/avatar.png"}
                             alt={provider.fullName}
@@ -524,7 +541,7 @@ export default function AvailableRiders() {
                                     <p className="text-sm font-semibold text-[#005823]">
                                       Discount available
                                     </p>
-                                    <p className="mt-1 text-xs text-[#231F2080] max-w-[180px]">
+                                    <p className="mt-1 text-xs text-[#231F2080] max-w-45">
                                       Select a provider to see your discounted
                                       price.
                                     </p>
@@ -548,7 +565,7 @@ export default function AvailableRiders() {
                                   </>
                                 ) : (
                                   <>
-                                    <Check className="w-[24px] h-[24px]" />
+                                    <Check className="w-6 h-6" />
                                     Accept
                                   </>
                                 )}
@@ -580,6 +597,29 @@ export default function AvailableRiders() {
             bookingDetails={bookingDetails}
           />
         </div> */}
+
+        {isProviderDeclined && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center">
+              <h2 className="text-xl font-bold text-gray-900">
+                Booking Declined
+              </h2>
+
+              <p className="mt-3 text-gray-600">
+                This provider has declined your booking. Please try another
+                provider.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setIsProviderDeclined(false)}
+                className="mt-6 rounded-xl bg-[#2D6A3E] px-6 py-3 font-semibold text-white"
+              >
+                Okay
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

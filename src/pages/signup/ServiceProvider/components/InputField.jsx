@@ -1,0 +1,179 @@
+import { Fragment, useEffect, useState } from "react";
+import { Listbox, Transition } from "@headlessui/react";
+import {
+  ChevronDownIcon,
+  ChevronUpDownIcon,
+  CheckIcon,
+} from "@heroicons/react/20/solid";
+import { FaCheck } from "react-icons/fa";
+
+export default function InputField({
+  label,
+  select = false,
+  options = [],
+  value,
+  onChange,
+  isSelected = false,
+  asRadio = false,
+  onClick,
+  type = "text",
+  placeholder,
+  italicPlaceholder = false,
+  onBlur,
+  name,
+  size = "full",
+  inputClassName = "",
+  labelClassName = "",
+  singleChevron = false,
+  ...props
+}) {
+  const getSelected = () => {
+    if (!options || options.length === 0) return null;
+    if (!value) return placeholder ? null : options[0];
+    return (
+      options.find((option) => option.value === value) ||
+      (placeholder ? null : options[0])
+    );
+  };
+
+  const [selected, setSelected] = useState(getSelected);
+
+  useEffect(() => {
+    if (!options || options.length === 0) {
+      if (selected !== null) setSelected(null);
+      return;
+    }
+
+    if (value !== undefined && value !== null && value !== "") {
+      const match = options.find((option) => option.value === value);
+      setSelected(match || (placeholder ? null : options[0]));
+      return;
+    }
+
+    setSelected(placeholder ? null : options[0]);
+  }, [value, options, placeholder]);
+
+  const widthClasses = {
+    full: "w-full",
+    large: "w-full sm:w-96 md:w-[500px] max-w-full",
+    medium: "w-full sm:w-80 md:w-96 max-w-full",
+    small: "w-full sm:w-64 md:w-80 max-w-full",
+    xs: "w-full sm:w-48 md:w-64 max-w-full",
+  };
+
+  const widthClass = widthClasses[size] || widthClasses.full;
+
+  if (asRadio) {
+    return (
+      <div
+        onClick={onClick}
+        className={`flex items-center gap-4 ${widthClass} px-5 py-4 border rounded-md cursor-pointer transition-colors
+          ${
+            isSelected
+              ? "bg-[#005823BF] border-[#005823] text-white"
+              : "bg-gray-50 border-gray-400 text-black"
+          }
+        `}
+      >
+        <div
+          className={`w-4 h-4 flex items-center justify-center border-2 rounded-full transition-colors
+            ${
+              isSelected
+                ? "border-[#8BC53FBF] bg-white"
+                : "border-gray-400"
+            }
+          `}
+        >
+          {isSelected && <FaCheck className="w-3 h-3 text-[#005823BF]" />}
+        </div>
+        <span className="text-sm font-medium">{placeholder}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex flex-col gap-1 ${widthClass}`}>
+      {label && (
+        <label
+          htmlFor={name}
+          className={`text-[16px] text-[#231F20] font-medium ${labelClassName}`}
+        >
+          {label}
+        </label>
+      )}
+
+      {select ? (
+        <Listbox
+          value={selected}
+          onChange={(option) => {
+            setSelected(option);
+            if (onChange) onChange(option);
+          }}
+        >
+          <div className="relative">
+            <Listbox.Button
+              id={name}
+              aria-label={label}
+              className={`w-full px-5 py-4 bg-gray-50 border border-gray-400 rounded-md text-left focus:outline-none focus:ring-1 focus:ring-[#8BC53FBF] focus:border-[#8BC53FBF] ${inputClassName}`}
+            >
+              <span className={`${selected ? "text-gray-900" : "text-gray-400"}`}>
+                {selected?.label || placeholder || "Select"}
+              </span>
+              <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                {singleChevron ? (
+                  <ChevronDownIcon className="w-4 h-4 text-[#231F20BF]" />
+                ) : (
+                  <ChevronUpDownIcon className="w-5 h-5 text-gray-400" />
+                )}
+              </span>
+            </Listbox.Button>
+
+            <Transition
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Listbox.Options className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-auto focus:outline-none text-base">
+                {options.map((option, index) => (
+                  <Listbox.Option
+                    key={index}
+                    value={option}
+                    className={({ active }) =>
+                      `cursor-pointer select-none px-4 py-2 ${
+                        active ? "bg-[#005823BF] text-white" : "text-gray-900"
+                      }`
+                    }
+                  >
+                    {({ selected: optionSelected }) => (
+                      <div className="flex justify-between items-center">
+                        <span className={optionSelected ? "font-semibold" : ""}>
+                          {option.label}
+                        </span>
+                        {optionSelected && <CheckIcon className="w-5 h-5 text-white" />}
+                      </div>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </Transition>
+          </div>
+        </Listbox>
+      ) : (
+        <input
+          id={name}
+          name={name}
+          type={type}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          className={`w-full px-5 py-4 bg-gray-50 border border-gray-400 rounded-md focus:border-[#8BC53FBF] focus:ring-1 focus:ring-[#8BC53FBF] focus:outline-none ${inputClassName} ${
+            italicPlaceholder ? "placeholder:italic" : ""
+          }`}
+          placeholder={placeholder}
+          {...props}
+        />
+      )}
+    </div>
+  );
+}

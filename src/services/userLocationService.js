@@ -365,6 +365,11 @@ class UserLocationService {
         const address = data.data?.currentLocation?.address;
         if (address) {
           localStorage.setItem("currentLocationAddress", address);
+          window.dispatchEvent(
+            new CustomEvent("current-location-address-updated", {
+              detail: { address },
+            }),
+          );
           console.log("📍 Address saved:", address);
         }
       })
@@ -396,4 +401,3 @@ class UserLocationService {
 }
 
 export default new UserLocationService();
-

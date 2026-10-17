@@ -3,13 +3,12 @@ import Button from "../../components/button";
 import { useState, useRef, useEffect } from "react";
 import Modal from "../../components/Modal";
 import ResetPassword from "./ResetPassword";
-import axios from "axios";
 import {
-  resendBusinessPasswordResetOtp,
-  verifyBusinessPasswordResetOtp,
+  resendPasswordResetOtp,
+  verifyPasswordResetOtp,
 } from "../../api/auth";
 
-export default function OtpInput({ isOpen, onClose, accountType = "user" }) {
+export default function OtpInput({ isOpen, onClose }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [showResetModal, setShowResetModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -80,15 +79,7 @@ export default function OtpInput({ isOpen, onClose, accountType = "user" }) {
     setError("");
     setSuccessMessage("");
     try {
-      const data =
-        accountType === "business"
-          ? await verifyBusinessPasswordResetOtp({ email, otp: otpCode })
-          : (
-              await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/auth/verify-reset-otp`,
-                { email, otp: otpCode },
-              )
-            ).data;
+      const data = await verifyPasswordResetOtp({ email, otp: otpCode });
 
       if (data) {
         localStorage.setItem("resetOtp", otpCode);
@@ -118,18 +109,10 @@ export default function OtpInput({ isOpen, onClose, accountType = "user" }) {
       setError("");
       setSuccessMessage("");
 
-      const data =
-        accountType === "business"
-          ? await resendBusinessPasswordResetOtp(email)
-          : (
-              await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/auth/resend-forgot-password-otp`,
-                { email },
-              )
-            ).data;
+      const data = await resendPasswordResetOtp(email);
 
       if (data) {
-        setSuccessMessage("OTP resent successfully!");
+        setSuccessMessage("If an account exists for this email, you'll receive another OTP");
         setCountdown(60);
         setCanResend(false);
         setOtp(["", "", "", "", "", ""]);
@@ -176,7 +159,7 @@ export default function OtpInput({ isOpen, onClose, accountType = "user" }) {
     <>
       <Modal isOpen={isOpen} onClose={onClose} title="Forgot Password?">
         <p className="text-gray-500">
-          Please enter the code sent to your email: {email}
+          If an account exists for this email, you'll receive an OTP to enter below. Email: {email}
         </p>
 
         <div className="flex flex-col gap-4 items-center">
@@ -246,7 +229,6 @@ export default function OtpInput({ isOpen, onClose, accountType = "user" }) {
       <ResetPassword
         isOpen={showResetModal}
         onClose={() => setShowResetModal(false)}
-        accountType={accountType}
       />
     </>
   );

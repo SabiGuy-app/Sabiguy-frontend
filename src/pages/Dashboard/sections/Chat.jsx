@@ -210,7 +210,11 @@ export default function ChatPage() {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const response = await chatService.getAllChats(1, 20, CHAT_STATUS_CATEGORY);
+      const response = await chatService.getAllChats(
+        1,
+        20,
+        CHAT_STATUS_CATEGORY,
+      );
       setChats(response.data || []);
     } catch (error) {
       console.error("Error loading chats:", error);
@@ -311,13 +315,6 @@ export default function ChatPage() {
         bookingId: selectedChat.bookingId._id,
         isTyping,
       });
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
     }
   };
 
@@ -448,7 +445,11 @@ export default function ChatPage() {
                   <div className="relative">
                     <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
                       <img
-                        src={chat.otherParticipant?.avatar || chat.otherParticipant?.profilePicture || "/avatar.png"}
+                        src={
+                          chat.otherParticipant?.avatar ||
+                          chat.otherParticipant?.profilePicture ||
+                          "/avatar.png"
+                        }
                         alt=""
                         className="w-full h-full rounded-full object-cover"
                         onError={(e) => {
@@ -494,7 +495,11 @@ export default function ChatPage() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden">
                       <img
-                        src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                        src={
+                          selectedChat.otherParticipant?.profilePicture ||
+                          selectedChat.otherParticipant?.avatar ||
+                          "/avatar.png"
+                        }
                         alt=""
                         className="w-full h-full rounded-full object-cover"
                         onError={(e) => {
@@ -566,7 +571,13 @@ export default function ChatPage() {
                                   {!isCurrentUser && (
                                     <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
                                       <img
-                                        src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                                        src={
+                                          selectedChat.otherParticipant
+                                            ?.profilePicture ||
+                                          selectedChat.otherParticipant
+                                            ?.avatar ||
+                                          "/avatar.png"
+                                        }
                                         alt=""
                                         className="w-full h-full rounded-full object-cover"
                                         onError={(e) => {
@@ -613,7 +624,11 @@ export default function ChatPage() {
                     <div className="flex items-end gap-2 justify-start">
                       <div className="w-8 h-8 rounded-full overflow-hidden">
                         <img
-                          src={selectedChat.otherParticipant?.profilePicture || selectedChat.otherParticipant?.avatar || "/avatar.png"}
+                          src={
+                            selectedChat.otherParticipant?.profilePicture ||
+                            selectedChat.otherParticipant?.avatar ||
+                            "/avatar.png"
+                          }
                           alt=""
                           className="w-full h-full rounded-full object-cover"
                           onError={(e) => {
@@ -648,8 +663,7 @@ export default function ChatPage() {
                   <button className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
                     <FiPaperclip size={18} className="sm:w-5 sm:h-5" />
                   </button>
-                  <input
-                    type="text"
+                  <textarea
                     placeholder="Type your message"
                     value={message}
                     onChange={(e) => {
@@ -657,8 +671,8 @@ export default function ChatPage() {
                       handleTyping(true);
                     }}
                     onBlur={() => handleTyping(false)}
-                    onKeyPress={handleKeyPress}
                     disabled={sendingMessage}
+                    rows={1}
                     className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent disabled:bg-gray-100 transition-all"
                   />
                   <button

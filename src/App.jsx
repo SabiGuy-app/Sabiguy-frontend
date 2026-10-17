@@ -19,17 +19,18 @@ import { listenForMessages } from "./services/fcmService";
 import { initAnalytics, trackPageView } from "./services/analytics";
 import Loader from "./components/Loader";
 import { Analytics } from "@vercel/analytics/react";
-import BusinessForm from "./business-transport/signup/BusinessForm";
-import VehiclesPage from "./business-transport/dashboard/pages/VehiclesPage";
-import GroupsManagement from "./business-transport/dashboard/pages/GroupsPage";
-import PoliciesPage from "./business-transport/dashboard/pages/PoliciesPage";
+import BusinessForm from "./businessess/signup/BusinessForm";
+import VehiclesPage from "./businessess/business-transport/dashboard/pages/VehiclesPage";
+import GroupsManagement from "./businessess/business-transport/dashboard/pages/GroupsPage";
+import PoliciesPage from "./businessess/business-transport/dashboard/pages/PoliciesPage";
 import NotFound from "./pages/Not-found/NotFound";
 import ProviderNotFound from "./pages/Not-found/ProviderNotFound";
 import UserNotFound from "./pages/Not-found/UserNotFound";
-import BeautyOverview from "./beauty-care/dashboard/pages/BeautyOverview";
-import BeautyProfilePage from "./beauty-care/dashboard/pages/BeautySettings";
-import BeautyContactPage from "./beauty-care/dashboard/pages/BeautyHelp";
-import BeautyActivityPage from "./beauty-care/dashboard/pages/BeautyActivity";
+import BeautyOverview from "./other-services/dashboard-provider/pages/BeautyOverview";
+import BeautyProfilePage from "./other-services/dashboard-provider/pages/BeautySettings";
+import BeautyContactPage from "./other-services/dashboard-provider/pages/BeautyHelp";
+import BeautyActivityPage from "./other-services/dashboard-provider/pages/BeautyActivity";
+import BeautyChatPage from "./other-services/dashboard-provider/pages/BeautyChatPage";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -43,7 +44,7 @@ const ResetPassword = lazy(
 );
 const Success = lazy(() => import("./pages/Forgot-Password/success"));
 const FleetDrivers = lazy(
-  () => import("./business-transport/dashboard/pages/Drivers"),
+  () => import("./businessess/business-transport/dashboard/pages/Drivers"),
 );
 const SignupPage = lazy(() => import("./pages/signup/ServiceUser"));
 const SignupForm = lazy(() => import("./pages/signup/ServiceProvider"));
@@ -60,11 +61,17 @@ const ActivityPage = lazy(() => import("./pages/Dashboard/sections/Activity"));
 const ProfilePage = lazy(() => import("./pages/Dashboard/sections/Settings"));
 const ContactPage = lazy(() => import("./pages/Dashboard/sections/Help"));
 const Categories = lazy(() => import("./pages/Dashboard/sections/Categories"));
+const BeautyServices = lazy(
+  () => import("./other-services/dashboard/pages/BeautyServices"),
+);
+const BeautyProviderProfile = lazy(
+  () => import("./other-services/dashboard/pages/BeautyProviderProfile"),
+);
 const DynamicServicePage = lazy(
-  () => import("./pages/Dashboard/Services/pages/ServicePage"),
+  () => import("./other-services/dashboard/services/pages/ServicePage"),
 );
 const AmbulanceServices = lazy(
-  () => import("./pages/Dashboard/Services/pages/AmbulanceServices"),
+  () => import("./other-services/dashboard/services/pages/AmbulanceServices"),
 );
 const ProviderDetails = lazy(
   () => import("./pages/Dashboard/sections/ProviderDetails"),
@@ -77,6 +84,9 @@ const HireAlerts = lazy(
 );
 const StartNavigation = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/StartNavigation"),
+);
+const BeautyServiceJourney = lazy(
+  () => import("./other-services/dashboard-provider/pages/BeautyServiceJourney"),
 );
 const TrackDelivery = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery"),
@@ -142,26 +152,26 @@ const NotificationTest = lazy(() => import("./services/testNotify"));
 const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
 const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
-  () => import("./business-transport/dashboard/pages/FleetOverview"),
+  () => import("./businessess/business-transport/dashboard/pages/FleetOverview"),
 );
 const Earnings = lazy(
-  () => import("./business-transport/dashboard/pages/Earnings"),
+  () => import("./businessess/business-transport/dashboard/pages/Earnings"),
 );
 const FleetComingSoon = lazy(
-  () => import("./business-transport/dashboard/pages/ComingSoonPage"),
+  () => import("./businessess/business-transport/dashboard/pages/ComingSoonPage"),
 );
 const FleetPerformance = lazy(
-  () => import("./business-transport/dashboard/pages/Performance"),
+  () => import("./businessess/business-transport/dashboard/pages/Performance"),
 );
 const FleetDocuments = lazy(
-  () => import("./business-transport/dashboard/pages/Documents"),
+  () => import("./businessess/business-transport/dashboard/pages/Documents"),
 );
 const FleetSettings = lazy(
-  () => import("./business-transport/dashboard/pages/Settings"),
+  () => import("./businessess/business-transport/dashboard/pages/Settings"),
 );
 
 const AddYourVehicle = lazy(
-  () => import("./business-transport/components/AddVehicle"),
+  () => import("./businessess/business-transport/components/AddVehicle"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -350,7 +360,7 @@ function App() {
               <Route path="/congrats" element={<Congrats />} />
               <Route
                 path="/forgot-password"
-                element={<ForgotPassword accountType="business" />}
+                element={<ForgotPassword />}
               />
               <Route path="/otp-input" element={<OtpInput />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -384,7 +394,7 @@ function App() {
 
               <Route
                 path="/beauty-provider/dashboard/chat"
-                element={<BeautyOverview />}
+                element={<BeautyChatPage />}
               />
 
               <Route
@@ -413,6 +423,14 @@ function App() {
                 <Route path="/dashboard/help" element={<ContactPage />} />
                 <Route path="/dashboard/settings" element={<ProfilePage />} />
                 <Route path="/dashboard/categories" element={<Categories />} />
+                <Route
+                  path="/dashboard/categories/beauty-personal-care"
+                  element={<BeautyServices />}
+                />
+                <Route
+                  path="/dashboard/beauty/:providerId"
+                  element={<BeautyProviderProfile />}
+                />
                 <Route path="/bookings/vehicletype" element={<VehicleType />} />
                 <Route
                   path="/bookings/availableriders"
@@ -443,6 +461,10 @@ function App() {
                 <Route
                   path="/dashboard/provider/start-navigation"
                   element={<StartNavigation />}
+                />
+                <Route
+                  path="/dashboard/provider/beauty-service/:bookingId"
+                  element={<BeautyServiceJourney />}
                 />
                 <Route
                   path="/dashboard/provider/track-delivery"

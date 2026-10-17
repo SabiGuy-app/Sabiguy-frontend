@@ -6,13 +6,14 @@ import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/auth.store";
 // import { getAllProviders } from "../../../api/provider";
-import { useState, useEffect } from "react";
-import { useProviderStore } from "../../../stores/provider.store";
+import { useEffect, useState } from "react";
+import { getProviderDirectory } from "../../../api/provider";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
-import family from "/family.png";
-import delivery from "/delivery.png";
-import handtool from "/hand-tools.png";
-import siren from "/siren.png";
+import {
+  exploreCategories,
+  getCategoryDestination,
+} from "../../../other-services/dashboard/data/exploreCategories";
+import { BEAUTY_PROVIDER_SEARCH_NAMES } from "../../../constants/beautyServices";
 import new1 from "/new1.png";
 import new2 from "/new2.png";
 import new3 from "/new3.png";
@@ -21,22 +22,65 @@ import new5 from "/new5.png";
 import new6 from "/new6.png";
 import new7 from "/new7.png";
 import new8 from "/new8.png";
-import { sendTestNotification } from "../../../api/fcm";
 import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import DashboardTour from "../../../components/tour/DashboardTour";
 import NotificationTest from "../../../services/testNotify";
 
-const ridePromoService = "book a ride";
+const beautyCategory = exploreCategories.find((category) => category.id === "beauty");
+const buildSearchableTasks = (providerServiceNames) => Array.from(
+  new Map(
+    [
+      ...BEAUTY_PROVIDER_SEARCH_NAMES.map((task) => ({ category: beautyCategory, task })),
+      ...providerServiceNames.map((task) => ({ category: beautyCategory, task })),
+      ...exploreCategories
+        .filter((category) => !category.comingSoon)
+        .flatMap((category) => category.tasks.map((task) => ({ category, task }))),
+    ].map(({ category, task }) => {
+      const destination = getCategoryDestination(category, task);
+      return [destination, { label: task, category: category.title, destination }];
+    }),
+  ).values(),
+);
 
 export default function DashboardHome() {
-  const [loading, setLoading] = useState(false);
-  const { token } = useAuthStore();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [providerServiceNames, setProviderServiceNames] = useState([]);
   const hydrated = useAuthStore((state) => state.hydrated);
   // const { providers, setProviders } = useProviderStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!hydrated) return undefined;
+    let active = true;
+    getProviderDirectory({ service: "beauty_personal_care", page: 1, limit: 100 })
+      .then((response) => {
+        if (!active) return;
+        const providers = Array.isArray(response?.data) ? response.data : [];
+        const names = providers.flatMap((provider) =>
+          (provider.service || provider.services || []).map(
+            (service) => service?.serviceName,
+          ),
+        ).filter(Boolean);
+        setProviderServiceNames([...new Set(names)]);
+      })
+      .catch(() => {
+        // The listed tasks remain searchable if the directory is unavailable.
+      });
+    return () => { active = false; };
+  }, [hydrated]);
+
+  const matchingTasks = buildSearchableTasks(providerServiceNames).filter(({ label, category, destination }) => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return false;
+    const service = new URLSearchParams(destination.split("?")[1]).get("service") || "";
+    return [label, category, service].some((value) => value.toLowerCase().includes(query));
+  });
+
+  const submitSearch = () => {
+    if (matchingTasks.length) navigate(matchingTasks[0].destination);
+  };
 
   if (!hydrated) {
     return (
@@ -109,81 +153,19 @@ export default function DashboardHome() {
     },
   ];
 
-  const services = [
-    {
-      // logo: (
-      //   <Truck
-      //     size={80}
-      //     className="bg-[#6467F2]/10 text-[#6467F2] rounded-full p-5 "
-      //   />
-      // ),
-      image: delivery,
-      title: "Transport & Logistics",
-    },
-    {
-      // logo: (
-      //   <CircleAlert
-      //     size={80}
-      //     className="bg-red-50 text-red-500 rounded-full p-5 "
-      //   />
-      // ),
-      image: siren,
-      title: "Emergency Services",
-    },
-    {
-      // logo: (
-      //   <Home
-      //     size={80}
-      //     className="bg-blue-50 text-blue-500 rounded-full p-5 "
-      //   />
-      // ),
-      image: family,
-      title: "Domestic & Lifetyle",
-    },
-    {
-      // logo: (
-      //   <Wrench
-      //     size={80}
-      //     className="bg-[#FF620D]/10 text-[#FF620D] rounded-full p-5 "
-      //   />
-      // ),
-      image: handtool,
-      title: "Home & Repair",
-    },
-    {
-      // logo: (
-      //   <Briefcase
-      //     size={80}
-      //     className="bg-purple-50 text-purple-500 rounded-full p-5 "
-      //   />
-      // ),
-      image: family,
-      title: "Professional Services",
-    },
-    {
-      // logo: (
-      //   <Palette
-      //     size={80}
-      //     className="bg-[#E83781]/10 text-[#E83781]  rounded-full p-5 "
-      //   />
-      // ),
-      image: family,
-      title: "Freelance & Creative Services",
-    },
-  ];
+  const services = exploreCategories;
 
   const categoryServiceMap = {
     "Package Delivery": "package delivery",
     "Book a Ride": "book a ride",
   };
 
-  const handleServiceClick = (service, isDisabled) => {
-    if (isDisabled) {
+  const handleServiceClick = (service, task) => {
+    const destination = getCategoryDestination(service, task);
+    if (destination) navigate(destination);
+    else {
       setSelectedService(service);
       setModalOpen(true);
-    } else {
-      // navigate("/bookings");
-      // console.log("Active service clicked:", service.title);
     }
   };
 
@@ -197,10 +179,6 @@ export default function DashboardHome() {
     }
   };
 
-  const handleRidePromoClick = () => {
-    navigate(`/bookings?service=${encodeURIComponent(ridePromoService)}`);
-  };
-
   // useEffect(() => {
   //   const loadProviders = async () => {
   //     const data = await getAllProviders(token);
@@ -212,7 +190,12 @@ export default function DashboardHome() {
   // }, []);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      searchValue={searchTerm}
+      onSearchChange={setSearchTerm}
+      onSearchSubmit={submitSearch}
+      searchPlaceholder="Search for anything"
+    >
       <DashboardTour />
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
@@ -223,6 +206,28 @@ export default function DashboardHome() {
           <p className="mb-3 text-sm">What would you like to get done today?</p>
         </div>
       </div>
+
+      {searchTerm.trim() && (
+        <section aria-label="Task search results" className="mb-6 mt-4 max-w-2xl">
+          <h3 className="mb-2 text-sm font-semibold text-[#231F20]">Tasks</h3>
+          {matchingTasks.length ? (
+            <ul className="divide-y divide-gray-200 border-y border-gray-200">
+              {matchingTasks.map((task) => (
+                <li key={task.destination}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(task.destination)}
+                    className="flex w-full items-center justify-between gap-4 py-3 text-left hover:text-[#005823] focus-visible:outline-2 focus-visible:outline-[#005823]"
+                  >
+                    <span className="min-w-0"><span className="block text-sm font-medium">{task.label}</span><span className="block text-xs text-gray-500">{task.category}</span></span>
+                    <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="py-3 text-sm text-gray-500">No matching task found.</p>}
+        </section>
+      )}
 
       {/* <section
         aria-label="Ride booking promotion"
@@ -272,17 +277,17 @@ export default function DashboardHome() {
           <h3 className="text-[20px] font-semibold mb-4">Categories</h3>
         </div>
         <div id="explore-categories">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((ser, idx) => {
-              const isDisabled = ser.title !== "Transport & Logistics";
               return (
                 <ServicesCard
                   key={idx}
                   image={ser.image}
-                  logo={ser.logo}
+                  tasks={ser.tasks}
+                  imageIncludesTitle={ser.imageIncludesTitle}
                   title={ser.title}
-                  disabled={isDisabled}
-                  onClick={() => handleServiceClick(ser, isDisabled)}
+                  onClick={() => handleServiceClick(ser)}
+                  onTaskClick={(task) => handleServiceClick(ser, task)}
                 />
               );
             })}

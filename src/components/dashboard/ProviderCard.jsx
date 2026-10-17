@@ -1,5 +1,4 @@
 import { Star, MapPin, Heart } from "lucide-react";
-import Button from "./Button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
@@ -13,6 +12,8 @@ export default function ProviderCard({
   city, 
   job, 
   profilePicture,
+  profilePath,
+  className = "w-70",
   onFavorite,
   isFavorited = false,
   showFavoriteButton = true,
@@ -34,12 +35,12 @@ export default function ProviderCard({
     }
   };
   const handleViewProfile = () => {
-    navigate(`/dashboard/provider/${providerId}`);
+    navigate(profilePath || `/dashboard/provider/${providerId}`);
   };
 
   return (
     
-    <div className="bg-white w-70 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all">
+    <div className={`bg-white ${className} rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all`}>
       {/* Provider Image */}
       <div className="relative h-56 bg-gray-200 overflow-hidden">
         {profilePicture ? (
@@ -95,15 +96,21 @@ export default function ProviderCard({
           </div>
           
            <div className="text-right">
+            {Number(price) > 0 ? (
+              <>
             <p className="text-xl font-bold text-gray-900">
               ₦{price?.toLocaleString()}
             </p>
             <p className="text-xs text-gray-500">Starting</p>
+              </>
+            ) : (
+              <p className="max-w-24 text-xs text-gray-500">Price unavailable</p>
+            )}
           </div>
         </div> 
         {/* <p className= "text-sm text-gray-400 line-clamp-2">{firstJob?.tagLine}</p> */}
         
-        <div className="flex md:flex-row md:items-center md:justify-between text-sm text-gray-600 mb-2 mt-4">
+        <div className="flex flex-col gap-3 text-sm text-gray-600 mb-2 mt-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Left side: Rating & Location */}
           <div className="flex flex-col">
             {/* Rating */}
@@ -124,7 +131,7 @@ export default function ProviderCard({
            <button
           onClick={handleViewProfile}
           // disabled={isUnavailable}
-          className={`w-1/2 px-3 py-2 font-medium rounded-lg transition-colors ${
+          className={`w-full shrink-0 px-3 py-2 font-medium rounded-lg transition-colors sm:w-auto sm:min-w-[120px] ${
             isUnavailable
               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
               : 'bg-[#005823] text-white hover:bg-[#004019]'
