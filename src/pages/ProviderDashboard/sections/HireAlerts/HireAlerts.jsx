@@ -18,6 +18,7 @@ import {
 import { getAllBookings, acceptBookings } from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
 import ProviderCancellationModal from "../../../../components/provider-dashboard/ProviderCancellationModal";
+import toast from "react-hot-toast";
 
 const normalizeBookingType = (value) =>
   String(value || "")
@@ -733,7 +734,7 @@ export default function HireAlerts() {
       );
     } catch (err) {
       console.error("Error declining booking:", err);
-      setError(err.response?.data?.message || "Failed to decline booking");
+      toast.error(err.response?.data?.message || "Failed to decline booking");
     } finally {
       setDecliningAlertId(null);
     }
@@ -853,7 +854,10 @@ export default function HireAlerts() {
           onClose={handleCloseAlert}
           alert={selectedAlert}
           onAccept={(alert) => handleAcceptBooking(alert, { rethrow: true })}
-          onDecline={handleDeclineBooking}
+          onDecline={async (alert) => {
+            await handleDeclineBooking(alert);
+            handleCloseAlert();
+          }}
           accepting={acceptingAlertId === selectedAlert?.id}
         />
       ) : (

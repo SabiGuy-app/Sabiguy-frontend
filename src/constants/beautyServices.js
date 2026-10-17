@@ -5,6 +5,7 @@ export const BEAUTY_SERVICE_OPTIONS = [
   { id: "lash-tech", name: "Lash Tech." },
   { id: "pedicure", name: "Pedicure" },
   { id: "nails-tech", name: "Nails Tech." },
+  
 ];
 
 export const BEAUTY_SERVICE_NAMES = BEAUTY_SERVICE_OPTIONS.map(

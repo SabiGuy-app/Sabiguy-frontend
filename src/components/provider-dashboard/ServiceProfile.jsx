@@ -28,10 +28,15 @@ import { useAuthStore } from "../../stores/auth.store";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const SERVICE_LOCATIONS = [
-  { key: "walk_in", value: "walk_in_salon", label: "Walk-in salon", Icon: Store },
+  {
+    key: "walk_in",
+    value: "Walk in Salon",
+    label: "Walk-in salon",
+    Icon: Store,
+  },
   {
     key: "provider_address",
-    value: "my_home_address",
+    value: "My home address",
     label: "My home address",
     Icon: House,
   },
@@ -50,9 +55,7 @@ const normalizeService = (service) => ({
   serviceName: service?.serviceName || service?.name || "",
   duration: service?.duration || "",
   pricingModel: {
-    walk_in: toNumberOrEmpty(
-      service?.pricingModel?.walk_in ?? service?.price,
-    ),
+    walk_in: toNumberOrEmpty(service?.pricingModel?.walk_in ?? service?.price),
     provider_address: toNumberOrEmpty(service?.pricingModel?.provider_address),
     customer_address: toNumberOrEmpty(service?.pricingModel?.customer_address),
   },
@@ -63,7 +66,10 @@ const serializeService = (service) => {
     Object.entries(service?.pricingModel || {})
       .filter(
         ([, value]) =>
-          value !== "" && value !== null && value !== undefined && !Number.isNaN(Number(value)),
+          value !== "" &&
+          value !== null &&
+          value !== undefined &&
+          !Number.isNaN(Number(value)),
       )
       .map(([location, value]) => [location, Number(value)]),
   );
@@ -90,16 +96,16 @@ export default function ProviderServiceProfileTab({
   const [isSavingService, setIsSavingService] = useState(false);
 
   // --- Provider's Info State ---
-  const [vehicleInfo, setVehicleInfo] = useState({
-    driverLicenseNumber:
-      profile?.driverLicenseNumber || user?.data?.driverLicenseNumber || "",
-    vehicleName: profile?.vehicleName || user?.data?.vehicleName || "",
-    vehicleProductionYear:
-      profile?.vehicleProductionYear || user?.data?.vehicleProductionYear || "",
-    vehicleColor: profile?.vehicleColor || user?.data?.vehicleColor || "",
-    vehicleRegNo: profile?.vehicleRegNo || user?.data?.vehicleRegNo || "",
-  });
-  const [isSavingVehicle, setIsSavingVehicle] = useState(false);
+  // const [vehicleInfo, setVehicleInfo] = useState({
+  //   driverLicenseNumber:
+  //     profile?.driverLicenseNumber || user?.data?.driverLicenseNumber || "",
+  //   vehicleName: profile?.vehicleName || user?.data?.vehicleName || "",
+  //   vehicleProductionYear:
+  //     profile?.vehicleProductionYear || user?.data?.vehicleProductionYear || "",
+  //   vehicleColor: profile?.vehicleColor || user?.data?.vehicleColor || "",
+  //   vehicleRegNo: profile?.vehicleRegNo || user?.data?.vehicleRegNo || "",
+  // });
+  // const [isSavingVehicle, setIsSavingVehicle] = useState(false);
 
   // Real services from user data (populated during signup via POST /provider/job-service)
   const [services, setServices] = useState(() => {
@@ -146,43 +152,43 @@ export default function ProviderServiceProfileTab({
     }
   };
 
-  const handleSaveVehicleInfo = async () => {
-    setIsSavingVehicle(true);
-    try {
-      const currentJob = user?.data?.job || [];
-      const currentService = user?.data?.service || [];
+  // const handleSaveVehicleInfo = async () => {
+  //   setIsSavingVehicle(true);
+  //   try {
+  //     const currentJob = user?.data?.job || [];
+  //     const currentService = user?.data?.service || [];
 
-      await api.post("/provider/job-service", {
-        job: currentJob,
-        service: currentService,
-        driverLicenseNumber: vehicleInfo.driverLicenseNumber,
-        vehicleName: vehicleInfo.vehicleName,
-        vehicleProductionYear: vehicleInfo.vehicleProductionYear,
-        vehicleColor: vehicleInfo.vehicleColor,
-        vehicleRegNo: vehicleInfo.vehicleRegNo,
-      });
+  //     await api.post("/provider/job-service", {
+  //       job: currentJob,
+  //       service: currentService,
+  //       driverLicenseNumber: vehicleInfo.driverLicenseNumber,
+  //       vehicleName: vehicleInfo.vehicleName,
+  //       vehicleProductionYear: vehicleInfo.vehicleProductionYear,
+  //       vehicleColor: vehicleInfo.vehicleColor,
+  //       vehicleRegNo: vehicleInfo.vehicleRegNo,
+  //     });
 
-      updateUser({
-        data: {
-          ...user.data,
-          ...vehicleInfo,
-        },
-      });
+  //     updateUser({
+  //       data: {
+  //         ...user.data,
+  //         ...vehicleInfo,
+  //       },
+  //     });
 
-      toast.success("Vehicle details updated!");
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Failed to update vehicle details",
-      );
-    } finally {
-      setIsSavingVehicle(false);
-    }
-  };
+  //     toast.success("Vehicle details updated!");
+  //   } catch (error) {
+  //     toast.error(
+  //       error?.response?.data?.message || "Failed to update vehicle details",
+  //     );
+  //   } finally {
+  //     setIsSavingVehicle(false);
+  //   }
+  // };
 
-  const handleVehicleInfoChange = (e) => {
-    const { name, value } = e.target;
-    setVehicleInfo((prev) => ({ ...prev, [name]: value }));
-  };
+  // const handleVehicleInfoChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setVehicleInfo((prev) => ({ ...prev, [name]: value }));
+  // };
 
   const handleEditService = (service, index) => {
     setEditingService({ ...service, index });
@@ -608,7 +614,7 @@ export default function ProviderServiceProfileTab({
           </select>
         </div>
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Sub-Category
           </label>
@@ -626,7 +632,7 @@ export default function ProviderServiceProfileTab({
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
         {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Tagline/Headline
@@ -747,7 +753,8 @@ export default function ProviderServiceProfileTab({
                   Services &amp; pricing
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Set one service duration and prices for the locations where you work.
+                  Set one service duration and prices for the locations where
+                  you work.
                 </p>
               </div>
 
@@ -819,7 +826,9 @@ export default function ProviderServiceProfileTab({
         <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
           <div className="flex flex-col gap-6">
             <div>
-              <h2 className="font-semibold text-lg text-gray-900">Availability</h2>
+              <h2 className="font-semibold text-lg text-gray-900">
+                Availability
+              </h2>
               <p className="text-sm text-gray-500 mt-1">
                 Tell customers when and where they can book your services.
               </p>
@@ -1084,7 +1093,7 @@ export default function ProviderServiceProfileTab({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        {/* <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
           <h2 className="font-semibold text-lg mb-1">
             Driver & Vehicle Details
           </h2>
@@ -1167,23 +1176,23 @@ export default function ProviderServiceProfileTab({
               </div>
             </div>
 
-              <div className="flex justify-end mt-4">
-                <button
-                  type="button"
-                  onClick={handleSaveVehicleInfo}
-                  disabled={isSavingVehicle}
-                  className="px-6 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isSavingVehicle ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Save size={16} />
-                  )}
-                  Save Changes
-                </button>
-              </div>
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={handleSaveVehicleInfo}
+                disabled={isSavingVehicle}
+                className="px-6 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSavingVehicle ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Save size={16} />
+                )}
+                Save Changes
+              </button>
+            </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
           <h2 className="font-semibold text-lg mb-4">Bank Account Details</h2>

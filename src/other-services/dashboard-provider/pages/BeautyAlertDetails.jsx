@@ -10,6 +10,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import DeclineBookingButton from "../../components/DeclineBookingButton";
 
 const SERVICE_PLACE_LABELS = {
   customer_address: "Customer's Address",
@@ -76,7 +77,7 @@ const formatDateTime = (booking) => {
       })
       .replace(":00", "");
 
-  return `${dateText} - ${time}`;
+  return `${dateText} \n ${time}`;
 };
 
 const formatDuration = (booking) => {
@@ -204,11 +205,6 @@ export default function AlertDetailsModal({
     }
   };
 
-  const handleDecline = () => {
-    setActionError("");
-    onDecline?.(alertData);
-  };
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-5"
@@ -301,14 +297,17 @@ export default function AlertDetailsModal({
                 {accepting ? "Loading..." : primaryActionLabel}
               </button>
               {!isJob && (
-                <button
-                  type="button"
-                  onClick={handleDecline}
-                  disabled={accepting}
-                  className="min-h-10 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-[#555555] transition hover:bg-gray-50 disabled:opacity-60"
-                >
-                  Decline
-                </button>
+                <DeclineBookingButton
+                  bookingId={booking._id || alertData?.id}
+                  role="provider"
+                  status={booking?.status || alertData?.status}
+                  title="Decline"
+                  onSuccess={() => {
+                    onClose?.();
+                    onDecline?.(alertData);
+                  }}
+                  className="min-h-10 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-[#555555] transition hover:bg-gray-50 disabled:opacity-60 flex items-center justify-center"
+                />
               )}
             </div>
           )}
