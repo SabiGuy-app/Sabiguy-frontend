@@ -117,9 +117,9 @@ export default function AlertsCard({
 
           <div className="mt-2 space-y-1.5 text-xs text-[#6B6B6B] sm:text-sm">
             <div className="flex min-w-0 items-start gap-1.5">
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-[#EAF3FF] px-1.5 py-1 text-[11px] text-[#1674E8]">
-                <Home className="h-4 w-4" />
-                <span className="hidden sm:inline">{servicePlace}</span>
+              <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-sm bg-[#EAF3FF] px-1.5 py-1 text-[11px] text-[#1674E8]">
+                <Home className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 break-words">{servicePlace}</span>
               </span>
               {isCustomerAddress && (
                 <span className="min-w-0 break-words">{serviceAddress}</span>

@@ -13,13 +13,12 @@ import {
 } from "lucide-react";
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import { getProviderById } from "../../../api/provider";
-import { beautyProvider as fallbackProvider } from "../data/beautyProvider";
-import { normalizeSearchBeautyProvider } from "../utils/beautyProviderMapper";
+import { mergeBeautyServices, normalizeSearchBeautyProvider } from "../utils/beautyProviderMapper";
 
 import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
 import BeautyBookingFlow from "..//components/booking/BeautyBookingFlow";
 
-const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v8";
+const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v9";
 const PRICING_OPTIONS = [
   { value: "walk_in", label: "Walk in Salon" },
   { value: "customer_address", label: "My Address" },
@@ -86,46 +85,24 @@ export default function BeautyProviderProfile() {
       setMissingProviderId(null);
       setActiveImage(0);
       setShowAllReviews(false);
-
-      if (providerId === fallbackProvider.id) {
-        setProviderState({ requestedId: providerId, data: fallbackProvider });
-        return;
-      }
-
+      setReviewState({ providerId, reviews: null, loading: true, error: "" });
+      let cachedProvider = null;
       try {
         const cachedProviders = JSON.parse(
           sessionStorage.getItem(BEAUTY_PROVIDER_CACHE_KEY) || "[]",
         );
-        const provider = cachedProviders.find(
+        cachedProvider = cachedProviders.find(
           (item) => item.id === providerId || item.backendId === providerId,
         );
-
-        if (active && provider) {
-          setProviderState({ requestedId: providerId, data: provider });
-        } else if (active) {
-          setMissingProviderId(providerId);
-        }
       } catch (error) {
-        console.error("Failed to load beauty provider", error);
-        if (active) setMissingProviderId(providerId);
+        console.warn("Could not read cached beauty provider", error);
       }
-    };
+      if (active) {
+        setProviderState({ requestedId: providerId, data: cachedProvider });
+      }
 
-    loadProvider();
-
-    return () => {
-      active = false;
-    };
-  }, [providerId]);
-
-  useEffect(() => {
-    if (!provider || providerId === fallbackProvider.id) return undefined;
-
-    let active = true;
-    setReviewState({ providerId, reviews: null, loading: true, error: "" });
-
-    getProviderById(providerId)
-      .then((response) => {
+      try {
+        const response = await getProviderById(providerId);
         if (!active) return;
         const entry =
           response?.data?.provider ||
@@ -133,34 +110,27 @@ export default function BeautyProviderProfile() {
           response?.data ||
           response?.provider ||
           response;
-        if (entry) {
-          const schedule =
-            entry.providerProfile ||
-            entry.profile ||
-            entry.userId?.data ||
-            entry;
-          const services = normalizeSearchBeautyProvider(entry).services;
-          setProviderState((current) => {
-            if (current?.requestedId !== providerId || !current.data) {
-              return current;
-            }
-
-            const availableDays =
-              schedule.availableDays ?? current.data.availableDays;
-            const businessHours =
-              schedule.businessHours ?? current.data.businessHours;
-
-            return {
-              ...current,
-              data: {
-                ...current.data,
-                availableDays,
-                businessHours,
-                services: services.length ? services : current.data.services,
-              },
-            };
-          });
+        const profile = entry?.providerProfile || entry?.profile || entry?.userId?.data || {};
+        const fullEntry = { ...profile, ...entry };
+        if (!fullEntry._id && !fullEntry.id) {
+          setMissingProviderId(providerId);
+          return;
         }
+        const details = normalizeSearchBeautyProvider({
+          ...cachedProvider,
+          ...fullEntry,
+          service: mergeBeautyServices(
+            Array.isArray(fullEntry.service) && fullEntry.service.length
+              ? fullEntry.service
+              : fullEntry.services,
+            cachedProvider?.services,
+          ),
+          workVisuals: fullEntry.workVisuals ?? cachedProvider?.workVisuals,
+          businessAddress: fullEntry.businessAddress ?? cachedProvider?.businessAddress,
+          BusinessAddress: fullEntry.BusinessAddress ?? cachedProvider?.BusinessAddress,
+        });
+        setActiveImage(0);
+        setProviderState({ requestedId: providerId, data: details });
         setReviewState({
           providerId,
           reviews: Array.isArray(entry?.reviews) ? entry.reviews : null,
@@ -172,22 +142,25 @@ export default function BeautyProviderProfile() {
               ? "Review details are not included in the provider directory yet."
               : "",
         });
-      })
-      .catch((error) => {
+      } catch (error) {
         if (!active) return;
         console.error("Failed to refresh beauty provider reviews", error);
+        if (!cachedProvider) setMissingProviderId(providerId);
         setReviewState({
           providerId,
           reviews: null,
           loading: false,
           error: "Unable to load reviews",
         });
-      });
+      }
+    };
+
+    loadProvider();
 
     return () => {
       active = false;
     };
-  }, [provider?.id, providerId]);
+  }, [providerId]);
 
   if (missingProviderId === providerId)
     return (
@@ -261,9 +234,7 @@ export default function BeautyProviderProfile() {
   };
   const currentReviewState =
     reviewState?.providerId === providerId ? reviewState : null;
-  const reviewsLoading =
-    providerId !== fallbackProvider.id &&
-    (!currentReviewState || currentReviewState.loading);
+  const reviewsLoading = !currentReviewState || currentReviewState.loading;
   const reviewsList = [
     ...(currentReviewState?.reviews ?? provider.recentReviews ?? []),
   ].sort(
@@ -271,6 +242,36 @@ export default function BeautyProviderProfile() {
       (Date.parse(second.ratedAt || second.createdAt) || 0) -
       (Date.parse(first.ratedAt || first.createdAt) || 0),
   );
+  const specialties = services
+    .map((service) => service.name || service.serviceName)
+    .filter(Boolean)
+    .join(", ");
+  const years = Number(provider.yearsOfExperience);
+  const experience = provider.yearsOfExperience != null &&
+    Number.isFinite(years)
+    ? `${years} ${years === 1 ? "year" : "years"}`
+    : "Not provided";
+  const languages = Array.isArray(provider.languages)
+    ? provider.languages.filter(Boolean).join(", ")
+    : provider.languages || "";
+  const availableDays = Array.isArray(provider.availableDays)
+    ? [...new Set(provider.availableDays
+        .filter(Boolean)
+        .filter((day) => !["string", "str"].includes(String(day).trim().toLowerCase()))
+        .map((day) => String(day).slice(0, 3)))]
+        .join(", ")
+    : "";
+  const businessHours = [provider.businessHours?.start, provider.businessHours?.end]
+    .filter(Boolean)
+    .join(" - ");
+  const availability = [availableDays, businessHours].filter(Boolean).join(", ");
+  const jobsDone = provider.completedJobs == null
+    ? "Not available"
+    : Number(provider.completedJobs).toLocaleString();
+  const responseTime = typeof provider.responseTime === "string" &&
+    provider.responseTime.trim()
+    ? provider.responseTime
+    : "Not available";
   return (
     <DashboardLayout showSidebar={false}>
       <div className="mx-auto max-w-7xl text-[#231F20]">
@@ -287,38 +288,46 @@ export default function BeautyProviderProfile() {
               <h1 id="work-gallery" className="mb-5 text-xl font-bold">
                 Work Gallery
               </h1>
-              <WorkPhoto
-                key={provider.gallery[activeImage]}
-                src={provider.gallery[activeImage]}
-                alt={`Hair styling work ${activeImage + 1} by ${provider.fullName}`}
-                className="aspect-[814/453] w-full rounded-xl border border-gray-200 object-cover"
-              />
-              <div className="mt-4 grid grid-cols-3 gap-3 sm:gap-5">
-                {provider.gallery.slice(1).map((image, index) => (
-                  <button
-                    type="button"
-                    key={image}
-                    onClick={() => setActiveImage(index + 1)}
-                    aria-label={`View hairstyle ${index + 2}`}
-                    aria-pressed={activeImage === index + 1}
-                    className={`overflow-hidden rounded-xl border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005823] ${activeImage === index + 1 ? "border-[#005823]" : "border-transparent"}`}
-                  >
-                    <WorkPhoto
-                      src={image}
-                      alt={`Hairstyle ${index + 2}`}
-                      className="aspect-[255/174] w-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-              {activeImage !== 0 && (
-                <button
-                  type="button"
-                  onClick={() => setActiveImage(0)}
-                  className="mt-3 text-sm text-[#005823] underline"
-                >
-                  Back to featured photo
-                </button>
+              {provider.gallery.length ? (
+                <>
+                  <WorkPhoto
+                    key={provider.gallery[activeImage]}
+                    src={provider.gallery[activeImage]}
+                    alt={`Work photo ${activeImage + 1} by ${provider.fullName}`}
+                    className="aspect-[814/453] w-full rounded-xl border border-gray-200 object-cover"
+                  />
+                  <div className="mt-4 grid grid-cols-3 gap-3 sm:gap-5">
+                    {provider.gallery.slice(1).map((image, index) => (
+                      <button
+                        type="button"
+                        key={image}
+                        onClick={() => setActiveImage(index + 1)}
+                        aria-label={`View work photo ${index + 2}`}
+                        aria-pressed={activeImage === index + 1}
+                        className={`overflow-hidden rounded-xl border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005823] ${activeImage === index + 1 ? "border-[#005823]" : "border-transparent"}`}
+                      >
+                        <WorkPhoto
+                          src={image}
+                          alt={`Work photo ${index + 2}`}
+                          className="aspect-[255/174] w-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  {activeImage !== 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveImage(0)}
+                      className="mt-3 text-sm text-[#005823] underline"
+                    >
+                      Back to featured photo
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-8 text-sm text-gray-500">
+                  No work photos provided yet.
+                </p>
               )}
             </section>
             <section className="mt-10" aria-labelledby="about-provider">
@@ -326,7 +335,7 @@ export default function BeautyProviderProfile() {
                 About
               </h2>
               <p className="text-sm leading-relaxed text-gray-500 sm:text-base">
-                {provider.about}
+                {provider.about || "No description provided yet."}
               </p>
             </section>
             <section className="mt-10" aria-labelledby="service-prices">
@@ -521,15 +530,15 @@ export default function BeautyProviderProfile() {
               <div>
                 <h3 className="flex items-center gap-1 text-sm font-semibold">
                   {provider.fullName}
-                  <BadgeCheck
+                  {provider.kycVerified && <BadgeCheck
                     size={14}
                     className="text-[#005823]"
                     aria-label="Verified"
-                  />
+                  />}
                 </h3>
-                <p className="mt-1 text-xs text-gray-400">
-                  Hair Stylist &amp; Beauty Therapist
-                </p>
+                {provider.job?.[0]?.tagLine && <p className="mt-1 text-xs text-gray-400">
+                  {provider.job[0].tagLine}
+                </p>}
                 <p className="mt-1 flex items-center text-xs text-gray-500">
                   <Star size={14} className="fill-amber-400 text-amber-400" />
                   {provider.rating} ({provider.reviews} reviews)
@@ -542,9 +551,9 @@ export default function BeautyProviderProfile() {
             </div>
             <div className="my-6 grid grid-cols-3 border-y border-gray-200 py-5 text-center">
               {[
-                [Award, "25", "Jobs Done"],
-                [Clock, "< 10 Mins", "Response Time"],
-                [Star, "4.9", "Ratings"],
+                [Award, jobsDone, "Jobs Done"],
+                [Clock, responseTime, "Response Time"],
+                [Star, provider.rating, "Ratings"],
               ].map(([Icon, value, label], index) => (
                 <div
                   key={label}
@@ -568,14 +577,10 @@ export default function BeautyProviderProfile() {
             </div>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-5 text-xs">
               {[
-                ["Experience", BriefcaseBusiness, "2-5 Years"],
-                ["Languages", Globe, "English, Yoruba"],
-                [
-                  "Specialties",
-                  Image,
-                  "Barbing, Hair Dresser, Spa, Lash Tech.",
-                ],
-                ["Availability", Clock, "Mon-Sat, 8 AM - 6 PM"],
+                ["Experience", BriefcaseBusiness, experience],
+                ["Languages", Globe, languages || "Not provided"],
+                ["Specialties", Image, specialties || "Not provided"],
+                ["Availability", Clock, availability || "Not provided"],
               ].map(([label, Icon, value]) => (
                 <div key={label}>
                   <dt className="mb-2 font-semibold">{label}</dt>

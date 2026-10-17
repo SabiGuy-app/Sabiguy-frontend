@@ -2,35 +2,20 @@ import { Check } from "lucide-react";
 
 import { formatMoney } from "../../utils/bookingFormat";
 
-const SERVICE_INCLUSIONS = {
-  barbing: ["Hair consultation", "Haircut", "Line-up & finish"],
-  "hair dresser": ["Hair wash", "Hair styling", "Finishing"],
-  braiding: ["Style consultation", "Hair sectioning", "Braiding & finish"],
-  spa: ["Treatment consultation", "Selected spa treatment", "Relaxation"],
-  "lash tech": ["Lash style consultation", "Lash application", "Finishing"],
-  "lash tech.": ["Lash style consultation", "Lash application", "Finishing"],
-  pedicure: ["Foot soak", "Nail shaping", "Pedicure finish"],
-  "nails tech": ["Nail shaping", "Cuticle care", "Nail finish"],
-  "nails tech.": ["Nail shaping", "Cuticle care", "Nail finish"],
-};
-
 export default function ServiceBookingOptions({
   service,
   pricingOption,
   selected,
   onToggle,
 }) {
-  const included =
+  const includedItems =
     service.includes ||
     service.included ||
     service.inclusions ||
-    service.items ||
-    SERVICE_INCLUSIONS[
-      String(service.name || "")
-        .trim()
-        .toLowerCase()
-    ] ||
-    [service.name].filter(Boolean);
+    service.items;
+  const included = Array.isArray(includedItems)
+    ? includedItems.filter(Boolean)
+    : [];
 
   const rawPrice =
     service.pricingModel?.[pricingOption] ??
@@ -65,7 +50,7 @@ export default function ServiceBookingOptions({
         </span>
       </label>
 
-      <div className="mt-3 border-t border-gray-100 pt-3">
+      {included.length > 0 && <div className="mt-3 border-t border-gray-100 pt-3">
         <p className="text-xs font-semibold text-gray-700">What's included</p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-500">
           {included.map((item) => (
@@ -75,7 +60,7 @@ export default function ServiceBookingOptions({
             </span>
           ))}
         </div>
-      </div>
+      </div>}
     </article>
   );
 }
