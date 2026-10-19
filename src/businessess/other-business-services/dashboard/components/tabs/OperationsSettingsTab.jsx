@@ -425,50 +425,50 @@ export default function OperationsSettingsTab() {
         </section>
       </div>
 
-      <SettingsTabCard title="Photos of your work">
-        <div className="flex flex-wrap gap-2.5">
-          {photos.map((photo, index) => (
-            <div
-              key={`${photo}-${index}`}
-              className="relative aspect-square w-[min(28vw,138px)] overflow-hidden rounded-lg bg-[#F4F4F4] sm:w-34.5"
-            >
-              <img
-                src={photo}
-                alt={`Example of salon work ${index + 1}`}
-                className="h-full w-full object-cover"
-              />
-              <button
-                type="button"
-                aria-label={`Remove photo ${index + 1}`}
-                onClick={() =>
-                  setPhotos((current) =>
-                    current.filter((_, photoIndex) => photoIndex !== index),
-                  )
-                }
-                className="absolute right-1.5 top-1.5 rounded-full bg-black/55 p-1 text-white opacity-0 transition-opacity hover:opacity-100 focus:opacity-100"
-              >
-                <Trash2 size={12} />
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => photoInput.current?.click()}
-            className="flex aspect-square w-[min(28vw,138px)] flex-col items-center justify-center gap-1.5 rounded-lg bg-[#F5F5F5] text-[#8B8B8B] hover:bg-[#EEEEEE] sm:w-34.5"
-          >
-            <Camera size={20} />
-            <span className="text-[9px]">Add photos</span>
-          </button>
-          <input
-            ref={photoInput}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={addPhotos}
-            className="hidden"
-          />
-        </div>
-      </SettingsTabCard>
+     <SettingsTabCard title="Photos of your work">
+  <div className="flex flex-wrap gap-2.5">
+    {photos.map((photo, index) => (
+      <div
+        key={`${photo}-${index}`}
+        className="group relative aspect-square w-[min(28vw,138px)] overflow-hidden rounded-lg bg-[#F4F4F4] sm:w-34.5"
+      >
+        <img
+          src={photo}
+          alt={`Example of salon work ${index + 1}`}
+          className="h-full w-full object-cover"
+        />
+        <button
+          type="button"
+          aria-label={`Remove photo ${index + 1}`}
+          onClick={() =>
+            setPhotos((current) =>
+              current.filter((_, photoIndex) => photoIndex !== index),
+            )
+          }
+          className="pointer-events-none absolute right-1.5 top-1.5 z-10 rounded-full bg-red-400 p-1 text-white opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100"
+        >
+          <Trash2 size={12} />
+        </button>
+      </div>
+    ))}
+    <button
+      type="button"
+      onClick={() => photoInput.current?.click()}
+      className="flex aspect-square w-[min(28vw,138px)] flex-col items-center justify-center gap-1.5 rounded-lg bg-[#F5F5F5] text-[#8B8B8B] hover:bg-[#EEEEEE] sm:w-34.5"
+    >
+      <Camera size={20} />
+      <span className="text-[9px]">Add photos</span>
+    </button>
+    <input
+      ref={photoInput}
+      type="file"
+      accept="image/*"
+      multiple
+      onChange={addPhotos}
+      className="hidden"
+    />
+  </div>
+</SettingsTabCard>
 
       <SettingsEditDialog
         isOpen={providedServiceEditorOpen}
