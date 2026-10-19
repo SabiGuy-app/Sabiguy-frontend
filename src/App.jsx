@@ -166,6 +166,12 @@ const BeautyBusinessLiveMap = lazy(
 const BeautyBusinessBookings = lazy(
   () => import("./businessess/other-business-services/dashboard/pages/BookingsPage"),
 );
+const BeautyBusinessEarnings = lazy(
+  () => import("./businessess/other-business-services/dashboard/pages/Earnings & Payouts"),
+);
+const BeautyBusinessPerformance = lazy(
+  () => import("./businessess/other-business-services/dashboard/pages/Performance &Rating"),
+);
 const Earnings = lazy(
   () => import("./businessess/business-transport/dashboard/pages/Earnings"),
 );
@@ -542,6 +548,14 @@ function App() {
                 <Route
                   path="/other-business-services/dashboard/bookings"
                   element={<BeautyBusinessBookings />}
+                />
+                <Route
+                  path="/other-business-services/dashboard/earnings"
+                  element={<BeautyBusinessEarnings />}
+                />
+                <Route
+                  path="/other-business-services/dashboard/performance"
+                  element={<BeautyBusinessPerformance />}
                 />
                 <Route
                   path="/other-business-services/dashboard/*"

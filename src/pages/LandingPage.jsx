@@ -27,7 +27,6 @@ import OptimizedImage from "../components/common/OptimizedImage";
 //import Invite from "../components/Invite.jsx";
 //import BookingSummary2 from "../pages/Dashboard/sections/Bookings/BookingSummary2.jsx"
 
-
 // Animated Counter Component
 const AnimatedCounter = ({ from = 0, to, duration = 2, start = true, resetKey = 0 }) => {
   const [count, setCount] = useState(from);
