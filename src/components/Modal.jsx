@@ -6,6 +6,7 @@ function Modal({
   title,
   children,
   showCloseButton = true,
+  closeIcon,
   overlayClassName = "",
   panelClassName = "",
   titleClassName = "",
@@ -45,7 +46,7 @@ function Modal({
             aria-label="Close modal"
             className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl"
           >
-            x
+            {closeIcon ?? "x"}
           </button>
         )}
 

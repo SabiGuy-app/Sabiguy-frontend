@@ -154,6 +154,18 @@ const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
   () => import("./businessess/business-transport/dashboard/pages/FleetOverview"),
 );
+const BeautyBusinessOverview = lazy(
+  () => import("./businessess/other-business-services/dashboard/pages/BeautyOverview"),
+);
+const BeautyBusinessComingSoon = lazy(
+  () => import("./businessess/other-business-services/dashboard/pages/ComingSoonPage"),
+);
+const BeautyBusinessLiveMap = lazy(
+  () => import("./businessess/other-business-services/dashboard/pages/LiveMapPage"),
+);
+const BeautyBusinessBookings = lazy(
+  () => import("./businessess/other-business-services/dashboard/pages/BookingsPage"),
+);
 const Earnings = lazy(
   () => import("./businessess/business-transport/dashboard/pages/Earnings"),
 );
@@ -516,6 +528,24 @@ function App() {
                 <Route
                   path="/dashboard/provider/*"
                   element={<ProviderNotFound />}
+                />
+
+                {/* Beauty business dashboard */}
+                <Route
+                  path="/other-business-services/dashboard"
+                  element={<BeautyBusinessOverview />}
+                />
+                <Route
+                  path="/other-business-services/dashboard/live-map"
+                  element={<BeautyBusinessLiveMap />}
+                />
+                <Route
+                  path="/other-business-services/dashboard/bookings"
+                  element={<BeautyBusinessBookings />}
+                />
+                <Route
+                  path="/other-business-services/dashboard/*"
+                  element={<BeautyBusinessComingSoon />}
                 />
 
                 {/* Business / fleet-operator dashboard */}
