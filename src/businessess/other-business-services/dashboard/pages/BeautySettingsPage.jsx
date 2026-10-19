@@ -7,13 +7,13 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
-import FleetDashboardLayout from "../layout/FleetDashboardLayout";
 import AccountSettingsTab from "../components/tabs/AccountSettingsTab";
 import AdvancedSettingsTab from "../components/tabs/AdvancedSettingsTab";
 import BillingSettingsTab from "../components/tabs/BillingSettingsTab";
 import BusinessSettingsTab from "../components/tabs/BusinessSettingsTab";
 import OperationsSettingsTab from "../components/tabs/OperationsSettingsTab";
 import TeamSettingsTab from "../components/tabs/TeamSettingsTab";
+import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
 
 const tabs = [
   {
@@ -54,12 +54,12 @@ const tabs = [
   },
 ];
 
-const SettingsPage = () => {
+const BeautySettingsPage = () => {
   const [activeTab, setActiveTab] = useState("business");
   const ActiveTab = tabs.find((tab) => tab.id === activeTab)?.Component;
 
   return (
-    <FleetDashboardLayout>
+    <BeautyDashboardLayout>
       <main className="min-h-[calc(100vh-8rem)] text-[#242424] xl:min-h-[calc(100vh-9rem)]">
         <header className="mb-3">
           <h1 className="text-lg font-semibold leading-6">Settings</h1>
@@ -91,8 +91,8 @@ const SettingsPage = () => {
           {ActiveTab && <ActiveTab />}
         </section>
       </main>
-    </FleetDashboardLayout>
+    </BeautyDashboardLayout>
   );
 };
 
-export default SettingsPage;
+export default BeautySettingsPage;

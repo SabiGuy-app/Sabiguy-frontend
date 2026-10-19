@@ -157,16 +157,20 @@ const FleetOverview = lazy(
     import("./businessess/business-transport/dashboard/pages/FleetOverview"),
 );
 const BeautyBusinessOverview = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/BeautyOverview"),
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BeautyOverview"),
 );
 const BeautyBusinessComingSoon = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/ComingSoonPage"),
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/ComingSoonPage"),
 );
 const BeautyBusinessLiveMap = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/LiveMapPage"),
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/LiveMapPage"),
 );
 const BeautyBusinessBookings = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/BookingsPage"),
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BookingsPage"),
 );
 const Earnings = lazy(
   () => import("./businessess/business-transport/dashboard/pages/Earnings"),
@@ -189,12 +193,14 @@ const AddYourVehicle = lazy(
   () => import("./businessess/business-transport/components/AddVehicle"),
 );
 
-const SettingsPage = lazy(
-  () => import("./businessess/business-beauty/dashboard/pages/SettingsPage"),
+const BeautyStaffPage = lazy(
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BeautyStaffPage"),
 );
 
-const StaffPage = lazy(
-  () => import("./businessess/business-beauty/dashboard/pages/StaffPage"),
+const BeautySettingsPage = lazy(
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BeautySettingsPage"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -552,6 +558,16 @@ function App() {
                   element={<BeautyBusinessBookings />}
                 />
                 <Route
+                  path="/other-business-services/dashboard/staff"
+                  element={<BeautyStaffPage />}
+                />
+
+                <Route
+                  path="/other-business-services/dashboard/settings"
+                  element={<BeautySettingsPage />}
+                />
+
+                <Route
                   path="/other-business-services/dashboard/*"
                   element={<BeautyBusinessComingSoon />}
                 />
@@ -608,16 +624,6 @@ function App() {
                 />
 
                 <Route path="*" element={<NotFound />} />
-
-                <Route
-                  path="/business-beauty/dashboard/settings"
-                  element={<SettingsPage />}
-                />
-
-                 <Route
-                  path="/business-beauty/dashboard/staff"
-                  element={<StaffPage />}
-                />
               </Route>
             </Routes>
           </Suspense>

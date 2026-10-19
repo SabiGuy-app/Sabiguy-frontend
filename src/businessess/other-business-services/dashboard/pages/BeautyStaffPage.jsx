@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { MoreHorizontal, UserPlus } from "lucide-react";
-import FleetDashboardLayout from "../layout/FleetDashboardLayout";
 import AddStaffModal from "../components/AddStaffModal";
 import StaffDetailsModal from "../components/StaffDetailsModal";
+import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
 
 const initialStaff = [
   {
@@ -27,7 +27,7 @@ const initialStaff = [
   },
 ];
 
-const StaffPage = () => {
+const BeautyStaffPage = () => {
   const [staff, setStaff] = useState(initialStaff);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -67,7 +67,7 @@ const StaffPage = () => {
   };
 
   return (
-    <FleetDashboardLayout>
+    <BeautyDashboardLayout>
       <section className="min-h-[calc(100vh-8rem)] text-[#242424] xl:min-h-[calc(100vh-9rem)]">
         <div className="mb-3 flex items-end justify-between gap-4">
           <div>
@@ -279,8 +279,8 @@ const StaffPage = () => {
           onClose={() => setSelectedStaff(null)}
         />
       )}
-    </FleetDashboardLayout>
+    </BeautyDashboardLayout>
   );
 };
 
-export default StaffPage;
+export default BeautyStaffPage;
