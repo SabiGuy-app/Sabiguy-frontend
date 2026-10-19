@@ -86,7 +86,8 @@ const StartNavigation = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/StartNavigation"),
 );
 const BeautyServiceJourney = lazy(
-  () => import("./other-services/dashboard-provider/pages/BeautyServiceJourney"),
+  () =>
+    import("./other-services/dashboard-provider/pages/BeautyServiceJourney"),
 );
 const TrackDelivery = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery"),
@@ -152,25 +153,31 @@ const NotificationTest = lazy(() => import("./services/testNotify"));
 const BuyerNinUpload = lazy(() => import("./pages/kyc/BuyerNinUpload"));
 const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
-  () => import("./businessess/business-transport/dashboard/pages/FleetOverview"),
+  () =>
+    import("./businessess/business-transport/dashboard/pages/FleetOverview"),
 );
 const BeautyBusinessOverview = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/BeautyOverview"),
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BeautyOverview"),
 );
 const BeautyBusinessComingSoon = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/ComingSoonPage"),
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/ComingSoonPage"),
 );
 const BeautyBusinessLiveMap = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/LiveMapPage"),
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/LiveMapPage"),
 );
 const BeautyBusinessBookings = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/BookingsPage"),
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BookingsPage"),
 );
 const Earnings = lazy(
   () => import("./businessess/business-transport/dashboard/pages/Earnings"),
 );
 const FleetComingSoon = lazy(
-  () => import("./businessess/business-transport/dashboard/pages/ComingSoonPage"),
+  () =>
+    import("./businessess/business-transport/dashboard/pages/ComingSoonPage"),
 );
 const FleetPerformance = lazy(
   () => import("./businessess/business-transport/dashboard/pages/Performance"),
@@ -184,6 +191,16 @@ const FleetSettings = lazy(
 
 const AddYourVehicle = lazy(
   () => import("./businessess/business-transport/components/AddVehicle"),
+);
+
+const BeautyStaffPage = lazy(
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BeautyStaffPage"),
+);
+
+const BeautySettingsPage = lazy(
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BeautySettingsPage"),
 );
 
 // Fixes double-slash URLs like //wallet/funding/callback from Paystack redirects
@@ -370,10 +387,7 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/service-provider/signup" element={<SignupForm />} />
               <Route path="/congrats" element={<Congrats />} />
-              <Route
-                path="/forgot-password"
-                element={<ForgotPassword />}
-              />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/otp-input" element={<OtpInput />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/success" element={<Success />} />
@@ -544,6 +558,16 @@ function App() {
                   element={<BeautyBusinessBookings />}
                 />
                 <Route
+                  path="/other-business-services/dashboard/staff"
+                  element={<BeautyStaffPage />}
+                />
+
+                <Route
+                  path="/other-business-services/dashboard/settings"
+                  element={<BeautySettingsPage />}
+                />
+
+                <Route
                   path="/other-business-services/dashboard/*"
                   element={<BeautyBusinessComingSoon />}
                 />
@@ -598,6 +622,7 @@ function App() {
                   path="/business-provider/dashboard/settings"
                   element={<FleetSettings />}
                 />
+
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
