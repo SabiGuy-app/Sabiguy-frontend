@@ -9,17 +9,11 @@ import BusinessSetupLayout from "../BusinessSetupLayout";
 const BUSINESS_DETAILS_ENDPOINT = "/businesses/business-details";
 const FILE_UPLOAD_CATEGORY = "identity_docs";
 
-const CATEGORIES = [
-  { id: "transport", label: "Transport & Logistics" },
-  { id: "beauty", label: "Beauty & Personal Care" },
-];
-
 const MAX_FILE_SIZE_MB = 5;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
 export default function BusinessInfo({ onNext, onBack }) {
   const [form, setForm] = useState({
-    category: "",
     businessName: "",
     address: "",
     city: "",
@@ -36,11 +30,6 @@ export default function BusinessInfo({ onNext, onBack }) {
   const handleChange = (field) => (e) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
     if (errors[field]) setErrors((er) => ({ ...er, [field]: undefined }));
-  };
-
-  const handleCategoryChange = (e) => {
-    setForm((f) => ({ ...f, category: e.target.value }));
-    if (errors.category) setErrors((er) => ({ ...er, category: undefined }));
   };
 
   const uploadFile = async (file) => {
@@ -74,13 +63,14 @@ export default function BusinessInfo({ onNext, onBack }) {
   };
 
   const canContinue = Boolean(
-    form.category && form.businessName.trim() && form.address.trim() &&
-    form.city.trim() && ninFile?.url,
+    form.businessName.trim() &&
+      form.address.trim() &&
+      form.city.trim() &&
+      ninFile?.url,
   );
 
   const validate = () => {
     const next = {};
-    if (!form.category) next.category = "Please select a business category";
     if (!form.businessName.trim())
       next.businessName = "Business name is required";
     if (!form.address.trim()) next.address = "Business address is required";
@@ -121,16 +111,11 @@ export default function BusinessInfo({ onNext, onBack }) {
         return;
       }
 
-      const categoryLabel = CATEGORIES.find(
-        (c) => c.id === form.category,
-      )?.label;
-
       const payload = {
         businessName: form.businessName.trim(),
         businessAddress: form.address.trim(),
         cityOfOperation: form.city.trim(),
         ninUrl: ninFile.url,
-        businessCategory: categoryLabel,
       };
 
       const response = await axios.post(
@@ -146,8 +131,6 @@ export default function BusinessInfo({ onNext, onBack }) {
       if (response.status === 200 || response.status === 201) {
         setSuccessMessage("Business information saved successfully!");
         onNext({
-          businessCategory: categoryLabel,
-          businessCategoryId: form.category,
           businessName: form.businessName,
           address: form.address,
           city: form.city,
@@ -193,21 +176,6 @@ export default function BusinessInfo({ onNext, onBack }) {
             }}
             className="mt-7 space-y-5"
           >
-            <div>
-              <InputField select name="businessCategory" label="Business category"
-                placeholder="Select category" value={form.category}
-                options={CATEGORIES.map((category) => ({ value: category.id, label: category.label }))}
-                onChange={(option) => handleCategoryChange({ target: { value: option.value } })} />
-              {errors.category && (
-                <p className="mt-1.5 text-sm text-red-600">
-                  {errors.category}
-                </p>
-              )}
-            </div>
-
-            {/* Rest of the form only appears once a category is picked. */}
-            {form.category && (
-              <>
                 <div>
                   <InputField
                     name="businessName"
@@ -304,8 +272,6 @@ export default function BusinessInfo({ onNext, onBack }) {
                     {submitting ? "Saving..." : "Save & Continue"}
                   </Button>
                 </div>
-              </>
-            )}
           </form>
 
           {errorMessage && (

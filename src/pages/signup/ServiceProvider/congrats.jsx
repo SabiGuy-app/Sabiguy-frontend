@@ -1,38 +1,38 @@
 import React, { useState } from "react";
 import Button from "./components/Button";
 import { useNavigate } from "react-router-dom";
-import { getUserByEmail } from "../../../api/auth";
-import { useAuthStore } from "../../../stores/auth.store";
+// import { getUserByEmail } from "../../../api/auth";
+// import { useAuthStore } from "../../../stores/auth.store";
 
 
 
 export default function Congrats() {
-    const [loading, setLoading] = useState(false);
+    // const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleGoToDashboard = async () => {
-        const token = localStorage.getItem("token");
-        const email =
-            localStorage.getItem("email") ||
-            localStorage.getItem("google-email");
+    // const handleGoToDashboard = async () => {
+    //     const token = localStorage.getItem("token");
+    //     const email =
+    //         localStorage.getItem("email") ||
+    //         localStorage.getItem("google-email");
 
-        if (!token || !email) {
-            navigate("/dashboard/provider");
-            return;
-        }
+    //     if (!token || !email) {
+    //         navigate("/dashboard/provider");
+    //         return;
+    //     }
 
-        try {
-            setLoading(true);
-            useAuthStore.getState().setToken(token);
-            const fullUser = await getUserByEmail(email);
-            useAuthStore.getState().setUser(fullUser);
-        } catch (err) {
-            console.error("Failed to load user profile:", err);
-        } finally {
-            setLoading(false);
-            navigate("/dashboard/provider");
-        }
-    };
+    //     try {
+    //         setLoading(true);
+    //         useAuthStore.getState().setToken(token);
+    //         const fullUser = await getUserByEmail(email);
+    //         useAuthStore.getState().setUser(fullUser);
+    //     } catch (err) {
+    //         console.error("Failed to load user profile:", err);
+    //     } finally {
+    //         setLoading(false);
+    //         navigate("/dashboard/provider");
+    //     }
+    // };
 
     return (
         <div className="flex flex-col min-h-screen justify-center items-center">
@@ -42,12 +42,12 @@ export default function Congrats() {
                 {/* </div> */}
                 <p className="text-2xl mb-5 mt-5">We’re reviewing your documents and will notify you once
 you’re verified.</p>
-                   <div className="flex gap-10 mt-10">
-                    <Button size="md" onClick={handleGoToDashboard} disabled={loading}>
-                      {loading ? "Loading..." : "Go To Dashboard"}
-                    </Button>
-                   </div>
-  <p className="text-gray-500 text-sm font-extralight italic mt-8">Tip: You can always update your profile or verification info in settings</p>
+                    <div className="mt-8">
+                           <Button size="md" onClick={() => navigate("/login")}>
+                             Log In
+                           </Button>
+                         </div>
+  <p className="text-gray-500 text-sm font-extralight italic mt-8">Tip: You can always update your profile info in settings</p>
             </div>
 
     )
