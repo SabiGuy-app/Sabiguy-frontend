@@ -14,6 +14,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
 import PasswordRequirements from "../../../components/PasswordRequirements";
 import { useAuthStore } from "../../../stores/auth.store";
+import { SIGNUP_PLATFORM } from "../../../constants/platform";
 
 const MotionDiv = motion.div;
 
@@ -54,6 +55,7 @@ export default function StepOne({ onNext, email }) {
         email: effectiveEmail,
         password: values.password,
         accountType: "business",
+        signupPlatform: SIGNUP_PLATFORM, // new
       };
 
       const response = await axios.post(
@@ -126,6 +128,7 @@ export default function StepOne({ onNext, email }) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ token: tokenResponse.access_token }),
+            signupPlatform: SIGNUP_PLATFORM, // new
           },
         );
 
