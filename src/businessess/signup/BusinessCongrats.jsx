@@ -1,11 +1,8 @@
-import React, { useEffect, useState } from "react";
-import Button from "../../components/button";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUserByEmail } from "../../api/auth";
-import { useAuthStore } from "../../stores/auth.store";
+import Button from "../../components/button";
 
 export default function BusinessCongrats() {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -13,44 +10,19 @@ export default function BusinessCongrats() {
     localStorage.removeItem("business-service-details-draft");
   }, []);
 
-  const handleGoToDashboard = async () => {
-    const token = localStorage.getItem("token");
-    const email =
-      localStorage.getItem("email") || localStorage.getItem("google-email");
-
-    if (!token || !email) {
-      navigate("/business-provider/dashboard");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      useAuthStore.getState().setToken(token);
-      const fullUser = await getUserByEmail(email);
-      useAuthStore.getState().setUser(fullUser);
-    } catch (err) {
-      console.error("Failed to load user profile:", err);
-    } finally {
-      setLoading(false);
-      navigate("/business-provider/dashboard");
-    }
-  };
-
   return (
-    <div className="flex flex-col min-h-screen justify-center items-center">
-      <h2 className="font-semibold text-3xl mb-6">All Done!</h2>
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
+      <h2 className="mb-6 text-3xl font-semibold">All Done!</h2>
       <img src="/Group.svg" alt="Group" className="w-full max-w-md" />
-      <p className="text-2xl mb-5 mt-5">
-        We’re reviewing your documents and will notify you once you’re verified.
+      <p className="mb-3 mt-5 max-w-2xl text-xl">
+        Your business account ready. You can now log in with the details you used to
+        register to explore your business dashboard. We’ll notify you when we finish reviewing your documents.
       </p>
-      <div className="flex gap-10 mt-10">
-        <Button size="md" onClick={handleGoToDashboard} disabled={loading}>
-          {loading ? "Loading..." : "Go To Dashboard"}
+      <div className="mt-8">
+        <Button size="md" onClick={() => navigate("/login")}>
+          Log In
         </Button>
       </div>
-      <p className="text-gray-500 text-sm font-extralight italic mt-8">
-        Tip: You can always update your profile or verification info in settings
-      </p>
     </div>
   );
 }
