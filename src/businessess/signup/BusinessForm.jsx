@@ -5,12 +5,9 @@ import StepOne from "./AccountSetup/StepOne";
 import StepTwo from "./AccountSetup/StepTwo";
 import StepThree from "./AccountSetup/StepThree";
 import BusinessInfo from "./ServiceProvider/BusinessSetup/BusinessInfo";
-import AddVehicleForm from "./ServiceProvider/BusinessSetup/AddVehicleForm";
-import AddDriverForm from "./ServiceProvider/BusinessSetup/AddDriverForm";
-import IncomeSplitForm from "./ServiceProvider/BusinessSetup/IncomeSplitForm";
 import BusinessCongrats from "./BusinessCongrats";
 import BusinessVerification from "./ServiceProvider/BusinessSetup/BusinessVerification";
-import BeautyAndPersonalCare from "./AccountSetup/BeautyAndPersonalCare";
+import GeneralBusinessSetup from "./AccountSetup/general-business-setup";
 
 const BUSINESS_STEPS = {
   CONFIRM_KYC: 0,
@@ -32,8 +29,18 @@ const BUSINESS_KYC_LEVEL_TO_STEP = {
 };
 
 const BUSINESS_SETUP_STEP_BY_CATEGORY = {
-  transport: AddVehicleForm,
-  beauty: BeautyAndPersonalCare,
+  automotive: GeneralBusinessSetup,
+  beauty: GeneralBusinessSetup,
+  catering: GeneralBusinessSetup,
+  cleaning: GeneralBusinessSetup,
+  domestic: GeneralBusinessSetup,
+  education: GeneralBusinessSetup,
+  events: GeneralBusinessSetup,
+  fashion: GeneralBusinessSetup,
+  "home-repair": GeneralBusinessSetup,
+  laundry: GeneralBusinessSetup,
+  transport: GeneralBusinessSetup,
+  "photography-videography": GeneralBusinessSetup,
 };
 
 // In-session onboarding sets businessCategoryId ("beauty"/"transport"). On
@@ -42,7 +49,17 @@ const BUSINESS_SETUP_STEP_BY_CATEGORY = {
 function resolveBusinessCategoryId(formData) {
   if (formData.businessCategoryId) return formData.businessCategoryId;
   const label = String(formData.businessCategory || "").toLowerCase();
+  if (label.includes("automotive")) return "automotive";
   if (label.includes("beauty")) return "beauty";
+  if (label.includes("catering")) return "catering";
+  if (label.includes("cleaning")) return "cleaning";
+  if (label.includes("domestic")) return "domestic";
+  if (label.includes("education")) return "education";
+  if (label.includes("event")) return "events";
+  if (label.includes("fashion")) return "fashion";
+  if (label.includes("home repair")) return "home-repair";
+  if (label.includes("photography") || label.includes("videography")) return "photography-videography";
+  if (label.includes("laundry")) return "laundry";
   if (label.includes("transport")) return "transport";
   return "";
 }
@@ -112,10 +129,18 @@ export default function BusinessForm() {
     });
   };
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
+  const handleBusinessCategoryChange = (category) => {
+    if (!category) return;
+    setFormData((prev) => ({
+      ...prev,
+      businessCategory: category.label,
+      businessCategoryId: category.id,
+    }));
+  };
 
   const BusinessSetupStep =
     BUSINESS_SETUP_STEP_BY_CATEGORY[resolveBusinessCategoryId(formData)] ??
-    AddVehicleForm;
+    GeneralBusinessSetup;
   useEffect(() => {
     const storedKycLevel = localStorage.getItem("kycLevel");
     const storedEmail = localStorage.getItem("email");
@@ -142,7 +167,11 @@ export default function BusinessForm() {
     <StepThree onNext={handleNext} onBack={handleBack} />,
     <BusinessInfo onNext={handleNext} onBack={handleBack} />,
     <BusinessVerification onNext={handleNext} onBack={handleBack} />,
-    <BusinessSetupStep onNext={handleNext} onBack={handleBack} />,
+    <BusinessSetupStep
+      onNext={handleNext}
+      onBack={handleBack}
+      onCategoryChange={handleBusinessCategoryChange}
+    />,
     <BusinessCongrats onNext={handleNext} onBack={handleBack} />,
   ];
 

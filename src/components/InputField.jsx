@@ -22,6 +22,7 @@ export default function InputField({
   inputClassName = "",
   labelClassName = "",
   singleChevron = false,
+  selectAnchor,
   ...props
 }) {
   const getSelected = () => {
@@ -109,7 +110,10 @@ export default function InputField({
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Listbox.Options className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-auto focus:outline-none text-base">
+              <Listbox.Options
+                anchor={selectAnchor}
+                className={`${selectAnchor ? "z-50 w-[var(--button-width)] [--anchor-max-height:15rem] [--anchor-gap:4px] [--anchor-padding:8px]" : "absolute z-10 mt-1 w-full max-h-60"} bg-white border border-gray-300 rounded-md shadow-lg overflow-auto focus:outline-none text-base`}
+              >
                 {options.map((option, idx) => (
                   <Listbox.Option
                     key={idx}
