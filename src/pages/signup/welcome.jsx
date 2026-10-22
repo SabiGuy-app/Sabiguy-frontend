@@ -4,10 +4,10 @@ import { FaArrowRight, FaSearch, FaWrench } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import AccountTypeModal from "./ServiceProvider/AccountSetup/AccountTypeModal";
+import AccountTypeModal from "../../components/AccountTypeModal";
 
 export default function Welcome() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpenModal, setIsOpenModal] = useState(false);
 
   return (
     <div className="h-screen">
@@ -55,7 +55,7 @@ export default function Welcome() {
 
             {/* Card 2 */}
             <div
-              onClick={() => setIsOpen(true)}
+              onClick={() => setIsOpenModal(true)}
               className="bg-white border-2 border-gray-400 rounded-xl shadow-lg p-6 transition hover:shadow-xl hover:border-[#FF791A] cursor-pointer text-center"
             >
               {/* Icon Circle */}
@@ -75,7 +75,10 @@ export default function Welcome() {
                   Showcase your skills and get hired for jobs in your area.
                 </p> */}
             </div>
-            <AccountTypeModal isOpen={isOpen} setIsOpen={setIsOpen} />
+            <AccountTypeModal
+              isOpenModal={isOpenModal}
+              setIsOpenModal={setIsOpenModal}
+            />
 
             {/* <Link
               to="/service-provider/signup"

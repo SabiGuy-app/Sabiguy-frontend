@@ -61,6 +61,9 @@ export default function StepOne({ onNext, email }) {
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}${REGISTER_ENDPOINT}`,
         payload,
+        {
+          headers: { "x-client-platform": SIGNUP_PLATFORM },
+        },
       );
 
       if (response.status === 200 || response.status === 201) {
@@ -126,9 +129,12 @@ export default function StepOne({ onNext, email }) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-client-platform": SIGNUP_PLATFORM,
             },
-            body: JSON.stringify({ token: tokenResponse.access_token }),
-            signupPlatform: SIGNUP_PLATFORM, // new
+            body: JSON.stringify({
+              token: tokenResponse.access_token,
+              signupPlatform: SIGNUP_PLATFORM,
+            }),
           },
         );
 

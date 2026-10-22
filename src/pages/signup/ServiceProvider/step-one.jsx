@@ -55,6 +55,9 @@ export default function StepOne({ onNext, email }) {
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/auth/provider`,
         payload,
+        {
+          headers: { "x-client-platform": SIGNUP_PLATFORM },
+        },
       );
 
       console.log("Backend response:", response);
@@ -160,9 +163,12 @@ export default function StepOne({ onNext, email }) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-client-platform": SIGNUP_PLATFORM,
             },
-            body: JSON.stringify({ token: tokenResponse.access_token }), // Send access_token
-            signupPlatform: SIGNUP_PLATFORM, // new
+            body: JSON.stringify({
+              token: tokenResponse.access_token,
+              signupPlatform: SIGNUP_PLATFORM,
+            }), // Send access_token
           },
         );
 
