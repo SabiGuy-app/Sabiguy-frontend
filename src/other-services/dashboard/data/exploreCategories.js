@@ -1,72 +1,72 @@
-export const exploreCategories = [
-  {
-    id: "transport",
-    title: "Transport & Logistics",
+import { SERVICE_CATEGORIES } from "../../../constants/serviceCategories";
+
+// Dashboard-only presentation for the shared service categories.
+const CATEGORY_DISPLAY = {
+  transport: {
     image: "/categories/transport.png",
     imageIncludesTitle: true,
     tasks: ["Book a Ride", "Package Delivery"],
   },
-  {
-    id: "beauty",
-    title: "Beauty & Personal Care",
+  beauty: {
+    slug: "beauty-personal-care",
+    description: "Beauty, grooming, and personal care services tailored to your needs.",
     image: "/categories/beauty.png",
     imageIncludesTitle: true,
-    tasks: ["Barbing Services", "Spa", "Lash Tech"],
-    to: "/dashboard/categories/beauty-personal-care",
   },
-  {
-    id: "home",
-    title: "Home & Repair Services",
-    image: "/hand-tools.png",
-    tasks: [
-      "Plumbing & Electrical",
-      "Carpentry & Welding",
-      "Finishing & Aesthetics",
-    ],
-    comingSoon: true,
-  },
-  {
-    id: "emergency",
-    title: "Emergency Services",
-    image: "/siren.png",
-    tasks: [
-      "Ambulance Services",
-      "Towing & Roadside",
-      "Locksmiths",
-      "Security Services",
-    ],
-    comingSoon: true,
-  },
-  {
-    id: "professional",
-    title: "Professional Services",
-    image: "/family.png",
-    tasks: [
-      "Legal & Financial",
-      "Real Estate & Construction",
-      "Healthcare & Technology",
-    ],
-    comingSoon: true,
-  },
-  {
-    id: "creative",
-    title: "Freelance & Creative Services",
-    image: "/family.png",
-    tasks: ["Digital Design", "Content Creation", "Media Production"],
-    comingSoon: true,
-  },
-];
+  automotive: { image: "/Towing.jpg" },
+  "home-repair": { image: "/hand-tools.png" },
+};
+
+const FEATURED_TASK_COUNT = 3;
+
+export const exploreCategories = [
+  SERVICE_CATEGORIES.find((category) => category.id === "transport"),
+  ...SERVICE_CATEGORIES.filter((category) => category.id !== "transport"),
+].map((category) => {
+  const display = CATEGORY_DISPLAY[category.id] || {};
+  const serviceNames = (category.services || []).map((service) => service.name);
+  const slug = display.slug || category.id;
+  return {
+    ...category,
+    ...display,
+    title: category.label,
+    slug,
+    serviceNames,
+    tasks: display.tasks || serviceNames.slice(0, FEATURED_TASK_COUNT),
+    ...(category.services && { to: `/dashboard/categories/${slug}` }),
+  };
+});
+
+export const getExploreCategoryBySlug = (slug) =>
+  exploreCategories.find((category) => category.to && category.slug === slug);
+
+const normalizeCategoryValue = (value) =>
+  String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, " ");
+
+// Search results span categories, so read each provider's from its job service.
+export const getCategoryForProvider = (provider, fallback = null) => {
+  const jobServices = (Array.isArray(provider?.job) ? provider.job : [])
+    .map((job) => normalizeCategoryValue(job?.service))
+    .filter(Boolean);
+  return (
+    exploreCategories.find(
+      (category) =>
+        category.to &&
+        [category.id, category.backendId, category.label]
+          .filter(Boolean)
+          .some((value) => jobServices.includes(normalizeCategoryValue(value))),
+    ) || fallback
+  );
+};
+
+export const getProviderProfilePath = (category, providerId) =>
+  category?.id === "beauty" || !category?.slug
+    ? `/dashboard/beauty/${providerId}`
+    : `/dashboard/categories/${category.slug}/providers/${providerId}`;
 
 export function getCategoryDestination(category, task) {
-  if (category.id === "beauty" && task) {
-    const serviceNames = {
-      "Barbing Services": "Barbing",
-      "Lash Tech": "Lash Tech.",
-    };
-    return `${category.to}?service=${encodeURIComponent(serviceNames[task] || task)}`;
-  }
-  if (category.to) return category.to;
   if (category.id === "transport")
     return `/bookings?service=${encodeURIComponent(task === "Package Delivery" ? "package delivery" : "book a ride")}`;
-  return null;
+  if (!category.to) return null;
+  return task ? `${category.to}?service=${encodeURIComponent(task)}` : category.to;
 }
