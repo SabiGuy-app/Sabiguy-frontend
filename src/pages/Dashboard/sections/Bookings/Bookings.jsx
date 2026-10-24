@@ -261,7 +261,7 @@ export default function Bookings() {
           };
           const searchResponse = await searchServiceProviders({
             location: searchLocation,
-            serviceName: finalServiceName,
+            search: finalServiceName,
           });
 
           navigate(

@@ -34,3 +34,9 @@ export const updateUserLocation = async ({ latitude, longitude }) => {
   });
   return data;
 };
+
+// Works for every account type, unlike /provider/:id which rejects businesses.
+export const getUserById = async (userId) => {
+  const { data } = await api.get(`/users/${userId}`);
+  return data;
+};

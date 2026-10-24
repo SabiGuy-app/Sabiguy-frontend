@@ -94,7 +94,14 @@ export const mergeBeautyServices = (detailServices, searchServices) => {
   });
 };
 
-export const normalizeSearchBeautyProvider = (provider) => {
+// categoryLabel and getProfilePath let other service categories reuse this mapper.
+export const normalizeSearchBeautyProvider = (
+  provider,
+  {
+    categoryLabel = "Beauty & Personal Care",
+    getProfilePath = (id) => `/dashboard/beauty/${id}`,
+  } = {},
+) => {
   if (!provider) return null;
 
   const sourceServices = Array.isArray(provider.service) && provider.service.length
@@ -152,15 +159,15 @@ export const normalizeSearchBeautyProvider = (provider) => {
       provider.fullName ||
       provider.businessName ||
       provider.BusinessName ||
-      "Beauty provider",
+      `${categoryLabel} provider`,
     profilePicture: provider.profilePicture || "/avatar.png",
     rating: toNumber(ratingAverage),
     reviews: toNumber(ratingCount),
     price: prices.length ? Math.min(...prices) : null,
     businessAddress,
     city: businessAddress || "Business address not provided",
-    job: [{ ...providerJob, service: firstService?.name || "Beauty & Personal Care" }],
-    profilePath: `/dashboard/beauty/${id}`,
+    job: [{ ...providerJob, service: firstService?.name || categoryLabel }],
+    profilePath: getProfilePath(id),
     gallery,
     about: provider.about || provider.bio || "",
     services,

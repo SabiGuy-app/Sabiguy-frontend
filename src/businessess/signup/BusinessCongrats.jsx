@@ -15,8 +15,9 @@ export default function BusinessCongrats() {
       <h2 className="mb-6 text-3xl font-semibold">All Done!</h2>
       <img src="/Group.svg" alt="Group" className="w-full max-w-md" />
       <p className="mb-3 mt-5 max-w-2xl text-xl">
-        Your business account ready. You can now log in with the details you used to
-        register to explore your business dashboard. We’ll notify you when we finish reviewing your documents.
+       Your business account is now ready! You can log in using the credentials you provided during registration to access your business dashboard.
+
+We’ll notify you once the review of your submitted documents is complete. Thank you for choosing us!
       </p>
       <div className="mt-8">
         <Button size="md" onClick={() => navigate("/login")}>
