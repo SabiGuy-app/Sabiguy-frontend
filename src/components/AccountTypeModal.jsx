@@ -16,7 +16,7 @@ const startFreshBusinessSignup = () => {
   }
 };
 
-const AccountTypeModal = ({ isOpen, setIsOpen }) => {
+const AccountTypeModal = ({ isOpenModal, setIsOpenModal }) => {
   const heading = "Account Type";
   const subHeading =
     "Before you get started, we need to confirm your account type. We require this to make your profile setup easier";
@@ -38,12 +38,12 @@ const AccountTypeModal = ({ isOpen, setIsOpen }) => {
     },
   ];
 
-  if (!isOpen) return null;
+  if (!isOpenModal) return null;
 
   return (
     <div
       className="w-full h-screen fixed inset-0 bg-black/20 flex justify-center items-center z-20 px-4"
-      onClick={() => setIsOpen(false)}
+      onClick={() => setIsOpenModal(false)}
     >
       <div
         className="w-full max-w-[500px] max-h-[85vh] bg-white rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shadow shadow-[#0000001A] overflow-y-auto"

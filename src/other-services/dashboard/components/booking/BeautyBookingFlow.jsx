@@ -27,6 +27,8 @@ import InputField from "../../../../components/InputField";
 import { formatMoney } from "../../utils/bookingFormat";
 import CancelBookingButton from "../../../../components/CancelBookingButton";
 import { useCallContext } from "../../../../components/shared/CallContext";
+import { getServiceCategoryBackendId } from "../../../../constants/serviceCategories";
+import { getExploreCategoryBySlug } from "../../data/exploreCategories";
 
 const countdown = (seconds) =>
   [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60]
@@ -293,6 +295,7 @@ export default function BeautyBookingFlow({
   booking,
   onClose,
   initialStage = "schedule",
+  category = getExploreCategoryBySlug("beauty-personal-care"),
 }) {
   const navigate = useNavigate();
   const callContext = useCallContext();
@@ -541,7 +544,7 @@ export default function BeautyBookingFlow({
       }
 
       const response = await store.submit({
-        category: "beauty_personal_care",
+        category: getServiceCategoryBackendId(category),
         service:
           booking.services?.length > 0
             ? booking.services
@@ -952,7 +955,7 @@ export default function BeautyBookingFlow({
               // Just close the modal and navigate to find another provider without cancelling
               onClose();
               navigate(
-                `/dashboard/categories/beauty-personal-care?service=${encodeURIComponent(booking.service)}`,
+                `${category.to}?service=${encodeURIComponent(booking.service)}`,
               );
             }}
           >

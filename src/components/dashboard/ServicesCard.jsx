@@ -1,12 +1,13 @@
 import { useState } from "react";
 
 export default function ServicesCard({ title, onClick, image, imageIncludesTitle = false, tasks = [], onTaskClick }) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const imageFailed = loadFailed || !image;
   return (
     <article className="overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-md">
       <button type="button" onClick={onClick} aria-label={`Explore ${title}`}
         className="relative block aspect-[401/229] w-full overflow-hidden bg-[#F5F8F6] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#005823]">
-        {!imageFailed && <img src={image} alt={imageIncludesTitle ? title : ""} loading="lazy" onError={() => setImageFailed(true)}
+        {!imageFailed && <img src={image} alt={imageIncludesTitle ? title : ""} loading="lazy" onError={() => setLoadFailed(true)}
           className={`h-full w-full ${imageIncludesTitle || image.endsWith(".jpg") ? "object-cover" : "object-contain p-8"}`} />}
         {(!imageIncludesTitle || imageFailed) && <><div className="absolute inset-0 bg-black/45" /><h3 className="absolute inset-0 flex items-center justify-center px-5 text-center text-xl font-bold leading-snug text-white lg:text-2xl">{title}</h3></>}
       </button>

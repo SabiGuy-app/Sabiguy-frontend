@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import {
   ChevronDown,
   Home,
@@ -20,14 +20,18 @@ import Breadcrumbs from "../../../components/dashboard/BreadCrumbs";
 import ProviderCard from "../../../components/dashboard/ProviderCard";
 import LocationAutocomplete from "../../../components/LocationAutocomplete";
 import { searchServiceProviders } from "../../../api/bookings";
-import { getProviderById } from "../../../api/provider";
+import { getUserById } from "../../../api/user";
 import {
   extractNearbyProviders,
   mergeBeautyServices,
   normalizeSearchBeautyProvider,
 } from "../utils/beautyProviderMapper";
 import { mergeProviderAvailability } from "../utils/providerAvailability";
-import { BEAUTY_PROVIDER_SEARCH_NAMES } from "../../../constants/beautyServices";
+import {
+  getCategoryForProvider,
+  getExploreCategoryBySlug,
+  getProviderProfilePath,
+} from "../data/exploreCategories";
 
 const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v9";
 
@@ -99,12 +103,19 @@ const mergeProviderResults = (providers) => {
   return Array.from(providersById.values());
 };
 
-const searchProvidersForService = async (location, query, searchResponse = null) => {
-  const serviceName = query.trim();
-  if (!serviceName) return [];
+// The backend matches the free-text search against service, business and
+// provider names, so the same request serves category pages and global search.
+const searchProvidersForService = async (
+  location,
+  query,
+  category,
+  searchResponse = null,
+) => {
+  const search = query.trim();
+  if (!search) return [];
 
   const response = searchResponse ||
-    await searchServiceProviders({ location, serviceName });
+    await searchServiceProviders({ location, search });
 
   const providers = extractNearbyProviders(response);
 
@@ -115,7 +126,7 @@ const searchProvidersForService = async (location, query, searchResponse = null)
 
       let details = {};
       try {
-        const response = await getProviderById(id);
+        const response = await getUserById(id);
         const entry = response?.data?.provider || response?.data?.data ||
           response?.data || response?.provider || response || {};
         const profile = entry.providerProfile || entry.profile || entry.userId?.data || {};
@@ -124,7 +135,7 @@ const searchProvidersForService = async (location, query, searchResponse = null)
         console.warn(`Could not load details for provider ${id}`, error);
       }
 
-      const normalized = normalizeSearchBeautyProvider({
+      const merged = {
         ...provider,
         ...details,
         id,
@@ -140,7 +151,18 @@ const searchProvidersForService = async (location, query, searchResponse = null)
             ? provider.service
             : provider.services,
         ),
-      });
+      };
+      const providerCategory = getCategoryForProvider(merged, category);
+      const normalized = normalizeSearchBeautyProvider(
+        merged,
+        providerCategory
+          ? {
+              categoryLabel: providerCategory.label,
+              getProfilePath: (providerId) =>
+                getProviderProfilePath(providerCategory, providerId),
+            }
+          : undefined,
+      );
       return normalized && { ...normalized, buyerSearchLocation: location };
     }),
   ).then((results) => results.filter(Boolean));
@@ -200,7 +222,11 @@ function ProviderCardSkeleton() {
   );
 }
 
-export default function BeautyServices() {
+// Category listing, or a cross-category provider search when searchMode is set.
+export default function BeautyServices({ searchMode = false }) {
+  const { categorySlug = "beauty-personal-care" } = useParams();
+  const category = searchMode ? null : getExploreCategoryBySlug(categorySlug);
+  const searchParam = searchMode ? "q" : "service";
   const routeLocation = useLocation();
   const initialBeautySearch = useRef(routeLocation.state?.beautySearch || null);
   const [providers, setProviders] = useState([]);
@@ -217,16 +243,16 @@ export default function BeautyServices() {
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState(
-    () => new URLSearchParams(routeLocation.search).get("service") || "",
+    () => new URLSearchParams(routeLocation.search).get(searchParam) || "",
   );
   const [priceFilter, setPriceFilter] = useState("default");
   const [ratingFilter, setRatingFilter] = useState("default");
 
   useEffect(() => {
     setSearchTerm(
-      new URLSearchParams(routeLocation.search).get("service") || "",
+      new URLSearchParams(routeLocation.search).get(searchParam) || "",
     );
-  }, [routeLocation.search]);
+  }, [routeLocation.search, searchParam]);
 
   const loadProviders = useCallback(async (signal, requestedSearch) => {
     const requestedLocation = requestedSearch?.location;
@@ -264,7 +290,7 @@ export default function BeautyServices() {
         setError(
           requestError?.response?.data?.message ||
             requestError?.message ||
-            "We could not load beauty providers. Please try again.",
+            "We could not load providers. Please try again.",
         );
       }
     } finally {
@@ -280,7 +306,7 @@ export default function BeautyServices() {
 
   useEffect(() => {
     const query = searchTerm.trim();
-    if (!searchLocation) return undefined;
+    if (!searchLocation || (!category && !searchMode)) return undefined;
     if (query.length < 2) {
       setServiceSearchResults(null);
       setServiceSearchLoading(false);
@@ -302,6 +328,7 @@ export default function BeautyServices() {
         const results = await searchProvidersForService(
           searchLocation,
           query,
+          category,
           matchesPendingSearch ? pendingSearch.response : null,
         );
         if (active) {
@@ -320,12 +347,12 @@ export default function BeautyServices() {
               ),
             );
           } catch (cacheError) {
-            console.warn("Could not cache beauty search results", cacheError);
+            console.warn("Could not cache provider search results", cacheError);
           }
         }
       } catch (requestError) {
         if (!active) return;
-        console.error("Failed to search beauty services", requestError);
+        console.error("Failed to search providers", requestError);
         setServiceSearchResults([]);
         setServiceSearchError(
           requestError?.response?.data?.message ||
@@ -340,33 +367,16 @@ export default function BeautyServices() {
       active = false;
       clearTimeout(timeoutId);
     };
-  }, [searchLocation, searchTerm]);
+  }, [category, searchLocation, searchMode, searchTerm]);
 
   const filteredProviders = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
+    // The backend already matched the search text, so only filter and sort here.
     const sourceProviders =
       query && serviceSearchResults !== null ? serviceSearchResults : providers;
 
     return sourceProviders
-      .filter((provider) => {
-        if (!query) return true;
-
-        const searchableText = [
-          provider.fullName,
-          provider.email,
-          provider.city,
-          ...provider.services.flatMap((service) => [
-            service.name,
-            service.serviceName,
-          ]),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        return searchableText.includes(query);
-      })
       .filter((provider) => {
         if (ratingFilter === "default") return true;
         return provider.rating >= Number(ratingFilter);
@@ -432,6 +442,19 @@ export default function BeautyServices() {
     setLocationPickerOpen(false);
   };
 
+  if (!category && !searchMode) {
+    return (
+      <DashboardLayout showSidebar={false}>
+        <p className="py-8">
+          Category not found.{" "}
+          <Link to="/dashboard/categories" className="text-[#005823] underline">
+            Browse all categories
+          </Link>
+        </p>
+      </DashboardLayout>
+    );
+  }
+
   const isSearching = loading || serviceSearchLoading;
 
   return (
@@ -439,23 +462,53 @@ export default function BeautyServices() {
       showSidebar={false}
       searchValue={searchTerm}
       onSearchChange={setSearchTerm}
-      searchPlaceholder="Search providers or services"
+      searchPlaceholder="Search providers, businesses or services"
     >
       <div className="mx-auto w-full max-w-6xl py-4">
         <Breadcrumbs
-          paths={[
-            { label: "", to: "/dashboard", icon: Home },
-            { label: "Categories", to: "/dashboard/categories" },
-            { label: "Beauty & Personal Care" },
-          ]}
+          paths={
+            searchMode
+              ? [
+                  { label: "", to: "/dashboard", icon: Home },
+                  { label: "Search" },
+                ]
+              : [
+                  { label: "", to: "/dashboard", icon: Home },
+                  { label: "Categories", to: "/dashboard/categories" },
+                  { label: category.title },
+                ]
+          }
         />
 
         <h1 className="text-2xl font-semibold text-[#231F20]">
-          Beauty &amp; Personal Care
+          {searchMode ? "Search results" : category.title}
         </h1>
         <p className="mt-2 text-sm text-gray-500 sm:text-base">
-          Beauty, grooming, and personal care services tailored to your needs.
+          {searchMode
+            ? searchTerm.trim()
+              ? `Providers and businesses matching “${searchTerm.trim()}” near you.`
+              : "Search by provider name, business name or service."
+            : category.description ||
+              `Find trusted ${category.title.toLowerCase()} providers near you.`}
         </p>
+
+        {category && <div className="mt-5 flex flex-wrap gap-2" aria-label={`${category.title} services`}>
+          {category.serviceNames.map((serviceName) => (
+            <button
+              key={serviceName}
+              type="button"
+              aria-pressed={searchTerm.trim() === serviceName}
+              onClick={() => setSearchTerm(serviceName)}
+              className={`rounded-full border px-3 py-1.5 text-sm ${
+                searchTerm.trim() === serviceName
+                  ? "border-[#34805A] bg-[#34805A] text-white"
+                  : "border-gray-200 bg-white text-[#231F20] hover:border-[#34805A]"
+              }`}
+            >
+              {serviceName}
+            </button>
+          ))}
+        </div>}
 
         <div className="mt-6 flex flex-wrap items-center gap-3 sm:gap-4">
           <span className="w-full text-sm text-[#231F20] sm:w-auto">
@@ -490,7 +543,7 @@ export default function BeautyServices() {
             {locationPickerOpen && (
               <div className="absolute left-0 top-full z-30 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-md border border-gray-200 bg-white p-4 shadow-lg">
                 <LocationAutocomplete
-                  name="beauty-provider-search-location"
+                  name="provider-search-location"
                   label="Location"
                   placeholder="Enter an address"
                   value={locationDraft}
@@ -555,7 +608,9 @@ export default function BeautyServices() {
           <p className="rounded-md border border-gray-200 bg-white px-4 py-5 text-sm text-gray-500">
             {searchTerm.trim()
               ? "No nearby providers match your search."
-              : "No beauty providers are available for this location right now."}
+              : searchMode
+                ? "Type a provider, business or service name in the search bar."
+                : "Choose a service above to see providers near you."}
           </p>
         )}
       </div>
