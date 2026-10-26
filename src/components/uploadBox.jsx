@@ -16,6 +16,7 @@ export default function UploadBox({
   prompt = "Drag and drop files here or",
   formatHint,
   className = "",
+  compact = false,
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -112,7 +113,9 @@ export default function UploadBox({
     handleFiles(e.dataTransfer.files);
   };
 
-  const handleBrowse = () => fileInputRef.current.click();
+  const handleBrowse = () => {
+    if (!disabled && !uploading) fileInputRef.current.click();
+  };
 
   return (
     <div>
@@ -135,7 +138,7 @@ export default function UploadBox({
             handleBrowse();
           }
         }}
-        className={`border-2 border-dashed rounded-lg p-10 text-center text-sm cursor-pointer transition focus-visible:outline-2 focus-visible:outline-[#005823]
+        className={`border-2 border-dashed rounded-lg ${compact ? "p-4" : "p-10"} text-center text-sm cursor-pointer transition focus-visible:outline-2 focus-visible:outline-[#005823]
           ${isDragging ? "bg-[#EAF5EE] border-[#005823]" : "border-[#005823BF] hover:bg-[#F5F8F6]"} ${className}`}
       >
         <input
@@ -153,7 +156,7 @@ export default function UploadBox({
 
         <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
           <span className="text-[#005823BF] text-2xl">
-            <UploadCloud size={36} />
+            <UploadCloud size={compact ? 24 : 36} />
           </span>
           <p>
             {uploading ? (
