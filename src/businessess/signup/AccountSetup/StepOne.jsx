@@ -14,6 +14,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
 import PasswordRequirements from "../../../components/PasswordRequirements";
 import { useAuthStore } from "../../../stores/auth.store";
+import ForgotPassword from "../../../pages/Forgot-Password/ForgotPassword";
 
 const MotionDiv = motion.div;
 
@@ -29,6 +30,7 @@ export default function StepOne({ onNext, email }) {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev);
@@ -241,9 +243,20 @@ export default function StepOne({ onNext, email }) {
                 </div>
 
                 <div className="relative">
+                  <div className="mb-1 flex items-center justify-between">
+                    <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm font-medium text-[#005823] hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <InputField
                     name="password"
-                    label="Password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={values.password}
@@ -385,6 +398,10 @@ export default function StepOne({ onNext, email }) {
           </Formik>
         </MotionDiv>
       </AuthLayout>
+      <ForgotPassword
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
     </div>
   );
 }

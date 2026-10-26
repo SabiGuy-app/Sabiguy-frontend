@@ -246,6 +246,7 @@ export default function StepOne({ onNext }) {
               city: "",
               phoneNumber: "",
               password: "",
+              forgotPassword: false,
               term: false,
             }}
             onSubmit={handleSubmit}
