@@ -2,6 +2,9 @@ import { BeautyBookingCard } from "../../../../other-services/dashboard/componen
 import { normalizeBeautyBooking } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
+import ImageUploadField from "../../../../components/ImageUploadField";
+import { uploadPackagePhoto } from "../../../../api/packagePhotos";
+import { useAuthStore } from "../../../../stores/auth.store";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
 import { useState, useEffect } from "react";
 import { Bike, Car } from "lucide-react";
@@ -105,6 +108,14 @@ export default function Bookings() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadingPackagePhoto, setUploadingPackagePhoto] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const userEmail =
+    user?.email ||
+    user?.data?.email ||
+    user?.user?.email ||
+    user?.data?.user?.email ||
+    localStorage.getItem("email");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [pickupMode, setPickupMode] = useState("manual");
@@ -202,6 +213,7 @@ export default function Bookings() {
       scheduleDate: "",
       scheduleTime: "",
       modeOfDelivery: "",
+      packageImage: "",
       autoAcceptNearest: false,
       applyRideDiscount: false,
     },
@@ -228,6 +240,11 @@ export default function Bookings() {
         then: (schema) => schema.required("Please choose a vehicle"),
         otherwise: (schema) => schema.notRequired(),
       }),
+      packageImage: Yup.string().when(["jobTitle", "service"], {
+        is: (jobTitle, service) => jobTitle === "transport" && service === "package delivery",
+        then: (schema) => schema.required("Upload a photo of the package you want to send."),
+        otherwise: (schema) => schema.notRequired(),
+      }),
       scheduleDate: Yup.date().when(["jobTitle", "serviceType"], {
         is: (jobTitle, serviceType) =>
           jobTitle === "transport" && serviceType === "scheduled",
@@ -248,6 +265,7 @@ export default function Bookings() {
       }),
     }),
     onSubmit: async (values) => {
+      if (uploadingPackagePhoto) return;
       console.log("Submitting booking with values:", values);
       setSuccessMessage("");
       setErrorMessage("");
@@ -301,6 +319,9 @@ export default function Bookings() {
             dropoffCoords?.longitude || values.dropoffLongitude || undefined,
           scheduleType: values.serviceType,
           modeOfDelivery: values.modeOfDelivery,
+          ...(values.jobTitle === "transport" && values.service === "package delivery"
+            ? { packageImage: values.packageImage }
+            : {}),
           applyRideDiscount: values.applyRideDiscount,
           scheduleDate:
             values.serviceType === "scheduled"
@@ -362,6 +383,7 @@ export default function Bookings() {
         formik.values.dropoffAddress &&
         formik.values.serviceType &&
         formik.values.modeOfDelivery &&
+        (formik.values.service !== "package delivery" || Boolean(formik.values.packageImage)) &&
         (formik.values.serviceType !== "scheduled" ||
           (formik.values.scheduleDate && formik.values.scheduleTime)),
       );
@@ -1005,11 +1027,25 @@ export default function Bookings() {
               </div>
             )}
 
+            {formik.values.jobTitle === "transport" && formik.values.service === "package delivery" && (
+              <ImageUploadField
+                label="Package image"
+                prompt="Drop a package photo here or"
+                required
+                value={formik.values.packageImage}
+                onChange={(url) => formik.setFieldValue("packageImage", url)}
+                uploadFile={(file) => uploadPackagePhoto(userEmail, file)}
+                onUploadingChange={setUploadingPackagePhoto}
+                error={formik.touched.packageImage ? formik.errors.packageImage : undefined}
+                disabled={loading}
+              />
+            )}
+
             <div className="flex flex-col">
               <Button
                 variant="secondary"
                 type="submit"
-                disabled={loading || !isFormReady}
+                disabled={loading || uploadingPackagePhoto || !isFormReady}
               >
                 {loading ? "Creating Booking..." : "Post Request"}
               </Button>
