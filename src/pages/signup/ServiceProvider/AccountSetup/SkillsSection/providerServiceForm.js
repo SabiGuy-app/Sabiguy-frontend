@@ -26,7 +26,8 @@ export function getProviderServiceInitialValues(category, serviceOptions) {
 export function isProviderServiceComplete(values) {
   return values.selectedServices.length > 0 && values.yearsOfExperience !== "" &&
     values.availableDays.length > 0 && Boolean(values.businessHours.start) &&
-    Boolean(values.businessHours.end) && values.servicePlace.length > 0;
+    Boolean(values.businessHours.end) && values.servicePlace.length > 0 &&
+    (values.workPhotos || []).length > 0;
 }
 
 function timeTo24Hour(time) {

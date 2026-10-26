@@ -275,10 +275,10 @@ export default function ProviderServicesSection({
         <div>
           <h3 className="flex gap-1 font-semibold text-[#231F20]">
             Photos of your work
-            <span className="font-normal text-[#231F20BF]">(optional)</span>
+            <span className="font-normal text-[#231F20BF]">(required)</span>
           </h3>
           <p className="mt-1 text-sm text-[#231F20BF]">
-            Upload clear photos that show your work or tools.
+            Upload at least one clear photo that shows your work or tools.
           </p>
         </div>
         <div className="relative mt-2 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-400 bg-white py-10 transition-all hover:bg-gray-50">
@@ -288,6 +288,7 @@ export default function ProviderServicesSection({
             accept=".jpg,.jpeg,.png"
             onChange={handleWorkPhotosUpload}
             disabled={uploadingWorkPhotos}
+            aria-required="true"
             className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
           />
           <div className="flex flex-col items-center justify-center gap-3">
