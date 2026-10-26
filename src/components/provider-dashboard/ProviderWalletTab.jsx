@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { FiSearch, FiCheckCircle, FiArrowUpRight, FiArrowDownLeft, FiClock } from "react-icons/fi";
 import { ChevronDown } from "lucide-react";
 import WithdrawFundsModal from "./WithdrawFundModal";
+import ProviderBankDetails from "./ProviderBankDetails";
 import { getWalletBalance, getWalletTransactions, formatCurrency } from "../../api/provider";
 
 const typeConfig = {
@@ -14,7 +15,7 @@ const typeConfig = {
 
 const defaultConfig = { direction: "", bgColor: "bg-gray-100", iconColor: "text-gray-600", textColor: "text-gray-600", Icon: FiCheckCircle };
 
-export default function ProviderWalletTab() {
+export default function ProviderWalletTab({ profile }) {
   const [activeTransactionTab, setActiveTransactionTab] = useState("all");
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -203,6 +204,8 @@ export default function ProviderWalletTab() {
           <p className="text-xl font-bold text-gray-900">{formatCurrency(totalWithdrawn)}</p>
         </div>
       </div>
+
+      <ProviderBankDetails profile={profile} />
 
       {/* Search and Filter */}
       <div className="flex flex-col md:flex-row gap-4 mb-4">
