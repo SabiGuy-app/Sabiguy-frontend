@@ -12,7 +12,8 @@ import { Formik, ErrorMessage } from "formik";
 import { SignUpSchema } from "./schema";
 import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
-import { SIGNUP_PLATFORM } from "../../../constants/platform";
+import PasswordRequirements from "../../../components/PasswordRequirements";
+import ForgotPassword from "../../Forgot-Password/ForgotPassword";
 
 const MotionDiv = motion.div;
 
@@ -25,6 +26,7 @@ export default function StepOne({ onNext, email }) {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleShowPassword = () => {
     setShowPassword((prev) => !prev);
@@ -49,15 +51,11 @@ export default function StepOne({ onNext, email }) {
         email: effectiveEmail,
         password: values.password,
         term: termAccepted,
-        signupPlatform: SIGNUP_PLATFORM, // new
       };
 
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/auth/provider`,
         payload,
-        {
-          headers: { "x-client-platform": SIGNUP_PLATFORM },
-        },
       );
 
       console.log("Backend response:", response);
@@ -163,12 +161,8 @@ export default function StepOne({ onNext, email }) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-client-platform": SIGNUP_PLATFORM,
             },
-            body: JSON.stringify({
-              token: tokenResponse.access_token,
-              signupPlatform: SIGNUP_PLATFORM,
-            }), // Send access_token
+            body: JSON.stringify({ token: tokenResponse.access_token }), // Send access_token
           },
         );
 
@@ -311,9 +305,20 @@ export default function StepOne({ onNext, email }) {
                 </div>
 
                 <div className="relative">
+                  <div className="mb-1 flex items-center justify-between">
+                    <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm font-medium text-[#005823] hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <InputField
                     name="password"
-                    label="Password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={values.password}
@@ -325,10 +330,7 @@ export default function StepOne({ onNext, email }) {
                     component="span"
                     className="text-[#db3a3a]"
                   />
-                  <p className="mt-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                    Password must be at least 8 characters long and include a
-                    letter, number, and special character
-                  </p>
+                  <PasswordRequirements password={values.password} />
                   {showPassword ? (
                     <BsEye
                       onClick={handleShowPassword}
@@ -458,6 +460,10 @@ export default function StepOne({ onNext, email }) {
           </Formik>
         </MotionDiv>
       </AuthLayout>
+      <ForgotPassword
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
     </div>
   );
 }
