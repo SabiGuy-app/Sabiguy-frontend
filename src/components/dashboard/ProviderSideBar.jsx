@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import SidebarNavLink from "./SidebarNavLink";
 import { HelpCircle, MessageCircle, LogOut } from "lucide-react";
 import {
   FaChartBar,
@@ -32,7 +33,6 @@ const links = [
 ];
 
 export default function ProviderSidebar({ open = false, onClose }) {
-  const { pathname } = useLocation();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -103,19 +103,14 @@ export default function ProviderSidebar({ open = false, onClose }) {
               }
 
               return (
-                <Link
+                <SidebarNavLink
                   key={link.path}
                   to={link.path}
                   onClick={() => onClose && onClose()}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[#231F20] hover:bg-[#005823]/10 ${
-                    pathname === link.path
-                      ? "bg-[#005823] text-white font-medium"
-                      : ""
-                  }`}
+                  icon={link.icon}
                 >
-                  <span>{link.icon}</span>
-                  <span>{link.name}</span>
-                </Link>
+                  {link.name}
+                </SidebarNavLink>
               );
             })}
           </nav>

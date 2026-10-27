@@ -2,6 +2,9 @@ import { BeautyBookingCard } from "../../../../other-services/dashboard/componen
 import { normalizeBeautyBooking } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
+import ImageUploadField from "../../../../components/ImageUploadField";
+import { uploadPackagePhoto } from "../../../../api/packagePhotos";
+import { useAuthStore } from "../../../../stores/auth.store";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
 import { useState, useEffect } from "react";
 import { Bike, Car } from "lucide-react";
@@ -15,13 +18,24 @@ import {
   bookingPost,
   getUserBookings,
   getBookingsDetails,
-  searchServiceProviders,
 } from "../../../../api/bookings";
 import { allowSystem } from "../../../../api/bookings";
 import { getPromoEligibility } from "../../../../api/payment";
 import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
-import { BEAUTY_PROVIDER_SEARCH_NAMES } from "../../../../constants/beautyServices";
+import { getServiceCategoryBackendId } from "../../../../constants/serviceCategories";
+import {
+  exploreCategories,
+  getCategoryDestination,
+} from "../../../../other-services/dashboard/data/exploreCategories";
+
+// Every bookable service category; transport keeps its own ride/delivery flow.
+const SERVICE_CATEGORY_CHOICES = exploreCategories
+  .filter((category) => category.to)
+  .map((category) => ({
+    category,
+    value: getServiceCategoryBackendId(category),
+  }));
 
 const vehicleOptions = (service) => {
   const isRide = service === "book a ride";
@@ -45,11 +59,16 @@ const vehicleOptions = (service) => {
   ];
 };
 
+const normalizeServiceType = (value) =>
+  String(value || "").trim().toLowerCase().replace(/-/g, "_");
+
+const SERVICE_BOOKING_TYPES = new Set(
+  SERVICE_CATEGORY_CHOICES.map(({ value }) => normalizeServiceType(value)),
+);
+
+// Scheduled service bookings (any non-transport category) share the beauty card.
 const isBeautyBooking = (booking) =>
-  String(booking?.serviceType || "")
-    .trim()
-    .toLowerCase()
-    .replace(/-/g, "_") === "beauty_personal_care";
+  SERVICE_BOOKING_TYPES.has(normalizeServiceType(booking?.serviceType));
 
 const getBookingTimestamp = (booking) => {
   const value =
@@ -89,11 +108,17 @@ export default function Bookings() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadingPackagePhoto, setUploadingPackagePhoto] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const userEmail =
+    user?.email ||
+    user?.data?.email ||
+    user?.user?.email ||
+    user?.data?.user?.email ||
+    localStorage.getItem("email");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [pickupMode, setPickupMode] = useState("manual");
-  const [beautyLocationLoading, setBeautyLocationLoading] = useState(false);
-  const [beautyLocationError, setBeautyLocationError] = useState("");
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
@@ -188,23 +213,16 @@ export default function Bookings() {
       scheduleDate: "",
       scheduleTime: "",
       modeOfDelivery: "",
+      packageImage: "",
       autoAcceptNearest: false,
       applyRideDiscount: false,
     },
     validationSchema: Yup.object().shape({
       jobTitle: Yup.string().required("Work category is required"),
       service: Yup.string().required("Sub-category is required"),
-      pickupAddress: Yup.string().required("Pickup location is required"),
-      pickupLatitude: Yup.string().when("jobTitle", {
-        is: "beauty_personal_care",
-        then: (schema) =>
-          schema.required("Choose a location from the suggestions."),
-        otherwise: (schema) => schema.notRequired(),
-      }),
-      pickupLongitude: Yup.string().when("jobTitle", {
-        is: "beauty_personal_care",
-        then: (schema) =>
-          schema.required("Choose a location from the suggestions."),
+      pickupAddress: Yup.string().when("jobTitle", {
+        is: "transport",
+        then: (schema) => schema.required("Pickup location is required"),
         otherwise: (schema) => schema.notRequired(),
       }),
       dropoffAddress: Yup.string().when("jobTitle", {
@@ -220,6 +238,11 @@ export default function Bookings() {
       modeOfDelivery: Yup.string().when("jobTitle", {
         is: "transport",
         then: (schema) => schema.required("Please choose a vehicle"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      packageImage: Yup.string().when(["jobTitle", "service"], {
+        is: (jobTitle, service) => jobTitle === "transport" && service === "package delivery",
+        then: (schema) => schema.required("Upload a photo of the package you want to send."),
         otherwise: (schema) => schema.notRequired(),
       }),
       scheduleDate: Yup.date().when(["jobTitle", "serviceType"], {
@@ -242,6 +265,7 @@ export default function Bookings() {
       }),
     }),
     onSubmit: async (values) => {
+      if (uploadingPackagePhoto) return;
       console.log("Submitting booking with values:", values);
       setSuccessMessage("");
       setErrorMessage("");
@@ -249,34 +273,16 @@ export default function Bookings() {
       setLoading(true);
 
       try {
-        if (values.jobTitle === "beauty_personal_care") {
+        if (values.jobTitle !== "transport") {
+          // The category page finds the user's location, like homepage search.
+          const choice = SERVICE_CATEGORY_CHOICES.find(
+            (item) => item.value === values.jobTitle,
+          );
           const finalServiceName =
             values.service === "Other"
               ? customBeautyService.trim()
               : values.service;
-
-          const searchLocation = {
-            latitude: Number(values.pickupLatitude),
-            longitude: Number(values.pickupLongitude),
-          };
-          const searchResponse = await searchServiceProviders({
-            location: searchLocation,
-            serviceName: finalServiceName,
-          });
-
-          navigate(
-            `/dashboard/categories/beauty-personal-care?service=${encodeURIComponent(finalServiceName)}`,
-            {
-              state: {
-                beautySearch: {
-                  location: searchLocation,
-                  address: values.pickupAddress,
-                  serviceName: finalServiceName,
-                  response: searchResponse,
-                },
-              },
-            },
-          );
+          navigate(getCategoryDestination(choice.category, finalServiceName));
           return;
         }
 
@@ -313,6 +319,9 @@ export default function Bookings() {
             dropoffCoords?.longitude || values.dropoffLongitude || undefined,
           scheduleType: values.serviceType,
           modeOfDelivery: values.modeOfDelivery,
+          ...(values.jobTitle === "transport" && values.service === "package delivery"
+            ? { packageImage: values.packageImage }
+            : {}),
           applyRideDiscount: values.applyRideDiscount,
           scheduleDate:
             values.serviceType === "scheduled"
@@ -359,25 +368,14 @@ export default function Bookings() {
     },
   });
 
-  const isBeautyFlow = formik.values.jobTitle === "beauty_personal_care";
-  const hasBeautySearchCoordinates =
-    String(formik.values.pickupLatitude ?? "").trim() !== "" &&
-    String(formik.values.pickupLongitude ?? "").trim() !== "" &&
-    Number.isFinite(Number(formik.values.pickupLatitude)) &&
-    Number.isFinite(Number(formik.values.pickupLongitude));
+  const isServiceFlow = Boolean(
+    formik.values.jobTitle && formik.values.jobTitle !== "transport",
+  );
 
-  const isFormReady = isBeautyFlow
+  const isFormReady = isServiceFlow
     ? Boolean(
         formik.values.service &&
-        formik.values.service !== "Other" &&
-        formik.values.pickupAddress &&
-        hasBeautySearchCoordinates,
-      ) ||
-      Boolean(
-        formik.values.service === "Other" &&
-        customBeautyService.trim() &&
-        formik.values.pickupAddress &&
-        hasBeautySearchCoordinates,
+        (formik.values.service !== "Other" || customBeautyService.trim()),
       )
     : Boolean(
         formik.values.service &&
@@ -385,6 +383,7 @@ export default function Bookings() {
         formik.values.dropoffAddress &&
         formik.values.serviceType &&
         formik.values.modeOfDelivery &&
+        (formik.values.service !== "package delivery" || Boolean(formik.values.packageImage)) &&
         (formik.values.serviceType !== "scheduled" ||
           (formik.values.scheduleDate && formik.values.scheduleTime)),
       );
@@ -599,44 +598,6 @@ export default function Bookings() {
   };
 
   const handlePickupModeChange = (mode) => {
-    if (mode === "current" && isBeautyFlow) {
-      if (!navigator.geolocation) {
-        setBeautyLocationError(
-          "Location services are not available in this browser.",
-        );
-        return;
-      }
-
-      setBeautyLocationError("");
-      setBeautyLocationLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        ({ coords }) => {
-          formik.setValues(
-            (values) => ({
-              ...values,
-              pickupAddress: currentLocationValue || "Current location",
-              pickupLatitude: String(coords.latitude),
-              pickupLongitude: String(coords.longitude),
-            }),
-            false,
-          );
-          setPickupMode("current");
-          setBeautyLocationLoading(false);
-        },
-        (locationError) => {
-          setBeautyLocationError(
-            locationError.code === 1
-              ? "Allow location access in your browser, or enter an address manually."
-              : "Could not get your location. Try again or enter an address manually.",
-          );
-          setPickupMode("manual");
-          setBeautyLocationLoading(false);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-      );
-      return;
-    }
-
     if (mode === "current" && !hasCurrentLocation) {
       setErrorMessage("Current location is not available yet.");
       return;
@@ -660,10 +621,6 @@ export default function Bookings() {
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
         );
       }
-    } else if (isBeautyFlow) {
-      setBeautyLocationError("");
-      formik.setFieldValue("pickupLatitude", "");
-      formik.setFieldValue("pickupLongitude", "");
     }
   };
 
@@ -743,10 +700,10 @@ export default function Bookings() {
                 options={[
                   { label: "Select category", value: "" },
                   { label: "Transport & Logistics", value: "transport" },
-                  {
-                    label: "Beauty & Personal Care",
-                    value: "beauty_personal_care",
-                  },
+                  ...SERVICE_CATEGORY_CHOICES.map(({ category, value }) => ({
+                    label: category.label,
+                    value,
+                  })),
                 ]}
                 value={formik.values.jobTitle}
                 onChange={(option) => {
@@ -774,10 +731,13 @@ export default function Bookings() {
                 options={
                   !formik.values.jobTitle
                     ? [{ label: "Select category first", value: "" }]
-                    : formik.values.jobTitle === "beauty_personal_care"
+                    : isServiceFlow
                       ? [
                           { label: "Select a service", value: "" },
-                          ...BEAUTY_PROVIDER_SEARCH_NAMES.map((service) => ({
+                          ...(SERVICE_CATEGORY_CHOICES.find(
+                            (item) => item.value === formik.values.jobTitle,
+                          )?.category.serviceNames || []
+                          ).map((service) => ({
                             label: service,
                             value: service,
                           })),
@@ -813,12 +773,12 @@ export default function Bookings() {
             </div>
 
             {/* ✅ Custom input field when "Other" is selected */}
-            {isBeautyFlow && formik.values.service === "Other" && (
+            {isServiceFlow && formik.values.service === "Other" && (
               <div className="mt-3">
                 <InputField
                   name="customService"
                   label="Specify Service"
-                  placeholder="e.g. Eyelash Extensions, Dreadlocks"
+                  placeholder="Describe the service you need"
                   value={customBeautyService}
                   onChange={(e) => {
                     setCustomBeautyService(e.target.value);
@@ -827,101 +787,7 @@ export default function Bookings() {
               </div>
             )}
 
-            {isBeautyFlow && formik.values.service && (
-              <div id="booking-location" className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handlePickupModeChange("current")}
-                    disabled={beautyLocationLoading}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                      pickupMode === "current"
-                        ? "border-[#005823] bg-[#f0f9f4] text-[#005823]"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-[#005823] hover:text-[#005823]"
-                    } disabled:cursor-wait disabled:opacity-50`}
-                  >
-                    {beautyLocationLoading
-                      ? "Getting current location..."
-                      : "Use current location"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handlePickupModeChange("manual")}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                      pickupMode === "manual"
-                        ? "border-[#005823] bg-[#f0f9f4] text-[#005823]"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-[#005823] hover:text-[#005823]"
-                    }`}
-                  >
-                    Enter manually
-                  </button>
-                </div>
-                {pickupMode === "current" ? (
-                  <InputField
-                    name="pickupAddress"
-                    label="Location"
-                    value={formik.values.pickupAddress}
-                    onBlur={formik.handleBlur}
-                    readOnly
-                  />
-                ) : (
-                  <LocationAutocomplete
-                    name="pickupAddress"
-                    label="Location"
-                    placeholder="Enter an address"
-                    value={formik.values.pickupAddress}
-                    onChange={(value) => {
-                      setBeautyLocationError("");
-                      formik.setFieldValue("pickupAddress", value);
-                      formik.setFieldValue("pickupLatitude", "");
-                      formik.setFieldValue("pickupLongitude", "");
-                    }}
-                    onSelect={(selectedLocation) => {
-                      formik.setFieldValue(
-                        "pickupAddress",
-                        selectedLocation.displayAddress ||
-                          selectedLocation.address ||
-                          "",
-                      );
-                      formik.setFieldValue(
-                        "pickupLatitude",
-                        selectedLocation.latitude ?? "",
-                      );
-                      formik.setFieldValue(
-                        "pickupLongitude",
-                        selectedLocation.longitude ?? "",
-                      );
-                    }}
-                    onBlur={() => formik.setFieldTouched("pickupAddress", true)}
-                  />
-                )}
-                {beautyLocationError && (
-                  <p role="alert" className="text-sm text-red-600">
-                    {beautyLocationError}
-                  </p>
-                )}
-                {formik.touched.pickupAddress &&
-                  (formik.errors.pickupAddress ||
-                    formik.errors.pickupLatitude ||
-                    formik.errors.pickupLongitude) && (
-                    <p className="text-sm text-red-600">
-                      {formik.errors.pickupAddress ||
-                        formik.errors.pickupLatitude ||
-                        formik.errors.pickupLongitude}
-                    </p>
-                  )}
-                {pickupMode === "manual" &&
-                  formik.values.pickupAddress &&
-                  !hasBeautySearchCoordinates && (
-                    <p className="text-sm text-gray-500">
-                      Select an address from the suggestions to use it for
-                      provider search.
-                    </p>
-                  )}
-              </div>
-            )}
-
-            {!isBeautyFlow && formik.values.service && (
+            {!isServiceFlow && formik.values.service && (
               <div id="booking-location" className="space-y-4">
                 <div>
                   <div className="mb-2 flex items-center gap-2">
@@ -1034,7 +900,7 @@ export default function Bookings() {
               </div>
             )}
 
-            {!isBeautyFlow && formik.values.service && (
+            {!isServiceFlow && formik.values.service && (
               <div>
                 <InputField
                   label="Service Type"
@@ -1058,7 +924,7 @@ export default function Bookings() {
               </div>
             )}
 
-            {!isBeautyFlow &&
+            {!isServiceFlow &&
               formik.values.service &&
               formik.values.serviceType === "scheduled" && (
                 <div className="flex gap-6">
@@ -1099,7 +965,7 @@ export default function Bookings() {
                 </div>
               )}
 
-            {!isBeautyFlow && formik.values.service && (
+            {!isServiceFlow && formik.values.service && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Choose Vehicle
@@ -1161,11 +1027,25 @@ export default function Bookings() {
               </div>
             )}
 
+            {formik.values.jobTitle === "transport" && formik.values.service === "package delivery" && (
+              <ImageUploadField
+                label="Package image"
+                prompt="Drop a package photo here or"
+                required
+                value={formik.values.packageImage}
+                onChange={(url) => formik.setFieldValue("packageImage", url)}
+                uploadFile={(file) => uploadPackagePhoto(userEmail, file)}
+                onUploadingChange={setUploadingPackagePhoto}
+                error={formik.touched.packageImage ? formik.errors.packageImage : undefined}
+                disabled={loading}
+              />
+            )}
+
             <div className="flex flex-col">
               <Button
                 variant="secondary"
                 type="submit"
-                disabled={loading || !isFormReady}
+                disabled={loading || uploadingPackagePhoto || !isFormReady}
               >
                 {loading ? "Creating Booking..." : "Post Request"}
               </Button>

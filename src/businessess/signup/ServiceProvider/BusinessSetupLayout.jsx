@@ -1,5 +1,6 @@
 import SidebarProgress from "../../../components/SidebarProgress";
 import { motion } from "framer-motion";
+import OnboardingLayout from "../../../components/onboarding/OnboardingLayout";
 
 const MotionDiv = motion.div;
 const MotionMain = motion.main;
@@ -8,6 +9,7 @@ export default function BusinessSetupLayout({
   currentStep,
   children,
   contentClassName = "",
+  matchIndividual = false,
 }) {
   const steps = [
     // "Account Type",
@@ -17,6 +19,10 @@ export default function BusinessSetupLayout({
     // "Add Driver",
     // "Income Split",
   ];
+
+  if (matchIndividual) {
+    return <OnboardingLayout steps={steps} currentStep={currentStep} sidebar={<SidebarProgress steps={steps} currentStep={currentStep} />} alignTop>{children}</OnboardingLayout>;
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen p-4 sm:p-8 bg-white relative">

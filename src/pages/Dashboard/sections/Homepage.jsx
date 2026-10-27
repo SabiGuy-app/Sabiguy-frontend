@@ -2,18 +2,16 @@ import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import ProviderCard from "../../../components/dashboard/ProviderCard";
 import CategoryCarousel from "../../../components/dashboard/CategoryCarousel";
 import Button from "../../../components/dashboard/Button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/auth.store";
 // import { getAllProviders } from "../../../api/provider";
-import { useEffect, useState } from "react";
-import { getProviderDirectory } from "../../../api/provider";
+import { useState } from "react";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
 import {
   exploreCategories,
   getCategoryDestination,
 } from "../../../other-services/dashboard/data/exploreCategories";
-import { BEAUTY_PROVIDER_SEARCH_NAMES } from "../../../constants/beautyServices";
 import new1 from "/new1.png";
 import new2 from "/new2.png";
 import new3 from "/new3.png";
@@ -26,60 +24,48 @@ import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import DashboardTour from "../../../components/tour/DashboardTour";
 import NotificationTest from "../../../services/testNotify";
 
-const beautyCategory = exploreCategories.find((category) => category.id === "beauty");
-const buildSearchableTasks = (providerServiceNames) => Array.from(
+// Every service in the shared constants, each linking to its category page.
+// The category page then asks the backend which providers actually offer it.
+const searchableTasks = Array.from(
   new Map(
-    [
-      ...BEAUTY_PROVIDER_SEARCH_NAMES.map((task) => ({ category: beautyCategory, task })),
-      ...providerServiceNames.map((task) => ({ category: beautyCategory, task })),
-      ...exploreCategories
-        .filter((category) => !category.comingSoon)
-        .flatMap((category) => category.tasks.map((task) => ({ category, task }))),
-    ].map(({ category, task }) => {
-      const destination = getCategoryDestination(category, task);
-      return [destination, { label: task, category: category.title, destination }];
-    }),
+    exploreCategories
+      .flatMap((category) =>
+        (category.id === "transport" ? category.tasks : category.serviceNames)
+          .map((task) => ({ category, task })),
+      )
+      .map(({ category, task }) => {
+        const destination = getCategoryDestination(category, task);
+        return [destination, { label: task, category: category.title, destination }];
+      }),
   ).values(),
 );
 
+const COLLAPSED_SUGGESTION_COUNT = 4;
+const HOMEPAGE_CATEGORY_COUNT = 3;
+
+const findCategory = (id) => exploreCategories.find((category) => category.id === id);
+
 export default function DashboardHome() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [providerServiceNames, setProviderServiceNames] = useState([]);
+  const [showAllSuggestions, setShowAllSuggestions] = useState(false);
   const hydrated = useAuthStore((state) => state.hydrated);
   // const { providers, setProviders } = useProviderStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
-  useEffect(() => {
-    if (!hydrated) return undefined;
-    let active = true;
-    getProviderDirectory({ service: "beauty_personal_care", page: 1, limit: 100 })
-      .then((response) => {
-        if (!active) return;
-        const providers = Array.isArray(response?.data) ? response.data : [];
-        const names = providers.flatMap((provider) =>
-          (provider.service || provider.services || []).map(
-            (service) => service?.serviceName,
-          ),
-        ).filter(Boolean);
-        setProviderServiceNames([...new Set(names)]);
-      })
-      .catch(() => {
-        // The listed tasks remain searchable if the directory is unavailable.
-      });
-    return () => { active = false; };
-  }, [hydrated]);
 
-  const matchingTasks = buildSearchableTasks(providerServiceNames).filter(({ label, category, destination }) => {
-    const query = searchTerm.trim().toLowerCase();
-    if (!query) return false;
-    const service = new URLSearchParams(destination.split("?")[1]).get("service") || "";
-    return [label, category, service].some((value) => value.toLowerCase().includes(query));
-  });
+  const query = searchTerm.trim().toLowerCase();
+  const matchingTasks = query
+    ? searchableTasks.filter(({ label, category }) =>
+        [label, category].some((value) => value.toLowerCase().includes(query)),
+      )
+    : [];
+
+  const providerSearchPath = `/dashboard/search?q=${encodeURIComponent(searchTerm.trim())}`;
 
   const submitSearch = () => {
-    if (matchingTasks.length) navigate(matchingTasks[0].destination);
+    if (query) navigate(providerSearchPath);
   };
 
   if (!hydrated) {
@@ -114,21 +100,21 @@ export default function DashboardHome() {
       description: "Reliable welding for repairs and fabrication",
       image: new3,
       // bgColor: "#72280080",
-      comingSoon: true,
+      destination: getCategoryDestination(findCategory("home-repair"), "Welder"),
     },
     {
       title: "Household Support",
       description: "Quick, dependable household assistance anytime.",
       image: new4,
       bgColor: "#0054AE80",
-      comingSoon: true,
+      destination: getCategoryDestination(findCategory("domestic")),
     },
     {
       title: "Towing & Roadside",
       description: "Fast help for breakdowns and emergencies",
       image: new5,
       bgColor: "#B100004D",
-      comingSoon: true,
+      destination: getCategoryDestination(findCategory("automotive"), "Towing"),
     },
     {
       title: "Legal & Financial",
@@ -142,7 +128,7 @@ export default function DashboardHome() {
       description: "Fast help for breakdowns and emergencies",
       image: new7,
       bgColor: "#BF4A0B4D",
-      comingSoon: true,
+      destination: getCategoryDestination(findCategory("home-repair"), "Plumber"),
     },
     {
       title: "Digital Design",
@@ -171,6 +157,10 @@ export default function DashboardHome() {
 
   const handleCategoryClick = (category) => {
     if (category.comingSoon) return;
+    if (category.destination) {
+      navigate(category.destination);
+      return;
+    }
     const serviceValue = categoryServiceMap[category.title];
     if (serviceValue) {
       navigate(`/bookings?service=${encodeURIComponent(serviceValue)}`);
@@ -192,7 +182,10 @@ export default function DashboardHome() {
   return (
     <DashboardLayout
       searchValue={searchTerm}
-      onSearchChange={setSearchTerm}
+      onSearchChange={(value) => {
+        setSearchTerm(value);
+        setShowAllSuggestions(false);
+      }}
       onSearchSubmit={submitSearch}
       searchPlaceholder="Search for anything"
     >
@@ -208,11 +201,14 @@ export default function DashboardHome() {
       </div>
 
       {searchTerm.trim() && (
-        <section aria-label="Task search results" className="mb-6 mt-4 max-w-2xl">
-          <h3 className="mb-2 text-sm font-semibold text-[#231F20]">Tasks</h3>
+        <section aria-label="Service search results" className="mb-6 mt-4 max-w-2xl">
+          <h3 className="mb-2 text-sm font-semibold text-[#231F20]">Services</h3>
           {matchingTasks.length ? (
             <ul className="divide-y divide-gray-200 border-y border-gray-200">
-              {matchingTasks.map((task) => (
+              {(showAllSuggestions
+                ? matchingTasks
+                : matchingTasks.slice(0, COLLAPSED_SUGGESTION_COUNT)
+              ).map((task) => (
                 <li key={task.destination}>
                   <button
                     type="button"
@@ -225,7 +221,30 @@ export default function DashboardHome() {
                 </li>
               ))}
             </ul>
-          ) : <p className="py-3 text-sm text-gray-500">No matching task found.</p>}
+          ) : <p className="py-3 text-sm text-gray-500">No matching service found.</p>}
+          {matchingTasks.length > COLLAPSED_SUGGESTION_COUNT && (
+            <button
+              type="button"
+              onClick={() => setShowAllSuggestions((value) => !value)}
+              aria-expanded={showAllSuggestions}
+              className="mt-2 text-sm font-semibold text-[#005823] hover:underline focus-visible:outline-2 focus-visible:outline-[#005823]"
+            >
+              {showAllSuggestions
+                ? "View less"
+                : `View more (${matchingTasks.length - COLLAPSED_SUGGESTION_COUNT})`}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={submitSearch}
+            className="mt-4 flex w-full items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-left text-sm hover:border-[#005823] hover:text-[#005823] focus-visible:outline-2 focus-visible:outline-[#005823]"
+          >
+            <Search size={17} className="shrink-0 text-[#005823]" aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">
+              Search providers &amp; businesses for “{searchTerm.trim()}”
+            </span>
+            <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
+          </button>
         </section>
       )}
 
@@ -278,7 +297,7 @@ export default function DashboardHome() {
         </div>
         <div id="explore-categories">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((ser, idx) => {
+            {services.slice(0, HOMEPAGE_CATEGORY_COUNT).map((ser, idx) => {
               return (
                 <ServicesCard
                   key={idx}
@@ -292,6 +311,18 @@ export default function DashboardHome() {
               );
             })}
           </div>
+          {services.length > HOMEPAGE_CATEGORY_COUNT && (
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/categories")}
+                className="inline-flex items-center gap-2 rounded-md border border-[#34805A] px-5 py-2.5 text-sm font-semibold text-[#005823] hover:bg-[#E7F6EC] focus-visible:outline-2 focus-visible:outline-[#005823]"
+              >
+                View more categories
+                <ArrowRight size={16} aria-hidden="true" />
+              </button>
+            </div>
+          )}
         </div>
 
         <ComingSoonModal

@@ -22,10 +22,6 @@ import {
 } from "../utils/animations";
 import { useNavigate } from "react-router-dom";
 import OptimizedImage from "../components/common/OptimizedImage";
-//import Assign from "../components/Assign.jsx";
-//import Return from "../components/Return.jsx";
-//import Invite from "../components/Invite.jsx";
-//import BookingSummary2 from "../pages/Dashboard/sections/Bookings/BookingSummary2.jsx"
 
 
 // Animated Counter Component
@@ -799,11 +795,6 @@ const LandingPage = () => {
           </div>
         </motion.div>
       </section>
-     {/*<Assign/>
-       <Return/>
-      <Invite />
-      <Booking/>
-       <BookingSummary2/>*/}
       <LandingFooter />
       <LandingChatbotWidget />
     </div>
@@ -977,7 +968,7 @@ const faqs = [
   {
     question: "What is SabiGuy?",
     answer:
-      "SabiGuy is a platform that connects people and businesses with trusted local service providers. Whether you need to send a package, run an errand, or get a task done at home, SabiGuy helps you find someone nearby who can do it quickly and reliably at a fair price.",
+      "SabiGuy connects individuals and businesses with skilled artisans, trusted service providers, and logistics professionals for a wide range of everyday needs. From dispatch and delivery to home repairs, maintenance, and other professional services, SabiGuy makes it easier to find and access the right help in one place.",
   },
   {
     question: "How does SabiGuy work?",

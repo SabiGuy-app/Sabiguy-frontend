@@ -2,12 +2,10 @@ import { useRef, useState } from "react";
 import { UploadCloud, X, FileText } from "lucide-react";
 import BusinessSetupLayout from "../BusinessSetupLayout";
 import Button from "../../../../components/button";
-import UploadBox from "../../../../components/uploadBox";
 import axios from "axios";
 
 const MAX_FILE_SIZE_MB = 5;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
-const MIN_BUSINESS_PHOTOS = 1;
 
 // Single-file documents: id, upload folder, label, description
 const SINGLE_DOCUMENTS = [
@@ -34,10 +32,6 @@ export default function BusinessVerification({ onBack, onNext }) {
   const [uploading, setUploading] = useState({}); // single-doc uploading flags: { [id]: bool }
   const [fieldErrors, setFieldErrors] = useState({}); // single-doc errors: { [id]: string }
   const inputRefs = useRef({});
-
-  const [businessPhotos, setBusinessPhotos] = useState([]); // [{ id, name, url }]
-  const [uploadingBusinessPhotos, setUploadingBusinessPhotos] = useState(false);
-  const [businessPhotoError, setBusinessPhotoError] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -114,31 +108,23 @@ export default function BusinessVerification({ onBack, onNext }) {
     if (inputRefs.current[doc.id]) inputRefs.current[doc.id].value = "";
   };
 
-  // ---- Business photos (multiple) ----
-
-  const handleRemoveBusinessPhoto = (id) => {
-    setBusinessPhotos((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  const canContinue = SINGLE_DOCUMENTS.every((doc) => Boolean(files[doc.id]?.url)) &&
-    businessPhotos.filter((photo) => photo.url).length >= MIN_BUSINESS_PHOTOS;
-
+  const canContinue = SINGLE_DOCUMENTS.every((doc) =>
+    Boolean(files[doc.id]?.url),
+  );
 
   const handleSubmit = async () => {
     setErrorMessage("");
     setSuccessMessage("");
 
-    if (Object.values(uploading).some(Boolean) || uploadingBusinessPhotos) {
+    if (Object.values(uploading).some(Boolean)) {
       setErrorMessage("Please wait for uploads to finish.");
       return;
     }
 
     const missingSingle = SINGLE_DOCUMENTS.filter((doc) => !files[doc.id]);
-    const missingBusinessPhotos = businessPhotos.length < MIN_BUSINESS_PHOTOS;
 
-    if (missingSingle.length > 0 || missingBusinessPhotos) {
+    if (missingSingle.length > 0) {
       const missingLabels = missingSingle.map((d) => d.label);
-      if (missingBusinessPhotos) missingLabels.push("Business/Store photo");
       setErrorMessage(`Please upload: ${missingLabels.join(", ")}.`);
       return;
     }
@@ -148,7 +134,7 @@ export default function BusinessVerification({ onBack, onNext }) {
       const payload = {
         cacCertificateUrl: files.cacCertificate.url,
         profilePhotoUrl: files.profilePhoto.url,
-        businessPhotos: businessPhotos.map((p) => p.url),
+        businessPhotos: [],
       };
 
       const response = await axios.post(
@@ -191,7 +177,7 @@ export default function BusinessVerification({ onBack, onNext }) {
           <h1 className="text-[20px] font-semibold text-[#231F20]">
             Business Verification
           </h1>
-          <p className="mt-1.5 text-[16px] leading-snug text-[#231F20BF]">
+          <p className="mt-1.5 text-[15px] leading-6 text-[#231F20BF]">
             We just need a few documents to confirm your business details and
             get you set up on SabiGuy.
           </p>
@@ -204,7 +190,7 @@ export default function BusinessVerification({ onBack, onNext }) {
 
               return (
                 <div key={doc.id}>
-                  <label className="block text-base font-medium text-[#231F20] mb-1">
+                  <label className="mb-1 block text-sm font-medium text-[#231F20]">
                     {doc.label}
                   </label>
                   <p className="mb-2 text-sm leading-relaxed text-[#231F20BF]">
@@ -236,7 +222,7 @@ export default function BusinessVerification({ onBack, onNext }) {
                       type="button"
                       disabled={isUploading || submitting}
                       onClick={() => inputRefs.current[doc.id]?.click()}
-                      className={`flex w-full items-center justify-center gap-2 rounded-md border border-gray-400 bg-gray-50 px-5 py-4 text-base text-[#231F20BF] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8BC53FBF] ${
+                      className={`flex w-full items-center justify-center gap-2 rounded-md border border-gray-400 bg-gray-50 px-5 py-4 text-sm text-[#231F20BF] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8BC53FBF] ${
                         isUploading
                           ? "cursor-not-allowed opacity-60"
                           : "cursor-pointer hover:bg-gray-100"
@@ -264,15 +250,15 @@ export default function BusinessVerification({ onBack, onNext }) {
             })}
 
             {/* Business/Store photos - multiple */}
-            <div>
-              <label className="block text-base font-medium text-[#231F20] mb-1">
+            {/* <div>
+              <label className="mb-1 block text-sm font-medium text-[#231F20]">
                 Business/Store photo{" "}
                 <span className="font-normal text-gray-500">
                   (you can upload more than one)
                 </span>
               </label>
               <p className="mb-2 text-sm leading-relaxed text-[#231F20BF]">
-                Upload clear photos of your shop, store, or business premises.
+                Upload clear photos of your shop, store, or office.
               </p>
 
               <UploadBox accept={ACCEPTED_TYPES.join(",")} maxSizeMB={MAX_FILE_SIZE_MB}
@@ -321,14 +307,14 @@ export default function BusinessVerification({ onBack, onNext }) {
                   {businessPhotoError}
                 </p>
               )}
-            </div>
+            </div> */}
           </div>
 
           <div className="mt-8 flex justify-end gap-4">
-            <Button type="button" variant="ghost" onClick={onBack}
-              disabled={submitting || uploadingBusinessPhotos || Object.values(uploading).some(Boolean)}>Back</Button>
-            <Button type="button" onClick={handleSubmit}
-              disabled={!canContinue || submitting || uploadingBusinessPhotos || Object.values(uploading).some(Boolean)}>
+            <Button type="button" size="sm" variant="ghost" onClick={onBack}
+              disabled={submitting || Object.values(uploading).some(Boolean)}>Back</Button>
+            <Button type="button" size="sm" onClick={handleSubmit}
+              disabled={!canContinue || submitting || Object.values(uploading).some(Boolean)}>
               {submitting ? "Saving..." : "Save & Continue"}
             </Button>
           </div>
