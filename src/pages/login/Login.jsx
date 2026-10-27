@@ -273,6 +273,8 @@ export default function Login() {
         if (businessCategory) {
           localStorage.setItem("businessCategory", businessCategory);
         }
+        businessCategory =
+          businessCategory || localStorage.getItem("businessCategory");
       } catch (err) {
         console.warn("Could not load business category:", err.message);
       }
@@ -288,13 +290,17 @@ export default function Login() {
         return;
       }
 
+      const dashboardPath = CATEGORY_DASHBOARDS[businessCategory];
+
+      if (!dashboardPath) {
+        setErrorMessage(
+          "We couldn't find a dashboard for your business category. Please contact support.",
+        );
+        return;
+      }
+
       setRedirecting(true);
-      navigate(
-        businessCategory === "Beauty & Personal Care"
-          ? "/other-business-services/dashboard"
-          : "/business-provider/dashboard",
-        { replace: true },
-      );
+      navigate(dashboardPath, { replace: true });
       return;
     }
 
@@ -313,6 +319,11 @@ export default function Login() {
       setRedirecting(true);
       navigate("/dashboard/provider", { replace: true });
     }
+  };
+
+  const CATEGORY_DASHBOARDS = {
+    "Transport & Logistics": "/business-provider/dashboard",
+    "Beauty & Personal Care": "/other-business-services/dashboard",
   };
 
   // ── Email / password login ─────────────────────────────────────────────────

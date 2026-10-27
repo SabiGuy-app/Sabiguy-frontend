@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Clock3, House, Info, Plus, Store, Trash2, X } from "lucide-react";
+import {
+  Clock3,
+  House,
+  Info,
+  Loader2,
+  Plus,
+  Store,
+  Trash2,
+  X,
+} from "lucide-react";
 
 const durationOptions = [
   "15 mins",
@@ -19,7 +28,7 @@ const suggestedIncludedItems = [
 ];
 
 const locationIcon = (location) => {
-  if (location === "Walk in Salon") return Store;
+  if (location === "Office / Commercial Space") return Store;
   if (location === "My home Address") return House;
   return House;
 };
@@ -34,6 +43,8 @@ export default function ServiceDetailsModal({
   const [draft, setDraft] = useState(service);
   const [itemDraft, setItemDraft] = useState("");
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (!isOpen) return;
@@ -47,6 +58,8 @@ export default function ServiceDetailsModal({
     });
     setItemDraft("");
     setIsAddingItem(false);
+    setIsSaving(false);
+    setSaveError("");
   }, [isOpen, service]);
 
   if (!isOpen || !draft) return null;
@@ -93,9 +106,23 @@ export default function ServiceDetailsModal({
     }));
   };
 
-  const save = (event) => {
+  const save = async (event) => {
     event.preventDefault();
-    onSave(draft);
+    if (isSaving) return;
+
+    setIsSaving(true);
+    setSaveError("");
+    try {
+      await onSave(draft);
+    } catch (error) {
+      setSaveError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save service details. Please try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -110,6 +137,7 @@ export default function ServiceDetailsModal({
         <button
           type="button"
           onClick={onClose}
+          disabled={isSaving}
           aria-label="Close service details"
           className="absolute right-4 top-4 rounded p-1 text-[#777777] hover:bg-[#F3F3F3]"
         >
@@ -118,8 +146,12 @@ export default function ServiceDetailsModal({
         <h2 className="pr-8 text-base font-semibold text-[#292929]">
           Service Details
         </h2>
+        <p className="mt-1 text-[10px] text-[#777777]">
+          This endpoint saves the service name and pricing. Duration and
+          included items are not saved by this endpoint.
+        </p>
 
-        <div className="mt-5 space-y-4">
+        <div className="mt-5 space-y-4" aria-busy={isSaving}>
           <label className="block text-xs font-medium text-[#353535]">
             Service Name
             <input
@@ -292,6 +324,10 @@ export default function ServiceDetailsModal({
                 <p className="mt-0.5 text-[10px] text-[#888888]">
                   Set a price and duration for each service location.
                 </p>
+                <p className="mt-0.5 text-[10px] text-[#888888]">
+                  Office / Commercial Space prices are saved as
+                  provider_address.
+                </p>
               </div>
               <button
                 type="button"
@@ -380,19 +416,27 @@ export default function ServiceDetailsModal({
           </div>
         </div>
 
+        {saveError && (
+          <p role="alert" className="mt-3 text-xs text-red-600">
+            {saveError}
+          </p>
+        )}
         <footer className="mt-4 flex justify-between gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="h-10 rounded-md border border-[#DADADA] px-6 text-xs font-medium text-[#444444] hover:bg-[#F7F7F7]"
+            disabled={isSaving}
+            className="h-10 rounded-md border border-[#DADADA] px-6 text-xs font-medium text-[#444444] hover:bg-[#F7F7F7] disabled:cursor-wait disabled:opacity-60"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="h-10 min-w-28 rounded-md bg-[#347B54] px-6 text-xs font-medium text-white hover:bg-[#286642]"
+            disabled={isSaving}
+            className="inline-flex h-10 min-w-28 items-center justify-center gap-2 rounded-md bg-[#347B54] px-6 text-xs font-medium text-white hover:bg-[#286642] disabled:cursor-wait disabled:opacity-60"
           >
-            Save
+            {isSaving && <Loader2 size={14} className="animate-spin" />}
+            {isSaving ? "Saving..." : "Save"}
           </button>
         </footer>
       </form>
