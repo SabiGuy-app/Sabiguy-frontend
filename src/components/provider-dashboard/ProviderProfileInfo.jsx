@@ -144,7 +144,7 @@ export default function ProviderProfileInfoTab({ user }) {
           <label
             htmlFor="textarea-message"
           >
-            About us
+            About
           </label>
 
           <textarea
