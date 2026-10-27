@@ -12,22 +12,55 @@ const INITIAL_PAYOUT = {
   verification: "Verified",
 };
 
-export default function BusinessSettingsTab() {
+export default function BusinessSettingsTab({ business, loading, error }) {
   const [payout, setPayout] = useState(INITIAL_PAYOUT);
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [automaticPayouts, setAutomaticPayouts] = useState(true);
   const [threshold, setThreshold] = useState("5000");
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
+  if (loading) {
+    return (
+      <div className="space-y-4 p-4 animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="rounded-xl border border-[#E9E9E9] bg-white p-4"
+          >
+            <div className="h-4 w-32 bg-gray-200 rounded mb-4" />
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="h-3 w-24 bg-gray-100 rounded" />
+                <div className="h-3 w-40 bg-gray-100 rounded" />
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-3 w-20 bg-gray-100 rounded" />
+                <div className="h-3 w-28 bg-gray-100 rounded" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="m-4 rounded-lg border border-red-200 bg-red-50 p-4 text-xs text-red-600">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="py-1">
       <EditableSettingsSection
         title="Business profile"
         initialValues={{
-          businessName: "Sharp Edge Grooming",
-          owner: "Adewale Okonkwo",
-          city: "Ibadan",
-          address: "18 Admiralty Way, Lekki Phase 1",
+          businessName: business?.BusinessName || "__",
+          owner: business?.fullName || "__",
+          city: business?.cityOfOperation || "__",
+          address: business?.BusinessAddress || "__",
         }}
         fields={[
           { key: "businessName", label: "Business name" },
@@ -45,10 +78,10 @@ export default function BusinessSettingsTab() {
       <EditableSettingsSection
         title="Operating defaults"
         initialValues={{
-          city: "Ibadan",
-          currency: "NGN (₦)",
-          timezone: "WAT (GMT+1)",
-          weekStarts: "Monday",
+          city: business?.cityOfOperation || "__",
+          currency: business?.currency || "__",
+          timezone: business?.timezone || "__",
+          weekStarts: business?.weekStarts || "__",
         }}
         fields={[
           { key: "city", label: "City" },

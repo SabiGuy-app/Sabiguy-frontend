@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { handleLogout } from "../../../../../api/auth";
 import SettingsTabCard from "./SettingsTabCard";
 
 const initialPreferences = [
@@ -59,8 +61,17 @@ const channels = [
 ];
 
 export default function AccountSettingsTab() {
+  const navigate = useNavigate();
   const [preferences, setPreferences] = useState(initialPreferences);
   const [language, setLanguage] = useState("English");
+
+  const handleSignOut = async () => {
+    try {
+      await handleLogout();
+    } finally {
+      navigate("/login", { replace: true });
+    }
+  };
 
   const togglePreference = (id, channel) => {
     setPreferences((current) =>
@@ -153,6 +164,7 @@ export default function AccountSettingsTab() {
             </span>
             <button
               type="button"
+              onClick={handleSignOut}
               className="h-9 rounded-md border border-[#BFD8C7] px-3 text-xs font-medium text-[#347B54] hover:bg-[#F3F8F4]"
             >
               Sign out
