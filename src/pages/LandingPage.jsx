@@ -15,23 +15,17 @@ import {
 import { Link } from "react-router-dom";
 import LandingFooter from "../components/LandingFooter";
 import LandingChatbotWidget from "../components/LandingChatbotWidget";
-import { fadeInUp, fadeInDown, staggerContainer } from "../utils/animations";
+import {
+  fadeInUp,
+  fadeInDown,
+  staggerContainer,
+} from "../utils/animations";
 import { useNavigate } from "react-router-dom";
 import OptimizedImage from "../components/common/OptimizedImage";
-import AccountTypeModal from "../components/AccountTypeModal";
-//import Assign from "../components/Assign.jsx";
-//import Return from "../components/Return.jsx";
-//import Invite from "../components/Invite.jsx";
-//import BookingSummary2 from "../pages/Dashboard/sections/Bookings/BookingSummary2.jsx"
+
 
 // Animated Counter Component
-const AnimatedCounter = ({
-  from = 0,
-  to,
-  duration = 2,
-  start = true,
-  resetKey = 0,
-}) => {
+const AnimatedCounter = ({ from = 0, to, duration = 2, start = true, resetKey = 0 }) => {
   const [count, setCount] = useState(from);
 
   useEffect(() => {
@@ -86,7 +80,6 @@ const LandingPage = () => {
   const hasStartedStatsAnimation = useRef(false);
   const [openIndex, setOpenIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [isOpenModal, setIsOpenModal] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [statsAnimationKey, setStatsAnimationKey] = useState(0);
@@ -99,11 +92,11 @@ const LandingPage = () => {
   };
 
   const prev = () => {
-    setCurrent((value) => (value - 1 + slides.length) % slides.length);
+    setCurrent((value) => ((value - 1 + slides.length) % slides.length));
   };
 
   const next = () => {
-    setCurrent((value) => (value + 1) % slides.length);
+    setCurrent((value) => ((value + 1) % slides.length));
   };
 
   const handleTouchStart = (event) => {
@@ -128,7 +121,7 @@ const LandingPage = () => {
   useEffect(() => {
     if (!isPaused) {
       timerRef.current = setInterval(() => {
-        setCurrent((value) => (value + 1) % slides.length);
+        setCurrent((value) => ((value + 1) % slides.length));
       }, AUTOSLIDE_INTERVAL);
     }
     return () => clearInterval(timerRef.current);
@@ -168,16 +161,11 @@ const LandingPage = () => {
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
         className={`fixed left-0 right-0 top-0 z-50 w-full bg-white transition-shadow duration-300 ${
-          isScrolled
-            ? "border-b border-gray-100 shadow-md"
-            : "border-b border-gray-100"
+          isScrolled ? "border-b border-gray-100 shadow-md" : "border-b border-gray-100"
         }`}
       >
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 md:h-20 md:px-6">
-          <motion.div
-            whileHover={{ scale: 1.03 }}
-            className="flex shrink-0 items-center"
-          >
+          <motion.div whileHover={{ scale: 1.03 }} className="flex shrink-0 items-center">
             <Link
               to="/"
               onClick={closeMobileMenu}
@@ -229,10 +217,7 @@ const LandingPage = () => {
                   Login
                 </Link>
               </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link
                   to="/welcome"
                   className="inline-flex items-center justify-center rounded-full bg-[#4F8461] px-8 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#3e694d]"
@@ -373,7 +358,7 @@ const LandingPage = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  onClick={() => setIsOpenModal(true)}
+                  to="/service-provider/signup"
                   className="bg-white text-[#2A3349] border-2 border-gray-100 px-6 md:px-10 py-3 md:py-4 rounded-lg md:rounded-xl font-bold hover:bg-gray-50 transition-all inline-block w-full text-center text-sm md:text-base"
                 >
                   Start Earning Today
@@ -381,7 +366,6 @@ const LandingPage = () => {
               </motion.div>
             </motion.div>
           </motion.div>
-          <AccountTypeModal isOpenModal={isOpenModal} setIsOpenModal={setIsOpenModal} />
 
           <motion.div
             initial={{ opacity: 0, scale: 0.8, x: 50 }}
@@ -395,6 +379,7 @@ const LandingPage = () => {
               className="w-full max-w-md md:max-w-full object-contain"
               priority={true}
             />
+
           </motion.div>
         </div>
       </section>
@@ -420,8 +405,7 @@ const LandingPage = () => {
               Our Impact
             </span> */}
             <h2 className="text-xl md:text-2xl font-bold text-[#2A3349] max-w-2xl px-4 leading-snug">
-              Trusted by individuals and businesses across major Nigerian
-              cities.
+              Trusted by individuals and businesses across major Nigerian cities.
             </h2>
           </motion.div>
 
@@ -437,7 +421,9 @@ const LandingPage = () => {
                 className={`w-full min-w-0 px-1 sm:px-3 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-green-900/5 transition-all duration-300 relative group
                 ${index !== stats.length - 1 ? "border-r border-gray-100" : ""}`}
               >
-                <div className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#005823] mb-1 md:mb-2 flex items-center justify-center">
+                <div
+                  className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#005823] mb-1 md:mb-2 flex items-center justify-center"
+                >
                   <AnimatedCounter
                     from={0}
                     to={parseInt(stat.number)}
@@ -446,9 +432,7 @@ const LandingPage = () => {
                     resetKey={statsAnimationKey}
                   />
                   {stat.number.includes("+") && (
-                    <span className="text-[#005823] ml-0.5 group-hover:scale-110 transition-transform duration-300">
-                      +
-                    </span>
+                    <span className="text-[#005823] ml-0.5 group-hover:scale-110 transition-transform duration-300">+</span>
                   )}
                 </div>
                 <div className="text-[8px] sm:text-xs md:text-sm font-bold tracking-[0.04em] md:tracking-wider leading-[1.15] text-gray-500 uppercase mt-2 break-words">
@@ -491,11 +475,10 @@ const LandingPage = () => {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center ${
-                  service.imgSide === "left"
-                    ? "md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1"
-                    : ""
-                }`}
+                className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center ${service.imgSide === "left"
+                  ? "md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1"
+                  : ""
+                  }`}
               >
                 <motion.div
                   initial={{
@@ -571,6 +554,7 @@ const LandingPage = () => {
                     alt={service.title}
                     className="w-full h-auto md:h-80 lg:h-96 object-cover rounded-lg md:rounded-2xl"
                   />
+
                 </motion.div>
               </motion.div>
             ))}
@@ -611,10 +595,7 @@ const LandingPage = () => {
                 className="h-full p-4 md:p-6 bg-gradient-to-br from-[#31784D] to-[#255d3b] border border-[#255d3b] rounded-lg md:rounded-2xl shadow-md shadow-black/20 hover:shadow-xl hover:shadow-black/30 transition-all duration-300 relative group flex flex-col items-center text-center"
               >
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-lg flex items-center justify-center mb-3 md:mb-6 backdrop-blur-sm group-hover:bg-white/20 transition-all duration-300">
-                  <OptimizedImage
-                    src={step.image}
-                    className="w-5 h-5 md:w-6 md:h-6"
-                  />
+                  <OptimizedImage src={step.image} className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
 
                 <h4 className="text-base md:text-lg font-bold text-white mb-2 leading-snug">
@@ -699,9 +680,7 @@ const LandingPage = () => {
                     >
                       <motion.div
                         className="h-full w-full"
-                        whileHover={
-                          deviceType !== "mobile" ? { scale: 1.015 } : {}
-                        }
+                        whileHover={deviceType !== "mobile" ? { scale: 1.015 } : {}}
                         transition={{ duration: 0.35 }}
                       >
                         <OptimizedImage
@@ -744,9 +723,7 @@ const LandingPage = () => {
                         aria-label={`Go to slide ${i + 1}`}
                         aria-current={i === current}
                         className={`h-2 rounded-full transition-all duration-300 ${
-                          i === current
-                            ? "w-7 bg-[#31784D]"
-                            : "w-2 bg-gray-300 hover:bg-gray-400"
+                          i === current ? "w-7 bg-[#31784D]" : "w-2 bg-gray-300 hover:bg-gray-400"
                         }`}
                       />
                     ))}
@@ -759,10 +736,7 @@ const LandingPage = () => {
       </section>
 
       {/* FAQ Section - Responsive */}
-      <section
-        id="faq"
-        className="w-full max-w-4xl mx-auto px-4 md:px-6 my-12 md:my-20 scroll-mt-24"
-      >
+      <section id="faq" className="w-full max-w-4xl mx-auto px-4 md:px-6 my-12 md:my-20 scroll-mt-24">
         <div className="text-center mb-8 md:mb-12">
           <motion.h2
             initial={{ opacity: 0, y: -20 }}
@@ -821,11 +795,6 @@ const LandingPage = () => {
           </div>
         </motion.div>
       </section>
-      {/*<Assign/>
-       <Return/>
-      <Invite />
-      <Booking/>
-       <BookingSummary2/>*/}
       <LandingFooter />
       <LandingChatbotWidget />
     </div>
@@ -999,7 +968,7 @@ const faqs = [
   {
     question: "What is SabiGuy?",
     answer:
-      "SabiGuy is a platform that connects people and businesses with trusted local service providers. Whether you need to send a package, run an errand, or get a task done at home, SabiGuy helps you find someone nearby who can do it quickly and reliably at a fair price.",
+      "SabiGuy connects individuals and businesses with skilled artisans, trusted service providers, and logistics professionals for a wide range of everyday needs. From dispatch and delivery to home repairs, maintenance, and other professional services, SabiGuy makes it easier to find and access the right help in one place.",
   },
   {
     question: "How does SabiGuy work?",
@@ -1022,3 +991,5 @@ const faqs = [
       "Pricing is calculated based on factors like distance, service type, and task requirements. The estimated price is shown before the job starts, so you know what to expect. SabiGuy focuses on fair and transparent pricing with no hidden charges.",
   },
 ];
+
+

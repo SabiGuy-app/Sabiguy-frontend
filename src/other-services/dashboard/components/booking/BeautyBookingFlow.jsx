@@ -17,6 +17,7 @@ import {
   MessageCircle,
   Phone,
   Star,
+  UserRound,
   Wallet,
   Wrench,
   X,
@@ -261,6 +262,15 @@ function BookingInformation({ booking, date, address }) {
   const rows = [
     { label: "Service", value: booking.service, icon: Wrench },
     { label: "Service Location", value: booking.label, icon: MapPinned },
+    ...(booking.isBusiness
+      ? [
+          {
+            label: "Preferred Staff",
+            value: booking.staffName || "Any available staff",
+            icon: UserRound,
+          },
+        ]
+      : []),
     {
       label: "Start Date & Time",
       value: date
@@ -553,7 +563,13 @@ export default function BeautyBookingFlow({
         date: formatBookingDate(date),
         time: formatBookingTime(date),
         location: address.trim(),
-        providerId,
+        // Business accounts are booked by businessId, optionally with a staff member.
+        ...(booking.isBusiness
+          ? {
+              businessId: providerId,
+              ...(booking.staffCode && { staffCode: booking.staffCode }),
+            }
+          : { providerId }),
       });
       const createdBooking = useBeautyBookingStore.getState().booking;
       const bookingId =

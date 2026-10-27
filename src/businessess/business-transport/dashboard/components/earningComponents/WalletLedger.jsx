@@ -1,7 +1,7 @@
 import { walletLedger } from "../../data/mockEarnings";
 import { formatNaira } from "../../utils/format";
 
-const WalletLedger = () => {
+const WalletLedger = ({ limit = walletLedger.length }) => {
   return (
     <div className="w-full flex flex-col gap-5 rounded-xl border-[0.39px] border-[#231F201A] py-5">
       <h3 className="font-semibold text-[#231F20] px-4">
@@ -9,7 +9,7 @@ const WalletLedger = () => {
       </h3>
 
       <div className="">
-        {walletLedger.map((data) => (
+        {walletLedger.slice(0, limit).map((data) => (
           <div key={data.id} className="w-full h-full flex justify-between items-center border-t-[0.3px] border-[#231F2026] py-2.5 px-4">
             <div className="flex items-center text-[12px]  gap-2">
               <img src={data.icon} className="w-4 h-4" alt={data.id} />
