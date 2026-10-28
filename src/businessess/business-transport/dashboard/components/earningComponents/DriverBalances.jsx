@@ -4,8 +4,9 @@ import { formatNaira } from "../../utils/format";
 import ConfirmPayoutModal from "./ConfirmPayoutModal";
 import { useState } from "react";
 
-const DriverBalances = () => {
-  const payoutAvailable = driverBalances.filter(
+const DriverBalances = ({ limit = driverBalances.length }) => {
+  const visibleBalances = driverBalances.slice(0, limit);
+  const payoutAvailable = visibleBalances.filter(
     (data) => data.payoutAvailable === true,
   ).length;
 
@@ -26,7 +27,7 @@ const DriverBalances = () => {
       </div>
 
       <div className="w-full relative">
-        {driverBalances.map((data) => (
+        {visibleBalances.map((data) => (
           <div
             key={data.id}
             className="border-t-[0.3px] border-[#231F2026] py-3 flex justify-between items-center px-4"

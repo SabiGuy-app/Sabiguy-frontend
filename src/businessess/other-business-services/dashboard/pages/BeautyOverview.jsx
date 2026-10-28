@@ -14,7 +14,9 @@ export default function BeautyOverview() {
   const { business, stats, earnings } = mockBeautyOverview;
   const flow = useBookingFlow();
   const { staff, activity, now } = flow;
-  const overviewBookings = flow.sessions.slice(0, 2).map((session) => session.booking);
+  const overviewBookings = flow.sessions
+    .slice(0, 2)
+    .map((session) => session.booking);
   const today = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Africa/Lagos",
     weekday: "long",
@@ -22,11 +24,15 @@ export default function BeautyOverview() {
     month: "long",
   }).format(new Date(now));
 
+
+
   return (
     <BeautyDashboardLayout search={search} onSearchChange={setSearch}>
       <div className="beauty-page-heading">
         <h1>Overview</h1>
-        <p>{today} · everything happening at {business.name} right now</p>
+        <p>
+          {today} · everything happening at {business.name} right now
+        </p>
       </div>
       <StatTileRow stats={stats} />
       <div className="beauty-overview-grid">
@@ -36,7 +42,9 @@ export default function BeautyOverview() {
           now={now}
           onView={flow.onView}
           onAssign={flow.onAssign}
-          onDecline={(bookingId) => flow.onConfirm("decline_booking", bookingId)}
+          onDecline={(bookingId) =>
+            flow.onConfirm("decline_booking", bookingId)
+          }
         />
         <StaffOnDuty staff={staff} search={search} />
         <EarningsBarChart earnings={earnings} />

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Check, Pencil, Plus, Trash2 } from "lucide-react";
 import SettingsTabCard from "./SettingsTabCard";
 import { SettingsEditDialog } from "./SettingsTabCard";
@@ -14,94 +14,96 @@ const weekDays = [
   { short: "Sun", full: "Sunday" },
 ];
 
-const initialServices = [
-  {
-    id: "cut",
-    name: "Haircut",
-    price: "8000",
-    duration: "45 mins",
-    included: ["Hair wash", "Hair cut & styling", "Beard Trim"],
-    locationPricing: [
-      { location: "Walk in Salon", price: "5000", duration: "45 mins" },
-      { location: "Customer's Address", price: "7000", duration: "1 hr" },
-    ],
-  },
-  {
-    id: "beard",
-    name: "Haircut & Beard Trim",
-    price: "12000",
-    duration: "1 hr",
-    included: ["Hair wash", "Hair cut & styling", "Beard Trim"],
-    locationPricing: [
-      { location: "Walk in Salon", price: "10000", duration: "1 hr" },
-      { location: "Customer's Address", price: "12000", duration: "1 hr" },
-    ],
-  },
-  {
-    id: "kids",
-    name: "Kids Haircut",
-    price: "5000",
-    duration: "30 mins",
-    included: [],
-    locationPricing: [
-      { location: "Walk in Salon", price: "5000", duration: "30 mins" },
-      { location: "Customer's Address", price: "7000", duration: "45 mins" },
-    ],
-  },
-  {
-    id: "shape",
-    name: "Shape-up",
-    price: "4000",
-    duration: "20 mins",
-    included: [],
-    locationPricing: [
-      { location: "Walk in Salon", price: "4000", duration: "20 mins" },
-      { location: "Customer's Address", price: "6000", duration: "30 mins" },
-    ],
-  },
-];
+// const initialServices = [
+//   {
+//     id: "cut",
+//     name: "Haircut",
+//     price: "8000",
+//     duration: "45 mins",
+//     included: ["Hair wash", "Hair cut & styling", "Beard Trim"],
+//     locationPricing: [
+//       { location: "Walk in Salon", price: "5000", duration: "45 mins" },
+//       { location: "Customer's Address", price: "7000", duration: "1 hr" },
+//     ],
+//   },
+//   {
+//     id: "beard",
+//     name: "Haircut & Beard Trim",
+//     price: "12000",
+//     duration: "1 hr",
+//     included: ["Hair wash", "Hair cut & styling", "Beard Trim"],
+//     locationPricing: [
+//       { location: "Walk in Salon", price: "10000", duration: "1 hr" },
+//       { location: "Customer's Address", price: "12000", duration: "1 hr" },
+//     ],
+//   },
+//   {
+//     id: "kids",
+//     name: "Kids Haircut",
+//     price: "5000",
+//     duration: "30 mins",
+//     included: [],
+//     locationPricing: [
+//       { location: "Walk in Salon", price: "5000", duration: "30 mins" },
+//       { location: "Customer's Address", price: "7000", duration: "45 mins" },
+//     ],
+//   },
+//   {
+//     id: "shape",
+//     name: "Shape-up",
+//     price: "4000",
+//     duration: "20 mins",
+//     included: [],
+//     locationPricing: [
+//       { location: "Walk in Salon", price: "4000", duration: "20 mins" },
+//       { location: "Customer's Address", price: "6000", duration: "30 mins" },
+//     ],
+//   },
+// ];
 
-const serviceLocations = [
-  "Walk in Salon",
-  "Customer's Address",
-  "My home Address",
-];
-
-const initialPhotos = [
-  "/beauty/hair-1.png",
-  "/beauty/hair-2.png",
-  "/beauty/hair-3.png",
-];
+const serviceLocations = ["Office / Commercial Space", "Customer Address"];
 
 const chipClass = (selected) =>
   `inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-[9px] font-medium transition-colors ${selected ? "bg-[#347B54] text-white" : "border border-[#E1E1E1] bg-white text-[#707070] hover:border-[#347B54]"}`;
 
-export default function OperationsSettingsTab() {
-  const [business, setBusiness] = useState({
-    name: "Sharp Edge Grooming",
-    category: "Beauty & Personal Care",
+export default function OperationsSettingsTab({ business, loading, error }) {
+  const [businesses, setBusinesses] = useState({
+    name: business?.BusinessName || "__",
+    category: business?.businessCategory || "__",
   });
   const [businessEditorOpen, setBusinessEditorOpen] = useState(false);
   const [providedServiceEditorOpen, setProvidedServiceEditorOpen] =
     useState(false);
-  const [services, setServices] = useState(initialServices);
+  const [services, setServices] = useState([]);
   const [serviceEditor, setServiceEditor] = useState(null);
-  const [openDays, setOpenDays] = useState([
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ]);
+  const [openDays, setOpenDays] = useState(business?.availableDays);
   const [scheduleMode, setScheduleMode] = useState("scheduled");
-  const [hours, setHours] = useState({ opens: "09:00", closes: "18:00" });
-  const [locations, setLocations] = useState([
-    "Customer's Address",
-    "Walk in Salon",
-  ]);
-  const [photos, setPhotos] = useState(initialPhotos);
+  const [hours, setHours] = useState({
+    opens: business?.businessHours.start,
+    closes: business?.businessHours.end,
+  });
+  const [locations, setLocations] = useState(business?.servicePlace ?? []);
+  const [photos, setPhotos] = useState(
+    business?.studioImages?.[0]?.pictures ?? [],
+  );
   const photoInput = useRef(null);
+  // const [media, setMedia] = useState([
+  //   ...(business?.studioImages?.[0]?.pictures ?? []).map((url) => ({ url, type: "image" })),
+  //   ...(business?.studioImages?.[0]?.videos ?? []).map((url) => ({ url, type: "video" })),
+  // ]);
+
+  useEffect(() => {
+    setServices(
+      (business?.service ?? []).map(({ _id, serviceName }) => ({
+        id: _id,
+        name: serviceName,
+        price: "",
+        duration: "",
+        included: [],
+        locationPricing: [],
+      })),
+    );
+  }, [business?.service]);
 
   const toggleDay = (day) => {
     setOpenDays((current) =>
@@ -110,6 +112,40 @@ export default function OperationsSettingsTab() {
         : [...current, day],
     );
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-4 p-4 animate-pulse">
+        {/* Skeleton for Business profile / Operating defaults sections */}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="rounded-xl border border-[#E9E9E9] bg-white p-4"
+          >
+            <div className="h-4 w-32 bg-gray-200 rounded mb-4" />
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="h-3 w-24 bg-gray-100 rounded" />
+                <div className="h-3 w-40 bg-gray-100 rounded" />
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-3 w-20 bg-gray-100 rounded" />
+                <div className="h-3 w-28 bg-gray-100 rounded" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="m-4 rounded-lg border border-red-200 bg-red-50 p-4 text-xs text-red-600">
+        {error}
+      </div>
+    );
+  }
 
   const toggleLocation = (location) => {
     setLocations((current) =>
@@ -205,6 +241,19 @@ export default function OperationsSettingsTab() {
     event.target.value = "";
   };
 
+  //   const addMedia = (event) => {
+  //   const files = Array.from(event.target.files ?? []);
+  //   setMedia((current) => [
+  //     ...current,
+  //     ...files.map((file) => ({
+  //       url: URL.createObjectURL(file),
+  //       type: file.type.startsWith("video/") ? "video" : "image",
+  //       file, // keep the original File, you'll need it when uploading
+  //     })),
+  //   ]);
+  //   event.target.value = "";
+  // };
+
   return (
     <div className="py-1">
       <SettingsTabCard
@@ -215,11 +264,11 @@ export default function OperationsSettingsTab() {
           <div>
             <p className="text-[10px] text-[#777777]">Business name</p>
             <p className="mt-0.5 text-[10px] font-semibold text-[#272727]">
-              {business.name}
+              {businesses.name}
             </p>
           </div>
           <p className="text-[10px] font-semibold text-[#272727]">
-            {business.category}
+            {businesses.category}
           </p>
         </div>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
@@ -275,10 +324,14 @@ export default function OperationsSettingsTab() {
                   </h3>
                   <p className="mt-1 text-[10px]">
                     <span className="font-semibold text-[#347B54]">
-                      ₦{Number(service.price).toLocaleString("en-NG")}
+                      {service.price
+                        ? `₦${Number(service.price).toLocaleString("en-NG")}`
+                        : "Set price"}
                     </span>
                     <span className="px-1.5 text-[#A5A5A5]">•</span>
-                    <span className="text-[#777777]">{service.duration}</span>
+                    <span className="text-[#777777]">
+                      {service.duration || "Set duration"}
+                    </span>
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">
@@ -425,50 +478,50 @@ export default function OperationsSettingsTab() {
         </section>
       </div>
 
-     <SettingsTabCard title="Photos of your work">
-  <div className="flex flex-wrap gap-2.5">
-    {photos.map((photo, index) => (
-      <div
-        key={`${photo}-${index}`}
-        className="group relative aspect-square w-[min(28vw,138px)] overflow-hidden rounded-lg bg-[#F4F4F4] sm:w-34.5"
-      >
-        <img
-          src={photo}
-          alt={`Example of salon work ${index + 1}`}
-          className="h-full w-full object-cover"
-        />
-        <button
-          type="button"
-          aria-label={`Remove photo ${index + 1}`}
-          onClick={() =>
-            setPhotos((current) =>
-              current.filter((_, photoIndex) => photoIndex !== index),
-            )
-          }
-          className="pointer-events-none absolute right-1.5 top-1.5 z-10 rounded-full bg-red-400 p-1 text-white opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100"
-        >
-          <Trash2 size={12} />
-        </button>
-      </div>
-    ))}
-    <button
-      type="button"
-      onClick={() => photoInput.current?.click()}
-      className="flex aspect-square w-[min(28vw,138px)] flex-col items-center justify-center gap-1.5 rounded-lg bg-[#F5F5F5] text-[#8B8B8B] hover:bg-[#EEEEEE] sm:w-34.5"
-    >
-      <Camera size={20} />
-      <span className="text-[9px]">Add photos</span>
-    </button>
-    <input
-      ref={photoInput}
-      type="file"
-      accept="image/*"
-      multiple
-      onChange={addPhotos}
-      className="hidden"
-    />
-  </div>
-</SettingsTabCard>
+      <SettingsTabCard title="Photos of your work">
+        <div className="flex flex-wrap gap-2.5">
+          {photos.map((photo, index) => (
+            <div
+              key={`${photo}-${index}`}
+              className="group relative aspect-square w-[min(28vw,138px)] overflow-hidden rounded-lg bg-[#F4F4F4] sm:w-34.5"
+            >
+              <img
+                src={photo}
+                alt={`Example of salon work ${index + 1}`}
+                className="h-full w-full object-cover"
+              />
+              <button
+                type="button"
+                aria-label={`Remove photo ${index + 1}`}
+                onClick={() =>
+                  setPhotos((current) =>
+                    current.filter((_, photoIndex) => photoIndex !== index),
+                  )
+                }
+                className="pointer-events-none absolute right-1.5 top-1.5 z-10 rounded-full bg-red-400 p-1 text-white opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => photoInput.current?.click()}
+            className="flex aspect-square w-[min(28vw,138px)] flex-col items-center justify-center gap-1.5 rounded-lg bg-[#F5F5F5] text-[#8B8B8B] hover:bg-[#EEEEEE] sm:w-34.5"
+          >
+            <Camera size={20} />
+            <span className="text-[9px]">Add photos</span>
+          </button>
+          <input
+            ref={photoInput}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={addPhotos}
+            className="hidden"
+          />
+        </div>
+      </SettingsTabCard>
 
       <SettingsEditDialog
         isOpen={providedServiceEditorOpen}
@@ -487,18 +540,13 @@ export default function OperationsSettingsTab() {
             key: "category",
             label: "Business category",
             type: "select",
-            options: [
-              "Beauty & Personal Care",
-              "Barbershop",
-              "Hair Salon",
-              "Spa",
-            ],
+            options: ["Beauty & Personal Care"],
           },
         ]}
-        values={business}
+        values={businesses}
         onClose={() => setBusinessEditorOpen(false)}
         onSave={(values) => {
-          setBusiness((current) => ({ ...current, ...values }));
+          setBusinesses((current) => ({ ...current, ...values }));
           setBusinessEditorOpen(false);
         }}
       />

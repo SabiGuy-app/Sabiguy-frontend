@@ -1,4 +1,6 @@
-import { createElement, useState } from "react";
+import { createElement, useState, useEffect } from "react";
+import { useAuthStore } from "../../../../stores/auth.store";
+import { getBusinessByEmail } from "../../api/businessess";
 import {
   CreditCard,
   LayoutGrid,
@@ -58,6 +60,40 @@ const BeautySettingsPage = () => {
   const [activeTab, setActiveTab] = useState("business");
   const ActiveTab = tabs.find((tab) => tab.id === activeTab)?.Component;
 
+  const email = useAuthStore((s) => s.user?.data?.email);
+  const [business, setBusiness] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+  if (!email) {
+    setLoading(false);
+    return;
+  }
+  let cancelled = false;
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const result = await getBusinessByEmail(email);
+      console.log("by-email result:", result); // remove after testing
+      if (!cancelled) setBusiness(result);
+    } catch (err) {
+      if (!cancelled) {
+        setError(err?.response?.data?.message || "Could not load business details.");
+      }
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  };
+
+  load();
+  return () => {
+    cancelled = true;
+  };
+}, [email]);
+
   return (
     <BeautyDashboardLayout>
       <main className="min-h-[calc(100vh-8rem)] text-[#242424] xl:min-h-[calc(100vh-9rem)]">
@@ -88,7 +124,7 @@ const BeautySettingsPage = () => {
               );
             })}
           </nav>
-          {ActiveTab && <ActiveTab />}
+          {ActiveTab && <ActiveTab  business={business} loading={loading} error={error} />}
         </section>
       </main>
     </BeautyDashboardLayout>
