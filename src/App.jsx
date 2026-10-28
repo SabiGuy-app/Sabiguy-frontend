@@ -188,6 +188,15 @@ const FleetSettings = lazy(
   () => import("./businessess/business-transport/dashboard/pages/Settings"),
 );
 
+const BeautyStaffPage = lazy(
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BeautyStaffPage"),
+);
+const BeautySettingsPage = lazy(
+  () =>
+    import("./businessess/other-business-services/dashboard/pages/BeautySettingsPage"),
+);
+
 const AddYourVehicle = lazy(
   () => import("./businessess/business-transport/components/AddVehicle"),
 );
@@ -449,6 +458,10 @@ function App() {
                   path="/dashboard/beauty/:providerId"
                   element={<BeautyProviderProfile />}
                 />
+                <Route
+                  path="/dashboard/categories/:categorySlug/providers/:providerId"
+                  element={<BeautyProviderProfile />}
+                />
                 <Route path="/bookings/vehicletype" element={<VehicleType />} />
                 <Route
                   path="/bookings/availableriders"
@@ -548,6 +561,14 @@ function App() {
                 <Route
                   path="/other-business-services/dashboard/bookings"
                   element={<BeautyBusinessBookings />}
+                />
+                <Route
+                  path="/other-business-services/dashboard/staff"
+                  element={<BeautyStaffPage />}
+                />
+                <Route
+                  path="/other-business-services/dashboard/settings"
+                  element={<BeautySettingsPage />}
                 />
                 <Route
                   path="/other-business-services/dashboard/earnings"

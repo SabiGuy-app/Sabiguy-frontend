@@ -77,7 +77,6 @@ const BeautySettingsPage = () => {
       setLoading(true);
       setError("");
       const result = await getBusinessByEmail(email);
-      console.log("by-email result:", result); // remove after testing
       if (!cancelled) setBusiness(result);
     } catch (err) {
       if (!cancelled) {
@@ -93,6 +92,10 @@ const BeautySettingsPage = () => {
     cancelled = true;
   };
 }, [email]);
+
+  const updateBusiness = (updatedBusiness) => {
+    setBusiness((current) => ({ ...current, ...updatedBusiness }));
+  };
 
   return (
     <BeautyDashboardLayout>
@@ -124,7 +127,14 @@ const BeautySettingsPage = () => {
               );
             })}
           </nav>
-          {ActiveTab && <ActiveTab  business={business} loading={loading} error={error} />}
+          {ActiveTab && (
+            <ActiveTab
+              business={business}
+              loading={loading}
+              error={error}
+              onBusinessUpdate={updateBusiness}
+            />
+          )}
         </section>
       </main>
     </BeautyDashboardLayout>
