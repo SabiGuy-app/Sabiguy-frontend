@@ -1,7 +1,9 @@
 import { X } from "lucide-react";
+import { getStaffDisplayName, getStaffMemberStatus } from "../utils/staffMembers";
 
 export default function StaffDetailsModal({ staff, onClose }) {
   if (!staff) return null;
+  const status = getStaffMemberStatus(staff);
 
   return (
     <div
@@ -18,10 +20,10 @@ export default function StaffDetailsModal({ staff, onClose }) {
         <header className="flex items-start justify-between border-b border-[#EEEEEE] px-4 py-3">
           <div>
             <h2 id="staff-detail-name" className="text-sm font-semibold">
-              {staff.name}
+              {getStaffDisplayName(staff)}
             </h2>
             <p className="mt-0.5 text-[10px] text-[#777777]">
-              {staff.role} · joined Apr 2025
+              {staff.role}
             </p>
           </div>
           <button
@@ -36,7 +38,7 @@ export default function StaffDetailsModal({ staff, onClose }) {
         <div className="space-y-3 p-4">
           <div className="flex flex-wrap items-center gap-2 text-[10px]">
             <span className="rounded-full bg-[#18C84D] px-2 py-1 text-white">
-              Available
+              {status.label}
             </span>
             <span className="text-[#777777]">
               Clocked in 9:51 am · Free now
@@ -73,11 +75,11 @@ export default function StaffDetailsModal({ staff, onClose }) {
           <dl className="space-y-1.5 border-t border-[#EEEEEE] pt-2 text-[10px]">
             <div className="flex justify-between gap-4">
               <dt className="text-[#777777]">ID</dt>
-              <dd>{staff.staffId}</dd>
+              <dd>{staff.staffCode}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-[#777777]">Home service</dt>
-              <dd>Yes</dd>
+              <dd>{staff.canDoHomeService ? "Yes" : "No"}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-[#777777]">Documents</dt>

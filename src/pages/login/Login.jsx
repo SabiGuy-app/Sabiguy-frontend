@@ -266,18 +266,22 @@ export default function Login() {
         businessKycStatusFromLogin(email, kycLevel, kycCompleted) ??
         (await getBusinessKycStatus(email));
 
+      let businessCategory = null;
+      try {
+        const profile = await getBusinessProfile();
+        businessCategory = profile?.businessCategory || null;
+        if (businessCategory) {
+          localStorage.setItem("businessCategory", businessCategory);
+        }
+        businessCategory =
+          businessCategory || localStorage.getItem("businessCategory");
+      } catch (err) {
+        console.warn("Could not load business category:", err.message);
+      }
+
       if (kycStatus === "incomplete") {
         // Restore the saved business category so onboarding resumes on the
         // correct setup screen (Beauty vs. Transport) even on a fresh device.
-        try {
-          const profile = await getBusinessProfile();
-          if (profile?.businessCategory) {
-            localStorage.setItem("businessCategory", profile.businessCategory);
-          }
-        } catch (err) {
-          console.warn("Could not load business category:", err.message);
-        }
-
         setRedirecting(true);
         setErrorMessage(
           "You are yet to complete your onboarding process. You will be redirected to where you stopped...",
@@ -286,8 +290,15 @@ export default function Login() {
         return;
       }
 
+      const normalizedCategory = String(businessCategory || "")
+        .trim()
+        .toLowerCase();
+      const dashboardPath = normalizedCategory.includes("transport")
+        ? CATEGORY_DASHBOARDS["Transport & Logistics"]
+        : "/other-business-services/dashboard";
+
       setRedirecting(true);
-      navigate("/business-provider/dashboard", { replace: true });
+      navigate(dashboardPath, { replace: true });
       return;
     }
 
@@ -306,6 +317,10 @@ export default function Login() {
       setRedirecting(true);
       navigate("/dashboard/provider", { replace: true });
     }
+  };
+
+  const CATEGORY_DASHBOARDS = {
+    "Transport & Logistics": "/business-provider/dashboard",
   };
 
   // ── Email / password login ─────────────────────────────────────────────────

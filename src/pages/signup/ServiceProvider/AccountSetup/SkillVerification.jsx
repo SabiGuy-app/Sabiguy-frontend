@@ -5,11 +5,12 @@ import ProviderCategoryVerification from "./ProviderCategoryVerification";
 import IndividualServiceForm from "./IndividualServiceForm";
 // These are the same dropdown, service options, and form used by businesses.
 import ServiceCategorySelect from "../../../../components/onboarding/ServiceCategorySelect";
-import { SERVICE_CATEGORIES } from "../../../../constants/serviceCategories";
+import { useServiceCategories } from "../../../../stores/serviceCategories.store";
 
 export default function SkillsVerification({ onNext, onBack }) {
   const [category, setCategory] = useState("");
-  const selectedCategory = SERVICE_CATEGORIES.find((item) => item.id === category);
+  const { categories } = useServiceCategories();
+  const selectedCategory = categories.find((item) => item.id === category);
   const returnToCategories = () => setCategory("");
 
   // Beauty and transport retain their original provider-specific fields and APIs.

@@ -19,6 +19,8 @@ export const bookingStatuses = {
   payment_pending: { label: "Payment in progress", tone: "pending" },
   payment_expired: { label: "Payment expired", tone: "offline" },
   scheduled: { label: "Scheduled", tone: "pending" },
+  cancellation_requested: { label: "Cancellation requested", tone: "pending" },
+  disputed: { label: "Disputed", tone: "offline" },
 };
 
 export function getStatus(statuses, status) {

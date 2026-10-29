@@ -53,6 +53,8 @@ export const createServiceBooking = async (payload) => {
       category: payload?.category,
       pricing_option: payload?.pricingOption,
       provider_id: payload?.providerId,
+      business_id: payload?.businessId,
+      has_preferred_staff: Boolean(payload?.staffCode),
       service_name: payload?.service?.[0]?.serviceName,
     });
 
@@ -62,6 +64,8 @@ export const createServiceBooking = async (payload) => {
       category: payload?.category,
       pricing_option: payload?.pricingOption,
       provider_id: payload?.providerId,
+      business_id: payload?.businessId,
+      has_preferred_staff: Boolean(payload?.staffCode),
       service_name: payload?.service?.[0]?.serviceName,
       status: error?.response?.status,
     });

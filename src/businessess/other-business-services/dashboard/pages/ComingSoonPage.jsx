@@ -1,17 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
-import { beautyDashboardPath, beautyNavGroups } from "../layout/beautyNavLinks";
+import BusinessDashboardLayout from "../layout/BusinessDashboardLayout";
+import { businessDashboardPath, businessNavGroups } from "../layout/businessNavLinks";
 
 export default function ComingSoonPage() {
   const { pathname } = useLocation();
-  const section = beautyNavGroups.flatMap((group) => group.items).find((item) => `${beautyDashboardPath}/${item.path}` === pathname);
+  const section = businessNavGroups.flatMap((group) => group.items).find((item) => `${businessDashboardPath}/${item.path}` === pathname);
   return (
-    <BeautyDashboardLayout>
-      <div className="beauty-page-heading"><h1>{section?.name || "Page not found"}</h1></div>
-      <section className="beauty-card beauty-section-placeholder">
+    <BusinessDashboardLayout>
+      <div className="business-page-heading"><h1>{section?.name || "Page not found"}</h1></div>
+      <section className="business-card business-section-placeholder">
         <p>{section ? "This section is coming soon." : "This dashboard page does not exist."}</p>
-        <Link to={beautyDashboardPath} className="beauty-button beauty-button-primary">Back to overview</Link>
+        <Link to={businessDashboardPath} className="business-button business-button-primary">Back to overview</Link>
       </section>
-    </BeautyDashboardLayout>
+    </BusinessDashboardLayout>
   );
 }

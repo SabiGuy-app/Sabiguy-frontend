@@ -2,7 +2,6 @@ import InputField from "../components/InputField";
 import BusinessRegistrationFields from "../../../../components/onboarding/BusinessRegistrationFields";
 import { useState } from "react";
 import { Check, CloudUpload, Plus, X } from "lucide-react";
-import { BEAUTY_SERVICE_NAMES } from "../../../../constants/beautyServices";
 
 const experienceOptions = ["0-2 years", "2-5 years", "5-10 years", "10+ years"];
 
@@ -56,7 +55,7 @@ export default function ProviderServicesSection({
   uploadFile,
   onRegistrationUploadingChange,
   onWorkUploadingChange,
-  serviceNames = BEAUTY_SERVICE_NAMES,
+  serviceNames = [],
   servicesField = "beautyServices",
   serviceLocationSection,
   allowCustomServices = false,
@@ -64,6 +63,7 @@ export default function ProviderServicesSection({
   const [uploadingWorkPhotos, setUploadingWorkPhotos] = useState(false);
   const [workPhotoNames, setWorkPhotoNames] = useState([]);
   const [uploadError, setUploadError] = useState("");
+  const [showAllServices, setShowAllServices] = useState(false);
   const [addingService, setAddingService] = useState(false);
   const [newService, setNewService] = useState("");
 
@@ -133,7 +133,7 @@ export default function ProviderServicesSection({
           Choose all the services your business offers.
         </p>
         <div className="flex w-full flex-wrap gap-3">
-          {serviceNames.map((service) => {
+          {(showAllServices ? serviceNames : serviceNames.slice(0, 4)).map((service) => {
             const isSelected = (values?.[servicesField] || []).includes(service);
             return (
               <button
@@ -151,6 +151,15 @@ export default function ProviderServicesSection({
               </button>
             );
           })}
+          {serviceNames.length > 4 && !showAllServices ? (
+            <button
+              type="button"
+              onClick={() => setShowAllServices(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-[#34805A] px-5 py-2 text-sm font-medium text-[#34805A] hover:bg-[#E8F4EC]"
+            >
+              View more
+            </button>
+          ) : null}
           {allowCustomServices && (addingService ? (
             <div className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm">
               <input autoFocus aria-label="New service" value={newService} onChange={(event) => setNewService(event.target.value)}
@@ -275,10 +284,10 @@ export default function ProviderServicesSection({
         <div>
           <h3 className="flex gap-1 font-semibold text-[#231F20]">
             Photos of your work
-            <span className="font-normal text-[#231F20BF]">(optional)</span>
+            <span className="font-normal text-[#231F20BF]">(required)</span>
           </h3>
           <p className="mt-1 text-sm text-[#231F20BF]">
-            Upload clear photos that show your work or tools.
+            Upload at least one clear photo that shows your work or tools.
           </p>
         </div>
         <div className="relative mt-2 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-400 bg-white py-10 transition-all hover:bg-gray-50">
@@ -288,6 +297,7 @@ export default function ProviderServicesSection({
             accept=".jpg,.jpeg,.png"
             onChange={handleWorkPhotosUpload}
             disabled={uploadingWorkPhotos}
+            aria-required="true"
             className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
           />
           <div className="flex flex-col items-center justify-center gap-3">

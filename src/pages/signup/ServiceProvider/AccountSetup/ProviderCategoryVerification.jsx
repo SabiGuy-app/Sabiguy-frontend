@@ -79,6 +79,14 @@ export default function ProviderCategoryVerification({ category, onNext, onBack 
     setWorkPictures((prev) => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async (values) => {
+    if (
+      selectedJobTitle === "beauty_personal_care" &&
+      !(values.workPhotos || []).length
+    ) {
+      setErrorMessage("Please upload at least one photo of your work before continuing.");
+      return;
+    }
+
     setLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -330,7 +338,8 @@ export default function ProviderCategoryVerification({ category, onNext, onBack 
                   values.availableDays.length > 0 &&
                   values.businessHours.start &&
                   values.businessHours.end &&
-                  values.servicePlace.length > 0
+                  values.servicePlace.length > 0 &&
+                  (values.workPhotos || []).length > 0
                 );
               }
               return false;

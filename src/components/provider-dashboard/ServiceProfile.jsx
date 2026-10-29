@@ -10,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import AddService from "../../pages/signup/ServiceProvider/AccountSetup/SkillsSection/AddService";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   updateProviderServiceDetails,
   updateProviderWorkVisuals,
@@ -20,6 +20,7 @@ import {
   allServices,
 } from "../../pages/signup/ServiceProvider/AccountSetup/SkillsSection/jobData";
 import api from "../../api/axios";
+import { getServiceCategories } from "../../api/categories";
 import toast from "react-hot-toast";
 import UploadBox from "../uploadBox";
 import { useAuthStore } from "../../stores/auth.store";
@@ -319,13 +320,42 @@ export default function ProviderServiceProfileTab({
   };
 
   // --- Job Info State (Work Category, Sub-Category, Tagline) ---
+  const firstJobService = user?.data?.job?.[0]?.service || "";
+  const initialWorkCategory =
+    firstJobService === "beauty_personal_care"
+      ? "beauty-personal-care"
+      : firstJobService === "home_repair"
+        ? "home-repair"
+        : firstJobService;
+
   const [jobInfo, setJobInfo] = useState({
-    workCategory: profile?.workCategory || "",
-    subCategory: profile?.subCategory || "",
-    tagLine: profile?.tagLine || "",
+    workCategory: profile?.workCategory || initialWorkCategory || "",
+    subCategory: profile?.subCategory || user?.data?.job?.[0]?.title || "",
+    tagLine: profile?.tagLine || user?.data?.job?.[0]?.tagLine || "",
   });
   const [isSavingJob, setIsSavingJob] = useState(false);
   const [jobInfoDirty, setJobInfoDirty] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(jobInfo.workCategory || "");
+  const [showAllServices, setShowAllServices] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getServiceCategories()
+      .then((data) => {
+        if (active) setCategories(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (active) setCategories([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setSelectedCategory(jobInfo.workCategory || "");
+  }, [jobInfo.workCategory]);
 
   const handleJobInfoChange = (e) => {
     const { name, value } = e.target;
@@ -337,8 +367,15 @@ export default function ProviderServiceProfileTab({
     setIsSavingJob(true);
     try {
       const currentJobs = user?.data?.job || [];
+      const categorySlug = jobInfo.workCategory;
+      const backendService =
+        categorySlug === "beauty-personal-care"
+          ? "beauty_personal_care"
+          : categorySlug === "home-repair"
+            ? "home_repair"
+            : categorySlug;
       const updatedJob = {
-        service: jobInfo.workCategory,
+        service: backendService,
         title: jobInfo.subCategory,
         tagLine: jobInfo.tagLine,
         startingPrice: currentJobs[0]?.startingPrice || "0",
@@ -382,6 +419,13 @@ export default function ProviderServiceProfileTab({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Work Category
           </label>
+          {jobInfo.workCategory ? (
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#E8F4EC] px-3 py-1.5 text-sm font-medium text-[#005823]">
+              <Check size={14} />
+              {categories.find((c) => c.slug === jobInfo.workCategory)?.name ||
+                jobInfo.workCategory}
+            </div>
+          ) : null}
           <select
             name="workCategory"
             value={jobInfo.workCategory}
@@ -396,9 +440,14 @@ export default function ProviderServiceProfileTab({
             }}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BC53F] focus:border-transparent bg-gray-50"
           >
-            {jobTitles.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {[
+              ...categories,
+              ...(categories.some((c) => c.slug === "transport")
+                ? []
+                : [{ slug: "transport", name: "Transport & Logistics" }]),
+            ].map((option) => (
+              <option key={option.slug || option.value} value={option.slug || option.value}>
+                {option.name || option.label}
               </option>
             ))}
           </select>
@@ -458,49 +507,11 @@ export default function ProviderServiceProfileTab({
           </button>
         )}
 
-        {/* Add your Services & Pricing — commented out
-        <div>
-          <p className="font-semibold text-xl">Add your Services &amp; Pricing</p>
-          <p>List the services you offer and set fair prices so customers know what to expect.</p>
-          <div className="flex flex-col gap-3 mt-3">
-            {services.map((service, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between border border-gray-300 rounded-lg p-3 shadow-sm bg-white"
-              >
-                <div>
-                  <h3 className="font-semibold text-lg">{service.name}</h3>
-                  <p className="text-green-700 font-semibold">
-                    ₦{service.price}
-                    <span className="text-gray-500 font-normal ml-2">
-                      • {service.pricingModelLabel}
-                    </span>
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 text-gray-500">
-                  <Pencil className="w-4 h-4 cursor-pointer hover:text-gray-700"
-                    onClick={() => handleEditService(service, index)}
-                  />
-                  <Trash2
-                    className="w-4 h-4 cursor-pointer hover:text-red-600"
-                    onClick={() => handleDeleteService(index)}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <button type="button" className="flex item-center justify-center w-full mt-3 gap-1 border border-gray-300 rounded-md  py-1 font-semibold text-gray-700 bg-white hover:bg-[#8BC53FBF] transition"
-            onClick={() => setAddService(true)}>
-            <IoIosAdd size={25} className=" text-gray-600" />
-            <span>Add New Service</span>
-          </button>
-        </div>
-        <h3 className="font-semibold border-t border-gray-300"></h3>
-        */}
 
         <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className=" border-gray-200 pt-6">
+              <div className="mb-4">
+               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="font-semibold text-lg text-gray-900">
                   Services you provide
@@ -512,42 +523,13 @@ export default function ProviderServiceProfileTab({
               <button
                 type="button"
                 onClick={() => setAddService(true)}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-2 py-1.5 bg-[#005823] text-white font-medium rounded-lg hover:bg-[#004019] transition-colors"
               >
                 <Plus size={17} />
                 Add service
               </button>
             </div>
-
-            {services.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {services.map((service, index) => (
-                  <span
-                    key={`${service.serviceName}-${index}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F4EC] px-3 py-1.5 text-sm font-medium text-[#005823]"
-                  >
-                    <Check size={14} />
-                    {service.serviceName}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500">
-                No services have been added yet.
-              </div>
-            )}
-
-            <div className="border-t border-gray-200 pt-6">
-              <div className="mb-4">
-                <h3 className="font-semibold text-lg text-gray-900">
-                  Services &amp; pricing
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Set one service duration and prices for the locations where
-                  you work.
-                </p>
-              </div>
-
+            
               {services.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {services.map((service, index) => (

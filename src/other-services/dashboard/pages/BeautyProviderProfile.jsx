@@ -9,17 +9,20 @@ import {
   MapPin,
   Globe,
   BriefcaseBusiness,
+  Check,
   Image,
+  Users,
 } from "lucide-react";
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import { getUserById } from "../../../api/user";
 import { mergeBeautyServices, normalizeSearchBeautyProvider } from "../utils/beautyProviderMapper";
 
 import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
-import BeautyBookingFlow from "..//components/booking/BeautyBookingFlow";
+import ServiceBookingFlow from "..//components/booking/ServiceBookingFlow";
 import {
   getExploreCategoryBySlug,
   getProviderProfilePath,
+  useExploreCategories,
 } from "../data/exploreCategories";
 
 const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v9";
@@ -69,9 +72,83 @@ function WorkPhoto({ src, alt, className }) {
   );
 }
 
+// Business accounts list the staff currently on shift; picking one is optional.
+function PreferredStaffPicker({ staff, selectedStaffCode, onSelect }) {
+  return (
+    <fieldset className="mt-6 rounded-xl border border-gray-200 p-4">
+      <legend className="px-1 text-sm font-semibold">
+        Preferred staff <span className="font-normal text-gray-500">(optional)</span>
+      </legend>
+      <p className="mb-4 text-xs text-gray-500">
+        {staff.length
+          ? "Choose someone you'd like to attend to you, or skip this and the business will assign available staff."
+          : "No staff are on duty right now. The business will assign someone to your booking."}
+      </p>
+      {staff.length > 0 && (
+        <ul className="space-y-2">
+          {[{ staffCode: null, name: "Any available staff" }, ...staff].map((member) => {
+            const selected = selectedStaffCode === member.staffCode;
+            const available = member.workStatus === "available";
+            return (
+              <li key={member.staffCode || "any"}>
+                <button
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => onSelect(member.staffCode ? member : null)}
+                  className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left ${
+                    selected
+                      ? "border-[#34805A] bg-[#E7F6EC]"
+                      : "border-gray-200 hover:border-[#34805A]"
+                  } focus-visible:outline-2 focus-visible:outline-[#005823]`}
+                >
+                  {member.staffCode ? (
+                    <WorkPhoto
+                      src={member.avatar || "/avatar.png"}
+                      alt=""
+                      className="h-10 w-10 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                      <Users size={18} aria-hidden="true" />
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="truncate text-sm font-medium">{member.name}</span>
+                      {member.staffCode && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                            available ? "bg-white text-[#005823]" : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {String(member.workStatus || "unavailable").replaceAll("_", " ")}
+                        </span>
+                      )}
+                    </span>
+                    {member.role && (
+                      <span className="mt-0.5 block text-xs text-gray-500">{member.role}</span>
+                    )}
+                    {member.services?.length > 0 && (
+                      <span className="mt-1 block text-xs text-gray-400">
+                        {member.services.join(", ")}
+                      </span>
+                    )}
+                  </span>
+                  {selected && <Check size={18} className="shrink-0 text-[#005823]" aria-hidden="true" />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </fieldset>
+  );
+}
+
 export default function BeautyProviderProfile() {
   const { providerId, categorySlug = "beauty-personal-care" } = useParams();
-  const category = getExploreCategoryBySlug(categorySlug);
+  const { exploreCategories, loading: categoriesLoading } = useExploreCategories();
+  const category = getExploreCategoryBySlug(exploreCategories, categorySlug);
   const pricingOptions = PRICING_OPTIONS.map((option) =>
     option.value === "walk_in" && category?.id === "beauty"
       ? { ...option, label: "Walk in Salon" }
@@ -84,17 +161,21 @@ export default function BeautyProviderProfile() {
   const [booking, setBooking] = useState(null);
   const [pricingOption, setPricingOption] = useState("walk_in");
   const [selectedServiceIds, setSelectedServiceIds] = useState([]);
+  const [preferredStaff, setPreferredStaff] = useState(null);
   const [reviewState, setReviewState] = useState(null);
   const provider =
     providerState?.requestedId === providerId ? providerState.data : null;
 
   useEffect(() => {
+    // Wait for /categories so the profile is normalized with its category.
+    if (!category) return undefined;
     let active = true;
 
     const loadProvider = async () => {
       setMissingProviderId(null);
       setActiveImage(0);
       setShowAllReviews(false);
+      setPreferredStaff(null);
       setReviewState({ providerId, reviews: null, loading: true, error: "" });
       let cachedProvider = null;
       try {
@@ -177,7 +258,7 @@ export default function BeautyProviderProfile() {
 
   const categoryPath = category?.to || "/dashboard/categories";
 
-  if (!category || missingProviderId === providerId)
+  if ((!category && !categoriesLoading) || missingProviderId === providerId)
     return (
       <DashboardLayout showSidebar={false}>
         <p className="py-8">
@@ -192,7 +273,7 @@ export default function BeautyProviderProfile() {
       </DashboardLayout>
     );
 
-  if (!provider)
+  if (!provider || !category)
     return (
       <DashboardLayout showSidebar={false}>
         <div
@@ -209,6 +290,10 @@ export default function BeautyProviderProfile() {
     );
 
   const services = provider.services || [];
+  const isBusiness = provider.role === "businessOwner";
+  const staffOnDuty = Array.isArray(provider.staffOnDuty?.staff)
+    ? provider.staffOnDuty.staff.filter((member) => member?.staffCode)
+    : [];
   const availablePricingOptions = pricingOptions.filter((option) =>
     services.some((service) => getServicePrice(service, option.value) !== null),
   );
@@ -245,6 +330,9 @@ export default function BeautyProviderProfile() {
       duration: selectedDuration,
       pricingOption,
       mode: "later",
+      isBusiness,
+      staffCode: preferredStaff?.staffCode || null,
+      staffName: preferredStaff?.name || "",
     });
   };
   const currentReviewState =
@@ -417,6 +505,13 @@ export default function BeautyProviderProfile() {
                   </p>
                 )}
               </div>
+              {isBusiness && services.length > 0 && (
+                <PreferredStaffPicker
+                  staff={staffOnDuty}
+                  selectedStaffCode={preferredStaff?.staffCode || null}
+                  onSelect={setPreferredStaff}
+                />
+              )}
               {services.length > 0 && (
                 <button
                   type="button"
@@ -613,7 +708,7 @@ export default function BeautyProviderProfile() {
         </div>
       </div>
       {booking && (
-        <BeautyBookingFlow
+        <ServiceBookingFlow
           provider={provider}
           booking={booking}
           category={category}

@@ -148,7 +148,7 @@ export const normalizeSearchBeautyProvider = (
     provider.workVisuals?.flatMap((item) => item.pictures || []),
   );
   const businessAddress =
-    provider.businessAddress || provider.BusinessAddress || "";
+    provider.businessAddress || provider.city || provider.BusinessAddress || "";
 
   return {
     ...provider,
