@@ -11,8 +11,8 @@ export default function BookingsTable({ bookings, selected, search, onView }) {
     .filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase().trim()));
 
   return (
-    <div className="beauty-bookings-table-scroll" role="region" aria-label="Bookings table" tabIndex={0}>
-      <table className="beauty-bookings-table">
+    <div className="business-bookings-table-scroll" role="region" aria-label="Bookings table" tabIndex={0}>
+      <table className="business-bookings-table">
         <caption className="sr-only">{selected} bookings</caption>
         <thead>
           <tr>
@@ -30,22 +30,22 @@ export default function BookingsTable({ bookings, selected, search, onView }) {
         <tbody>
           {visible.length ? visible.map((booking) => (
             <tr key={booking.id}>
-              <td className="beauty-booking-customer-name">{booking.customer}</td>
+              <td className="business-booking-customer-name">{booking.customer}</td>
               <td>{booking.service}</td>
               <td>{booking.serviceLocation === "in_salon" ? "Walk in salon" : "Customer’s Address"}</td>
               <td>{formatBookingStart(booking.startsAt)}</td>
-              <td><span className="beauty-booking-address" title={booking.address}>{booking.address}</span></td>
+              <td><span className="business-booking-address" title={booking.address}>{booking.address}</span></td>
               <td>{requests ? booking.requestedStaff || "—" : booking.assignedStaff?.name || "—"}</td>
-              <td className="beauty-booking-amount">{formatNaira(booking.amount)}</td>
-              {!requests && <td>{booking.status === "accepted" ? <span className="beauty-status beauty-booking-needs-staff">Needs staff</span> : <StatusBadge statuses={bookingStatuses} status={booking.status} />}</td>}
+              <td className="business-booking-amount">{formatNaira(booking.amount)}</td>
+              {!requests && <td>{booking.status === "accepted" ? <span className="business-status business-booking-needs-staff">Needs staff</span> : <StatusBadge statuses={bookingStatuses} status={booking.status} />}</td>}
               <td>
-                <div className="beauty-booking-row-actions">
-                  <Button size="sm" className="beauty-button beauty-button-primary" onClick={() => onView(booking.id)}>{booking.status === "payment_pending" ? "View payment" : "View Details"}</Button>
+                <div className="business-booking-row-actions">
+                  <Button size="sm" className="business-button business-button-primary" onClick={() => onView(booking.id)}>{booking.status === "payment_pending" ? "View payment" : "View Details"}</Button>
                 </div>
               </td>
             </tr>
           )) : (
-            <tr><td className="beauty-booking-table-empty" colSpan={requests ? 8 : 9}>{tabBookings.length ? "No bookings match your search." : `No ${selected === "completed" ? "completed or closed" : selected} bookings.`}</td></tr>
+            <tr><td className="business-booking-table-empty" colSpan={requests ? 8 : 9}>{tabBookings.length ? "No bookings match your search." : `No ${selected === "completed" ? "completed or closed" : selected} bookings.`}</td></tr>
           )}
         </tbody>
       </table>

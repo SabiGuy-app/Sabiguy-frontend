@@ -205,7 +205,7 @@ export default function ServiceDetailsModal({
               What’s included{" "}
               <span className="font-normal text-[#929292]">(Optional)</span>
             </legend>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            {/* <div className="mt-2 flex flex-wrap gap-1.5">
               {draft.included.map((item) => (
                 <span
                   key={item}
@@ -254,7 +254,7 @@ export default function ServiceDetailsModal({
                     ))}
                 </div>
               </div>
-            )}
+            )} */}
             {isAddingItem ? (
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 <input

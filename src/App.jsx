@@ -26,11 +26,11 @@ import PoliciesPage from "./businessess/business-transport/dashboard/pages/Polic
 import NotFound from "./pages/Not-found/NotFound";
 import ProviderNotFound from "./pages/Not-found/ProviderNotFound";
 import UserNotFound from "./pages/Not-found/UserNotFound";
-import BeautyOverview from "./other-services/dashboard-provider/pages/BeautyOverview";
-import BeautyProfilePage from "./other-services/dashboard-provider/pages/BeautySettings";
-import BeautyContactPage from "./other-services/dashboard-provider/pages/BeautyHelp";
-import BeautyActivityPage from "./other-services/dashboard-provider/pages/BeautyActivity";
-import BeautyChatPage from "./other-services/dashboard-provider/pages/BeautyChatPage";
+import ServiceOverview from "./other-services/dashboard-provider/pages/ServiceOverview";
+import ServiceProfilePage from "./other-services/dashboard-provider/pages/ServiceSettings";
+import ServiceContactPage from "./other-services/dashboard-provider/pages/ServiceHelp";
+import ServiceActivityPage from "./other-services/dashboard-provider/pages/ServiceActivity";
+import ServiceChatPage from "./other-services/dashboard-provider/pages/ServiceChatPage";
 
 // Lazy-loaded components
 const Welcome = lazy(() => import("./pages/signup/welcome"));
@@ -67,9 +67,6 @@ const BeautyServices = lazy(
 const BeautyProviderProfile = lazy(
   () => import("./other-services/dashboard/pages/BeautyProviderProfile"),
 );
-const DynamicServicePage = lazy(
-  () => import("./other-services/dashboard/services/pages/ServicePage"),
-);
 const AmbulanceServices = lazy(
   () => import("./other-services/dashboard/services/pages/AmbulanceServices"),
 );
@@ -85,8 +82,8 @@ const HireAlerts = lazy(
 const StartNavigation = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/StartNavigation"),
 );
-const BeautyServiceJourney = lazy(
-  () => import("./other-services/dashboard-provider/pages/BeautyServiceJourney"),
+const ServiceServiceJourney = lazy(
+  () => import("./other-services/dashboard-provider/pages/ServiceServiceJourney"),
 );
 const TrackDelivery = lazy(
   () => import("./pages/ProviderDashboard/sections/HireAlerts/TrackDelivery"),
@@ -154,22 +151,25 @@ const BuyerKycPending = lazy(() => import("./pages/kyc/BuyerKycPending"));
 const FleetOverview = lazy(
   () => import("./businessess/business-transport/dashboard/pages/FleetOverview"),
 );
-const BeautyBusinessOverview = lazy(
-  () => import("./businessess/other-business-services/dashboard/pages/BeautyOverview"),
+const BusinessSession = lazy(
+  () => import("./businessess/other-business-services/dashboard/session/BusinessSession"),
 );
-const BeautyBusinessComingSoon = lazy(
+const BusinessOverview = lazy(
+  () => import("./businessess/other-business-services/dashboard/pages/BusinessOverview"),
+);
+const BusinessComingSoon = lazy(
   () => import("./businessess/other-business-services/dashboard/pages/ComingSoonPage"),
 );
-const BeautyBusinessLiveMap = lazy(
+const BusinessLiveMap = lazy(
   () => import("./businessess/other-business-services/dashboard/pages/LiveMapPage"),
 );
-const BeautyBusinessBookings = lazy(
+const BusinessBookings = lazy(
   () => import("./businessess/other-business-services/dashboard/pages/BookingsPage"),
 );
-const BeautyBusinessEarnings = lazy(
+const BusinessEarnings = lazy(
   () => import("./businessess/other-business-services/dashboard/pages/Earnings & Payouts"),
 );
-const BeautyBusinessPerformance = lazy(
+const BusinessPerformance = lazy(
   () => import("./businessess/other-business-services/dashboard/pages/Performance &Rating"),
 );
 const Earnings = lazy(
@@ -188,13 +188,13 @@ const FleetSettings = lazy(
   () => import("./businessess/business-transport/dashboard/pages/Settings"),
 );
 
-const BeautyStaffPage = lazy(
+const BusinessStaffPage = lazy(
   () =>
-    import("./businessess/other-business-services/dashboard/pages/BeautyStaffPage"),
+    import("./businessess/other-business-services/dashboard/pages/BusinessStaffPage"),
 );
-const BeautySettingsPage = lazy(
+const BusinessSettingsPage = lazy(
   () =>
-    import("./businessess/other-business-services/dashboard/pages/BeautySettingsPage"),
+    import("./businessess/other-business-services/dashboard/pages/BusinessSettingsPage"),
 );
 
 const AddYourVehicle = lazy(
@@ -411,32 +411,32 @@ function App() {
 
               <Route
                 path="/beauty-provider/dashboard"
-                element={<BeautyOverview />}
+                element={<ServiceOverview />}
               />
 
               <Route
                 path="/beauty-provider/dashboard/bookings"
-                element={<BeautyOverview />}
+                element={<ServiceOverview />}
               />
 
               <Route
                 path="/beauty-provider/dashboard/chat"
-                element={<BeautyChatPage />}
+                element={<ServiceChatPage />}
               />
 
               <Route
                 path="/beauty-provider/dashboard/activity"
-                element={<BeautyActivityPage />}
+                element={<ServiceActivityPage />}
               />
 
               <Route
                 path="/beauty-provider/dashboard/settings"
-                element={<BeautyProfilePage />}
+                element={<ServiceProfilePage />}
               />
 
               <Route
                 path="/beauty-provider/dashboard/help"
-                element={<BeautyContactPage />}
+                element={<ServiceContactPage />}
               />
 
               <Route element={<ProtectedRoute />}>
@@ -450,6 +450,10 @@ function App() {
                 <Route path="/dashboard/help" element={<ContactPage />} />
                 <Route path="/dashboard/settings" element={<ProfilePage />} />
                 <Route path="/dashboard/categories" element={<Categories />} />
+                <Route
+                  path="/dashboard/search"
+                  element={<BeautyServices searchMode />}
+                />
                 <Route
                   path="/dashboard/categories/beauty-personal-care"
                   element={<BeautyServices />}
@@ -494,8 +498,8 @@ function App() {
                   element={<StartNavigation />}
                 />
                 <Route
-                  path="/dashboard/provider/beauty-service/:bookingId"
-                  element={<BeautyServiceJourney />}
+                  path="/dashboard/provider/service/:bookingId"
+                  element={<ServiceServiceJourney />}
                 />
                 <Route
                   path="/dashboard/provider/track-delivery"
@@ -508,8 +512,8 @@ function App() {
                   element={<ProviderHelp />}
                 />
                 <Route
-                  path="/dashboard/categories/:serviceSlug"
-                  element={<DynamicServicePage />}
+                  path="/dashboard/categories/:categorySlug"
+                  element={<BeautyServices />}
                 />
                 <Route
                   path="/dashboard/categories/emergency"
@@ -549,39 +553,42 @@ function App() {
                   element={<ProviderNotFound />}
                 />
 
-                {/* Beauty business dashboard */}
-                <Route
-                  path="/other-business-services/dashboard"
-                  element={<BeautyBusinessOverview />}
-                />
-                <Route
-                  path="/other-business-services/dashboard/live-map"
-                  element={<BeautyBusinessLiveMap />}
-                />
-                <Route
-                  path="/other-business-services/dashboard/bookings"
-                  element={<BeautyBusinessBookings />}
-                />
-                <Route
-                  path="/other-business-services/dashboard/staff"
-                  element={<BeautyStaffPage />}
-                />
-                <Route
-                  path="/other-business-services/dashboard/settings"
-                  element={<BeautySettingsPage />}
-                />
-                <Route
-                  path="/other-business-services/dashboard/earnings"
-                  element={<BeautyBusinessEarnings />}
-                />
-                <Route
-                  path="/other-business-services/dashboard/performance"
-                  element={<BeautyBusinessPerformance />}
-                />
-                <Route
-                  path="/other-business-services/dashboard/*"
-                  element={<BeautyBusinessComingSoon />}
-                />
+                {/* Other-services business dashboard (every category except transport) */}
+                {/* BusinessSession keeps the socket, availability and notifications alive across pages. */}
+                <Route element={<BusinessSession />}>
+                  <Route
+                    path="/other-business-services/dashboard"
+                    element={<BusinessOverview />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/live-map"
+                    element={<BusinessLiveMap />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/bookings"
+                    element={<BusinessBookings />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/staff"
+                    element={<BusinessStaffPage />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/settings"
+                    element={<BusinessSettingsPage />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/earnings"
+                    element={<BusinessEarnings />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/performance"
+                    element={<BusinessPerformance />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/*"
+                    element={<BusinessComingSoon />}
+                  />
+                </Route>
 
                 {/* Business / fleet-operator dashboard */}
                 <Route

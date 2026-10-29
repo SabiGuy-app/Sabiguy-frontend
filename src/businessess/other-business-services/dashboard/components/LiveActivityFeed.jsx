@@ -7,12 +7,12 @@ export default function LiveActivityFeed({ activity, search = "" }) {
   const matchesSearch = description.toLowerCase().includes(search.toLowerCase().trim());
 
   return (
-    <DashboardCard title="Live activity" className="beauty-activity-card">
+    <DashboardCard title="Live activity" className="business-activity-card">
       <div aria-live="polite" aria-atomic="true">
         {activity && matchesSearch ? (
           <ActivityEntry activity={activity} key={activity.id} />
         ) : (
-          <p className="beauty-empty">{activity ? "No activity matches your search." : "No activity yet."}</p>
+          <p className="business-empty">{activity ? "No activity matches your search." : "No activity yet."}</p>
         )}
       </div>
     </DashboardCard>
