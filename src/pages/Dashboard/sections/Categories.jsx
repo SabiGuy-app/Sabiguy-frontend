@@ -6,13 +6,14 @@ import ServicesCard from "../../../components/dashboard/ServicesCard";
 import Breadcrumbs from "../../../components/dashboard/BreadCrumbs";
 import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import {
-  exploreCategories,
   getCategoryDestination,
+  useExploreCategories,
 } from "../../../other-services/dashboard/data/exploreCategories";
 
 export default function Categories() {
   const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState(null);
+  const { exploreCategories, loading, error, retry } = useExploreCategories();
   const openCategory = (category, task) => {
     const destination = getCategoryDestination(category, task);
     if (destination) navigate(destination);
@@ -27,6 +28,13 @@ export default function Categories() {
             { label: "Categories" },
           ]}
         />
+        {loading && <p className="text-sm text-gray-500">Loading categories...</p>}
+        {error && (
+          <p className="text-sm text-red-600">
+            Couldn't load categories.{" "}
+            <button type="button" onClick={retry} className="font-semibold underline">Try again</button>
+          </p>
+        )}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {exploreCategories.map((category) => (
             <ServicesCard

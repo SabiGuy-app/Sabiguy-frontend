@@ -48,9 +48,16 @@ export function EditableSettingsSection({
   initialValues,
   fields,
   rows,
+  onSave,
 }) {
   const [values, setValues] = useState(initialValues);
   const [isEditing, setIsEditing] = useState(false);
+  const save = async (nextValues) => {
+    const result = await onSave?.(nextValues);
+    if (result === false) return;
+    setValues((current) => ({ ...current, ...nextValues }));
+    setIsEditing(false);
+  };
 
   return (
     <>
@@ -70,10 +77,7 @@ export function EditableSettingsSection({
         fields={fields}
         values={values}
         onClose={() => setIsEditing(false)}
-        onSave={(nextValues) => {
-          setValues((current) => ({ ...current, ...nextValues }));
-          setIsEditing(false);
-        }}
+        onSave={save}
       />
     </>
   );

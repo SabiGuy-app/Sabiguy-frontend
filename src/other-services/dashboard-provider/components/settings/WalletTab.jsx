@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FiSearch, FiPlus } from "react-icons/fi";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import BeautyFundWalletModal from "../../../dashboard/components/booking/BeautyFundWalletModal";
+import ServiceFundWalletModal from "../../../dashboard/components/booking/ServiceFundWalletModal";
 
 const SAMPLE_BALANCE = 125000;
 
@@ -241,7 +241,7 @@ export default function BeautyWalletTab() {
         </div>
       </div>
 
-      <BeautyFundWalletModal
+      <ServiceFundWalletModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />

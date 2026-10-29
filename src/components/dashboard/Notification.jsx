@@ -18,10 +18,15 @@ export default function NotificationDrawer({
   onMarkAllAsRead,
   onDelete,
   onBookingCompleted,
+  // Overrides the provider hire-alert navigation for booking requests.
+  onBookingRequestClick,
+  showSampleNotifications = true,
 }) {
   const navigate = useNavigate();
   const sample = useBeautyBookingStore();
-  const allNotifications = [...sample.notifications, ...notifications];
+  const allNotifications = showSampleNotifications
+    ? [...sample.notifications, ...notifications]
+    : notifications;
   const [markingAsRead, setMarkingAsRead] = useState(null); // Track which notification is being marked as read
   const [deleting, setDeleting] = useState(null);
   const [selectedNotification, setSelectedNotification] = useState(null);
@@ -111,6 +116,12 @@ export default function NotificationDrawer({
 
     // Route to hire alert page for new_booking_request type
     if (
+      onBookingRequestClick &&
+      (notification.type === "new_booking_request" ||
+        notification.type === "booking_selected")
+    ) {
+      onBookingRequestClick(notification);
+    } else if (
       notification.type === "new_booking_request" ||
       notification.type === "booking_selected"
     ) {
@@ -185,6 +196,10 @@ export default function NotificationDrawer({
       notification.type === "booking_selected"
     ) {
       onClose();
+      if (onBookingRequestClick) {
+        onBookingRequestClick(notification);
+        return;
+      }
       try {
         const serviceType = notification.data?.serviceType;
         const modeOfDelivery = notification.data?.modeOfDelivery;

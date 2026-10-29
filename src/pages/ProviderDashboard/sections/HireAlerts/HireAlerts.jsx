@@ -4,9 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import JobsCard from "../../../../components/provider-dashboard/JobsCard";
 import AlertsCard from "../../../../components/provider-dashboard/AlertsCard";
 import AlertDetailsModal from "./AlertDetails";
-import BeautyAlertsCard from "../../../../other-services/dashboard-provider/pages/BeautyAlertsCard";
-import BeautyAlertDetails from "../../../../other-services/dashboard-provider/pages/BeautyAlertDetails";
-import BeautyWaitingForPaymentModal from "../../../../other-services/dashboard-provider/pages/BeautyWaitingForPaymentModal";
+import ServiceAlertsCard from "../../../../other-services/dashboard-provider/pages/ServiceAlertsCard";
+import ServiceAlertDetails from "../../../../other-services/dashboard-provider/pages/ServiceAlertDetails";
+import ServiceWaitingForPaymentModal from "../../../../other-services/dashboard-provider/pages/ServiceWaitingForPaymentModal";
 import JobDetailsModal from "./JobDetails";
 import MarkAsCompleted from "../../../../components/provider-dashboard/MarkAsCompleted";
 import {
@@ -27,7 +27,7 @@ const normalizeBookingType = (value) =>
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
-const isBeautyBooking = (booking) => {
+const isServiceBooking = (booking) => {
   const source = booking?.originalData || booking || {};
   const values = [
     source.serviceType,
@@ -37,14 +37,12 @@ const isBeautyBooking = (booking) => {
     source.serviceDetails?.serviceType,
   ];
 
-  return values.some((value) => {
+  const isTransport = values.some((value) => {
     const normalized = normalizeBookingType(value);
-    return (
-      normalized === "beauty_personal_care" ||
-      normalized === "beauty" ||
-      (normalized.includes("beauty") && normalized.includes("personal"))
-    );
+    return normalized.includes("transport");
   });
+
+  return !isTransport;
 };
 
 const canStartBeautyJourney = (booking) =>
@@ -127,7 +125,7 @@ export default function HireAlerts() {
             status: booking.status,
             originalData: booking,
           };
-          navigate(`/dashboard/provider/beauty-service/${bookingId}`, {
+          navigate(`/dashboard/provider/service/${bookingId}`, {
             state: { job, booking },
           });
           return;
@@ -366,7 +364,7 @@ export default function HireAlerts() {
       };
 
       const isBeautyNewBooking =
-        isBeautyBooking(booking) &&
+        isServiceBooking(booking) &&
         [
           "pending",
           "pending_provider_acceptance",
@@ -404,7 +402,7 @@ export default function HireAlerts() {
       } else {
         jobs.push({
           ...commonData,
-          status: mapJobStatus(bookingStatus, isBeautyBooking(booking)),
+          status: mapJobStatus(bookingStatus, isServiceBooking(booking)),
           providerName: "You", // Since this is provider dashboard
           startsIn:
             bookingStatus === "confirmed"
@@ -622,8 +620,8 @@ export default function HireAlerts() {
   };
 
   const handleShowNavigation = (job) => {
-    if (isBeautyBooking(job)) {
-      handleShowBeautyJourney(job);
+    if (isServiceBooking(job)) {
+      handleShowServiceJourney(job);
       return;
     }
 
@@ -653,11 +651,11 @@ export default function HireAlerts() {
     }
   };
 
-  const handleShowBeautyJourney = (job) => {
+  const handleShowServiceJourney = (job) => {
     const bookingId = getBookingId(job);
     if (!bookingId) return;
 
-    navigate(`/dashboard/provider/beauty-service/${bookingId}`, {
+    navigate(`/dashboard/provider/service/${bookingId}`, {
       state: { job, booking: job?.originalData },
     });
   };
@@ -684,7 +682,7 @@ export default function HireAlerts() {
       }
 
       handleCloseAlert();
-      if (isBeautyBooking(alert)) {
+      if (isServiceBooking(alert)) {
         const responseData =
           response?.data?.data ||
           response?.data ||
@@ -813,7 +811,7 @@ export default function HireAlerts() {
               : {};
 
           return (
-            <BeautyWaitingForPaymentModal
+            <ServiceWaitingForPaymentModal
               secondsLeft={Math.max(
                 0,
                 Math.ceil((paymentWaiting.deadline - paymentClock) / 1000),
@@ -848,8 +846,8 @@ export default function HireAlerts() {
             />
           );
         })()}
-      {isBeautyBooking(selectedAlert) ? (
-        <BeautyAlertDetails
+      {isServiceBooking(selectedAlert) ? (
+        <ServiceAlertDetails
           isOpen={isAlertModalOpen}
           onClose={handleCloseAlert}
           alert={selectedAlert}
@@ -869,13 +867,13 @@ export default function HireAlerts() {
         />
       )}
 
-      {isBeautyBooking(selectedJob) ? (
-        <BeautyAlertDetails
+      {isServiceBooking(selectedJob) ? (
+        <ServiceAlertDetails
           isOpen={isJobModalOpen}
           onClose={handleCloseJob}
           alert={selectedJob}
           variant="job"
-          onAccept={() => handleShowBeautyJourney(selectedJob)}
+          onAccept={() => handleShowServiceJourney(selectedJob)}
           showPrimaryAction={canStartBeautyJourney(selectedJob)}
           accepting={false}
         />
@@ -951,8 +949,8 @@ export default function HireAlerts() {
         <div className="space-y-4 mt-1">
           {alerts.length > 0 ? (
             alerts.map((alert) =>
-              isBeautyBooking(alert) ? (
-                <BeautyAlertsCard
+              isServiceBooking(alert) ? (
+                <ServiceAlertsCard
                   key={alert.id}
                   alert={alert}
                   onViewDetails={handleViewAlert}
@@ -990,14 +988,14 @@ export default function HireAlerts() {
           <div className="space-y-4">
             {filteredJobs.length > 0 ? (
               filteredJobs.map((job) =>
-                isBeautyBooking(job) ? (
-                  <BeautyAlertsCard
+                isServiceBooking(job) ? (
+                  <ServiceAlertsCard
                     key={job.id}
                     alert={job}
                     variant="job"
                     onViewDetails={handleViewJob}
-                    onAcceptBooking={() => handleShowBeautyJourney(job)}
-                    onMarkAsCompleted={() => handleShowBeautyJourney(job)}
+                    onAcceptBooking={() => handleShowServiceJourney(job)}
+                    onMarkAsCompleted={() => handleShowServiceJourney(job)}
                     showAction={canStartBeautyJourney(job)}
                   />
                 ) : (

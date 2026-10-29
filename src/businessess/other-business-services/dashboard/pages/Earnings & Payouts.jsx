@@ -7,11 +7,11 @@ import Reconciliation from "../../../business-transport/dashboard/components/ear
 import WalletCard from "../../../business-transport/dashboard/components/earningComponents/WalletCard"
 import WalletLedger from "../../../business-transport/dashboard/components/earningComponents/WalletLedger"
 //import { paymentWarning } from "../../../business-transport/dashboard/data/mockEarnings"
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout"
+import BusinessDashboardLayout from "../layout/BusinessDashboardLayout"
 
 export default function Earnings() {
   return (
-    <BeautyDashboardLayout>
+    <BusinessDashboardLayout>
       <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
       <header className="mb-5 flex max-w-[719px] flex-col gap-2">
         <h1 className="text-2xl font-semibold text-[#231F20]">
@@ -41,6 +41,6 @@ export default function Earnings() {
 
       <WalletLedger limit={1} />
       </main>
-    </BeautyDashboardLayout>
+    </BusinessDashboardLayout>
   )
 }
