@@ -4,16 +4,17 @@ import ServiceCategorySelect from "../../../components/onboarding/ServiceCategor
 import BusinessSetupLayout from "../ServiceProvider/BusinessSetupLayout";
 import AddVehicleForm from "../ServiceProvider/BusinessSetup/AddVehicleForm";
 import CategoryService from "./business-setup/category-service";
-import { SERVICE_CATEGORIES } from "../../../constants/serviceCategories";
+import { useServiceCategories } from "../../../stores/serviceCategories.store";
 
 export default function GeneralBusinessSetup({ onBack, onNext, onCategoryChange }) {
   const [category, setCategory] = useState("");
+  const { categories } = useServiceCategories();
 
   const handleCategoryChange = (option) => {
     const selectedCategory = option.value;
     setCategory(selectedCategory);
     onCategoryChange?.(
-      SERVICE_CATEGORIES.find((item) => item.id === selectedCategory),
+      categories.find((item) => item.id === selectedCategory),
     );
   };
 
@@ -25,7 +26,7 @@ export default function GeneralBusinessSetup({ onBack, onNext, onCategoryChange 
     );
   }
 
-  const selectedCategory = SERVICE_CATEGORIES.find(
+  const selectedCategory = categories.find(
     (item) => item.id === category,
   );
   if (selectedCategory?.services) {
