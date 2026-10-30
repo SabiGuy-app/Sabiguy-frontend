@@ -37,6 +37,19 @@ export const getBusinessStaff = async (businessId, params = {}) => {
   return data?.data || data;
 };
 
+export const getBusinessClockRequests = async (businessId) => {
+  const { data } = await api.get(`/business/${businessId}/clock-requests`);
+  return data?.data || data;
+};
+
+export const respondToStaffClockRequest = async (businessId, staffId, payload) => {
+  const { data } = await api.post(
+    `/business/${businessId}/staff/${staffId}/clock-request`,
+    payload,
+  );
+  return data?.data || data;
+};
+
 // payload: { email, role, services, canDoHomeService }; services must be the
 // business's own service names.
 export const inviteBusinessStaff = async (businessId, payload) => {
@@ -63,6 +76,19 @@ export const declineBusinessBooking = async (bookingId) => {
   const { data } = await api.patch(`/businesses/bookings/${bookingId}/decline`);
   return data?.data || data;
 };
+
+// Dashboard stats for the business overview.
+export const getBusinessDashboardStats = async (businessId) => {
+  const { data } = await api.get(`/business/${businessId}/dashboard/stats`);
+  return data?.data || data;
+};
+
+// Recent business activity feed (limit defaults to 5).
+export const getBusinessDashboardActivity = async (businessId, params = {}) => {
+  const { data } = await api.get(`/business/${businessId}/dashboard/activity`, { params });
+  return data?.data || data;
+};
+
 
 // Active staff annotated with eligibility, distance and ETA for this booking.
 export const getBookingStaffCandidates = async (businessId, bookingId) => {
