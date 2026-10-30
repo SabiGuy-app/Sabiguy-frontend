@@ -10,6 +10,16 @@ export const getBusinessById = async (businessId) => {
   return data;
 };
 
+export const requestStaffClockIn = async (businessId) => {
+  const { data } = await api.post("/business/staff/clock-in", { businessId });
+  return data;
+};
+
+export const requestStaffClockOut = async (businessId) => {
+  const { data } = await api.post("/business/staff/clock-out", { businessId });
+  return data;
+};
+
 export const saveBusinessServiceDetails = async (serviceDetails) => {
   const { data } = await api.post(
     "/businesses/service-details",

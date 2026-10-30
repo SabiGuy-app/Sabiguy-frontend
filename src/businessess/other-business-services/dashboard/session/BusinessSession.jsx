@@ -149,6 +149,9 @@ export default function BusinessSession() {
 
   const notificationCenter = useNotificationCenter(socket, (notification) => {
     playNotificationSound();
+    if (["staff_clock_in_requested", "staff_clock_out_requested"].includes(notification?.type)) {
+      window.dispatchEvent(new CustomEvent("business:staff-clock-request", { detail: notification }));
+    }
     if (BOOKING_REQUEST_TYPES.includes(notification?.type)) {
       window.dispatchEvent(new CustomEvent("business:booking-request", { detail: notification }));
       setBookingRequest(notification);

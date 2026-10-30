@@ -68,6 +68,25 @@
 .business-card-count { font-weight: 400; color: var(--business-muted); }
 .business-card-link { display: inline-flex; align-items: center; gap: 6px; color: #34b852; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .business-card-link:hover { color: #005823; }
+.business-clock-requests-card { grid-column: 1 / -1; }
+.business-clock-requests-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 10px; padding: 12px; }
+.business-clock-request { min-width: 0; padding: 12px; border: 1px solid var(--business-border); border-radius: 10px; background: #fff; }
+.business-clock-request-person { display: flex; align-items: center; gap: 10px; }
+.business-clock-request-avatar { width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%; object-fit: cover; background: #f3f4f3; }
+.business-clock-request-details { min-width: 0; flex: 1; }
+.business-clock-request-details h3 { margin: 0 0 2px; overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.business-clock-request-details p { margin: 0; overflow: hidden; color: var(--business-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.business-clock-request-type { flex: 0 0 auto; padding: 4px 8px; border-radius: 20px; background: #fff2dc; color: #946213; font-size: 10px; font-weight: 600; }
+.business-clock-request-time { margin: 9px 0; color: var(--business-muted); font-size: 11px; }
+.business-clock-request-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.business-clock-button { min-height: 34px; padding: 6px 12px; border: 1px solid transparent; border-radius: 6px; font-size: 12px !important; font-weight: 600 !important; cursor: pointer; }
+.business-clock-button:disabled { opacity: .6; cursor: wait; }
+.business-clock-button-muted { border-color: var(--business-border); background: #fff; color: var(--business-ink); }
+.business-clock-button-reject { background: #b83232; color: #fff; }
+.business-clock-button-approve { background: var(--business-green); color: #fff; }
+.business-clock-reject-form { display: grid; gap: 7px; }
+.business-clock-reject-form label { color: var(--business-muted); font-size: 11px; }
+.business-clock-reject-form input { width: 100%; min-height: 36px; padding: 7px 9px; border: 1px solid var(--business-border); border-radius: 6px; background: #fff; font-size: 12px; }
 .business-requests-card, .business-staff-card { min-height: 368px; }
 .business-requests-body { padding: 12px; }
 .business-requests-body > .business-request + .business-request { margin-top: 12px; }
