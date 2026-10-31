@@ -66,7 +66,7 @@ export default function BusinessOverview() {
       <div className="business-page-heading">
         <h1>Overview</h1>
         <p>
-          {today} · everything happening at {business?.BusinessName || "your business"} right now
+          {today} - everything happening at {business?.BusinessName || "your business"} right now
         </p>
       </div>
       <StatTileRow stats={statTiles} />
