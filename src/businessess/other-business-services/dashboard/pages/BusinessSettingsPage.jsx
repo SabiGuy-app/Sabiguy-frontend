@@ -16,6 +16,7 @@ import BusinessSettingsTab from "../components/tabs/BusinessSettingsTab";
 import OperationsSettingsTab from "../components/tabs/OperationsSettingsTab";
 import TeamSettingsTab from "../components/tabs/TeamSettingsTab";
 import BusinessDashboardLayout from "../layout/BusinessDashboardLayout";
+import SwitchToBuyerButton from "../../../../components/auth/SwitchToBuyerButton";
 
 const tabs = [
   {
@@ -100,11 +101,12 @@ const BusinessSettingsPage = () => {
   return (
     <BusinessDashboardLayout>
       <main className="min-h-[calc(100vh-8rem)] text-[#242424] xl:min-h-[calc(100vh-9rem)]">
-        <header className="mb-3">
+        <header className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-lg font-semibold leading-6">Settings</h1>
           <p className="mt-1 text-[10px] text-[#777777]">
             Business account &amp; data
           </p>
+          <SwitchToBuyerButton className="w-full sm:w-auto" />
         </header>
         <section className="overflow-hidden rounded-xl border border-[#E9E9E9] bg-white">
           <nav

@@ -151,6 +151,7 @@
 .business-activity-check--cancelled { background: #fff0d6; color: #a77628; }
 .business-activity-row p { margin: 0 0 3px; font-size: 12px; color: #686465; }
 .business-activity-row time, .business-activity-time { display: block; font-size: 10px; color: #999596; }
+.business-activity-more { display: block; margin: 10px auto 0; border: 0; background: transparent; color: var(--business-green); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
 .business-detail-list { margin: 20px 0 0; }
 .business-detail-list > div { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--business-border); }
 .business-detail-list dt { color: var(--business-muted); }
