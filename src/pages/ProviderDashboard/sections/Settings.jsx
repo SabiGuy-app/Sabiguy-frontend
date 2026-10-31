@@ -15,6 +15,7 @@ import { updateProviderProfilePic } from "../../../api/provider";
 import { getUserByEmail } from "../../../api/auth";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
+import SwitchToBuyerButton from "../../../components/auth/SwitchToBuyerButton";
 
 export default function ProviderProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -211,6 +212,8 @@ export default function ProviderProfilePage() {
               <span className="text-xs sm:text-sm text-gray-600 mb-2">Overall Rating</span>
               <StarRating rating={profile.rating} />
             </div>
+
+            <SwitchToBuyerButton className="w-full md:w-auto" />
 
             {/* Right Side - Edit Button */}
             {/* <button

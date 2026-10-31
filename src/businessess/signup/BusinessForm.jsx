@@ -85,8 +85,10 @@ function getStepForBusinessKycLevel(level) {
 }
 
 export default function BusinessForm() {
+  const switchedIntoBusiness = localStorage.getItem("switchProfileOnboarding") === "business";
   const [step, setStep] = useState(() => {
     const draft = readBusinessWizardDraft();
+    if (switchedIntoBusiness) return BUSINESS_STEPS.ACCOUNT_DETAILS;
     return Number.isInteger(draft?.step)
       ? draft.step
       : BUSINESS_STEPS.CONFIRM_KYC;
@@ -98,6 +100,7 @@ export default function BusinessForm() {
       city: "",
       accountType: "",
       ...(draft?.formData || {}),
+      ...(switchedIntoBusiness ? { email: localStorage.getItem("email") || "" } : {}),
     };
   });
 
@@ -142,6 +145,9 @@ export default function BusinessForm() {
     BUSINESS_SETUP_STEP_BY_CATEGORY[resolveBusinessCategoryId(formData)] ??
     GeneralBusinessSetup;
   useEffect(() => {
+    if (localStorage.getItem("switchProfileOnboarding") === "business") {
+      localStorage.removeItem("switchProfileOnboarding");
+    }
     const storedKycLevel = localStorage.getItem("kycLevel");
     const storedEmail = localStorage.getItem("email");
     const storedCategory = localStorage.getItem("businessCategory");

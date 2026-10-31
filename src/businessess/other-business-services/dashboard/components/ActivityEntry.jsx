@@ -20,7 +20,7 @@ export default function ActivityEntry({ activity }) {
     ? eventAppearance[activity.type]
     : { icon: Bell, tone: "info" };
   const Icon = appearance.icon;
-  const timestamp = formatActivityTime(activity.occurredAt);
+  const timestamp = formatActivityTime(activity.createdAt || activity.occurredAt);
 
   return (
     <div className="business-activity-row">
@@ -28,7 +28,7 @@ export default function ActivityEntry({ activity }) {
         <Icon size={12} aria-hidden="true" />
       </span>
       <div>
-        <p>{getActivityDescription(activity)}</p>
+        <p>{activity.title ? <strong>{activity.title}: </strong> : null}{activity.message || getActivityDescription(activity)}</p>
         {timestamp ? (
           <time dateTime={timestamp.dateTime} title={`${timestamp.fullDate} (Lagos)`}>{timestamp.time}</time>
         ) : <span className="business-activity-time">Time unavailable</span>}
