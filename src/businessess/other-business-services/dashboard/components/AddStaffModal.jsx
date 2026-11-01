@@ -1,49 +1,69 @@
 import { useState } from "react";
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
-const serviceOptions = [
-  "Home Cleaning",
-  "Deep Cleaning",
-  "Office Cleaning",
-  "Office Cleaning",
-];
+const inputClassName =
+  "mt-1.5 block h-9 w-full rounded-md border border-[#DADADA] px-2.5 text-xs font-normal outline-none placeholder:text-[#AAAAAA] focus:border-[#347B54] focus:ring-2 focus:ring-[#347B54]/15";
 
-export default function AddStaffModal({ isOpen, onClose, onSubmit }) {
-  const [staffId, setStaffId] = useState("");
-  const [role, setRole] = useState("Barber");
-  const [selectedServices, setSelectedServices] = useState([
-    "Home Cleaning-0",
-    "Deep Cleaning-1",
-  ]);
+const emptyForm = { email: "", role: "", services: [], canDoHomeService: false };
+
+// serviceOptions: the business's own service names; the invite API rejects others.
+// onSubmit should throw on failure so the error can be shown here.
+export default function AddStaffModal({ isOpen, onClose, onSubmit, serviceOptions = [] }) {
+  const [form, setForm] = useState(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   if (!isOpen) return null;
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const invitedId = staffId.trim();
-    if (!invitedId) return;
+  const update = (changes) => {
+    setForm((current) => ({ ...current, ...changes }));
+    setError("");
+  };
 
-    onSubmit({
-      staffId: invitedId,
-      role,
-      services: selectedServices,
-    });
-    setStaffId("");
+  const close = () => {
+    if (submitting) return;
+    setForm(emptyForm);
+    setError("");
     onClose();
   };
 
   const toggleService = (service) => {
-    setSelectedServices((current) =>
-      current.includes(service)
-        ? current.filter((item) => item !== service)
-        : [...current, service],
-    );
+    update({
+      services: form.services.includes(service)
+        ? form.services.filter((item) => item !== service)
+        : [...form.services, service],
+    });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const email = form.email.trim();
+    const role = form.role.trim();
+    if (!email || !role) return;
+    if (form.services.length === 0) {
+      setError("Select at least one service they can do.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await onSubmit({ ...form, email, role });
+      setForm(emptyForm);
+      onClose();
+    } catch (submitError) {
+      setError(
+        submitError?.response?.data?.message ||
+          "Couldn't send the invite. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4"
-      onClick={onClose}
+      onClick={close}
     >
       <div
         role="dialog"
@@ -59,75 +79,88 @@ export default function AddStaffModal({ isOpen, onClose, onSubmit }) {
           <button
             type="button"
             aria-label="Close"
-            onClick={onClose}
+            onClick={close}
             className="rounded p-1 text-[#777777] hover:bg-[#F3F3F3]"
           >
             <X size={16} aria-hidden="true" />
           </button>
         </div>
         <p className="mb-4 text-[11px] leading-[1.45] text-[#777777]">
-          Enter a registered ID to send an invitation. They’ll need to accept
+          Enter their email to send an invitation. They’ll need to accept
           before joining your business.
         </p>
         <form onSubmit={handleSubmit} className="space-y-3">
           <label className="block text-[11px] font-medium text-[#353535]">
-            Staff ID
+            Email
             <input
               autoFocus
               required
-              value={staffId}
-              onChange={(event) => setStaffId(event.target.value)}
-              placeholder="e.g. SGD-284961"
-              className="mt-1.5 block h-9 w-full rounded-md border border-[#DADADA] px-2.5 text-xs font-normal outline-none placeholder:text-[#AAAAAA] focus:border-[#347B54] focus:ring-2 focus:ring-[#347B54]/15"
+              type="email"
+              value={form.email}
+              onChange={(event) => update({ email: event.target.value })}
+              placeholder="e.g. tunde@example.com"
+              className={inputClassName}
             />
           </label>
           <label className="block text-[11px] font-medium text-[#353535]">
             Role
-            <span className="relative mt-1.5 block">
-              <select
-                value={role}
-                onChange={(event) => setRole(event.target.value)}
-                className="h-9 w-full appearance-none rounded-md border border-[#DADADA] bg-white px-2.5 pr-8 text-xs outline-none focus:border-[#347B54] focus:ring-2 focus:ring-[#347B54]/15"
-              >
-                <option>Barber</option>
-                <option>Stylist</option>
-                <option>Junior barber</option>
-              </select>
-              <ChevronDown
-                size={14}
-                aria-hidden="true"
-                className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#666666]"
-              />
-            </span>
+            <input
+              required
+              value={form.role}
+              onChange={(event) => update({ role: event.target.value })}
+              placeholder="e.g. Photographer"
+              className={inputClassName}
+            />
           </label>
           <fieldset>
             <legend className="mb-2 text-[11px] font-medium text-[#353535]">
               Services they can do
             </legend>
-            <div className="flex flex-wrap gap-1.5">
-              {serviceOptions.map((service, index) => {
-                const serviceKey = `${service}-${index}`;
-                const isSelected = selectedServices.includes(serviceKey);
-                return (
-                  <button
-                    key={serviceKey}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => toggleService(serviceKey)}
-                    className={`inline-flex h-6 items-center gap-1 rounded-full px-2 text-[9px] transition-colors ${isSelected ? "bg-[#347B54] text-white" : "bg-[#F0F0F0] text-[#555555] hover:bg-[#E5E5E5]"}`}
-                  >
-                    {isSelected && <Check size={10} aria-hidden="true" />}
-                    {service}
-                  </button>
-                );
-              })}
-            </div>
+            {serviceOptions.length ? (
+              <div className="flex flex-wrap gap-1.5">
+                {serviceOptions.map((service) => {
+                  const isSelected = form.services.includes(service);
+                  return (
+                    <button
+                      key={service}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => toggleService(service)}
+                      className={`inline-flex h-6 items-center gap-1 rounded-full px-2 text-[9px] transition-colors ${isSelected ? "bg-[#347B54] text-white" : "bg-[#F0F0F0] text-[#555555] hover:bg-[#E5E5E5]"}`}
+                    >
+                      {isSelected && <Check size={10} aria-hidden="true" />}
+                      {service}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-[11px] text-[#777777]">
+                Your business has no services yet. Add them in Settings before
+                inviting staff.
+              </p>
+            )}
           </fieldset>
+          <label className="flex items-center gap-2 text-[11px] font-medium text-[#353535]">
+            <input
+              type="checkbox"
+              checked={form.canDoHomeService}
+              onChange={(event) => update({ canDoHomeService: event.target.checked })}
+              className="h-3.5 w-3.5 accent-[#347B54]"
+            />
+            Can do home service
+          </label>
+          {error && (
+            <p role="alert" className="text-[11px] text-[#A33A3A]">
+              {error}
+            </p>
+          )}
           <button
             type="submit"
-            className="mt-1 inline-flex h-9 w-full items-center justify-center rounded-md bg-[#347B54] text-xs font-medium text-white hover:bg-[#286642] focus:outline-none focus:ring-2 focus:ring-[#347B54] focus:ring-offset-2"
+            disabled={submitting || serviceOptions.length === 0}
+            className="mt-1 inline-flex h-9 w-full items-center justify-center rounded-md bg-[#347B54] text-xs font-medium text-white hover:bg-[#286642] focus:outline-none focus:ring-2 focus:ring-[#347B54] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Send Invite
+            {submitting ? "Sending invite..." : "Send Invite"}
           </button>
         </form>
       </div>

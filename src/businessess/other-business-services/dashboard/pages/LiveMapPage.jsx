@@ -1,8 +1,8 @@
 import { useSearchParams } from "react-router-dom";
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
+import BusinessDashboardLayout from "../layout/BusinessDashboardLayout";
 import LiveMapFilters from "../components/LiveMapFilters";
 import { liveMapFilterOptions } from "../data/liveMapFilters";
-import { mockBeautyLiveMapCounts } from "../data/mockBeautyLiveMap";
+import { mockBusinessLiveMapCounts } from "../data/mockBusinessLiveMap";
 
 export default function LiveMapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,18 +19,18 @@ export default function LiveMapPage() {
   };
 
   return (
-    <BeautyDashboardLayout showAvailability={false}>
-      <header className="beauty-live-map-header">
-        <div className="beauty-page-heading">
+    <BusinessDashboardLayout showAvailability={false}>
+      <header className="business-live-map-header">
+        <div className="business-page-heading">
           <h1>Live map</h1>
           <p>Where your staff are and how each active job is going</p>
         </div>
         <LiveMapFilters
-          counts={mockBeautyLiveMapCounts}
+          counts={mockBusinessLiveMapCounts}
           selected={selected}
           onChange={handleFilterChange}
         />
       </header>
-    </BeautyDashboardLayout>
+    </BusinessDashboardLayout>
   );
 }

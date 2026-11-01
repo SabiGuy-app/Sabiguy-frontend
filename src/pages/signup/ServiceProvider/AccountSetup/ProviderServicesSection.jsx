@@ -2,7 +2,6 @@ import InputField from "../components/InputField";
 import BusinessRegistrationFields from "../../../../components/onboarding/BusinessRegistrationFields";
 import { useState } from "react";
 import { Check, CloudUpload, Plus, X } from "lucide-react";
-import { BEAUTY_SERVICE_NAMES } from "../../../../constants/beautyServices";
 
 const experienceOptions = ["0-2 years", "2-5 years", "5-10 years", "10+ years"];
 
@@ -56,7 +55,7 @@ export default function ProviderServicesSection({
   uploadFile,
   onRegistrationUploadingChange,
   onWorkUploadingChange,
-  serviceNames = BEAUTY_SERVICE_NAMES,
+  serviceNames = [],
   servicesField = "beautyServices",
   serviceLocationSection,
   allowCustomServices = false,
@@ -64,6 +63,7 @@ export default function ProviderServicesSection({
   const [uploadingWorkPhotos, setUploadingWorkPhotos] = useState(false);
   const [workPhotoNames, setWorkPhotoNames] = useState([]);
   const [uploadError, setUploadError] = useState("");
+  const [showAllServices, setShowAllServices] = useState(false);
   const [addingService, setAddingService] = useState(false);
   const [newService, setNewService] = useState("");
 
@@ -133,7 +133,7 @@ export default function ProviderServicesSection({
           Choose all the services your business offers.
         </p>
         <div className="flex w-full flex-wrap gap-3">
-          {serviceNames.map((service) => {
+          {(showAllServices ? serviceNames : serviceNames.slice(0, 4)).map((service) => {
             const isSelected = (values?.[servicesField] || []).includes(service);
             return (
               <button
@@ -151,6 +151,15 @@ export default function ProviderServicesSection({
               </button>
             );
           })}
+          {serviceNames.length > 4 && !showAllServices ? (
+            <button
+              type="button"
+              onClick={() => setShowAllServices(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-[#34805A] px-5 py-2 text-sm font-medium text-[#34805A] hover:bg-[#E8F4EC]"
+            >
+              View more
+            </button>
+          ) : null}
           {allowCustomServices && (addingService ? (
             <div className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm">
               <input autoFocus aria-label="New service" value={newService} onChange={(event) => setNewService(event.target.value)}

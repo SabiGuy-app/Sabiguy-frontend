@@ -15,7 +15,7 @@ export default function BookingInformation({ booking }) {
     { label: "Service Cost", value: formatNaira(booking.amount), icon: Banknote },
   ];
   return (
-    <dl className="beauty-booking-information">
+    <dl className="business-booking-information">
       {fields.map((field) => {
         const Icon = field.icon;
         return <div key={field.label}><Icon size={20} strokeWidth={1.7} /><div><dt>{field.label}</dt><dd>{field.value}</dd></div></div>;

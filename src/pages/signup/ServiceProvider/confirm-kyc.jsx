@@ -13,7 +13,7 @@ export default function ConfirmKyc({ onNext }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("email") || "");
   const [kycLevel, setKycLevel] = useState(null);
 
   const handleSubmit = async (e) => {

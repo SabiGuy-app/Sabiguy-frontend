@@ -1,4 +1,4 @@
-import { BeautyBookingCard } from "../../../../other-services/dashboard/components/booking/BeautyRequest";
+import { ServiceBookingCard } from "../../../../other-services/dashboard/components/booking/ServiceRequest";
 import { normalizeBeautyBooking } from "../../../../stores/beautyBooking.store";
 import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import InputField from "../../../../components/InputField";
@@ -6,7 +6,7 @@ import ImageUploadField from "../../../../components/ImageUploadField";
 import { uploadPackagePhoto } from "../../../../api/packagePhotos";
 import { useAuthStore } from "../../../../stores/auth.store";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Bike, Car } from "lucide-react";
 import Button from "../../../../components/button";
 import RequestCard from "../../../../components/dashboard/RequestsCard";
@@ -23,19 +23,20 @@ import { allowSystem } from "../../../../api/bookings";
 import { getPromoEligibility } from "../../../../api/payment";
 import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
-import { getServiceCategoryBackendId } from "../../../../constants/serviceCategories";
+import { getServiceCategoryBackendId } from "../../../../stores/serviceCategories.store";
 import {
-  exploreCategories,
   getCategoryDestination,
+  useExploreCategories,
 } from "../../../../other-services/dashboard/data/exploreCategories";
 
 // Every bookable service category; transport keeps its own ride/delivery flow.
-const SERVICE_CATEGORY_CHOICES = exploreCategories
-  .filter((category) => category.to)
-  .map((category) => ({
-    category,
-    value: getServiceCategoryBackendId(category),
-  }));
+const buildServiceCategoryChoices = (exploreCategories) =>
+  exploreCategories
+    .filter((category) => category.to)
+    .map((category) => ({
+      category,
+      value: getServiceCategoryBackendId(category),
+    }));
 
 const vehicleOptions = (service) => {
   const isRide = service === "book a ride";
@@ -62,13 +63,9 @@ const vehicleOptions = (service) => {
 const normalizeServiceType = (value) =>
   String(value || "").trim().toLowerCase().replace(/-/g, "_");
 
-const SERVICE_BOOKING_TYPES = new Set(
-  SERVICE_CATEGORY_CHOICES.map(({ value }) => normalizeServiceType(value)),
-);
-
 // Scheduled service bookings (any non-transport category) share the beauty card.
-const isBeautyBooking = (booking) =>
-  SERVICE_BOOKING_TYPES.has(normalizeServiceType(booking?.serviceType));
+const isBeautyBooking = (serviceBookingTypes, booking) =>
+  serviceBookingTypes.has(normalizeServiceType(booking?.serviceType));
 
 const getBookingTimestamp = (booking) => {
   const value =
@@ -121,6 +118,17 @@ export default function Bookings() {
   const [pickupMode, setPickupMode] = useState("manual");
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+  const { exploreCategories, loading: categoriesLoading } = useExploreCategories();
+  const SERVICE_CATEGORY_CHOICES = useMemo(
+    () => buildServiceCategoryChoices(exploreCategories),
+    [exploreCategories],
+  );
+  const serviceBookingTypes = useMemo(
+    () => new Set(SERVICE_CATEGORY_CHOICES.map(({ value }) => normalizeServiceType(value))),
+    [SERVICE_CATEGORY_CHOICES],
+  );
+  // Service vs. ride bookings are told apart by category, so wait for both.
+  const listLoading = bookingsLoading || categoriesLoading;
   const [bookingsError, setBookingsError] = useState("");
   const [promoEligibility, setPromoEligibility] = useState(null);
   const [promoLoading, setPromoLoading] = useState(false);
@@ -555,7 +563,7 @@ export default function Bookings() {
 
   const visibleUserBookings = sortBookingsNewestFirst(userBookings).flatMap(
     (booking) => {
-      if (isBeautyBooking(booking)) {
+      if (isBeautyBooking(serviceBookingTypes, booking)) {
         const normalizedBooking = normalizeBeautyBooking(booking);
         return matchesBeautyFilter(normalizedBooking.status)
           ? [{ type: "beauty", booking: normalizedBooking }]
@@ -1058,25 +1066,25 @@ export default function Bookings() {
               onFilterChange={setStatusFilter}
             />
 
-            {bookingsLoading && (
+            {listLoading && (
               <div className="text-center py-12 bg-white rounded-lg">
                 <div className="w-8 h-8 border-4 border-[#005823] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                 <p className="text-gray-500">Loading your bookings...</p>
               </div>
             )}
 
-            {!bookingsLoading && bookingsError && (
+            {!listLoading && bookingsError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {bookingsError}
               </div>
             )}
 
-            {!bookingsLoading && !bookingsError && (
+            {!listLoading && !bookingsError && (
               <div className="space-y-4 w-full">
                 {visibleUserBookings.length > 0 ? (
                   visibleUserBookings.map(({ type, booking }) =>
                     type === "beauty" ? (
-                      <BeautyBookingCard
+                      <ServiceBookingCard
                         key={booking.id}
                         booking={booking}
                         onRefresh={refreshBookings}

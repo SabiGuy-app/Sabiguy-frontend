@@ -290,14 +290,12 @@ export default function Login() {
         return;
       }
 
-      const dashboardPath = CATEGORY_DASHBOARDS[businessCategory];
-
-      if (!dashboardPath) {
-        setErrorMessage(
-          "We couldn't find a dashboard for your business category. Please contact support.",
-        );
-        return;
-      }
+      const normalizedCategory = String(businessCategory || "")
+        .trim()
+        .toLowerCase();
+      const dashboardPath = normalizedCategory.includes("transport")
+        ? CATEGORY_DASHBOARDS["Transport & Logistics"]
+        : "/other-business-services/dashboard";
 
       setRedirecting(true);
       navigate(dashboardPath, { replace: true });
@@ -323,7 +321,6 @@ export default function Login() {
 
   const CATEGORY_DASHBOARDS = {
     "Transport & Logistics": "/business-provider/dashboard",
-    "Beauty & Personal Care": "/other-business-services/dashboard",
   };
 
   // ── Email / password login ─────────────────────────────────────────────────

@@ -27,6 +27,22 @@ export const resetPassword = async ({ email, otp, newPassword }) => {
   return data;
 };
 
+// Switch an authenticated provider/business owner into their buyer profile.
+export const switchToBuyer = async () => {
+  const { data } = await api.post("/auth/switch-to-buyer");
+  return data;
+};
+
+export const getAuthProfiles = async () => {
+  const { data } = await api.get("/auth/profiles");
+  return data;
+};
+
+export const switchProfile = async (payload) => {
+  const { data } = await api.post("/auth/switch-profile", payload);
+  return data;
+};
+
 // LOGIN (email + password)
 export const login = async (payload) => {
   try {

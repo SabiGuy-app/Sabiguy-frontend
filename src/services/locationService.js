@@ -1,7 +1,16 @@
 class LocationService {
-  constructor() {
+  // endpoint: heartbeat route under VITE_BASE_URL; storageKey/eventName let
+  // the dashboard read the latest fix.
+  constructor({
+    endpoint = "/provider/location",
+    storageKey = "providerCurrentLocation",
+    eventName = "provider-location-updated",
+  } = {}) {
     this.watchId = null;
     this.socket = null;
+    this.endpoint = endpoint;
+    this.storageKey = storageKey;
+    this.eventName = eventName;
   }
 
   startTracking(socket) {
@@ -62,10 +71,10 @@ class LocationService {
     });
 
     localStorage.setItem(
-      "providerCurrentLocation",
+      this.storageKey,
       JSON.stringify({ latitude, longitude, accuracy, timestamp: position.timestamp }),
     );
-    window.dispatchEvent(new Event("provider-location-updated"));
+    window.dispatchEvent(new Event(this.eventName));
 
     if (accuracy > 1000) {
       console.warn("⚠️ Very poor accuracy — likely IP-based, not GPS");
@@ -91,7 +100,7 @@ class LocationService {
   }, 30000);
 
   httpUpdate(latitude, longitude) {
-    fetch(`${import.meta.env.VITE_BASE_URL}/provider/location`, {
+    fetch(`${import.meta.env.VITE_BASE_URL}${this.endpoint}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -137,5 +146,11 @@ class LocationService {
     }
   }
 }
+
+export const businessLocationService = new LocationService({
+  endpoint: "/businesses/location",
+  storageKey: "businessCurrentLocation",
+  eventName: "business-location-updated",
+});
 
 export default new LocationService();

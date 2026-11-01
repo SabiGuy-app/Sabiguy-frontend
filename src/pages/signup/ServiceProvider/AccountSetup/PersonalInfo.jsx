@@ -1,11 +1,9 @@
 import AccountSetupLayout from "./layout";
-import Button from "../components/Button";
 import InputField from "../components/InputField";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Formik, ErrorMessage } from "formik";
 import { PersonalInfoSchema } from "../schema";
-import CoverageRadius from "../components/CoverageRadius";
 import axios from "axios";
 import { trackEvent } from "../../../../services/analytics";
 import { IoIosArrowBack } from "react-icons/io";
@@ -60,11 +58,8 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
       // console.log("URL type:", typeof url);
       // console.log("URL length:", url?.length);
 
-      setFieldValue("ninSlip", url);
-
-      setTimeout(() => {
-        setFieldValue("ninSlipFile", file);
-      }, 100);
+      await setFieldValue("ninSlip", url);
+      await setFieldValue("ninSlipFile", file);
     } catch (err) {
       console.error("NIN upload error:", err);
       setErrorMessage(
@@ -77,6 +72,15 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
   };
 
   const handleSubmit = async (values) => {
+    if (uploadingNin) {
+      setErrorMessage("Please wait for the NIN slip upload to finish.");
+      return;
+    }
+    if (!values.ninSlip) {
+      setErrorMessage("Please upload your NIN slip before continuing.");
+      return;
+    }
+
     setLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -314,10 +318,10 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
                   <div className="flex justify-end mt-4">
                     <button
                       type="submit"
-                      disabled={loading || !isValid}
+                      disabled={loading || uploadingNin || !isValid}
                       className="p-3 rounded-md text-white bg-[#005823BF] hover:bg-[#005823] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? "Saving..." : "Save & Continue"}
+                      {uploadingNin ? "Uploading NIN slip..." : loading ? "Saving..." : "Save & Continue"}
                     </button>
                   </div>
                   {errorMessage && (

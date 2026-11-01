@@ -2,7 +2,7 @@
 import { House } from "../icons";
 import { formatNaira } from "../utils/format";
 import { formatBookingStart } from "../utils/bookings";
-import { beautyDashboardPath } from "../layout/beautyNavLinks";
+import { businessDashboardPath } from "../layout/businessNavLinks";
 import DashboardCard from "./DashboardCard";
 import StatusBadge from "./StatusBadge";
 import ResponseCountdown from "./ResponseCountdown";
@@ -13,12 +13,12 @@ const closedStatuses = ["declined", "cancelled", "completed", "expired", "paymen
 export default function IncomingRequests({ bookings, search, now, onView, onAssign, onDecline }) {
   const incoming = bookings.filter((booking) => !closedStatuses.includes(booking.status));
   return (
-    <DashboardCard title="Incoming Requests" count={incoming.length} action="All bookings" to={`${beautyDashboardPath}/bookings`} className="beauty-requests-card">
-      <div className="beauty-requests-body">
+    <DashboardCard title="Incoming Requests" count={incoming.length} action="All bookings" to={`${businessDashboardPath}/bookings`} className="business-requests-card">
+      <div className="business-requests-body">
         {incoming.length ? incoming.map((booking) => (
           <IncomingRequest key={booking.id} booking={booking} search={search} now={now}
             onView={() => onView(booking.id)} onAssign={() => onAssign(booking.id)} onDecline={() => onDecline(booking.id)} />
-        )) : <p className="beauty-empty" role="status">No incoming requests.</p>}
+        )) : <p className="business-empty" role="status">No incoming requests.</p>}
       </div>
     </DashboardCard>
   );
@@ -51,31 +51,31 @@ function IncomingRequest({ booking, search, now, onView, onAssign, onDecline }) 
   return (
     <>
         {!isClosed && matchesSearch ? (
-          <article className="beauty-request">
-            <div className="beauty-request-heading">
-              <div className="beauty-request-service">
+          <article className="business-request">
+            <div className="business-request-heading">
+              <div className="business-request-service">
                 <h3>{booking.service}</h3>
-                <span className={`beauty-location-badge ${isInSalon ? "beauty-location-badge--salon" : ""}`}>
+                <span className={`business-location-badge ${isInSalon ? "business-location-badge--salon" : ""}`}>
                   <House size={13} />{isInSalon ? "Walk in Salon" : booking.location}
                 </span>
               </div>
-              <strong className="beauty-request-price">{formatNaira(booking.amount)}</strong>
+              <strong className="business-request-price">{formatNaira(booking.amount)}</strong>
             </div>
-            <p className="beauty-request-meta">
+            <p className="business-request-meta">
               {booking.customer} · {formatBookingStart(booking.startsAt)} · {booking.address}
             </p>
             {isPending && <ResponseCountdown booking={booking} now={now} />}
-            <div className="beauty-request-footer">
-              <p className={needsAssignment ? "beauty-unassigned-message" : ""} role="status">{staffMessage}</p>
-              <div className="beauty-request-actions">
-                {isPending && <Button variant="outline" size="sm" className="beauty-button beauty-button-secondary" onClick={onDecline}>Decline</Button>}
+            <div className="business-request-footer">
+              <p className={needsAssignment ? "business-unassigned-message" : ""} role="status">{staffMessage}</p>
+              <div className="business-request-actions">
+                {isPending && <Button variant="outline" size="sm" className="business-button business-button-secondary" onClick={onDecline}>Decline</Button>}
                 {!isPending && !needsAssignment && <StatusBadge statuses={bookingStatuses} status={booking.status} />}
-                {!needsAssignment && <Button size="sm" className="beauty-button beauty-button-primary" onClick={onView}>{paymentPending ? "View payment" : "View Details"}</Button>}
-                {needsAssignment && <Button size="sm" className="beauty-button beauty-button-primary" onClick={onAssign}>Assign staff</Button>}
+                {!needsAssignment && <Button size="sm" className="business-button business-button-primary" onClick={onView}>{paymentPending ? "View payment" : "View Details"}</Button>}
+                {needsAssignment && <Button size="sm" className="business-button business-button-primary" onClick={onAssign}>Assign staff</Button>}
               </div>
             </div>
           </article>
-        ) : <p className="beauty-empty" role="status">{emptyMessage}</p>}
+        ) : <p className="business-empty" role="status">{emptyMessage}</p>}
     </>
   );
 }

@@ -8,12 +8,15 @@ import {
   Store,
   Trash2,
   X,
+  Check,
 } from "lucide-react";
 import Modal from "../../components/Modal";
+import { useAuthStore } from "../../../../../stores/auth.store";
+import { getServiceCategories } from "../../../../../api/categories";
 import Button from "../../components/Button";
 
 const LOCATION_OPTIONS = [
-  { key: "walk_in", label: "Walk-in salon", Icon: Store },
+  { key: "walk_in", label: "Studio, Office or Shop", Icon: Store },
   { key: "customer_address", label: "Customer's address", Icon: MapPin },
   { key: "provider_address", label: "Provider's address", Icon: House },
 ];
@@ -51,13 +54,47 @@ const normalizeService = (service) => ({
   },
 });
 
-export default function AddService({ isOpen, onClose, onSave, editingService }) {
+export default function AddService({ isOpen, onClose, onSave, editingService, workCategory }) {
+  const user = useAuthStore((state) => state.user);
   const [service, setService] = useState(createEmptyService);
   const [visibleLocations, setVisibleLocations] = useState([
     "walk_in",
     "customer_address",
   ]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [validationError, setValidationError] = useState("");
+  const [showAllServices, setShowAllServices] = useState(false);
+
+  useEffect(() => {
+    const raw = workCategory || user?.data?.job?.[0]?.service || "";
+    const slug =
+      raw === "beauty_personal_care"
+        ? "beauty-personal-care"
+        : raw === "home_repair"
+          ? "home-repair"
+          : raw;
+    if (slug) setSelectedCategory(slug);
+  }, [workCategory, user]);
+
+  useEffect(() => {
+    if (categories.length === 0 || selectedCategory) return;
+    setSelectedCategory(categories[0]?.slug || "");
+  }, [categories, selectedCategory]);
+
+  useEffect(() => {
+    let active = true;
+    getServiceCategories()
+      .then((data) => {
+        if (active) setCategories(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (active) setCategories([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const nextService = editingService
@@ -151,6 +188,48 @@ export default function AddService({ isOpen, onClose, onSave, editingService }) 
       </div>
 
       <form onSubmit={handleSave} className="flex flex-col gap-5 pt-5">
+        {selectedCategory ? (
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#231F20]">
+              Services under {categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(showAllServices
+                ? categories.find((c) => c.slug === selectedCategory)?.services || []
+                : (categories.find((c) => c.slug === selectedCategory)?.services || []).slice(0, 4)
+              ).map((svc) => {
+                const isSelected = service.serviceName === svc.name;
+                return (
+                  <button
+                    key={svc._id || svc.id}
+                    type="button"
+                    onClick={() => updateService("serviceName", svc.name)}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                      isSelected
+                        ? "bg-[#388659] text-white"
+                        : "bg-[#E8F4EC] text-[#267348] hover:bg-[#d4ebdd]"
+                    }`}
+                  >
+                    {isSelected ? <Check size={14} /> : null}
+                    {svc.name}
+                  </button>
+                );
+              })}
+            </div>
+            {(categories.find((c) => c.slug === selectedCategory)?.services || [])
+              .length > 4 && !showAllServices ? (
+              <button
+                type="button"
+                onClick={() => setShowAllServices(true)}
+                className="mt-2 text-sm font-medium text-[#388659] hover:underline"
+              >
+                View more
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+
         <div>
           <label
             htmlFor="serviceName"

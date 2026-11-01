@@ -1,32 +1,47 @@
 ﻿import Modal from "../../../../components/Modal";
 import Button from "../../../../components/button";
 import { X } from "../icons";
-import { formatBookingStart, getStaffEligibility } from "../utils/bookings";
+import { formatBookingStart } from "../utils/bookings";
+import { formatCandidateMeta, getCandidateIneligibility } from "../utils/businessBookings";
 
-export default function BookingAssignmentModal({ isOpen, booking, staff, staffMembers = [], onClose, onAssign }) {
-  const candidates = (staffMembers.length ? staffMembers : [staff].filter(Boolean))
-    .map((member) => ({ member, reason: getStaffEligibility(booking, member) }))
-    .sort((a, b) => Number(Boolean(a.reason)) - Number(Boolean(b.reason)));
-  const hasEligibleStaff = candidates.some((candidate) => !candidate.reason);
+const FALLBACK_AVATAR = "/avatar.png";
+
+// candidates: { list, loading, error } from the staff-candidates endpoint,
+// already sorted eligible-first and by distance.
+export default function BookingAssignmentModal({ isOpen, booking, candidates, busy, onClose, onAssign }) {
+  if (!booking) return null;
+  const rows = candidates.list.map((member) => ({ member, reason: getCandidateIneligibility(member) }));
+  const hasEligibleStaff = rows.some((row) => !row.reason);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} closeIcon={<X size={21} />} title={`${booking.assignedStaff ? "Change staff for" : "Assign"} ${booking.service.toLowerCase()}`} panelClassName="beauty-booking-dialog beauty-assignment-dialog" titleClassName="beauty-booking-dialog-heading" contentClassName="beauty-booking-dialog-body">
-      <p className="beauty-assignment-summary">{booking.customer} · {formatBookingStart(booking.startsAt)} · {booking.address}</p>
-      <div className="beauty-booking-candidates" role="group" aria-label="Staff candidates">
-        {candidates.map(({ member, reason }) => (
-          <div key={member.id} className={`beauty-booking-candidate ${reason ? "is-unavailable" : ""}`}>
-            <img className="beauty-staff-avatar" src={member.avatar} alt="" />
-            <div className="beauty-booking-candidate-info">
-              <h3>{member.name}</h3>
-              <p>{member.distanceKm} km away · about {member.travelMinutes} min · {member.rating}★</p>
-              <p>{member.role}</p>
-              {reason && <p className="beauty-booking-ineligible">{reason}</p>}
+    <Modal isOpen={isOpen} onClose={onClose} closeIcon={<X size={21} />} title={`Assign staff for ${booking.service.toLowerCase()}`} panelClassName="business-booking-dialog business-assignment-dialog" titleClassName="business-booking-dialog-heading" contentClassName="business-booking-dialog-body">
+      <p className="business-assignment-summary">{booking.customer} · {formatBookingStart(booking.startsAt)} · {booking.address}</p>
+      {candidates.loading && <p className="business-booking-muted">Loading your staff...</p>}
+      {candidates.error && <p className="business-assignment-notice">{candidates.error}</p>}
+      {!candidates.loading && !candidates.error && (
+        <div className="business-booking-candidates" role="group" aria-label="Staff candidates">
+          {rows.map(({ member, reason }) => (
+            <div key={member.staffId} className={`business-booking-candidate ${reason ? "is-unavailable" : ""}`}>
+              <img className="business-staff-avatar" src={member.avatar || FALLBACK_AVATAR} alt="" />
+              <div className="business-booking-candidate-info">
+                <h3>{member.name}</h3>
+                {formatCandidateMeta(member) && <p>{formatCandidateMeta(member)}</p>}
+                <p>{[member.role, member.staffCode].filter(Boolean).join(" · ")}</p>
+                {member.staffCode && member.staffCode === booking.requestedStaffCode && (
+                  <span className="business-booking-requested-tag">Requested by customer</span>
+                )}
+                {reason && <p className="business-booking-ineligible">{reason}</p>}
+              </div>
+              <Button size="sm" className="business-button business-button-primary" aria-label={`Assign ${member.name}`} disabled={Boolean(reason) || busy} onClick={() => onAssign(member.staffId)}>Assign</Button>
             </div>
-            <Button size="sm" className="beauty-button beauty-button-primary" aria-label={`Assign ${member.name}`} disabled={Boolean(reason)} onClick={() => onAssign(member.id)}>Assign</Button>
-          </div>
-        ))}
-      </div>
-      {!hasEligibleStaff && <p className="beauty-assignment-notice">{booking.assignedStaff ? "No other eligible staff are available to take over this booking." : "No eligible staff are available for this booking."}</p>}
+          ))}
+        </div>
+      )}
+      {!candidates.loading && !candidates.error && !hasEligibleStaff && (
+        <p className="business-assignment-notice">
+          {rows.length ? "No eligible staff are available for this booking." : "You have no active staff yet. Invite staff from the Staff page."}
+        </p>
+      )}
     </Modal>
   );
 }

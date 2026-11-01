@@ -10,6 +10,7 @@ import PasswordTab from "../../../components/dashboard/PasswordTab";
 import SettingsTab from "../../../components/dashboard/SettingsTab";
 import { useAuthStore } from "../../../stores/auth.store";
 import ReferralsTab from "../../../components/provider-dashboard/ReferralsTab";
+import BuyerProfileSwitcher from "../../../components/auth/BuyerProfileSwitcher";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -89,6 +90,8 @@ export default function ProfilePage() {
                 </p>
               </div>
             </div>
+
+            <BuyerProfileSwitcher />
 
             {/* <div className="flex flex-col items-start md:items-center">
               <span className="text-sm text-gray-600 mb-2">Overall Rating</span>

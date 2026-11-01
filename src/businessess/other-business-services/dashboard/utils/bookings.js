@@ -7,18 +7,9 @@ export const bookingTabs = [
 
 export function getBookingTab(status) {
   if (["pending", "payment_pending"].includes(status)) return "requests";
-  if (["accepted", "assigned", "en_route", "in_service"].includes(status)) return "active";
+  if (["accepted", "assigned", "en_route", "in_service", "cancellation_requested"].includes(status)) return "active";
   if (status === "scheduled") return "upcoming";
   return "completed";
-}
-
-export function getStaffEligibility(booking, staff) {
-  if (booking.assignedStaff?.id === staff.id) return "Currently assigned to this job";
-  if (staff.serviceIds && !staff.serviceIds.includes(booking.serviceId)) return "Doesn’t offer this service";
-  if (staff.status === "offline") return "Offline";
-  if (staff.assignedBookingId && staff.assignedBookingId !== booking.id) return staff.status === "available" ? "Reserved for another booking" : "Currently assigned to another job";
-  if (staff.status !== "available") return "Currently assigned to another job";
-  return null;
 }
 
 export function formatBookingStart(startsAt) {

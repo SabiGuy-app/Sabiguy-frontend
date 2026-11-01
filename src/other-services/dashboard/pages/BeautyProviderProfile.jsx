@@ -18,10 +18,11 @@ import { getUserById } from "../../../api/user";
 import { mergeBeautyServices, normalizeSearchBeautyProvider } from "../utils/beautyProviderMapper";
 
 import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
-import BeautyBookingFlow from "..//components/booking/BeautyBookingFlow";
+import ServiceBookingFlow from "..//components/booking/ServiceBookingFlow";
 import {
   getExploreCategoryBySlug,
   getProviderProfilePath,
+  useExploreCategories,
 } from "../data/exploreCategories";
 
 const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v9";
@@ -146,7 +147,8 @@ function PreferredStaffPicker({ staff, selectedStaffCode, onSelect }) {
 
 export default function BeautyProviderProfile() {
   const { providerId, categorySlug = "beauty-personal-care" } = useParams();
-  const category = getExploreCategoryBySlug(categorySlug);
+  const { exploreCategories, loading: categoriesLoading } = useExploreCategories();
+  const category = getExploreCategoryBySlug(exploreCategories, categorySlug);
   const pricingOptions = PRICING_OPTIONS.map((option) =>
     option.value === "walk_in" && category?.id === "beauty"
       ? { ...option, label: "Walk in Salon" }
@@ -165,6 +167,8 @@ export default function BeautyProviderProfile() {
     providerState?.requestedId === providerId ? providerState.data : null;
 
   useEffect(() => {
+    // Wait for /categories so the profile is normalized with its category.
+    if (!category) return undefined;
     let active = true;
 
     const loadProvider = async () => {
@@ -254,7 +258,7 @@ export default function BeautyProviderProfile() {
 
   const categoryPath = category?.to || "/dashboard/categories";
 
-  if (!category || missingProviderId === providerId)
+  if ((!category && !categoriesLoading) || missingProviderId === providerId)
     return (
       <DashboardLayout showSidebar={false}>
         <p className="py-8">
@@ -269,7 +273,7 @@ export default function BeautyProviderProfile() {
       </DashboardLayout>
     );
 
-  if (!provider)
+  if (!provider || !category)
     return (
       <DashboardLayout showSidebar={false}>
         <div
@@ -704,7 +708,7 @@ export default function BeautyProviderProfile() {
         </div>
       </div>
       {booking && (
-        <BeautyBookingFlow
+        <ServiceBookingFlow
           provider={provider}
           booking={booking}
           category={category}

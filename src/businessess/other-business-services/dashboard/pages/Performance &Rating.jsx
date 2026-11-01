@@ -1,6 +1,6 @@
 import { useState } from "react";
 //import tunde from "../assets/tunde.png";
-import BeautyDashboardLayout from "../layout/BeautyDashboardLayout";
+import BusinessDashboardLayout from "../layout/BusinessDashboardLayout";
 
 const timeRanges = ["Last 7 days", "Last 30 days", "Last 90 days"];
 
@@ -46,7 +46,7 @@ export default function PerformanceRatingPage() {
   const [activeRange, setActiveRange] = useState(timeRanges[0]);
 
   return (
-    <BeautyDashboardLayout>
+    <BusinessDashboardLayout>
       <div className="mx-auto w-full max-w-5xl space-y-5 p-4 sm:p-6">
         {/* Heading */}
         <header>
@@ -209,6 +209,6 @@ export default function PerformanceRatingPage() {
           </div>
         </section>
       </div>
-    </BeautyDashboardLayout>
+    </BusinessDashboardLayout>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Search, MapPin, Menu } from "lucide-react";
+import { Bell, Search, MapPin, Menu, ChevronDown, Building2, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import NotificationDrawer from "../dashboard/Notification";
@@ -14,6 +14,9 @@ import { notificationService } from "../../api/notifications";
 import { getAllBookings } from "../../api/bookings";
 import { toggleAvailability as apiToggleAvailability } from "../../api/provider";
 import KycVerificationModal from "./KycVerificationModal";
+import { getUserByEmail } from "../../api/auth";
+import { getUserById } from "../../api/user";
+import { requestStaffClockIn, requestStaffClockOut } from "../../api/business";
 
 export default function ProviderNavbar({ onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
@@ -24,10 +27,14 @@ export default function ProviderNavbar({ onMenuClick }) {
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const logout = useAuthStore((state) => state.logout);
   const [socket, setSocket] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [staffBusiness, setStaffBusiness] = useState(null);
+  const [clockRequestBusy, setClockRequestBusy] = useState(false);
   const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
   const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
   const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
@@ -37,6 +44,76 @@ export default function ProviderNavbar({ onMenuClick }) {
     "new_booking_request",
     "booking_selected",
   ];
+  const memberships = user?.data?.staffMemberships || [];
+  const activeMembership = memberships.find((membership) => membership?.status === "ACTIVE" && membership?.onDuty?.active)
+    || memberships.find((membership) => membership?.status === "ACTIVE");
+  const onBusinessWorkspace = Boolean(activeMembership?.onDuty?.active);
+  const businessId = activeMembership?.business?._id || activeMembership?.business;
+  const requestPending = activeMembership?.clockRequest?.status?.toLowerCase() === "pending";
+
+  const refreshStaffProfile = async () => {
+    const email = useAuthStore.getState().user?.data?.email;
+    if (!email) return;
+    const response = await getUserByEmail(email);
+    const freshUser = response?.data || response;
+    if (freshUser) updateUser({ data: { ...useAuthStore.getState().user?.data, ...freshUser } });
+  };
+
+  useEffect(() => {
+    if (!businessId) {
+      setStaffBusiness(null);
+      return;
+    }
+    let cancelled = false;
+    getUserById(businessId)
+      .then((response) => {
+        if (!cancelled) setStaffBusiness(response?.data || response);
+      })
+      .catch((error) => console.error("Could not load staff business profile:", error));
+    return () => { cancelled = true; };
+  }, [businessId]);
+
+  useEffect(() => {
+    if (!requestPending) return undefined;
+    const timer = window.setInterval(() => {
+      refreshStaffProfile().catch((error) => console.error("Could not refresh clock request:", error));
+    }, 10000);
+    return () => window.clearInterval(timer);
+  }, [requestPending]);
+
+  const handleWorkspaceSwitch = async (workspace) => {
+    setShowProfileMenu(false);
+    if (!activeMembership || !businessId) return;
+    if (clockRequestBusy) return;
+    if (workspace === "business" && onBusinessWorkspace) return;
+    if (workspace === "personal" && !onBusinessWorkspace) return;
+    setClockRequestBusy(true);
+    try {
+      if (workspace === "business") {
+        await requestStaffClockIn(businessId);
+        toast.success("Clock-in request sent. Your business must approve it before you switch workspaces.");
+      } else {
+        await requestStaffClockOut(businessId);
+        toast.success("Clock-out request sent. Your business must approve it before you switch to your personal profile.");
+      }
+      await refreshStaffProfile();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Could not send your clock request. Please try again.");
+    } finally {
+      setClockRequestBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    const approved = activeMembership?.clockRequest?.status?.toLowerCase() === "approved";
+    const action = activeMembership?.clockRequest?.action?.toLowerCase().replace(/[-_\s]/g, "");
+    if (approved && action?.includes("clockin") && activeMembership?.onDuty?.active) {
+      toast.success("Clock-in approved. You’re now using your business profile.");
+    }
+    if (approved && action?.includes("clockout") && !activeMembership?.onDuty?.active) {
+      toast.success("Clock-out approved. You’re back on your personal profile.");
+    }
+  }, [activeMembership?.clockRequest?.status, activeMembership?.clockRequest?.action, activeMembership?.onDuty?.active]);
 
   // Don't render until store is hydrated
   if (!hydrated) {
@@ -587,28 +664,35 @@ export default function ProviderNavbar({ onMenuClick }) {
           </button>
 
           {/* Profile */}
-          <button
-            onClick={() => navigate("/dashboard/provider/settings")}
-            className="flex items-center"
-          >
-            {user?.data?.profilePicture ? (
-              <img
-                src={user.data.profilePicture}
-                alt="Profile"
-                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/avatar.png";
-                }}
-              />
-            ) : (
-              <img
-                src="/avatar.png"
-                alt="Profile"
-                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border"
-              />
+          <div className="relative">
+            <button
+              type="button"
+              aria-expanded={showProfileMenu}
+              aria-label="Open profile and workspace menu"
+              onClick={() => setShowProfileMenu((open) => !open)}
+              className="flex items-center gap-1 text-gray-700"
+            >
+              {onBusinessWorkspace && staffBusiness?.profilePicture ? (
+                <img src={staffBusiness.profilePicture} alt="Business profile" className="h-7 w-7 rounded-full border sm:h-8 sm:w-8" />
+              ) : (
+                <img src={user?.data?.profilePicture || "/avatar.png"} alt="Personal profile" className="h-7 w-7 rounded-full border sm:h-8 sm:w-8" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatar.png"; }} />
+              )}
+              <ChevronDown size={15} />
+            </button>
+            {showProfileMenu && (
+              <div className="absolute right-0 top-12 z-[70] w-[min(92vw,350px)] overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-xl">
+                <div className="flex items-center gap-3 px-4 py-4">
+                  {onBusinessWorkspace ? <Building2 className="h-11 w-11 rounded-full border border-[#327c53] p-2 text-[#327c53]" /> : <img src={user?.data?.profilePicture || "/avatar.png"} alt="" className="h-11 w-11 rounded-full border object-cover" />}
+                  <div className="min-w-0 flex-1"><p className="truncate font-semibold text-[#327c53]">{onBusinessWorkspace ? (staffBusiness?.fullName || staffBusiness?.businessName || "Business") : (user?.data?.fullName || "Provider")}</p><p className="text-sm text-gray-500">{onBusinessWorkspace ? "Business workspace" : "Personal profile"}</p></div>
+                </div>
+                <div className="flex justify-end gap-4 border-b px-4 pb-3 text-sm text-gray-600"><button type="button" onClick={() => { setShowProfileMenu(false); navigate("/dashboard/provider/settings"); }} className="hover:text-gray-900">Account settings</button><button type="button" onClick={() => { setShowProfileMenu(false); logout(); navigate("/login"); }} className="hover:text-gray-900">Sign out</button></div>
+                {activeMembership && businessId && <div className="p-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Switch workspace</p>
+                  <button type="button" disabled={clockRequestBusy || requestPending || onBusinessWorkspace} onClick={() => handleWorkspaceSwitch("business")} className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-gray-50 disabled:cursor-default disabled:opacity-70"><Building2 className="h-11 w-11 shrink-0 rounded-full border border-[#327c53] p-2 text-[#327c53]" /><span className="min-w-0 flex-1"><span className="block truncate font-medium">{staffBusiness?.fullName || staffBusiness?.businessName || "Business workspace"}</span><span className="block text-sm text-gray-500">{requestPending && activeMembership?.clockRequest?.action?.toLowerCase().includes("in") ? "Clock-in request awaiting approval" : "Business workspace"}</span></span>{onBusinessWorkspace && <span className="text-xs font-medium text-[#327c53]">Current</span>}{!onBusinessWorkspace && !requestPending && <span className="text-xs text-[#327c53]">Clock in</span>}</button>
+                  <button type="button" disabled={clockRequestBusy || requestPending || !onBusinessWorkspace} onClick={() => handleWorkspaceSwitch("personal")} className="mt-2 flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-gray-50 disabled:cursor-default disabled:opacity-70"><UserRound className="h-11 w-11 shrink-0 rounded-full border border-gray-300 p-2 text-lime-600" /><span className="min-w-0 flex-1"><span className="block truncate font-medium">{user?.data?.fullName || "Personal profile"}</span><span className="block text-sm text-gray-500">{requestPending && activeMembership?.clockRequest?.action?.toLowerCase().includes("out") ? "Clock-out request awaiting approval" : "Personal profile"}</span></span>{!onBusinessWorkspace && <span className="text-xs font-medium text-[#327c53]">Current</span>}{onBusinessWorkspace && !requestPending && <span className="text-xs text-[#327c53]">Clock out</span>}</button>
+                </div>}
+              </div>
             )}
-          </button>
+          </div>
         </div>
 
         {/* Mobile Search Dropdown */}

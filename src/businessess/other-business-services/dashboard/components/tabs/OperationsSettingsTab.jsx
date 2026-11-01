@@ -5,6 +5,10 @@ import { SettingsEditDialog } from "./SettingsTabCard";
 import ServiceDetailsModal from "../ServiceDetailsModal";
 import { updateServiceDetails } from "../../../api/businessess";
 import { uploadBusinessWorkVisual } from "../../../../../api/business";
+import {
+  findServiceCategoryByLabel,
+  useServiceCategories,
+} from "../../../../../stores/serviceCategories.store";
 
 const weekDays = [
   { short: "Mon", full: "Monday" },
@@ -14,15 +18,6 @@ const weekDays = [
   { short: "Fri", full: "Friday" },
   { short: "Sat", full: "Saturday" },
   { short: "Sun", full: "Sunday" },
-];
-
-const MASTER_SERVICES = [
-  "Barbing",
-  "Hair Dresser",
-  "Spa",
-  "Lash Tech.",
-  "Pedicure",
-  "Nails Tech.",
 ];
 
 const serviceLocations = [
@@ -96,6 +91,12 @@ export default function BusinessSettingsTab({
   const [providedServiceEditorOpen, setProvidedServiceEditorOpen] =
     useState(false);
   const [services, setServices] = useState([]);
+  const [showAllServiceNames, setShowAllServiceNames] = useState(false);
+  const { categories } = useServiceCategories();
+  // Services offered under the business's category, from /categories.
+  const categoryServiceNames = (
+    findServiceCategoryByLabel(categories, business?.businessCategory)?.services || []
+  ).map((service) => service.name);
   const [serviceEditor, setServiceEditor] = useState(null);
   const [openDays, setOpenDays] = useState(business?.availableDays ?? []);
   const [scheduleMode, setScheduleMode] = useState("scheduled");
@@ -196,7 +197,7 @@ export default function BusinessSettingsTab({
 
   const serviceNames = [
     ...new Map(
-      [...MASTER_SERVICES, ...services.map((service) => service.name)].map(
+      [...categoryServiceNames, ...services.map((service) => service.name)].map(
         (name) => [name.toLowerCase(), name],
       ),
     ).values(),
@@ -490,7 +491,7 @@ export default function BusinessSettingsTab({
           </button>
         </div>
         <div className="mt-2.5 flex flex-wrap gap-1.5">
-         {serviceNames.map((serviceName) => {
+         {(showAllServiceNames ? serviceNames : serviceNames.slice(0, 4)).map((serviceName) => {
             const isSelected = services.some(
               (s) => s.name.toLowerCase() === serviceName.toLowerCase()
             );
@@ -763,7 +764,9 @@ export default function BusinessSettingsTab({
             key: "category",
             label: "Business category",
             type: "select",
-            options: ["Beauty & Personal Care"],
+            options: categories
+              .filter((category) => category.id !== "transport")
+              .map((category) => category.label),
           },
         ]}
         values={businesses}

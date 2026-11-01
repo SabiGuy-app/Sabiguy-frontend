@@ -16,11 +16,13 @@ import { useEffect, useState } from "react";
 // import BeautyAndPersonalCare from "./AccountSetup/BeautyAndPersonalCare";
 
 export default function Form() {
-  const [step, setStep] = useState(0);
+  const switchedIntoProvider = localStorage.getItem("switchProfileOnboarding") === "provider";
+  const [step, setStep] = useState(switchedIntoProvider ? 1 : 0);
   const [formData, setFormData] = useState({
     gender: "",
     city: "",
     accountType: "",
+    ...(switchedIntoProvider ? { email: localStorage.getItem("email") || "" } : {}),
   });
 
   const getStepForKycLevel = (level) => {
@@ -55,6 +57,9 @@ export default function Form() {
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
   useEffect(() => {
+    if (localStorage.getItem("switchProfileOnboarding") === "provider") {
+      localStorage.removeItem("switchProfileOnboarding");
+    }
     const storedKycLevel = localStorage.getItem("kycLevel");
     const storedEmail = localStorage.getItem("email");
     if (storedKycLevel) {

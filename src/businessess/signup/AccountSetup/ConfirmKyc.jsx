@@ -15,7 +15,7 @@ const MotionDiv = motion.div;
 const BUSINESS_KYC_ENDPOINT = "/businesses/kyc-level";
 
 export default function ConfirmKyc({ onNext }) {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("email") || "");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 

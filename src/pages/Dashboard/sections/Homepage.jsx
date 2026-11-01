@@ -6,11 +6,11 @@ import { ArrowRight, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/auth.store";
 // import { getAllProviders } from "../../../api/provider";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import ServicesCard from "../../../components/dashboard/ServicesCard";
 import {
-  exploreCategories,
   getCategoryDestination,
+  useExploreCategories,
 } from "../../../other-services/dashboard/data/exploreCategories";
 import new1 from "/new1.png";
 import new2 from "/new2.png";
@@ -24,9 +24,9 @@ import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import DashboardTour from "../../../components/tour/DashboardTour";
 import NotificationTest from "../../../services/testNotify";
 
-// Every service in the shared constants, each linking to its category page.
+// Every service from /categories, each linking to its category page.
 // The category page then asks the backend which providers actually offer it.
-const searchableTasks = Array.from(
+const buildSearchableTasks = (exploreCategories) => Array.from(
   new Map(
     exploreCategories
       .flatMap((category) =>
@@ -43,8 +43,6 @@ const searchableTasks = Array.from(
 const COLLAPSED_SUGGESTION_COUNT = 4;
 const HOMEPAGE_CATEGORY_COUNT = 3;
 
-const findCategory = (id) => exploreCategories.find((category) => category.id === id);
-
 export default function DashboardHome() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAllSuggestions, setShowAllSuggestions] = useState(false);
@@ -54,6 +52,9 @@ export default function DashboardHome() {
   const [selectedService, setSelectedService] = useState(null);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  const { exploreCategories } = useExploreCategories();
+  const searchableTasks = useMemo(() => buildSearchableTasks(exploreCategories), [exploreCategories]);
+  const findCategory = (id) => exploreCategories.find((category) => category.id === id);
 
   const query = searchTerm.trim().toLowerCase();
   const matchingTasks = query

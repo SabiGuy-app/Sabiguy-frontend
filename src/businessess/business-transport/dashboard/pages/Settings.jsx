@@ -8,6 +8,7 @@ import AccountSettingsTab from "../components/AccountSettingsTab";
 import BillingSettingsTab from "../components/BillingSettingsTab";
 import AdvancedSettingsTab from "../components/AdvancedSettingsTab";
 import DangerZoneCard from "../components/DangerZoneCard";
+import SwitchToBuyerButton from "../../../../components/auth/SwitchToBuyerButton";
 
 const TABS = [
   { key: "business", label: "Business", icon: LayoutGrid, Component: BusinessSettingsTab },
@@ -24,11 +25,12 @@ export default function Settings() {
 
   return (
     <FleetDashboardLayout>
-      <header className="mb-5 sm:mb-6">
+      <header className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold tracking-[-0.02em] text-[#231F20] sm:text-[26px]">
           Settings
         </h1>
         <p className="mt-2 text-sm text-[#656263] sm:text-base">Business account & data</p>
+        <SwitchToBuyerButton className="w-full sm:w-auto" />
       </header>
 
       <div className="rounded-xl border border-[#E8E5E6] bg-white">

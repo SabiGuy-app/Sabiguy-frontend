@@ -31,6 +31,7 @@ import {
   getCategoryForProvider,
   getExploreCategoryBySlug,
   getProviderProfilePath,
+  useExploreCategories,
 } from "../data/exploreCategories";
 
 const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v9";
@@ -109,6 +110,7 @@ const searchProvidersForService = async (
   location,
   query,
   category,
+  exploreCategories,
   searchResponse = null,
 ) => {
   const search = query.trim();
@@ -152,7 +154,7 @@ const searchProvidersForService = async (
             : provider.services,
         ),
       };
-      const providerCategory = getCategoryForProvider(merged, category);
+      const providerCategory = getCategoryForProvider(exploreCategories, merged, category);
       const normalized = normalizeSearchBeautyProvider(
         merged,
         providerCategory
@@ -225,7 +227,13 @@ function ProviderCardSkeleton() {
 // Category listing, or a cross-category provider search when searchMode is set.
 export default function BeautyServices({ searchMode = false }) {
   const { categorySlug = "beauty-personal-care" } = useParams();
-  const category = searchMode ? null : getExploreCategoryBySlug(categorySlug);
+  const {
+    exploreCategories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    retry: retryCategories,
+  } = useExploreCategories();
+  const category = searchMode ? null : getExploreCategoryBySlug(exploreCategories, categorySlug);
   const searchParam = searchMode ? "q" : "service";
   const routeLocation = useLocation();
   const initialBeautySearch = useRef(routeLocation.state?.beautySearch || null);
@@ -306,7 +314,7 @@ export default function BeautyServices({ searchMode = false }) {
 
   useEffect(() => {
     const query = searchTerm.trim();
-    if (!searchLocation || (!category && !searchMode)) return undefined;
+    if (categoriesLoading || !searchLocation || (!category && !searchMode)) return undefined;
     if (query.length < 2) {
       setServiceSearchResults(null);
       setServiceSearchLoading(false);
@@ -329,6 +337,7 @@ export default function BeautyServices({ searchMode = false }) {
           searchLocation,
           query,
           category,
+          exploreCategories,
           matchesPendingSearch ? pendingSearch.response : null,
         );
         if (active) {
@@ -367,7 +376,7 @@ export default function BeautyServices({ searchMode = false }) {
       active = false;
       clearTimeout(timeoutId);
     };
-  }, [category, searchLocation, searchMode, searchTerm]);
+  }, [category, categoriesLoading, exploreCategories, searchLocation, searchMode, searchTerm]);
 
   const filteredProviders = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -446,10 +455,21 @@ export default function BeautyServices({ searchMode = false }) {
     return (
       <DashboardLayout showSidebar={false}>
         <p className="py-8">
-          Category not found.{" "}
-          <Link to="/dashboard/categories" className="text-[#005823] underline">
-            Browse all categories
-          </Link>
+          {categoriesLoading ? "Loading category..." : categoriesError ? (
+            <>
+              Couldn't load categories.{" "}
+              <button type="button" onClick={retryCategories} className="text-[#005823] underline">
+                Try again
+              </button>
+            </>
+          ) : (
+            <>
+              Category not found.{" "}
+              <Link to="/dashboard/categories" className="text-[#005823] underline">
+                Browse all categories
+              </Link>
+            </>
+          )}
         </p>
       </DashboardLayout>
     );

@@ -1,4 +1,4 @@
-import { Star, MapPin, Heart } from "lucide-react";
+import { Star, MapPin, Heart, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
@@ -18,9 +18,11 @@ export default function ProviderCard({
   isFavorited = false,
   showFavoriteButton = true,
   isUnavailable = false,
-  isAvailable = !isUnavailable
+  isAvailable = !isUnavailable,
+  accountType = "business",
 
 }) {
+  const isBusiness = accountType === "business";
     const [favorited, setFavorited] = useState(isFavorited);
 
   const navigate = useNavigate();
@@ -61,6 +63,13 @@ export default function ProviderCard({
           />
         )}
         
+        {isBusiness && (
+          <span className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-[#005823] shadow-sm">
+            <Building2 size={14} aria-hidden="true" />
+            Business
+          </span>
+        )}
+
         {/* Favorite Button */}
         {showFavoriteButton && (
           <button
