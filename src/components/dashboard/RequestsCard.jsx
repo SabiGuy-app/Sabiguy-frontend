@@ -252,7 +252,7 @@ export default function RequestCard({
                             {copiedId === "provider" ? (
                               <Check size={14} className="text-green-500" />
                             ) : (
-                                <Copy size={14} />
+                              <Copy size={14} />
                             )}
                           </button>
                         </div>
@@ -375,6 +375,8 @@ export default function RequestCard({
                 "paid_escrow",
               ].includes(request.status.toLowerCase()) && (
                 <CancelRequestButton
+                  className="w-full max-w-30 flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border  rounded-lg  transition-colors text-red-600  border-red-300  hover:bg-red-50 text-xs sm:px-3 sm:py-2 sm:text-sm bg-[#2D6A3E]  font-medium md:w-fit md:px-5 md:py-2 md:text-base cursor-pointer"
+                  buttonText="Cancel"
                   bookingId={request.id}
                   onSuccess={onBookingCancelled}
                 />

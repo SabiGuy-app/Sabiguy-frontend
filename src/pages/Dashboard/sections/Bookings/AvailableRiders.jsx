@@ -12,6 +12,7 @@ import DashboardLayout from "../../../../components/layouts/DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import useBookingStore from "../../../../stores/booking.store";
 import { selectProvider, getBookingsDetails } from "../../../../api/bookings";
+import AvailableRiderCard from "../../../../components/dashboard/AvailableRiderCard";
 import DeliveryMap from "../../../../components/dashboard/Map";
 
 const WAIT_DURATION_MS = 60_000; // 1 minute
@@ -418,7 +419,7 @@ export default function AvailableRiders() {
         />
       )}
 
-      <div className="min-h-screen md:grid md:grid-cols-2 space-y-4 gap-10 bg-gray-50 p-4 sm:p-8">
+      <div className="min-h-screen flex flex-wrap space-y-4 gap-10 bg-gray-50 p-4 sm:p-8">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">
             Available providers
@@ -457,133 +458,18 @@ export default function AvailableRiders() {
                 const providerId = getProviderId(provider);
 
                 return (
-                  <div
+                  <AvailableRiderCard
                     key={providerId}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
-                  >
-                    <div className="flex flex-col md:flex-row gap-6 md:gap-4">
-                      <div className="w-full md:w-1/2">
-                        <div className="w-full h-50 sm:h-62.5 bg-gray-100 rounded-lg overflow-hidden">
-                          <img
-                            src={provider.profilePicture || "/avatar.png"}
-                            alt={provider.fullName}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = "/avatar.png";
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="w-full md:w-1/2">
-                        <div className="flex flex-col h-full justify-between">
-                          <div>
-                            <h2 className="text-[20px] font-medium text-[#231F20] capitalize">
-                              {provider.fullName}{" "}
-                              <span className="text-[#231F2080] font-semibold text-[17px] capitalize">
-                                -{" "}
-                                {provider.services?.[0]?.title?.replace(
-                                  /_/g,
-                                  " ",
-                                )}
-                              </span>
-                            </h2>
-                            {providerId && (
-                              <div className="mt-1 mb-1">
-                                <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200 inline-block">
-                                  ID:{" "}
-                                  {String(providerId).slice(-6).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-1 mt-1">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm font-medium text-gray-900">
-                                {provider.rating?.average > 0
-                                  ? provider.rating.average.toFixed(1)
-                                  : "New"}
-                              </span>
-                              <span className="text-[14px] text-[#231F2080]">
-                                ({provider.rating?.count} reviews)
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-1 mt-1">
-                              <MapPin className="w-4 h-4 text-[#231F20BF]" />
-                              <span className="text-[14px] text-[#231F20BF]">
-                                {getProviderDistanceLabel(provider)}
-                                {provider.providerETA &&
-                                  ` - ETA: ${provider.providerETA.value} minutes`}
-                              </span>
-                            </div>
-
-                            <div className="mt-4 rounded-2xl border border-[#005823]/10 bg-white/80 px-4 py-3">
-                              <div className="flex items-end justify-between gap-3">
-                                <div>
-                                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                    Normal price
-                                  </p>
-                                  <h2
-                                    className={`text-2xl sm:text-[25px] font-semibold ${
-                                      hasFirstRideDiscount
-                                        ? "text-gray-400 line-through"
-                                        : "text-[#005823]"
-                                    }`}
-                                  >
-                                    {formatCurrency(getProviderPrice(provider))}
-                                  </h2>
-                                </div>
-
-                                {hasFirstRideDiscount && (
-                                  <div className="text-right">
-                                    <p className="text-sm font-semibold text-[#005823]">
-                                      Discount available
-                                    </p>
-                                    <p className="mt-1 text-xs text-[#231F2080] max-w-45">
-                                      Select a provider to see your discounted
-                                      price.
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-3 sm:flex-row gap-2 mt-4">
-                            <button
-                              onClick={() => handleAccept(provider)}
-                              disabled={!!acceptingId}
-                              className="w-full py-2.5 px-4 rounded-md text-[16px] font-medium transition-colors bg-[#005823CC] hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                              <span className="flex items-center justify-center gap-2 text-white">
-                                {acceptingId === providerId ? (
-                                  <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Notifying…
-                                  </>
-                                ) : (
-                                  <>
-                                    <Check className="w-6 h-6" />
-                                    Accept
-                                  </>
-                                )}
-                              </span>
-                            </button>
-
-                            <button
-                              onClick={() => handleDecline(providerId)}
-                              disabled={!!acceptingId}
-                              className="w-full py-2.5 px-4 text-[16px] rounded-md font-medium bg-white border border-[#231F2040] text-[#231F20] hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                              Decline
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    provider={provider}
+                    providerId={providerId}
+                    acceptingId={acceptingId}
+                    hasFirstRideDiscount={hasFirstRideDiscount}
+                    onAccept={handleAccept}
+                    onDecline={handleDecline}
+                    formatCurrency={formatCurrency}
+                    getProviderDistanceLabel={getProviderDistanceLabel}
+                    getProviderPrice={getProviderPrice}
+                  />
                 );
               })}
             </div>

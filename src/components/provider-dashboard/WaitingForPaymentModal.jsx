@@ -1,23 +1,28 @@
-import { X, MapPin, Calendar, Shield } from "lucide-react";
+import { X, MapPin, Calendar, Shield, AlertTriangle } from "lucide-react";
+
+export const getPaymentCountdown = (totalSeconds = 0) => {
+  const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+
+  return {
+    totalSeconds: safeSeconds,
+    minutes,
+    seconds,
+    formatted: `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
+  };
+};
 
 /**
  * Waiting for Payment modal — the countdown view only.
  *
- * This component does NOT own the timer. It used to run its own
- * setInterval internally — but that meant closing the modal (X icon)
- * unmounted it, React cleared its interval, and the countdown simply
- * stopped, so the expired state would never fire for a dismissed job.
- * Now the PARENT page owns the timer and passes `secondsLeft` down as
- * a plain number every render — this component just displays it. The
- * countdown keeps running in the parent regardless of whether this
- * modal is even mounted.
- *
- * `onClose` is the X icon — just closes the modal; the countdown
- * itself is unaffected and keeps running in the parent.
+ * The timer is owned by the parent page so it continues counting down even
+ * when the modal is dismissed. This component just displays the shared value.
  */
 export default function WaitingForPaymentModal({
   secondsLeft = 0,
   onClose = () => {},
+  compact = false,
   customer = {
     fullName: "Customer",
     profilePicture: "/avatar.png",
@@ -29,14 +34,8 @@ export default function WaitingForPaymentModal({
   platformFee = 0,
   riderReceives = 0,
 }) {
-  const formatTime = (totalSeconds) => {
-    const m = Math.floor(totalSeconds / 60);
-    const s = totalSeconds % 60;
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${pad(m)}:${pad(s)}`;
-  };
+  const paymentCountdown = getPaymentCountdown(secondsLeft);
 
-  // Timer color condition tuned for a 5-minute countdown.
   const getTimerStyle = (totalSeconds) => {
     if (totalSeconds <= 30) return "text-red-600 animate-pulse";
     if (totalSeconds <= 120) return "text-amber-500";
@@ -44,6 +43,20 @@ export default function WaitingForPaymentModal({
   };
 
   const formatNaira = (value) => `₦${Number(value || 0).toLocaleString()}`;
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+        <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-500" />
+        <p className="text-sm font-medium">
+          Complete your payment before the countdown expires —{" "}
+          <span className="font-bold tabular-nums">
+            {paymentCountdown.formatted}
+          </span>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
@@ -68,7 +81,7 @@ export default function WaitingForPaymentModal({
             secondsLeft,
           )}`}
         >
-          {formatTime(secondsLeft)}
+          {paymentCountdown.formatted}
         </div>
 
         <div className="flex items-center gap-3 mt-6">

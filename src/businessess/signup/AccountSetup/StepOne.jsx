@@ -15,6 +15,7 @@ import { trackEvent } from "../../../services/analytics";
 import PasswordRequirements from "../../../components/PasswordRequirements";
 import { useAuthStore } from "../../../stores/auth.store";
 import ForgotPassword from "../../../pages/Forgot-Password/ForgotPassword";
+import { SIGNUP_PLATFORM } from "../../../constants/platform";
 
 const MotionDiv = motion.div;
 
@@ -56,11 +57,15 @@ export default function StepOne({ onNext, email }) {
         email: effectiveEmail,
         password: values.password,
         accountType: "business",
+        signupPlatform: SIGNUP_PLATFORM, // new
       };
 
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}${REGISTER_ENDPOINT}`,
         payload,
+        {
+          headers: { "x-client-platform": SIGNUP_PLATFORM },
+        },
       );
 
       if (response.status === 200 || response.status === 201) {
@@ -126,8 +131,10 @@ export default function StepOne({ onNext, email }) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-client-platform": SIGNUP_PLATFORM,
             },
             body: JSON.stringify({ token: tokenResponse.access_token }),
+            signupPlatform: SIGNUP_PLATFORM, // new
           },
         );
 
@@ -244,7 +251,10 @@ export default function StepOne({ onNext, email }) {
 
                 <div className="relative">
                   <div className="mb-1 flex items-center justify-between">
-                    <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="password"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Password
                     </label>
                     <button
