@@ -2,12 +2,30 @@ import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import ProviderCard from "../../../components/dashboard/ProviderCard";
 import CategoryCarousel from "../../../components/dashboard/CategoryCarousel";
 import Button from "../../../components/dashboard/Button";
-import { ArrowRight, Search } from "lucide-react";
+import ServicesCard from "../../../components/dashboard/ServicesCard";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  Car,
+  CarFront,
+  Camera,
+  Flower2,
+  GraduationCap,
+  Grid2X2,
+  Hammer,
+  House,
+  Shirt,
+  Search,
+  Sparkles,
+  Utensils,
+  Video,
+  WashingMachine,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/auth.store";
 // import { getAllProviders } from "../../../api/provider";
 import { useMemo, useState } from "react";
-import ServicesCard from "../../../components/dashboard/ServicesCard";
 import {
   getCategoryDestination,
   useExploreCategories,
@@ -20,7 +38,6 @@ import new5 from "/new5.png";
 import new6 from "/new6.png";
 import new7 from "/new7.png";
 import new8 from "/new8.png";
-import ComingSoonModal from "../../../components/dashboard/ComingSoonModal";
 import DashboardTour from "../../../components/tour/DashboardTour";
 import NotificationTest from "../../../services/testNotify";
 
@@ -41,15 +58,31 @@ const buildSearchableTasks = (exploreCategories) => Array.from(
 );
 
 const COLLAPSED_SUGGESTION_COUNT = 4;
-const HOMEPAGE_CATEGORY_COUNT = 3;
+const CATEGORY_ICONS = {
+  transport: Car,
+  beauty: Flower2,
+  automotive: CarFront,
+  fashion: Shirt,
+  fashon: Shirt,
+  "home-repair": Hammer,
+  laundry: WashingMachine,
+  photography: Camera,
+  videography: Video,
+  catering: Utensils,
+  cleaning: Sparkles,
+  domestic: House,
+  education: GraduationCap,
+};
+
+const getCategoryIcon = (category) =>
+  CATEGORY_ICONS[category.id] || BriefcaseBusiness;
 
 export default function DashboardHome() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAllSuggestions, setShowAllSuggestions] = useState(false);
   const hydrated = useAuthStore((state) => state.hydrated);
   // const { providers, setProviders } = useProviderStore();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(null);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const { exploreCategories } = useExploreCategories();
@@ -140,20 +173,9 @@ export default function DashboardHome() {
     },
   ];
 
-  const services = exploreCategories;
-
   const categoryServiceMap = {
     "Package Delivery": "package delivery",
     "Book a Ride": "book a ride",
-  };
-
-  const handleServiceClick = (service, task) => {
-    const destination = getCategoryDestination(service, task);
-    if (destination) navigate(destination);
-    else {
-      setSelectedService(service);
-      setModalOpen(true);
-    }
   };
 
   const handleCategoryClick = (category) => {
@@ -197,7 +219,6 @@ export default function DashboardHome() {
             {" "}
             Welcome Back, {user?.data?.fullName?.split(" ")[0]} 👋
           </h2>
-          <p className="mb-3 text-sm">What would you like to get done today?</p>
         </div>
       </div>
 
@@ -297,40 +318,87 @@ export default function DashboardHome() {
           <h3 className="text-[20px] font-semibold mb-4">Categories</h3>
         </div>
         <div id="explore-categories">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.slice(0, HOMEPAGE_CATEGORY_COUNT).map((ser, idx) => {
+          <div className="grid grid-cols-4 gap-x-3 gap-y-7 sm:grid-cols-4 lg:grid-cols-4">
+            {exploreCategories.slice(0, 7).map((category) => {
+              const Icon = getCategoryIcon(category);
               return (
                 <ServicesCard
-                  key={idx}
-                  image={ser.image}
-                  tasks={ser.tasks}
-                  imageIncludesTitle={ser.imageIncludesTitle}
-                  title={ser.title}
-                  onClick={() => handleServiceClick(ser)}
-                  onTaskClick={(task) => handleServiceClick(ser, task)}
+                  key={category.id}
+                  icon={Icon}
+                  title={category.title}
+                  onClick={() => setActiveCategory(category)}
                 />
               );
             })}
-          </div>
-          {services.length > HOMEPAGE_CATEGORY_COUNT && (
-            <div className="mt-6 flex justify-center">
+            {
               <button
                 type="button"
                 onClick={() => navigate("/dashboard/categories")}
-                className="inline-flex items-center gap-2 rounded-md border border-[#34805A] px-5 py-2.5 text-sm font-semibold text-[#005823] hover:bg-[#E7F6EC] focus-visible:outline-2 focus-visible:outline-[#005823]"
+                aria-label="View all categories"
+                className="group flex min-w-0 flex-col items-center gap-3 rounded-lg px-2 py-1 text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005823]"
               >
-                View more categories
-                <ArrowRight size={16} aria-hidden="true" />
+                <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F1F4F2] text-[#16804A] transition-colors group-hover:bg-[#E4F2E9] sm:h-24 sm:w-24">
+                  <Grid2X2 size={40} strokeWidth={1.8} aria-hidden="true" />
+                </span>
+                <span className="text-sm font-semibold leading-snug text-[#231F20] sm:text-base">More</span>
               </button>
-            </div>
-          )}
+            }
+          </div>
         </div>
 
-        <ComingSoonModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          service={selectedService}
-        />
+        {activeCategory && (
+          <div
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setActiveCategory(null);
+            }}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="featured-services-title"
+              className="max-h-[85vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:max-w-lg sm:rounded-2xl sm:p-6"
+            >
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Featured services</p>
+                  <h3 id="featured-services-title" className="mt-1 text-xl font-semibold text-[#231F20]">
+                    {activeCategory.title}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory(null)}
+                  aria-label="Close featured services"
+                  className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-[#005823]"
+                >
+                  <X size={20} aria-hidden="true" />
+                </button>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {(activeCategory.tasks?.length
+                  ? activeCategory.tasks
+                  : activeCategory.serviceNames?.length
+                    ? activeCategory.serviceNames
+                    : [activeCategory.title]
+                ).map((service) => (
+                  <button
+                    key={service}
+                    type="button"
+                    onClick={() => {
+                      setActiveCategory(null);
+                      navigate(`/dashboard/search?q=${encodeURIComponent(service)}`);
+                    }}
+                    className="flex w-full items-center justify-between gap-4 py-3 text-left text-sm font-medium text-[#231F20] hover:text-[#005823] focus-visible:outline-2 focus-visible:outline-[#005823]"
+                  >
+                    {service}
+                    <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
       </div>
       {/* <div>
         <h3 className="text-xl font-semibold mb-4">Featured Providers</h3>

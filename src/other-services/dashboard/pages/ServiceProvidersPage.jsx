@@ -34,7 +34,7 @@ import {
   useExploreCategories,
 } from "../data/exploreCategories";
 
-const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v9";
+const PROVIDER_SEARCH_CACHE_KEY = "service-search-providers-v1";
 
 const getCurrentLocation = () =>
   new Promise((resolve, reject) => {
@@ -225,15 +225,18 @@ function ProviderCardSkeleton() {
 }
 
 // Category listing, or a cross-category provider search when searchMode is set.
-export default function BeautyServices({ searchMode = false }) {
-  const { categorySlug = "beauty-personal-care" } = useParams();
+export default function ServiceProvidersPage({ searchMode = false }) {
+  const { categorySlug, serviceSlug } = useParams();
+  const activeCategorySlug = categorySlug || serviceSlug || "beauty-personal-care";
   const {
     exploreCategories,
     loading: categoriesLoading,
     error: categoriesError,
     retry: retryCategories,
   } = useExploreCategories();
-  const category = searchMode ? null : getExploreCategoryBySlug(exploreCategories, categorySlug);
+  const category = searchMode
+    ? null
+    : getExploreCategoryBySlug(exploreCategories, activeCategorySlug);
   const searchParam = searchMode ? "q" : "service";
   const routeLocation = useLocation();
   const initialBeautySearch = useRef(routeLocation.state?.beautySearch || null);
@@ -344,10 +347,10 @@ export default function BeautyServices({ searchMode = false }) {
           setServiceSearchResults(results);
           try {
             const cachedProviders = JSON.parse(
-              sessionStorage.getItem(BEAUTY_PROVIDER_CACHE_KEY) || "[]",
+              sessionStorage.getItem(PROVIDER_SEARCH_CACHE_KEY) || "[]",
             );
             sessionStorage.setItem(
-              BEAUTY_PROVIDER_CACHE_KEY,
+              PROVIDER_SEARCH_CACHE_KEY,
               JSON.stringify(
                 mergeProviderResults([
                   ...(Array.isArray(cachedProviders) ? cachedProviders : []),

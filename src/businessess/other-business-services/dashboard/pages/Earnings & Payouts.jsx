@@ -1,9 +1,8 @@
-//import { TriangleAlert } from "lucide-react"
-import DriverBalances from "../../../business-transport/dashboard/components/earningComponents/DriverBalances"
+// import DriverBalances from "../../../business-transport/dashboard/components/earningComponents/DriverBalances"
 import EarningTabs from "../../../business-transport/dashboard/components/earningComponents/EarningTabs"
 import EarningsSummary from "../../../business-transport/dashboard/components/earningComponents/EarningsSummary"
 import IncomeChart from "../../../business-transport/dashboard/components/earningComponents/IncomeChart"
-import Reconciliation from "../../../business-transport/dashboard/components/earningComponents/Reconciliation"
+// import Reconciliation from "../../../business-transport/dashboard/components/earningComponents/Reconciliation"
 import WalletCard from "../../../business-transport/dashboard/components/earningComponents/WalletCard"
 import WalletLedger from "../../../business-transport/dashboard/components/earningComponents/WalletLedger"
 //import { paymentWarning } from "../../../business-transport/dashboard/data/mockEarnings"
@@ -30,16 +29,16 @@ export default function Earnings() {
         <IncomeChart />
       </section>
 
-      <div className="my-5">
+      {/* <div className="my-5">
         <DriverBalances limit={1} />
-      </div>
+      </div> */}
 
-      <section className="my-5 flex w-full flex-col items-stretch justify-center gap-5 lg:flex-row">
+      {/* <section className="my-5 flex w-full flex-col items-stretch justify-center gap-5 lg:flex-row">
         <Reconciliation />
         <EarningTabs />
-      </section>
+      </section> */}
 
-      <WalletLedger limit={1} />
+      <WalletLedger limit={5} />
       </main>
     </BusinessDashboardLayout>
   )

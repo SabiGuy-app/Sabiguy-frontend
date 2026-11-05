@@ -103,6 +103,7 @@ export default function CategoryCarousel({ categories, onCategoryClick }) {
                 bgColor={cat.bgColor}
                 comingSoon={cat.comingSoon}
                 onClick={() => onCategoryClick(cat)}
+                onBookNow={() => onCategoryClick(cat)}
               />
             </div>
           ))}

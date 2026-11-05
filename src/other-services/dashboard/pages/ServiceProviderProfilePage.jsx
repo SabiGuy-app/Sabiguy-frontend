@@ -1,5 +1,5 @@
 import { createElement, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -20,12 +20,13 @@ import { mergeBeautyServices, normalizeSearchBeautyProvider } from "../utils/bea
 import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
 import ServiceBookingFlow from "..//components/booking/ServiceBookingFlow";
 import {
+  getCategoryForProvider,
   getExploreCategoryBySlug,
   getProviderProfilePath,
   useExploreCategories,
 } from "../data/exploreCategories";
 
-const BEAUTY_PROVIDER_CACHE_KEY = "beauty-search-providers-v9";
+const PROVIDER_SEARCH_CACHE_KEY = "service-search-providers-v1";
 const PRICING_OPTIONS = [
   { value: "walk_in", label: "Walk in" },
   { value: "customer_address", label: "My Address" },
@@ -145,10 +146,13 @@ function PreferredStaffPicker({ staff, selectedStaffCode, onSelect }) {
   );
 }
 
-export default function BeautyProviderProfile() {
+export default function ServiceProviderProfilePage() {
   const { providerId, categorySlug = "beauty-personal-care" } = useParams();
+  const navigate = useNavigate();
   const { exploreCategories, loading: categoriesLoading } = useExploreCategories();
-  const category = getExploreCategoryBySlug(exploreCategories, categorySlug);
+  const routeCategory = getExploreCategoryBySlug(exploreCategories, categorySlug);
+  const [profileCategory, setProfileCategory] = useState(null);
+  const category = profileCategory || routeCategory;
   const pricingOptions = PRICING_OPTIONS.map((option) =>
     option.value === "walk_in" && category?.id === "beauty"
       ? { ...option, label: "Walk in Salon" }
@@ -167,6 +171,10 @@ export default function BeautyProviderProfile() {
     providerState?.requestedId === providerId ? providerState.data : null;
 
   useEffect(() => {
+    setProfileCategory(null);
+  }, [providerId, categorySlug]);
+
+  useEffect(() => {
     // Wait for /categories so the profile is normalized with its category.
     if (!category) return undefined;
     let active = true;
@@ -180,7 +188,7 @@ export default function BeautyProviderProfile() {
       let cachedProvider = null;
       try {
         const cachedProviders = JSON.parse(
-          sessionStorage.getItem(BEAUTY_PROVIDER_CACHE_KEY) || "[]",
+          sessionStorage.getItem(PROVIDER_SEARCH_CACHE_KEY) || "[]",
         );
         cachedProvider = cachedProviders.find(
           (item) => item.id === providerId || item.backendId === providerId,
@@ -207,7 +215,7 @@ export default function BeautyProviderProfile() {
           setMissingProviderId(providerId);
           return;
         }
-        const details = normalizeSearchBeautyProvider({
+        const providerForCategory = {
           ...cachedProvider,
           ...fullEntry,
           service: mergeBeautyServices(
@@ -216,12 +224,34 @@ export default function BeautyProviderProfile() {
               : fullEntry.services,
             cachedProvider?.services,
           ),
+        };
+        const providerCategory =
+          getCategoryForProvider(
+            exploreCategories,
+            providerForCategory,
+            routeCategory,
+          ) || routeCategory;
+        setProfileCategory(providerCategory);
+
+        if (
+          window.location.pathname === `/dashboard/beauty/${providerId}` &&
+          providerCategory?.slug &&
+          providerCategory.slug !== "beauty-personal-care"
+        ) {
+          navigate(
+            getProviderProfilePath(providerCategory, providerId),
+            { replace: true },
+          );
+        }
+
+        const details = normalizeSearchBeautyProvider({
+          ...providerForCategory,
           workVisuals: fullEntry.workVisuals ?? cachedProvider?.workVisuals,
           businessAddress: fullEntry.businessAddress ?? cachedProvider?.businessAddress,
           BusinessAddress: fullEntry.BusinessAddress ?? cachedProvider?.BusinessAddress,
-        }, category && {
-          categoryLabel: category.label,
-          getProfilePath: (id) => getProviderProfilePath(category, id),
+        }, providerCategory && {
+          categoryLabel: providerCategory.label,
+          getProfilePath: (id) => getProviderProfilePath(providerCategory, id),
         });
         setActiveImage(0);
         setProviderState({ requestedId: providerId, data: details });
@@ -254,7 +284,7 @@ export default function BeautyProviderProfile() {
     return () => {
       active = false;
     };
-  }, [category, providerId]);
+  }, [category, providerId, exploreCategories, navigate, routeCategory]);
 
   const categoryPath = category?.to || "/dashboard/categories";
 
@@ -292,7 +322,11 @@ export default function BeautyProviderProfile() {
   const services = provider.services || [];
   const isBusiness = provider.role === "businessOwner";
   const staffOnDuty = Array.isArray(provider.staffOnDuty?.staff)
-    ? provider.staffOnDuty.staff.filter((member) => member?.staffCode)
+    ? provider.staffOnDuty.staff.filter(
+        (member) =>
+          member?.staffCode &&
+          String(member.workStatus || "").toLowerCase() !== "booked",
+      )
     : [];
   const availablePricingOptions = pricingOptions.filter((option) =>
     services.some((service) => getServicePrice(service, option.value) !== null),

@@ -1,12 +1,12 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
 
 export default function CategoryCard({
   image,
   title,
   description,
   onClick,
+  onBookNow,
   bgColor,
   comingSoon = false, // 👈 Add this prop
 }) {
@@ -46,8 +46,15 @@ export default function CategoryCard({
 </p>
         {!comingSoon && (
           <div className="flex">
-            <button className="bg-gray/5 mt-2 text-white rounded-full px-2 py-0.5 shadow-lg text-[15px] bg-[#FFFFFF4D]/70 flex items-center gap-1 backdrop-blur-md border border-white/10">
-              <Link to={"/bookings"}>Book now</Link>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onBookNow?.();
+              }}
+              className="bg-gray/5 mt-2 text-white rounded-full px-2 py-0.5 shadow-lg text-[15px] bg-[#FFFFFF4D]/70 flex items-center gap-1 backdrop-blur-md border border-white/10"
+            >
+              Book now
               <ArrowRight size={10} />
             </button>
           </div>
