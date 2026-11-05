@@ -1044,7 +1044,43 @@ export default function ServiceBookingFlow({
       </Modal>
     );
 
-  if (stage === "received")
+  if (stage === "received") {
+    const providerDidNotAccept = responseRemaining <= 0;
+
+    if (providerDidNotAccept) {
+      return (
+        <Modal
+          isOpen
+          onClose={onClose}
+          showCloseButton={false}
+          overlayClassName="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4 py-8"
+          panelClassName="relative w-[92%] max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        >
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <Clock size={28} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800">Request expired</h2>
+            <p className="mt-4 text-sm leading-relaxed text-gray-600">
+              Your booking request expired before any provider accepted it. The
+              provider didn&apos;t accept your request in time, so please choose
+              another provider to continue.
+            </p>
+            <div className="mt-6 grid">
+              <Button
+                onClick={() => {
+                  onClose();
+                  navigate("/dashboard/categories/beauty-personal-care");
+                }}
+              >
+                Choose another provider
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
     return (
       <Modal
         isOpen
@@ -1075,6 +1111,7 @@ export default function ServiceBookingFlow({
         </div>
       </Modal>
     );
+  }
 
   return (
     <Modal

@@ -14,7 +14,7 @@ const HIDDEN_CANCEL_STATUSES = [
   "funds_released",
   "awaiting_provider_acceptance",
   "declined",
-  "review "
+  "review"
 ];
 
 

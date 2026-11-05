@@ -14,6 +14,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
 import PasswordRequirements from "../../../components/PasswordRequirements";
 import ForgotPassword from "../../../pages/Forgot-Password/ForgotPassword";
+import { SIGNUP_PLATFORM } from "../../../constants/platform";
 
 const MotionDiv = motion.div;
 
@@ -57,11 +58,15 @@ export default function StepOne({ onNext }) {
         email: values.email,
         password: values.password,
         term: termAccepted,
+        signupPlatform: SIGNUP_PLATFORM, // new
       };
 
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/auth/buyer`,
         payload,
+        {
+          headers: { "x-client-platform": SIGNUP_PLATFORM },
+        },
       );
 
       console.log("Backend response:", response);
@@ -156,8 +161,10 @@ export default function StepOne({ onNext }) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-client-platform": SIGNUP_PLATFORM,
             },
             body: JSON.stringify({ token: tokenResponse.access_token }),
+            signupPlatform: SIGNUP_PLATFORM, // new
           },
         );
 
@@ -335,7 +342,10 @@ export default function StepOne({ onNext }) {
 
                   <div className="relative">
                     <div className="mb-1 flex items-center justify-between">
-                      <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="password"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Password
                       </label>
                       <button

@@ -14,6 +14,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
 import PasswordRequirements from "../../../components/PasswordRequirements";
 import ForgotPassword from "../../Forgot-Password/ForgotPassword";
+import { SIGNUP_PLATFORM } from "../../../constants/platform";
 
 const MotionDiv = motion.div;
 
@@ -51,11 +52,15 @@ export default function StepOne({ onNext, email }) {
         email: effectiveEmail,
         password: values.password,
         term: termAccepted,
+        signupPlatform: SIGNUP_PLATFORM, // new
       };
 
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/auth/provider`,
         payload,
+        {
+          headers: { "x-client-platform": SIGNUP_PLATFORM },
+        },
       );
 
       console.log("Backend response:", response);
@@ -161,8 +166,10 @@ export default function StepOne({ onNext, email }) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-client-platform": SIGNUP_PLATFORM,
             },
             body: JSON.stringify({ token: tokenResponse.access_token }), // Send access_token
+            signupPlatform: SIGNUP_PLATFORM, // new
           },
         );
 
@@ -306,7 +313,10 @@ export default function StepOne({ onNext, email }) {
 
                 <div className="relative">
                   <div className="mb-1 flex items-center justify-between">
-                    <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="password"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Password
                     </label>
                     <button
@@ -423,9 +433,9 @@ export default function StepOne({ onNext, email }) {
                 </Button>
 
                 <div className="flex items-center my-4">
-                  <div className="flex-grow border-t border-gray-300"></div>
+                  <div className="grow border-t border-gray-300"></div>
                   <span className="mx-2 text-gray-500 text-sm">or</span>
-                  <div className="flex-grow border-t border-gray-300"></div>
+                  <div className="grow border-t border-gray-300"></div>
                 </div>
 
                 <button

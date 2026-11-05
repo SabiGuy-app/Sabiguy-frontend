@@ -59,28 +59,30 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-50 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-5 rounded-2xl max-w-6xl w-full h-[95vh] overflow-y-auto">
-        <div className="border-b border-gray-200 px-2 py-4 flex items-center gap-3 mb-6">
-          <button
-            onClick={onClose}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <FiChevronLeft size={20} />
-          </button>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Service Details
-          </h2>
-          <div className="flex items-center gap-2 flex-wrap">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50/50 p-3 sm:p-4">
+      <div className="max-h-[95vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white shadow-xl sm:p-5">
+        <div className="mb-4 flex justify-between flex-col gap-3 border-b border-gray-200 px-2 py-4 sm:mb-6 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="text-gray-600 transition-colors hover:text-gray-900"
+            >
+              <FiChevronLeft size={20} />
+            </button>
+            <h2 className="text-lg font-semibold text-gray-900 sm:text-xl">
+              Service Details
+            </h2>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             {request.orderId && (
-              <span className="text-[12px] font-mono text-[#005823] bg-[#0058231A] px-2 py-1 rounded-full border border-[#0058234D] w-fit">
+              <span className="w-fit rounded-full border border-[#0058234D] bg-[#0058231A] px-2 py-1 font-mono text-[10px] text-[#005823] sm:text-[12px]">
                 {request.orderId}
               </span>
             )}
 
             {request.status && (
               <span
-                className={`text-[12px] font-medium px-3 py-1 rounded-full capitalize border ${getStatusStyles(
+                className={`rounded-full border px-3 py-1 text-[10px] font-medium capitalize sm:text-[12px] ${getStatusStyles(
                   request.status,
                 )}`}
               >
@@ -90,76 +92,76 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
           </div>
         </div>
 
-        <div className="md:grid md:grid-cols-2 gap-8 space-y-4 md:space-y-0">
+        <div className="grid gap-4 space-y-4 md:grid-cols-2 md:gap-8 md:space-y-0">
           <div className="space-y-6">
-            <div className="shadow-sm p-6 rounded-2xl space-y-6">
-              <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
+            <div className="space-y-6 rounded-2xl p-4 shadow-sm sm:p-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
                 <img
                   src={
                     request.providerImage ||
                     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop"
                   }
                   alt={request.providerName}
-                  className="w-16 h-16 rounded-full object-cover shrink-0 self-center lg:self-start"
+                  className="h-16 w-16 shrink-0 self-center rounded-full object-cover lg:self-start"
                 />
-                <div className="grow w-full text-center lg:text-left">
-                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-1">
-                    <h2 className="text-base font-semibold text-gray-900 capitalize">
+                <div className="w-full grow text-center lg:text-left">
+                  <div className="mb-1 flex items-center justify-center gap-2 lg:justify-start">
+                    <h2 className="text-base font-semibold capitalize text-gray-900">
                       {request.providerName ?? "Provider"}
                     </h2>
                     <span className="text-[#8BC53F]">
-                      <BadgeCheck className="w-5 h-5" />
+                      <BadgeCheck className="h-5 w-5" />
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1 capitalize">
+                  <p className="mb-1 text-sm capitalize text-gray-600">
                     {request.title?.replace(/_/g, " ") || "—"}
                   </p>
                   {request.providerIdDisplay &&
                     request.providerIdDisplay !== "—" && (
                       <div className="mb-1">
-                        <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 inline-block">
+                        <span className="inline-block rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">
                           ID: {request.providerIdDisplay}
                         </span>
                       </div>
                     )}
-                  <div className="flex justify-center lg:justify-start items-center gap-1 text-[14px] text-gray-600">
-                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                  <div className="flex items-center justify-center gap-1 text-[14px] text-gray-600 lg:justify-start">
+                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium text-gray-900">
                       {request.providerRating ?? ""}
                     </span>
-                    <span className="text-gray-500 ">
+                    <span className="text-gray-500">
                       ({request.providerReviews ?? 0} reviews)
                     </span>
                   </div>
                   {request.providerDistance && (
-                    <div className="flex items-center gap-1 text-[14px] text-[#231F20BF] mt-1">
-                      <MapPin className="w-3.5 h-3.5" />
+                    <div className="mt-1 flex items-center justify-center gap-1 text-[14px] text-[#231F20BF] lg:justify-start">
+                      <MapPin className="h-3.5 w-3.5" />
                       <span>{request.providerDistance} miles away</span>
                     </div>
                   )}
                 </div>
 
                 {/* Stats */}
-                <div className="flex justify-between lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto mt-3 lg:mt-0">
-                  <div className="flex flex-col items-center flex-1 md:flex-none">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full">
-                      <Award className="w-5 h-5 text-[#005823]" />
+                <div className="mt-1 flex w-full justify-between gap-4 lg:mt-0 lg:w-auto lg:justify-start lg:gap-6">
+                  <div className="flex flex-1 flex-col items-center md:flex-none">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full">
+                      <Award className="h-5 w-5 text-[#005823]" />
                     </div>
                     <div className="text-base font-semibold text-[#231F20]">
                       {request.jobsDone ?? 0}
                     </div>
-                    <div className="text-[12px] text-[#231F2080] text-center">
+                    <div className="text-center text-[12px] text-[#231F2080]">
                       Jobs Done
                     </div>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center justify-center w-10 h-10">
-                      <Clock className="w-5 h-5 text-[#231F20BF]" />
+                  <div className="flex flex-1 flex-col items-center md:flex-none">
+                    <div className="flex h-10 w-10 items-center justify-center">
+                      <Clock className="h-5 w-5 text-[#231F20BF]" />
                     </div>
                     <div className="text-base font-semibold text-[#231F20]">
                       {"< 3 Mins"}
                     </div>
-                    <div className="text-[12px] text-[#231F2080] text-center">
+                    <div className="text-center text-[12px] text-[#231F2080]">
                       Response Time
                     </div>
                   </div>
@@ -173,7 +175,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                 "booking_expired",
                 "expired",
               ].includes(bookingStatus) && (
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     onClick={() =>
                       callContext?.openCall?.({
@@ -192,17 +194,21 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                         },
                       })
                     }
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-3 transition-colors hover:bg-gray-50"
                   >
-                    <PhoneCall className="w-4 h-4 text-gray-600" />
-                    <span className="font-medium text-gray-700">Call</span>
+                    <span className="flex items-center justify-center gap-2 font-medium text-gray-700">
+                      <PhoneCall className="h-4 w-4 text-gray-600" />
+                      Call
+                    </span>
                   </button>
                   <button
                     onClick={handleMessageProvider}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-3 transition-colors hover:bg-gray-50"
                   >
-                    <MessageCircle className="w-5 h-5 text-gray-600" />
-                    <span className="font-medium text-gray-700">Message</span>
+                    <span className="flex items-center justify-center gap-2 font-medium text-gray-700">
+                      <MessageCircle className="h-5 w-5 text-gray-600" />
+                      Message
+                    </span>
                   </button>
                   <CancelBookingButton
                     bookingId={bookingId}
@@ -214,7 +220,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                       request?.paymentStatus ||
                       request?.payment_status
                     }
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 border   rounded-lg bg-white text-red-600  border-red-300  hover:bg-red-50 transition-colors"
+                    className="flex-1 rounded-lg border border-red-300 bg-white px-4 py-3 text-red-600 transition-colors hover:bg-red-50"
                     title="Cancel"
                     onSuccess={() => {
                       setCancelModalOpen(false);
@@ -259,58 +265,58 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
           </div>
 
           <div>
-            <div className="border border-[#231F201A] px-6 py-6 rounded-2xl space-y-6">
+            <div className="space-y-6 rounded-2xl border border-[#231F201A] px-4 py-5 sm:px-6 sm:py-6">
               <h3 className="text-base font-semibold text-[#231F20]">
                 Job Summary
               </h3>
 
               <div className="space-y-4">
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
-                    <div className="w-3 h-3 bg-[#005823] rounded-full" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E6EFE9]">
+                    <div className="h-3 w-3 rounded-full bg-[#005823]" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-sm font-semibold text-[#231F20]">
                       Pickup Location
                     </div>
-                    <div className="text-sm text-[#231F20BF]">
+                    <div className="break-words text-sm text-[#231F20BF]">
                       {request.pickupAddress || "—"}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center shrink-0">
-                    <MapPin className="w-5 h-5 text-[#005823]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E6EFE9]">
+                    <MapPin className="h-5 w-5 text-[#005823]" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-sm font-semibold text-[#231F20]">
                       Dropoff Location
                     </div>
-                    <div className="text-sm text-[#231F20BF]">
+                    <div className="break-words text-sm text-[#231F20BF]">
                       {request.dropoffAddress || "—"}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-10 h-10  rounded-full flex items-center justify-center shrink-0">
-                    <img src={distance} alt="" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                    <img src={distance} alt="" className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-sm font-semibold text-[#231F20]">
                       Distance
                     </div>
-                    <div className="text-sm text-[#231F20BF]">
+                    <div className="break-words text-sm text-[#231F20BF]">
                       {request.distance || "—"}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                     <svg
-                      className="w-5 h-5 text-[#005823]"
+                      className="h-5 w-5 text-[#005823]"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -323,11 +329,11 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
                       />
                     </svg>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-sm font-semibold text-[#231F20]">
                       Fare
                     </div>
-                    <div className="text-sm text-[#231F20BF]">
+                    <div className="break-words text-sm text-[#231F20BF]">
                       {(request.totalAmount ??
                       request.total_amount ??
                       request.amount ??
@@ -357,13 +363,13 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
 
                   if (fee > 0) {
                     return (
-                      <div className="flex gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" />
-                        <div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 shrink-0 rounded-full" />
+                        <div className="min-w-0">
                           <div className="text-sm font-semibold text-[#231F20]">
                             Service Charge (10%)
                           </div>
-                          <div className="text-sm text-[#231F20BF]">
+                          <div className="break-words text-sm text-[#231F20BF]">
                             ₦{fee.toLocaleString()}
                           </div>
                         </div>
@@ -377,21 +383,21 @@ export default function ServiceDetailsModal({ isOpen, onClose, request }) {
               {/* Description */}
               {request.description && (
                 <div className="mt-4">
-                  <h4 className="text-base font-semibold text-[#231F20] mb-2">
+                  <h4 className="mb-2 text-base font-semibold text-[#231F20]">
                     Description
                   </h4>
-                  <p className="text-sm text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <p className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm leading-relaxed text-[#231F20BF]">
                     {request.description}
                   </p>
                 </div>
               )}
 
               <div>
-                <h4 className="text-base font-semibold text-[#231F20] mb-3">
+                <h4 className="mb-3 text-base font-semibold text-[#231F20]">
                   Pickup notes{" "}
                   <span className="text-[14px] text-[#231F20BF]"></span>
                 </h4>
-                <p className="text-sm text-[#231F20BF] leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <p className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm leading-relaxed text-[#231F20BF]">
                   {request.pickupNotes || "No pickup notes provided."}
                 </p>
               </div>
