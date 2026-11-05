@@ -154,6 +154,10 @@ export default function useBusinessBookings({ onStatusChange } = {}) {
   };
 
   const accept = async () => {
+    if (booking?.status === "pending" && (!Number.isFinite(seconds) || seconds <= 0)) {
+      toast.error("The response window has expired.");
+      return;
+    }
     const next = await runAction("accept", () => acceptBusinessBooking(businessId, booking.id), "Booking accepted");
     if (!next) return;
     setDialog(next.status === "payment_pending" ? "payment" : "details");
@@ -161,6 +165,11 @@ export default function useBusinessBookings({ onStatusChange } = {}) {
   };
 
   const decline = async () => {
+    if (booking?.status === "pending" && (!Number.isFinite(seconds) || seconds <= 0)) {
+      toast.error("The response window has expired.");
+      setConfirmation(null);
+      return;
+    }
     setConfirmation(null);
     const next = await runAction("decline", () => declineBusinessBooking(booking.id), "Booking declined");
     if (next) setDialog(null);

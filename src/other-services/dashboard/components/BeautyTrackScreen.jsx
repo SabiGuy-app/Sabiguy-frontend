@@ -21,6 +21,7 @@ export default function BeautyTrackScreen({
   dropoffAddress,
   serviceLocationAddress,
   showRoute,
+  showMap,
   routePoints,
   pickupNote,
   canCancel,
@@ -95,7 +96,7 @@ export default function BeautyTrackScreen({
             {booking.service}
           </button>
 
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className={`grid gap-6 ${showMap ? "lg:grid-cols-[0.9fr_1.1fr]" : "grid-cols-1"}`}>
             <section>
               <div className="rounded-xl border border-gray-200 bg-white px-8 py-5">
                 {showRoute ? (
@@ -224,12 +225,14 @@ export default function BeautyTrackScreen({
               </div>
             </section>
 
-            <section className="min-h-[520px] overflow-hidden rounded-xl bg-gray-100">
-              <DeliveryMap
-                pickup={routePoints.pickup}
-                dropoff={routePoints.dropoff}
-              />
-            </section>
+            {showMap && (
+              <section className="min-h-[520px] overflow-hidden rounded-xl bg-gray-100">
+                <DeliveryMap
+                  pickup={routePoints.pickup}
+                  dropoff={routePoints.dropoff}
+                />
+              </section>
+            )}
           </div>
         </main>
       </div>

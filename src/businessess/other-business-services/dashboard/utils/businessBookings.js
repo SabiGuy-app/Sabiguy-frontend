@@ -50,7 +50,8 @@ export function normalizeBusinessBooking(booking, roster = []) {
   const serviceNames = items.map((item) => item.serviceName).filter(Boolean);
   const pricingOption = booking.serviceDetails?.pricingOption;
   const createdAt = Date.parse(booking.createdAt);
-  const expiresAt = Date.parse(booking.expiredAt);
+  const expiresAt = Date.parse(booking.expiresAt || booking.expiredAt)
+    || (Number.isFinite(createdAt) ? createdAt + 300000 : NaN);
   const status = getUiBookingStatus(booking);
 
   const requestedStaffMember = booking.requestedStaffCode
@@ -83,10 +84,12 @@ export function normalizeBusinessBooking(booking, roster = []) {
     durationMinutes: toMinutes(booking.estimatedDuration) || toMinutes(booking.bookingDuration),
     amount: booking.agreedPrice ?? booking.serviceDetails?.price ?? booking.totalAmount ?? 0,
     customerNote: booking.description || "",
-    expiresAt: booking.expiredAt,
+    expiresAt: Number.isFinite(expiresAt)
+      ? new Date(expiresAt).toISOString()
+      : null,
     responseWindowSeconds: Number.isFinite(createdAt) && Number.isFinite(expiresAt) && expiresAt > createdAt
       ? Math.round((expiresAt - createdAt) / 1000)
-      : undefined,
+      : 300,
     paymentExpiresAt: booking.paymentDeadlineAt,
     requestedStaffCode: booking.requestedStaffCode || null,
     requestedStaffMember,

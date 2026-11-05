@@ -15,16 +15,17 @@ export default function BookingDetailsModal({ isOpen, booking, seconds, availabl
   const upcoming = booking.status === "scheduled";
   const profile = booking.customerProfile ?? {};
   const busy = Boolean(busyAction);
+  const expired = pending && (!Number.isFinite(seconds) || seconds <= 0);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} closeIcon={<X size={21} />} title="Service Details" panelClassName="business-booking-dialog" titleClassName="business-booking-dialog-heading" contentClassName="business-booking-dialog-body">
       <BookingCustomer booking={booking} />
       {pending ? (
         <div className="business-booking-response-actions">
-          <Button size="sm" className="business-button business-button-primary" disabled={!available || seconds === 0 || busy} onClick={onAccept}>
+          <Button size="sm" className="business-button business-button-primary" disabled={!available || expired || busy} onClick={onAccept}>
             {busyAction === "accept" ? "Accepting..." : "Accept Request"}
           </Button>
-          <Button variant="outline" size="sm" className="business-button business-button-secondary" disabled={seconds === 0 || busy} onClick={() => onConfirm("decline_booking")}>Decline</Button>
+          <Button variant="outline" size="sm" className="business-button business-button-secondary" disabled={expired || busy} onClick={() => onConfirm("decline_booking")}>Decline</Button>
         </div>
       ) : (
         <div className="business-booking-contact-actions">

@@ -54,24 +54,44 @@ const normalizeCategoryValue = (value) =>
 
 // Search results span categories, so read each provider's from its job service.
 export const getCategoryForProvider = (exploreCategories, provider, fallback = null) => {
-  const jobServices = (Array.isArray(provider?.job) ? provider.job : [])
-    .map((job) => normalizeCategoryValue(job?.service))
+  const providerServices = [
+    ...(Array.isArray(provider?.job) ? provider.job.map((job) => job?.service) : []),
+    ...(Array.isArray(provider?.service) ? provider.service.map((service) =>
+      service?.serviceName || service?.name
+    ) : []),
+    ...(Array.isArray(provider?.services) ? provider.services.map((service) =>
+      service?.serviceName || service?.name
+    ) : []),
+  ]
+    .map(normalizeCategoryValue)
     .filter(Boolean);
-  return (
-    exploreCategories.find(
-      (category) =>
-        category.to &&
-        [category.id, category.slug, category.backendId, category.label]
-          .filter(Boolean)
-          .some((value) => jobServices.includes(normalizeCategoryValue(value))),
-    ) || fallback
-  );
+  return exploreCategories.find((category) => {
+    if (!category.to) return false;
+    const categoryValues = [
+      category.id,
+      category.slug,
+      category.backendId,
+      category.label,
+      ...(Array.isArray(category.services)
+        ? category.services.map((service) => service?.name)
+        : []),
+    ]
+      .filter(Boolean)
+      .map(normalizeCategoryValue);
+    return providerServices.some((providerValue) =>
+      categoryValues.some((categoryValue) =>
+        providerValue === categoryValue ||
+        providerValue.includes(categoryValue) ||
+        categoryValue.includes(providerValue),
+      ),
+    );
+  }) || fallback;
 };
 
 export const getProviderProfilePath = (category, providerId) =>
-  category?.id === "beauty" || !category?.slug
-    ? `/dashboard/beauty/${providerId}`
-    : `/dashboard/categories/${category.slug}/providers/${providerId}`;
+  category?.slug
+    ? `/dashboard/categories/${category.slug}/providers/${providerId}`
+    : `/dashboard/beauty/${providerId}`;
 
 export function getCategoryDestination(category, task) {
   if (!category) return null;

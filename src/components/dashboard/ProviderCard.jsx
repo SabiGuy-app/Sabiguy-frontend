@@ -6,6 +6,7 @@ export default function ProviderCard({
   _id,
   id,
   fullName, 
+  BusinessName,
   rating, 
   reviews, 
   price, 
@@ -23,6 +24,7 @@ export default function ProviderCard({
 
 }) {
   const isBusiness = accountType === "business";
+  const displayName = isBusiness ? BusinessName || fullName : fullName;
     const [favorited, setFavorited] = useState(isFavorited);
 
   const navigate = useNavigate();
@@ -48,7 +50,7 @@ export default function ProviderCard({
         {profilePicture ? (
           <img
             src={profilePicture}
-            alt={fullName}
+            alt={displayName}
             className="w-full h-full object-cover"
             onError={(e) => {
               e.target.onerror = null;
@@ -58,7 +60,7 @@ export default function ProviderCard({
         ) : (
           <img
             src="/avatar.png"
-            alt={fullName}
+            alt={displayName}
             className="w-full h-full object-cover"
           />
         )}
@@ -92,7 +94,7 @@ export default function ProviderCard({
           <div className="flex-1">
                         <div className="flex items-center gap-2">
 
-            <h3 className="text-xs text-gray-800">{fullName}</h3>
+            <h3 className="text-xs text-gray-800">{displayName}</h3>
             {isAvailable  && (
               <span className="inline-flex bg-green-100 rounded-lg px-2 items-center gap-1 text-[9px] text-green-400 font-medium">
                 <span className="w-0.5 h-0.5 bg-green-600 rounded-full"></span>

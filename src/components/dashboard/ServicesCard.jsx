@@ -1,7 +1,26 @@
 import { useState } from "react";
 
-export default function ServicesCard({ title, onClick, image, imageIncludesTitle = false, tasks = [], onTaskClick }) {
+export default function ServicesCard({ title, onClick, image, icon: Icon, imageIncludesTitle = false, tasks = [], onTaskClick }) {
   const [loadFailed, setLoadFailed] = useState(false);
+
+  if (Icon) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={`Browse ${title} services`}
+        className="group flex min-w-0 flex-col items-center gap-3 rounded-lg px-2 py-1 text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005823]"
+      >
+        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F1F4F2] text-[#16804A] transition-colors group-hover:bg-[#E4F2E9] sm:h-24 sm:w-24">
+          <Icon size={40} strokeWidth={1.8} aria-hidden="true" />
+        </span>
+        <span className="text-sm font-semibold leading-snug text-[#231F20] sm:text-base">
+          {title}
+        </span>
+      </button>
+    );
+  }
+
   const imageFailed = loadFailed || !image;
   return (
     <article className="overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-md">

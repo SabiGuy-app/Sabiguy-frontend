@@ -201,6 +201,21 @@ export default function ServiceServiceJourney() {
     .trim()
     .toLowerCase()
     .replace(/[\s-]+/g, "_");
+  const jobStartedOrTraveling = [
+    "enroute_to_pickup",
+    "arrived_at_pickup",
+    "enroute_to_dropoff",
+    "arrived_at_dropoff",
+    "in_progress",
+  ].includes(status);
+  const startJobFirst = [
+    "paid_escrow",
+    "paid_escrow_scheduled",
+  ].includes(status) ||
+    (!jobStartedOrTraveling && [
+    "paid_escrow",
+    "paid_escrow_scheduled",
+  ].includes(paymentState));
   const hasExplicitPaymentState = Boolean(paymentState);
   const paid = hasExplicitPaymentState
     ? [
@@ -290,12 +305,31 @@ export default function ServiceServiceJourney() {
     }
   };
 
-  const handleStart = async () => {
+  const handleStart = async (fallbackStatus = "in_progress") => {
     setStarting(true);
     setError("");
     try {
       const response = await startJob(bookingId);
-      applyBookingResponse(response, "in_progress");
+      const nextBooking = extractBooking(response);
+      const returnedStatus = String(nextBooking?.status || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+      if (
+        nextBooking?._id &&
+        fallbackStatus === "enroute_to_pickup" &&
+        ![
+          "enroute_to_pickup",
+          "arrived_at_pickup",
+          "enroute_to_dropoff",
+          "arrived_at_dropoff",
+          "in_progress",
+        ].includes(returnedStatus)
+      ) {
+        setBooking({ ...nextBooking, status: fallbackStatus });
+      } else {
+        applyBookingResponse(response, fallbackStatus);
+      }
       setModalOpen(false);
     } catch (err) {
       setError(err.response?.data?.message || "Unable to start service.");
@@ -307,6 +341,8 @@ export default function ServiceServiceJourney() {
   const handleJourneyAction = () => {
     if (started) {
       setCompletionOpen(true);
+    } else if (startJobFirst) {
+      handleStart(needsTravel ? "enroute_to_pickup" : "in_progress");
     } else if (needsTravel && !arrived) {
       handleArrive();
     } else {
@@ -424,7 +460,9 @@ export default function ServiceServiceJourney() {
                         ? "Starting service..."
                         : updatingStatus
                           ? "Updating..."
-                          : arrived || !needsTravel
+                          : startJobFirst
+                            ? "Start Job"
+                            : arrived || !needsTravel
                             ? "Start Service"
                             : "Arrived at Destination"}
                     </button>

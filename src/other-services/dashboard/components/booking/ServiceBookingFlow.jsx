@@ -219,18 +219,29 @@ const getDurationLabel = (duration) =>
       ? "1 hr"
       : `${Number(duration || 45)} mins`;
 
-function ProviderSummary({ provider }) {
+function ProviderSummary({ provider, isBusiness = false }) {
+  const formatAddress = (value) =>
+    typeof value === "string" ? value : value?.address || "";
+  const businessName =
+    provider.businessName || provider.BusinessName || provider.fullName;
+  const displayName = isBusiness ? businessName : provider.fullName;
+  const providerArea = isBusiness
+    ? formatAddress(provider.businessAddress) ||
+      formatAddress(provider.BusinessAddress) ||
+      provider.city
+    : provider.currentLocation?.address || provider.city || provider.businessAddress;
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-5">
       <div className="flex items-center gap-3">
         <img
           src={provider.profilePicture}
-          alt={provider.fullName}
+          alt={displayName}
           className="h-16 w-16 rounded-full object-cover"
         />
         <div>
           <h3 className="flex items-center gap-2 font-semibold">
-            {provider.fullName}
+            {displayName}
             <BadgeCheck size={15} className="text-[#005823]" />
           </h3>
           <p className="mt-1 flex items-center text-sm text-gray-500">
@@ -239,7 +250,7 @@ function ProviderSummary({ provider }) {
           </p>
           <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
             <MapPin size={14} />
-            Lekki Phase 1
+            {providerArea || (isBusiness ? "Business address not provided" : "Location not provided")}
           </p>
         </div>
       </div>
@@ -522,6 +533,9 @@ export default function ServiceBookingFlow({
     : 300;
   const paymentBooking = bookingRecord || booking;
   const rawPaymentBooking = paymentBooking.raw || paymentBooking;
+  const isBusinessBooking = Boolean(
+    booking.isBusiness || rawPaymentBooking?.businessId,
+  );
   const paymentBookingId =
     rawPaymentBooking?._id || paymentBooking.id || paymentBooking._id;
   const providerId =
@@ -907,7 +921,7 @@ export default function ServiceBookingFlow({
         titleClassName="mb-6 border-b border-gray-200 pb-5 pr-6 text-xl font-semibold text-left"
         panelClassName="relative max-h-[92vh] w-[94%] max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl sm:p-8"
       >
-        <ProviderSummary provider={provider} />
+        <ProviderSummary provider={provider} isBusiness={isBusinessBooking} />
         <div className="mb-6 mt-8 flex flex-wrap items-start justify-between gap-4">
           <h2 className="text-lg font-semibold">Booking Information</h2>
           <div className="text-right">
@@ -1145,7 +1159,7 @@ export default function ServiceBookingFlow({
           <div className="grid gap-8 lg:grid-cols-2">
             <section>
               <div className="rounded-2xl border border-gray-200 p-5">
-                <ProviderSummary provider={provider} />
+                <ProviderSummary provider={provider} isBusiness={isBusinessBooking} />
                 <div className="w-full mt-6 flex justify-center items-center gap-3">
                   <button
                     type="button"
