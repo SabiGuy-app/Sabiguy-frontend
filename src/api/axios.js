@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "../stores/auth.store";
+import { clearStoragePreservingTours } from "../utils/tourStorage";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
@@ -108,7 +109,7 @@ api.interceptors.response.use(
 
         // Force logout on refresh failure
         useAuthStore.getState().logout();
-        localStorage.clear();
+        clearStoragePreservingTours(localStorage);
         sessionStorage.clear();
 
         // Redirect to login

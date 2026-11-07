@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuthStore } from "../../stores/auth.store";
+import useFirstVisitTour from "./useFirstVisitTour";
 
 const G = "#1B6B35";
 const TW = 278;
@@ -102,22 +102,9 @@ function Arrow({ pos }) {
 
 export default function BookingsTour() {
   const [si, setSi] = useState(0);
-  const [on, setOn] = useState(false); // start false — wait for user
+  const [on, endTour] = useFirstVisitTour("bookingTourSeen");
   const [layout, setLayout] = useState(null);
   const [targetRect, setTargetRect] = useState(null);
-
-  const user = useAuthStore((state) => state.user);
-  const hydrated = useAuthStore((state) => state.hydrated);
-
-  const userId = user?.data?._id || user?._id || null;
-  const TOUR_KEY = userId ? `bookingTourSeen_${userId}` : null;
-
-  // Wait for auth to hydrate + user id to be available, then check localStorage
-  useEffect(() => {
-    if (!hydrated || !TOUR_KEY) return;
-    const alreadySeen = localStorage.getItem(TOUR_KEY);
-    if (!alreadySeen) setOn(true);
-  }, [hydrated, TOUR_KEY]);
 
   const s = STEPS[si];
   const isTip = s?.type === "tip";
@@ -171,11 +158,6 @@ export default function BookingsTour() {
       window.removeEventListener("scroll", compute, true);
     };
   }, [si, on]);
-
-  const endTour = () => {
-    if (TOUR_KEY) localStorage.setItem(TOUR_KEY, "true");
-    setOn(false);
-  };
 
   const next = () => {
     if (si >= STEPS.length - 1) { endTour(); return; }

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import LandingFooter from "../components/LandingFooter";
+import DownloadAppSection from "../components/DownloadAppSection";
 import LandingChatbotWidget from "../components/LandingChatbotWidget";
 import {
   fadeInUp,
@@ -736,6 +737,8 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      <DownloadAppSection />
 
       {/* FAQ Section - Responsive */}
       <section id="faq" className="w-full max-w-4xl mx-auto px-4 md:px-6 my-12 md:my-20 scroll-mt-24">
