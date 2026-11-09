@@ -78,6 +78,11 @@ export const searchServiceProviders = async (payload) => {
   return data;
 };
 
+export const searchGeneralProviders = async (payload) => {
+  const { data } = await api.post("/bookings/search/general", payload);
+  return data;
+};
+
 export const getAllBookings = async (params = {}) => {
   const token = localStorage.getItem("token");
   const {

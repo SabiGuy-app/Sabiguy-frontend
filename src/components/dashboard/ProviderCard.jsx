@@ -95,10 +95,10 @@ export default function ProviderCard({
                         <div className="flex items-center gap-2">
 
             <h3 className="text-xs text-gray-800">{displayName}</h3>
-            {isAvailable  && (
-              <span className="inline-flex bg-green-100 rounded-lg px-2 items-center gap-1 text-[9px] text-green-400 font-medium">
-                <span className="w-0.5 h-0.5 bg-green-600 rounded-full"></span>
-                Available
+            {(isAvailable || isUnavailable) && (
+              <span className={`inline-flex rounded-lg px-2 items-center gap-1 text-[9px] font-medium ${isAvailable ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                <span className={`h-1 w-1 rounded-full ${isAvailable ? "bg-green-600" : "bg-gray-400"}`}></span>
+                {isAvailable ? "Available" : "Unavailable"}
               </span>
             )}
           </div>
@@ -141,12 +141,7 @@ export default function ProviderCard({
           {/* <Button onClick={handleViewProfile}>View Profile</Button> */}
            <button
           onClick={handleViewProfile}
-          // disabled={isUnavailable}
-          className={`w-full shrink-0 px-3 py-2 font-medium rounded-lg transition-colors sm:w-auto sm:min-w-[120px] ${
-            isUnavailable
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              : 'bg-[#005823] text-white hover:bg-[#004019]'
-          }`}
+          className="w-full shrink-0 rounded-lg bg-[#005823] px-3 py-2 font-medium text-white transition-colors hover:bg-[#004019] sm:w-auto sm:min-w-[120px]"
         >
           View Profile
         </button>

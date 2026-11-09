@@ -234,7 +234,9 @@ export default function DashboardHome() {
                 <li key={task.destination}>
                   <button
                     type="button"
-                    onClick={() => navigate(task.destination)}
+                    onClick={() =>
+                      navigate(`/dashboard/search?q=${encodeURIComponent(task.label)}`)
+                    }
                     className="flex w-full items-center justify-between gap-4 py-3 text-left hover:text-[#005823] focus-visible:outline-2 focus-visible:outline-[#005823]"
                   >
                     <span className="min-w-0"><span className="block text-sm font-medium">{task.label}</span><span className="block text-xs text-gray-500">{task.category}</span></span>
