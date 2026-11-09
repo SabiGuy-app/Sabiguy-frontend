@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+import toast from "react-hot-toast";
+import api from "../../../../../api/axios";
 import { handleLogout } from "../../../../../api/auth";
+import { useAuthStore } from "../../../../../stores/auth.store";
 import SettingsTabCard from "./SettingsTabCard";
 
 const initialPreferences = [
@@ -60,10 +64,25 @@ const channels = [
   { key: "email", label: "Email" },
 ];
 
+const initialPasswordForm = {
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+};
+
 export default function AccountSettingsTab() {
   const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
   const [preferences, setPreferences] = useState(initialPreferences);
-  const [language, setLanguage] = useState("English");
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState(initialPasswordForm);
+  const [passwordError, setPasswordError] = useState("");
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
   const handleSignOut = async () => {
     try {
@@ -81,6 +100,63 @@ export default function AccountSettingsTab() {
           : preference,
       ),
     );
+  };
+
+  const handlePasswordChange = async (event) => {
+    event.preventDefault();
+
+    const { currentPassword, newPassword, confirmPassword } = passwordForm;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("Please fill in all password fields.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters long.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      setPasswordError("New password must be different from the current password.");
+      return;
+    }
+
+    setPasswordError("");
+    setIsSubmittingPassword(true);
+
+    try {
+      await api.put("/business/auth/change-password", {
+        oldPassword: currentPassword,
+        newPassword,
+      });
+
+      toast.success("Password changed successfully. Please sign in again.");
+      setPasswordForm(initialPasswordForm);
+      setPasswordModalOpen(false);
+      setTimeout(() => {
+        logout();
+        navigate("/login", { replace: true });
+      }, 1200);
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to change password. Please try again.";
+
+      if (error?.response?.status === 401) {
+        setPasswordError("Current password is incorrect.");
+      } else {
+        setPasswordError(message);
+      }
+    } finally {
+      setIsSubmittingPassword(false);
+    }
   };
 
   return (
@@ -134,25 +210,16 @@ export default function AccountSettingsTab() {
         <div className="divide-y divide-[#EFEFEF]">
           <div className="flex min-h-11 items-center justify-between gap-4 py-2.5">
             <span className="text-[10px] text-[#333333] sm:text-[11px]">
-              Language
-            </span>
-            <select
-              value={language}
-              onChange={(event) => setLanguage(event.target.value)}
-              className="h-9 rounded-md border border-[#D1D1D1] bg-white px-2.5 text-xs text-[#555555] outline-none focus:border-[#347B54]"
-            >
-              <option>English</option>
-              <option>French</option>
-              <option>Yoruba</option>
-              <option>Igbo</option>
-            </select>
-          </div>
-          <div className="flex min-h-11 items-center justify-between gap-4 py-2.5">
-            <span className="text-[10px] text-[#333333] sm:text-[11px]">
               Password
             </span>
             <button
               type="button"
+              onClick={() => {
+                setPasswordError("");
+                setPasswordForm(initialPasswordForm);
+                setShowPassword({ current: false, new: false, confirm: false });
+                setPasswordModalOpen(true);
+              }}
               className="h-9 rounded-md border border-[#BFD8C7] px-3 text-xs font-medium text-[#347B54] hover:bg-[#F3F8F4]"
             >
               Change Password
@@ -172,6 +239,149 @@ export default function AccountSettingsTab() {
           </div>
         </div>
       </SettingsTabCard>
+
+      {passwordModalOpen && (
+        <div
+          className="fixed inset-0 z-80 flex items-center justify-center bg-black/40 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setPasswordModalOpen(false);
+              setPasswordError("");
+              setShowPassword({ current: false, new: false, confirm: false });
+            }
+          }}
+        >
+          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-[#242424]">
+                  Change password
+                </h2>
+                <p className="mt-1 text-[11px] text-[#666666]">
+                  Choose a strong password you have not used before.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPasswordModalOpen(false);
+                  setPasswordError("");
+                  setShowPassword({ current: false, new: false, confirm: false });
+                }}
+                className="text-lg text-[#666666] hover:text-[#222222]"
+                aria-label="Close change password modal"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handlePasswordChange} className="mt-5 space-y-4">
+              <div className="space-y-4">
+                {[
+                  {
+                    key: "current",
+                    label: "Current password",
+                    value: passwordForm.currentPassword,
+                    placeholder: "Enter current password",
+                    setter: (value) =>
+                      setPasswordForm((current) => ({
+                        ...current,
+                        currentPassword: value,
+                      })),
+                  },
+                  {
+                    key: "new",
+                    label: "New password",
+                    value: passwordForm.newPassword,
+                    placeholder: "Enter new password",
+                    setter: (value) =>
+                      setPasswordForm((current) => ({
+                        ...current,
+                        newPassword: value,
+                      })),
+                  },
+                  {
+                    key: "confirm",
+                    label: "Confirm new password",
+                    value: passwordForm.confirmPassword,
+                    placeholder: "Re-enter new password",
+                    setter: (value) =>
+                      setPasswordForm((current) => ({
+                        ...current,
+                        confirmPassword: value,
+                      })),
+                  },
+                ].map(({ key, label, value, placeholder, setter }) => {
+                  const isVisible = showPassword[key];
+
+                  return (
+                    <label
+                      key={key}
+                      className="block text-xs font-medium text-[#555555]"
+                    >
+                      {label}
+                      <div className="relative mt-1.5">
+                        <input
+                          type={isVisible ? "text" : "password"}
+                          value={value}
+                          onChange={(event) => setter(event.target.value)}
+                          className="h-10 w-full rounded-md border border-[#D8D8D8] bg-white px-3 pr-10 text-sm outline-none focus:border-[#347B54]"
+                          placeholder={placeholder}
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPassword((current) => ({
+                              ...current,
+                              [key]: !current[key],
+                            }))
+                          }
+                          className="absolute inset-y-0 right-3 flex items-center text-[#666666] hover:text-[#222222]"
+                          aria-label={isVisible ? `Hide ${label}` : `Show ${label}`}
+                        >
+                          {isVisible ? (
+                            <EyeOff size={15} className="stroke-[2.2]" />
+                          ) : (
+                            <Eye size={15} className="stroke-[2.2]" />
+                          )}
+                        </button>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {passwordError && (
+                <p role="alert" className="text-xs text-red-600">
+                  {passwordError}
+                </p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPasswordModalOpen(false);
+                    setPasswordError("");
+                    setPasswordForm(initialPasswordForm);
+                    setShowPassword({ current: false, new: false, confirm: false });
+                  }}
+                  className="h-9 rounded-md border border-[#D8D8D8] px-3 text-xs text-[#555555] hover:bg-[#F7F7F7]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingPassword}
+                  className="h-9 rounded-md bg-[#347B54] px-4 text-xs font-medium text-white hover:bg-[#286642] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmittingPassword ? "Saving..." : "Save password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

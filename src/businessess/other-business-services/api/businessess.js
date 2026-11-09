@@ -7,9 +7,19 @@ export const getBusinessByEmail = async (email) => {
   return data?.data || data;
 };
 
+export const updateBusinessProfile = async (payload) => {
+  const { data } = await api.put("/businesses/profile", payload);
+  return data?.data || data;
+};
+
 export const updateServiceDetails = async (payload) => {
   const { data } = await api.post("/businesses/service-details", payload);
   return data?.data || data;
+};
+
+export const updateBusinessBankInfo = async (data) => {
+  const response = await api.put("/businesses/bank-info", data);
+  return response.data;
 };
 
 export const getBanks = async () => {
@@ -42,7 +52,11 @@ export const getBusinessClockRequests = async (businessId) => {
   return data?.data || data;
 };
 
-export const respondToStaffClockRequest = async (businessId, staffId, payload) => {
+export const respondToStaffClockRequest = async (
+  businessId,
+  staffId,
+  payload,
+) => {
   const { data } = await api.post(
     `/business/${businessId}/staff/${staffId}/clock-request`,
     payload,
@@ -60,14 +74,22 @@ export const inviteBusinessStaff = async (businessId, payload) => {
 // Bookings made to this business, newest first. Optional `status` and
 // `businessStatus` (needs_staff, assigned, in_progress, completed, cancelled).
 export const getBusinessBookings = async (businessId, params = {}) => {
-  const { data } = await api.get(`/businesses/${businessId}/bookings`, { params });
-  return { bookings: data?.data ?? [], total: data?.total ?? 0, totalPages: data?.totalPages ?? 1 };
+  const { data } = await api.get(`/businesses/${businessId}/bookings`, {
+    params,
+  });
+  return {
+    bookings: data?.data ?? [],
+    total: data?.total ?? 0,
+    totalPages: data?.totalPages ?? 1,
+  };
 };
 
 // Not on the backend yet: path from the spec, bookingId sent in the body and
 // PATCH to match the provider accept/decline routes. Adjust once it ships.
 export const acceptBusinessBooking = async (businessId, bookingId) => {
-  const { data } = await api.patch(`/businesses/${businessId}/accept`, { bookingId });
+  const { data } = await api.patch(`/businesses/${businessId}/accept`, {
+    bookingId,
+  });
   return data?.data || data;
 };
 
@@ -85,19 +107,25 @@ export const getBusinessDashboardStats = async (businessId) => {
 
 // Recent business activity feed (limit defaults to 5).
 export const getBusinessDashboardActivity = async (businessId, params = {}) => {
-  const { data } = await api.get(`/business/${businessId}/dashboard/activity`, { params });
+  const { data } = await api.get(`/business/${businessId}/dashboard/activity`, {
+    params,
+  });
   return data?.data || data;
 };
 
-
 // Active staff annotated with eligibility, distance and ETA for this booking.
 export const getBookingStaffCandidates = async (businessId, bookingId) => {
-  const { data } = await api.get(`/business/${businessId}/bookings/${bookingId}/staff-candidates`);
+  const { data } = await api.get(
+    `/business/${businessId}/bookings/${bookingId}/staff-candidates`,
+  );
   return data?.data || data;
 };
 
 // Additive: each call assigns one more staff member.
 export const assignBookingStaff = async (businessId, bookingId, staffId) => {
-  const { data } = await api.put(`/business/${businessId}/bookings/${bookingId}/assign-staff`, { staffId });
+  const { data } = await api.put(
+    `/business/${businessId}/bookings/${bookingId}/assign-staff`,
+    { staffId },
+  );
   return data?.data || data;
 };
