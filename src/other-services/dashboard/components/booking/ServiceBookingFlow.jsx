@@ -219,18 +219,29 @@ const getDurationLabel = (duration) =>
       ? "1 hr"
       : `${Number(duration || 45)} mins`;
 
-function ProviderSummary({ provider }) {
+function ProviderSummary({ provider, isBusiness = false }) {
+  const formatAddress = (value) =>
+    typeof value === "string" ? value : value?.address || "";
+  const businessName =
+    provider.businessName || provider.BusinessName || provider.fullName;
+  const displayName = isBusiness ? businessName : provider.fullName;
+  const providerArea = isBusiness
+    ? formatAddress(provider.businessAddress) ||
+      formatAddress(provider.BusinessAddress) ||
+      provider.city
+    : provider.currentLocation?.address || provider.city || provider.businessAddress;
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-5">
       <div className="flex items-center gap-3">
         <img
           src={provider.profilePicture}
-          alt={provider.fullName}
+          alt={displayName}
           className="h-16 w-16 rounded-full object-cover"
         />
         <div>
           <h3 className="flex items-center gap-2 font-semibold">
-            {provider.fullName}
+            {displayName}
             <BadgeCheck size={15} className="text-[#005823]" />
           </h3>
           <p className="mt-1 flex items-center text-sm text-gray-500">
@@ -239,7 +250,7 @@ function ProviderSummary({ provider }) {
           </p>
           <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
             <MapPin size={14} />
-            Lekki Phase 1
+            {providerArea || (isBusiness ? "Business address not provided" : "Location not provided")}
           </p>
         </div>
       </div>
@@ -351,7 +362,23 @@ export default function ServiceBookingFlow({
       !Number.isFinite(Number(location?.latitude)) ||
       !Number.isFinite(Number(location?.longitude))
     ) {
-      setLocationError("Search location is unavailable. Please search again.");
+      const customerAddress = localStorage.getItem("currentLocationAddress") || "";
+      const providerAddress = [
+        provider.currentLocation?.address,
+        provider.businessAddress,
+        provider.BusinessAddress,
+        provider.city !== "Business address not provided" ? provider.city : "",
+      ]
+        .map((value) =>
+          typeof value === "string" ? value : value?.address || "",
+        )
+        .find(Boolean) || "";
+      setAddress(
+        booking.pricingOption === "customer_address"
+          ? customerAddress
+          : providerAddress,
+      );
+      setLocationError("");
       setLocationLoading(false);
       return undefined;
     }
@@ -380,8 +407,13 @@ export default function ServiceBookingFlow({
       active = false;
     };
   }, [
+    booking.pricingOption,
+    provider.businessAddress,
+    provider.BusinessAddress,
     provider.buyerSearchLocation?.latitude,
     provider.buyerSearchLocation?.longitude,
+    provider.city,
+    provider.currentLocation?.address,
   ]);
 
   useEffect(() => {
@@ -522,6 +554,9 @@ export default function ServiceBookingFlow({
     : 300;
   const paymentBooking = bookingRecord || booking;
   const rawPaymentBooking = paymentBooking.raw || paymentBooking;
+  const isBusinessBooking = Boolean(
+    booking.isBusiness || rawPaymentBooking?.businessId,
+  );
   const paymentBookingId =
     rawPaymentBooking?._id || paymentBooking.id || paymentBooking._id;
   const providerId =
@@ -746,19 +781,23 @@ export default function ServiceBookingFlow({
             htmlFor="beauty-booking-location"
             className="mb-1 block text-sm font-medium text-gray-700"
           >
-            Booking address
+            {booking.pricingOption === "customer_address"
+              ? "Your service address"
+              : "Service address"}
           </label>
           <input
             id="beauty-booking-location"
             type="text"
             value={address}
-            readOnly
+            onChange={(event) => setAddress(event.target.value)}
             placeholder={
               locationLoading
                 ? "Resolving search location..."
-                : "Address unavailable"
+                : booking.pricingOption === "customer_address"
+                  ? "Enter your address"
+                  : "Provider address unavailable; enter an address"
             }
-            className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none"
+            className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#34805A]"
           />
           {locationError && (
             <p role="alert" className="mt-2 text-sm text-red-600">
@@ -907,7 +946,7 @@ export default function ServiceBookingFlow({
         titleClassName="mb-6 border-b border-gray-200 pb-5 pr-6 text-xl font-semibold text-left"
         panelClassName="relative max-h-[92vh] w-[94%] max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl sm:p-8"
       >
-        <ProviderSummary provider={provider} />
+        <ProviderSummary provider={provider} isBusiness={isBusinessBooking} />
         <div className="mb-6 mt-8 flex flex-wrap items-start justify-between gap-4">
           <h2 className="text-lg font-semibold">Booking Information</h2>
           <div className="text-right">
@@ -927,17 +966,6 @@ export default function ServiceBookingFlow({
               value={date}
               min={localDateTime(new Date(now))}
               onChange={(event) => setDate(event.target.value)}
-            />
-          </div>
-        )}
-        {booking.id === "home" && (
-          <div className="mt-5">
-            <InputField
-              name="beauty-booking-address"
-              label="Your address"
-              placeholder="Enter the full service address"
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
             />
           </div>
         )}
@@ -1044,7 +1072,43 @@ export default function ServiceBookingFlow({
       </Modal>
     );
 
-  if (stage === "received")
+  if (stage === "received") {
+    const providerDidNotAccept = responseRemaining <= 0;
+
+    if (providerDidNotAccept) {
+      return (
+        <Modal
+          isOpen
+          onClose={onClose}
+          showCloseButton={false}
+          overlayClassName="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4 py-8"
+          panelClassName="relative w-[92%] max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        >
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <Clock size={28} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800">Request expired</h2>
+            <p className="mt-4 text-sm leading-relaxed text-gray-600">
+              Your booking request expired before any provider accepted it. The
+              provider didn&apos;t accept your request in time, so please choose
+              another provider to continue.
+            </p>
+            <div className="mt-6 grid">
+              <Button
+                onClick={() => {
+                  onClose();
+                  navigate("/dashboard/categories/beauty-personal-care");
+                }}
+              >
+                Choose another provider
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
     return (
       <Modal
         isOpen
@@ -1075,6 +1139,7 @@ export default function ServiceBookingFlow({
         </div>
       </Modal>
     );
+  }
 
   return (
     <Modal
@@ -1108,7 +1173,7 @@ export default function ServiceBookingFlow({
           <div className="grid gap-8 lg:grid-cols-2">
             <section>
               <div className="rounded-2xl border border-gray-200 p-5">
-                <ProviderSummary provider={provider} />
+                <ProviderSummary provider={provider} isBusiness={isBusinessBooking} />
                 <div className="w-full mt-6 flex justify-center items-center gap-3">
                   <button
                     type="button"

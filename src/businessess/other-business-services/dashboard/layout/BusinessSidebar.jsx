@@ -17,7 +17,7 @@ export default function BusinessSidebar({ open, onClose, wallet }) {
       </div>
       <div className="business-wallet">
         <p><MoneyBag size={18} /> <span>Wallet: {formatNaira(wallet.balance)}</span></p>
-        <span>Owed to staff: {formatNaira(wallet.owedToStaff)}</span>
+        {/* <span>Owed to staff: {formatNaira(wallet.owedToStaff)}</span> */}
       </div>
       <nav aria-label="Business business navigation" className="business-navigation">
         {businessNavGroups.map((group, index) => (

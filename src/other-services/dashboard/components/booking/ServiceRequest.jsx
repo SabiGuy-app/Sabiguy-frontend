@@ -1,4 +1,3 @@
-import DeliveryMap from "../../../../components/dashboard/Map";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -40,6 +39,7 @@ import BeautyCompletionReviewModal from "../../../../components/dashboard/Beauty
 import ServiceBookingFlow from "./ServiceBookingFlow";
 import { formatMoney } from "../../utils/bookingFormat";
 import { getBookingsDetails } from "../../../../api/bookings";
+import { getUserById } from "../../../../api/user";
 import UserBeautyViewDetailsModal from "../UserBeautyViewDetailsModal";
 import BeautyTrackScreen from "../BeautyTrackScreen";
 import BeautyThankYouModal from "../BeautyThankYouModal";
@@ -53,6 +53,10 @@ const statuses = {
   completed: "Completed",
   expired: "Expired",
   cancelled: "Cancelled",
+  needs_staff: "Needs Staff",
+  assigned: "Assigned",
+  staff_assigned: "Staff Assigned",
+  in_progress: "In Progress",
 };
 export default function ServiceRequest({
   filter = "all",
@@ -127,6 +131,9 @@ export function ServiceBookingCard({ booking, onRefresh }) {
   const [latestCompletionPhotos, setLatestCompletionPhotos] = useState(null);
   const [completionPhotosLoading, setCompletionPhotosLoading] = useState(false);
   const [completionPhotosError, setCompletionPhotosError] = useState("");
+  const [assignedProviderDetails, setAssignedProviderDetails] = useState(null);
+  const [assignedProviderLoading, setAssignedProviderLoading] = useState(false);
+  const [assignedProviderError, setAssignedProviderError] = useState("");
   const [secondsToStart, setSecondsToStart] = useState(null);
   const bookingProvider = booking.provider || {};
   const provider = {
@@ -142,6 +149,7 @@ export function ServiceBookingCard({ booking, onRefresh }) {
         : (bookingProvider.rating?.average ?? 0),
     reviews: bookingProvider.rating?.count ?? 0,
   };
+  const displayProvider = assignedProviderDetails || provider;
   const close = () => {
     setScreen(null);
     if (params.has("beauty")) {
@@ -163,6 +171,77 @@ export function ServiceBookingCard({ booking, onRefresh }) {
     (["payment", "review", "track", "details"].includes(requestedView)
       ? requestedView
       : null);
+  const assignedStaff = booking.assignedStaff ?? booking.raw?.assignedStaff ?? [];
+  const assignedStaffEntry = Array.isArray(assignedStaff)
+    ? assignedStaff[0]
+    : null;
+  const business = booking.businessId ?? booking.raw?.businessId ?? null;
+  const isBusinessBooking = Boolean(business);
+  const assignedProviderRef = assignedStaffEntry
+    ? assignedStaffEntry.provider
+    : null;
+  const assignedProviderId =
+    typeof assignedProviderRef === "string"
+      ? assignedProviderRef
+      : assignedProviderRef?._id || assignedProviderRef?.id;
+
+  useEffect(() => {
+    if (view !== "details" || !isBusinessBooking || !assignedProviderId) {
+      setAssignedProviderDetails(null);
+      setAssignedProviderLoading(false);
+      setAssignedProviderError("");
+      return undefined;
+    }
+
+    let active = true;
+    setAssignedProviderLoading(true);
+    setAssignedProviderError("");
+    getUserById(assignedProviderId)
+      .then((response) => {
+        if (!active) return;
+        const entry =
+          response?.provider ||
+          response?.data?.provider ||
+          response?.data?.data ||
+          response?.data ||
+          response ||
+          {};
+        const profile =
+          entry.providerProfile ||
+          entry.profile ||
+          entry.userId?.data ||
+          {};
+        const details = { ...profile, ...entry };
+        setAssignedProviderDetails({
+          ...provider,
+          ...details,
+          _id: details._id || details.id || assignedProviderId,
+          fullName:
+            details.fullName || details.name || provider.fullName || "Provider",
+          profilePicture:
+            details.profilePicture || details.avatar || provider.profilePicture,
+          rating:
+            typeof details.rating === "number"
+              ? details.rating
+              : details.rating?.average ?? provider.rating,
+          reviews: details.rating?.count ?? details.reviews ?? provider.reviews,
+        });
+      })
+      .catch((requestError) => {
+        if (!active) return;
+        setAssignedProviderError(
+          requestError?.response?.data?.message ||
+            "Could not load the assigned provider details.",
+        );
+      })
+      .finally(() => {
+        if (active) setAssignedProviderLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [view, assignedProviderId, isBusinessBooking]);
   useEffect(() => {
     if (view !== "review" || !booking.id) return undefined;
     let active = true;
@@ -201,18 +280,34 @@ export function ServiceBookingCard({ booking, onRefresh }) {
       ? reviewText
       : `${reviewText.slice(0, 120).trim()}...`;
   const dropoffAddress = booking.address || "";
-  const providerAddress =
-    bookingProvider.currentLocation?.address?.trim() || "";
+  const providerAddress = displayProvider.currentLocation?.address?.trim() || "";
+  const businessAddress =
+    typeof business?.businessAddress === "string"
+      ? business.businessAddress
+      : business?.businessAddress?.address || "";
+  const businessName = business?.businessName || "the business";
+  const pricingOption =
+    booking.raw?.serviceDetails?.pricingOption ??
+    booking.serviceDetails?.pricingOption;
   const showRoute =
-    booking.pricingOption === "customer_address" &&
+    pricingOption === "customer_address" &&
     providerAddress &&
     dropoffAddress.trim() &&
     providerAddress.toLowerCase() !== dropoffAddress.trim().toLowerCase();
   const serviceLocationAddress =
-    booking.pricingOption === "customer_address"
+    pricingOption === "customer_address"
       ? dropoffAddress
       : providerAddress || dropoffAddress;
-  const providerArea = provider.currentLocation?.address || provider.city || "";
+  const providerArea =
+    (isBusinessBooking && businessAddress) ||
+    displayProvider.currentLocation?.address ||
+    displayProvider.city ||
+    "";
+  const displayStatus = booking.businessStatus ?? booking.status;
+  const displayStatusLabel = booking.businessStatus
+    ? statuses[booking.businessStatus] ||
+      booking.businessStatus.replaceAll("_", " ")
+    : statuses[booking.status] || booking.apiStatus || booking.status;
   const canCancel = ["pending", "accepted", "", "expired"].includes(
     booking.status,
   );
@@ -265,11 +360,14 @@ export function ServiceBookingCard({ booking, onRefresh }) {
         ]
           .map((value) => String(value).padStart(2, "0"))
           .join(":");
+  const providerCoordinates =
+    displayProvider.currentLocation?.coordinates ||
+    booking.raw?.providerId?.currentLocation?.coordinates;
   const routePoints = {
-    pickup: booking.raw?.providerId?.currentLocation?.coordinates
+    pickup: providerCoordinates
       ? {
-          latitude: booking.raw.providerId.currentLocation.coordinates[1],
-          longitude: booking.raw.providerId.currentLocation.coordinates[0],
+          latitude: providerCoordinates[1],
+          longitude: providerCoordinates[0],
         }
       : null,
     dropoff: booking.raw?.location?.coordinates?.coordinates
@@ -306,11 +404,9 @@ const reviewScore = Math.max(
                 {booking.service}
               </h3>
               <span
-                className={`rounded-full border px-2 py-0.5 text-xs font-medium ${booking.status === "completed" ? "border-[#34805A] bg-[#34805A1A] text-[#34805A]" : booking.status === "active" ? "border-blue-200 bg-blue-50 text-blue-600" : ["expired", "cancelled"].includes(booking.status) ? "border-gray-200 bg-gray-50 text-gray-500" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+                className={`rounded-full border px-2 py-0.5 text-xs font-medium ${displayStatus === "completed" ? "border-[#34805A] bg-[#34805A1A] text-[#34805A]" : ["active", "in_progress"].includes(displayStatus) ? "border-blue-200 bg-blue-50 text-blue-600" : ["expired", "cancelled"].includes(displayStatus) ? "border-gray-200 bg-gray-50 text-gray-500" : "border-amber-200 bg-amber-50 text-amber-700"}`}
               >
-                {statuses[booking.status] ||
-                  booking.apiStatus ||
-                  booking.status}
+                {displayStatusLabel}
               </span>
             </div>
             <p className="mt-1 inline-flex items-center gap-1 rounded-sm bg-[#EAF3FF] px-1.5 py-1 text-[11px] text-[#1674E8]">
@@ -434,12 +530,13 @@ const reviewScore = Math.max(
       {view === "track" && (
         <BeautyTrackScreen
           booking={booking}
-          provider={provider}
+          provider={displayProvider}
           providerArea={providerArea}
           providerAddress={providerAddress}
           dropoffAddress={dropoffAddress}
           serviceLocationAddress={serviceLocationAddress}
           showRoute={showRoute}
+          showMap={pricingOption === "customer_address"}
           routePoints={routePoints}
           pickupNote={pickupNote}
           canCancel={canCancel}
@@ -452,7 +549,12 @@ const reviewScore = Math.max(
 
       {view === "details" && (
         <UserBeautyViewDetailsModal
-          provider={provider}
+          provider={displayProvider}
+          assignedProviderLoading={assignedProviderLoading}
+          assignedProviderError={assignedProviderError}
+          isBusinessBooking={isBusinessBooking}
+          hasAssignedStaff={Boolean(assignedProviderId)}
+          businessName={businessName}
           providerArea={providerArea}
           booking={booking}
           serviceDate={serviceDate}

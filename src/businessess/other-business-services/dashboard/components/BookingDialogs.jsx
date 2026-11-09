@@ -40,7 +40,7 @@ export default function BookingDialogs({ flow }) {
         <p className="business-modal-copy">Decline {booking.customer}’s request? They’ll be told you can’t take it.</p>
         <div className="business-modal-actions">
           <Button variant="outline" size="sm" className="business-button business-button-secondary" onClick={onClearConfirmation}>Keep booking</Button>
-          <Button size="sm" className="business-button business-button-primary" disabled={Boolean(busyAction)} onClick={onDecline}>
+          <Button size="sm" className="business-button business-button-primary" disabled={Boolean(busyAction) || !Number.isFinite(seconds) || seconds <= 0} onClick={onDecline}>
             {busyAction === "decline" ? "Declining..." : "Decline request"}
           </Button>
         </div>

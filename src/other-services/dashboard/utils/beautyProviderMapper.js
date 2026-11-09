@@ -55,10 +55,16 @@ export const extractBusinesses = (response) => {
 
 export const extractNearbyProviders = (response) => {
   if (Array.isArray(response)) return response;
-  if (Array.isArray(response?.nearbyProviders)) return response.nearbyProviders;
-  if (Array.isArray(response?.data?.nearbyProviders)) {
-    return response.data.nearbyProviders;
+  const containers = [response, response?.data, response?.data?.data];
+  const resultKeys = ["nearbyProviders", "providers", "serviceProviders", "results"];
+
+  for (const container of containers) {
+    if (Array.isArray(container)) return container;
+    for (const key of resultKeys) {
+      if (Array.isArray(container?.[key])) return container[key];
+    }
   }
+
   return [];
 };
 
@@ -141,9 +147,10 @@ export const normalizeSearchBeautyProvider = (
     (Array.isArray(provider.reviews)
       ? provider.reviews.length
       : provider.reviews);
-  const isUnavailable =
-    provider.availability?.isAvailable === false ||
-    provider.locationFresh === false;
+  const isUnavailable = provider.online != null
+    ? provider.online === false
+    : provider.availability?.isAvailable === false ||
+      provider.locationFresh === false;
   const gallery = compactImages(
     provider.workVisuals?.flatMap((item) => item.pictures || []),
   );
@@ -178,6 +185,7 @@ export const normalizeSearchBeautyProvider = (
     distanceFromPickup: provider.distanceFromPickup,
     isAvailable: !isUnavailable,
     isUnavailable,
+    online: provider.online,
   };
 };
 

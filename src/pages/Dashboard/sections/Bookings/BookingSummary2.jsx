@@ -23,6 +23,8 @@ import { getBookingsDetails, cancelBooking } from "../../../../api/bookings";
 import { getWalletBalance } from "../../../../api/provider";
 import { useSearchParams } from "react-router-dom";
 import UserCancellationModal from "../../../../components/UserCancellationModal";
+import CancelBookingButton from "../../../../components/CancelBookingButton";
+import WaitingForPaymentModal from "../../../../components/provider-dashboard/WaitingForPaymentModal";
 import PaymentExpiredModal from "./Modalpayment";
 
 export default function BookingSummary2() {
@@ -37,7 +39,6 @@ export default function BookingSummary2() {
   const [isNavigating, setIsNavigating] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [showExpiredModal, setShowExpiredModal] = useState(false);
-  
 
   const navigate = useNavigate();
   //const navigate = useNavigate();
@@ -45,14 +46,17 @@ export default function BookingSummary2() {
   const queryBookingId = searchParams.get("bookingId");
   const paymentSuccess = searchParams.get("payment_success");
   const reference = searchParams.get("reference");
-  const [timeLeft, setTimeLeft] = useState(5 * 60);
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
- 
+  const DEFAULT_PAYMENT_COUNTDOWN = 5 * 60;
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_PAYMENT_COUNTDOWN);
+
   const booking = useBookingStore((state) => state.booking);
   const setBooking = useBookingStore((state) => state.setBooking);
 
   const bookingDetails = booking?.data?.booking || {};
+  const bookingId = queryBookingId || bookingDetails?._id;
+  const countdownStorageKey = bookingId
+    ? `payment-countdown-${bookingId}`
+    : "payment-countdown";
   const providerDetails = bookingDetails?.providerId || {};
 
   const pickupAddress = bookingDetails?.pickupLocation?.address || "—";
@@ -60,36 +64,110 @@ export default function BookingSummary2() {
   const estimatedDistance = bookingDetails?.distance
     ? `${bookingDetails.distance.value} ${bookingDetails.distance.unit}`
     : "—";
-  const acceptedProviderId = bookingDetails?.providerId?._id || providerDetails?._id;
-  const targetProvider = booking?.data?.providers?.find(p => (p.id || p._id || p.userId) === acceptedProviderId) || providerDetails;
+  const acceptedProviderId =
+    bookingDetails?.providerId?._id || providerDetails?._id;
+  const targetProvider =
+    booking?.data?.providers?.find(
+      (p) => (p.id || p._id || p.userId) === acceptedProviderId,
+    ) || providerDetails;
   const pricing = targetProvider?.pricing || bookingDetails?.pricing;
 
-
-  const baseFare = bookingDetails?.pricingBreakdown?.meta?.ratesUsed?.baseFare ?? pricing?.meta?.ratesUsed?.baseFare ?? 0;
-  const timeCost = pricing?.breakdown?.timeCost ?? bookingDetails?.pricingBreakdown?.timeCost ?? 0;
-  const distanceCost = pricing?.breakdown?.distanceCost ?? bookingDetails?.pricingBreakdown?.distanceCost ?? 0;
-  const perMinuteRate = pricing?.meta?.ratesUsed?.perMinuteRate ?? bookingDetails?.pricingMeta?.ratesUsed?.perMinuteRate ?? 0;
-  const perKmRate = pricing?.meta?.ratesUsed?.perKmRate ?? bookingDetails?.pricingMeta?.ratesUsed?.perKmRate ?? 0;
-  const tax =  bookingDetails?.providerPricingOptions?.[0]?.breakdown?.tax ?? bookingDetails?.originalPricing?.breakdown?.tax ?? pricing?.tax?.amount ?? 0;
-  const serviceCost = pricing?.fare?.subtotal ?? bookingDetails?.pricingBreakdown?.subtotal ?? bookingDetails?.pricing?.subtotal ?? 0;
-  const serviceCharge = pricing?.breakdown?.platformFee ?? bookingDetails?.pricingBreakdown?.originalServiceFee ?? pricing?.fees?.userPlatformFee ??0;
-  const discount = pricing?.totals?.discountAmount ?? bookingDetails?.pricingBreakdown?.discountAmount ?? 0;
-  const totalAmount = bookingDetails?.pricingBreakdown?.originalTotalAmount ??  pricing?.totals?.beforeDiscount ?? 0;
-  const DiscountedAmount = bookingDetails?.pricingBreakdown?.totalAmount ?? pricing?.totals?.riderPaysFinal ?? 0;
+  const baseFare =
+    bookingDetails?.pricingBreakdown?.meta?.ratesUsed?.baseFare ??
+    pricing?.meta?.ratesUsed?.baseFare ??
+    0;
+  const timeCost =
+    pricing?.breakdown?.timeCost ??
+    bookingDetails?.pricingBreakdown?.timeCost ??
+    0;
+  const distanceCost =
+    pricing?.breakdown?.distanceCost ??
+    bookingDetails?.pricingBreakdown?.distanceCost ??
+    0;
+  const perMinuteRate =
+    pricing?.meta?.ratesUsed?.perMinuteRate ??
+    bookingDetails?.pricingMeta?.ratesUsed?.perMinuteRate ??
+    0;
+  const perKmRate =
+    pricing?.meta?.ratesUsed?.perKmRate ??
+    bookingDetails?.pricingMeta?.ratesUsed?.perKmRate ??
+    0;
+  const tax =
+    bookingDetails?.providerPricingOptions?.[0]?.breakdown?.tax ??
+    bookingDetails?.originalPricing?.breakdown?.tax ??
+    pricing?.tax?.amount ??
+    0;
+  const serviceCost =
+    pricing?.fare?.subtotal ??
+    bookingDetails?.pricingBreakdown?.subtotal ??
+    bookingDetails?.pricing?.subtotal ??
+    0;
+  const serviceCharge =
+    pricing?.breakdown?.platformFee ??
+    bookingDetails?.pricingBreakdown?.originalServiceFee ??
+    pricing?.fees?.userPlatformFee ??
+    0;
+  const discount =
+    pricing?.totals?.discountAmount ??
+    bookingDetails?.pricingBreakdown?.discountAmount ??
+    0;
+  const totalAmount =
+    bookingDetails?.pricingBreakdown?.originalTotalAmount ??
+    pricing?.totals?.beforeDiscount ??
+    0;
+  const DiscountedAmount =
+    bookingDetails?.pricingBreakdown?.totalAmount ??
+    pricing?.totals?.riderPaysFinal ??
+    0;
   const hasFirstRideDiscount = Boolean(
     bookingDetails?.applyRideDiscount ??
-      bookingDetails?.pricing?.applyRideDiscount ??
-      pricing?.applyRideDiscount,
+    bookingDetails?.pricing?.applyRideDiscount ??
+    pricing?.applyRideDiscount,
   );
   const payableAmount = hasFirstRideDiscount ? DiscountedAmount : totalAmount;
 
-
   const providerDistanceInfo = bookingDetails?.providerDistances?.find(
-    (p) => p.providerId === acceptedProviderId
+    (p) => p.providerId === acceptedProviderId,
   );
   const providerETA = providerDistanceInfo?.providerETAMinutes;
 
   // Fetch wallet balance on mount
+  const getStoredCountdownDeadline = (key) => {
+    try {
+      const storedValue = Number(localStorage.getItem(key));
+      return Number.isFinite(storedValue) ? storedValue : null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const saveCountdownDeadline = (key, remainingSeconds) => {
+    try {
+      const nextDeadline = Date.now() + remainingSeconds * 1000;
+      localStorage.setItem(key, String(nextDeadline));
+    } catch (error) {
+      console.warn("Could not persist payment countdown:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!bookingId) return;
+
+    const storedDeadline = getStoredCountdownDeadline(countdownStorageKey);
+
+    if (storedDeadline && storedDeadline > Date.now()) {
+      const remaining = Math.max(
+        0,
+        Math.ceil((storedDeadline - Date.now()) / 1000),
+      );
+      setTimeLeft(remaining);
+      return;
+    }
+
+    setTimeLeft(DEFAULT_PAYMENT_COUNTDOWN);
+    saveCountdownDeadline(countdownStorageKey, DEFAULT_PAYMENT_COUNTDOWN);
+  }, [bookingId, countdownStorageKey]);
+
   const fetchBalance = async () => {
     try {
       setIsLoadingBalance(true);
@@ -143,20 +221,39 @@ export default function BookingSummary2() {
   }, [queryBookingId, paymentSuccess, setBooking]);
 
   useEffect(() => {
-    if (isPaid || showExpiredModal) return;
+    if (isPaid || showExpiredModal || !bookingId) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((previousTime) => Math.max(previousTime - 1, 0));
+      setTimeLeft((previousTime) => {
+        const nextTime = Math.max(previousTime - 1, 0);
+        saveCountdownDeadline(countdownStorageKey, nextTime);
+        return nextTime;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isPaid, showExpiredModal]);
+  }, [isPaid, showExpiredModal, bookingId, countdownStorageKey]);
 
   useEffect(() => {
     if (!isPaid && timeLeft === 0) {
       setShowExpiredModal(true);
+      try {
+        localStorage.removeItem(countdownStorageKey);
+      } catch (error) {
+        console.warn("Could not clear payment countdown:", error);
+      }
     }
-  }, [isPaid, timeLeft]);
+  }, [isPaid, timeLeft, countdownStorageKey]);
+
+  useEffect(() => {
+    if (isPaid || showExpiredModal) {
+      try {
+        localStorage.removeItem(countdownStorageKey);
+      } catch (error) {
+        console.warn("Could not clear payment countdown:", error);
+      }
+    }
+  }, [isPaid, showExpiredModal, countdownStorageKey]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-NG", {
@@ -165,9 +262,8 @@ export default function BookingSummary2() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
-    
-  }; 
- 
+  };
+
   const handleCancelSubmit = async (reason) => {
     await cancelBooking(bookingDetails._id, reason);
   };
@@ -273,18 +369,26 @@ export default function BookingSummary2() {
           <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-3">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Service Cost:</span>
-              <span className="font-medium text-gray-900">{formatCurrency(serviceCost)}</span>
+              <span className="font-medium text-gray-900">
+                {formatCurrency(serviceCost)}
+              </span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Tax:</span>
-              <span className="font-medium text-gray-900">{formatCurrency(tax)}</span>
+              <span className="font-medium text-gray-900">
+                {formatCurrency(tax)}
+              </span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Platform Fee:</span>
-              <span className="font-medium text-gray-900">{formatCurrency(serviceCharge)}</span>
+              <span className="font-medium text-gray-900">
+                {formatCurrency(serviceCharge)}
+              </span>
             </div>
             <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
-              <span className="text-gray-600 font-semibold">Total Deducted:</span>
+              <span className="text-gray-600 font-semibold">
+                Total Deducted:
+              </span>
               <span className="font-bold text-green-600 text-lg">
                 {formatCurrency(DiscountedAmount)}
               </span>
@@ -439,7 +543,10 @@ export default function BookingSummary2() {
                   </div>
                   <p className="text-sm text-gray-600 mb-2 capitalize font-medium">
                     {providerDetails?.job?.[0]?.title?.replace(/_/g, " ") ||
-                      providerDetails?.services?.[0]?.title?.replace(/_/g, " ") ||
+                      providerDetails?.services?.[0]?.title?.replace(
+                        /_/g,
+                        " ",
+                      ) ||
                       bookingDetails?.subCategory?.replace(/_/g, " ") ||
                       "—"}
                   </p>
@@ -493,224 +600,277 @@ export default function BookingSummary2() {
 
               {/* Action Buttons */}
               <div className="text-center md:grid md:grid-cols-2 gap-5">
-                
                 {bookingDetails?.status?.toLowerCase() !== "cancelled" && (
                   <button
                     onClick={() => {
                       if (!bookingDetails?._id) return;
-                      navigate(`/dashboard/chat?bookingId=${bookingDetails._id}`, {
-                        state: {
-                          booking: bookingDetails,
-                          provider: providerDetails,
-                        }
-                      });
+                      navigate(
+                        `/dashboard/chat?bookingId=${bookingDetails._id}`,
+                        {
+                          state: {
+                            booking: bookingDetails,
+                            provider: providerDetails,
+                          },
+                        },
+                      );
                     }}
-                    className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    className="w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
                     <MessageCircle className="w-4 h-4 text-gray-600" />
                     <span className="font-medium text-gray-700">Message</span>
                   </button>
                 )}
                 {!isPaid && (
-                  <button
-                    onClick={() => setCancelModalOpen(true)}
+                  <CancelBookingButton
+                    bookingId={bookingDetails?._id}
+                    role="user"
+                    status={bookingDetails?.status}
+                    paymentStatus={bookingDetails?.payment?.status}
+                    title="Cancel Request"
                     className="text-red-500 hover:bg-red-200 text-center rounded-lg font-medium px-4 hover:text-red-600 transition-colors"
-                  >
-                    Cancel Request
-                  </button>
+                    onSuccess={() => {
+                      setCancelModalOpen(false);
+                      navigate("/bookings");
+                    }}
+                  />
                 )}
-              </div>
               </div>
             </div>
+          </div>
 
-            {/* Sidebar Column */}
-            <div className="lg:col-span-5 space-y-6">
-              {/* Job Summary */}
-              <div className="bg-[#231F2005] border border-[#231F201A] p-6 rounded-[16px] space-y-6">
-                     {!isPaid && (
-                  <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-                    <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-500" />
-                    <p className="text-sm font-medium">
-                      Complete your payment before the countdown expires —{" "}
-                      <span className="font-bold tabular-nums">
-                        {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-                      </span>
-                    </p>
+          {/* Sidebar Column */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Job Summary */}
+            <div className="bg-[#231F2005] border border-[#231F201A] p-6 rounded-[16px] space-y-6">
+              {!isPaid && (
+                <WaitingForPaymentModal
+                  compact
+                  secondsLeft={timeLeft}
+                  customer={{
+                    fullName: bookingDetails?.customer?.fullName || "Customer",
+                    profilePicture:
+                      bookingDetails?.customer?.profilePicture || "/avatar.png",
+                  }}
+                  pickup={pickupAddress}
+                  dropoff={dropoffAddress}
+                  dateTime={
+                    bookingDetails?.scheduledAt ||
+                    bookingDetails?.createdAt ||
+                    "N/A"
+                  }
+                  bookingPrice={totalAmount}
+                  platformFee={serviceCharge}
+                  riderReceives={payableAmount}
+                />
+              )}
+              <h3 className="text-xl font-bold text-[#231F20]">Job Summary</h3>
+
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-3 h-3 bg-[#005823] rounded-full" />
                   </div>
-                )}
-                <h3 className="text-xl font-bold text-[#231F20]">Job Summary</h3>
-
-                <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <div className="w-3 h-3 bg-[#005823] rounded-full" />
+                  <div className="flex-1">
+                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">
+                      Pickup Location
                     </div>
-                    <div className="flex-1">
-                      <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Pickup Location</div>
-                      <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
-                        {pickupAddress}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <MapPin className="w-5 h-5 text-[#005823]" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Dropoff Location</div>
-                      <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
-                        {dropoffAddress}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
-                      <Navigation className="w-5 h-5 text-[#005823]" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">Estimated Distance</div>
-                      <div className="text-[15px] font-medium text-[#231F20] mt-1">{estimatedDistance}</div>
+                    <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
+                      {pickupAddress}
                     </div>
                   </div>
                 </div>
 
-                {bookingDetails?.description && (
-                  <div className="pt-4 border-t border-[#231F201A]">
-                    <h4 className="font-bold text-sm text-[#231F2080] uppercase tracking-wide mb-2">Description</h4>
-                    <p className="text-sm text-[#231F20BF] leading-relaxed italic">
-                      "{bookingDetails.description}"
-                    </p>
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <MapPin className="w-5 h-5 text-[#005823]" />
                   </div>
-                )}
+                  <div className="flex-1">
+                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">
+                      Dropoff Location
+                    </div>
+                    <div className="text-[15px] font-medium text-[#231F20] leading-snug mt-1">
+                      {dropoffAddress}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-[#E6EFE9] rounded-full flex items-center justify-center flex-shrink-0">
+                    <Navigation className="w-5 h-5 text-[#005823]" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-sm text-[#231F2080] uppercase tracking-wide">
+                      Estimated Distance
+                    </div>
+                    <div className="text-[15px] font-medium text-[#231F20] mt-1">
+                      {estimatedDistance}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Payment Summary & Method */}
-              <div className="bg-white border border-[#231F201A] p-6 rounded-[16px] shadow-sm space-y-6">
-                <h3 className="text-xl font-bold text-[#231F20]">Payment Summary</h3>
+              {bookingDetails?.description && (
+                <div className="pt-4 border-t border-[#231F201A]">
+                  <h4 className="font-bold text-sm text-[#231F2080] uppercase tracking-wide mb-2">
+                    Description
+                  </h4>
+                  <p className="text-sm text-[#231F20BF] leading-relaxed italic">
+                    "{bookingDetails.description}"
+                  </p>
+                </div>
+              )}
+            </div>
 
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm font-medium text-gray-600">
-                    <span>Base Fare</span>
-                    <span>{formatCurrency(baseFare)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-medium text-gray-600">
-                    <span>Price per Minute</span>
-                    <span>{formatCurrency(perMinuteRate)}</span>
-                  </div>
-                  {/* <div className="flex justify-between text-sm font-medium text-gray-600">
+            {/* Payment Summary & Method */}
+            <div className="bg-white border border-[#231F201A] p-6 rounded-[16px] shadow-sm space-y-6">
+              <h3 className="text-xl font-bold text-[#231F20]">
+                Payment Summary
+              </h3>
+
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Base Fare</span>
+                  <span>{formatCurrency(baseFare)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Price per Minute</span>
+                  <span>{formatCurrency(perMinuteRate)}</span>
+                </div>
+                {/* <div className="flex justify-between text-sm font-medium text-gray-600">
                     <span>Price per KM</span>
                     <span>{formatCurrency(perKmRate)}</span>
                   </div> */}
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Subtotal</span>
+                  <span>{formatCurrency(serviceCost)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Tax </span>
+                  <span>{formatCurrency(tax)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <span>Platform Fee</span>
+                  <span>{formatCurrency(serviceCharge)}</span>
+                </div>
+                {hasFirstRideDiscount && (
                   <div className="flex justify-between text-sm font-medium text-gray-600">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(serviceCost)}</span>
+                    <span>Discount</span>
+                    <span>{formatCurrency(discount)}</span>
                   </div>
-                  <div className="flex justify-between text-sm font-medium text-gray-600">
-                    <span>Tax </span>
-                    <span>{formatCurrency(tax)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-medium text-gray-600">
-                    <span>Platform Fee</span>
-                    <span>{formatCurrency(serviceCharge)}</span>
-                  </div>
-                  {hasFirstRideDiscount && (
-                    <div className="flex justify-between text-sm font-medium text-gray-600">
-                      <span>Discount</span>
-                      <span>{formatCurrency(discount)}</span>
-                    </div>
-                  )}
+                )}
+                <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
+                  <span className="font-bold text-gray-900">Total Amount</span>
+                  <span
+                    className={`text-xl font-black ${
+                      hasFirstRideDiscount
+                        ? "text-[#005823] line-through"
+                        : "text-[#005823]"
+                    }`}
+                  >
+                    {formatCurrency(totalAmount)}
+                  </span>
+                </div>
+
+                {hasFirstRideDiscount && (
                   <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
-                    <span className="font-bold text-gray-900">Total Amount</span>
-                    <span
-                      className={`text-xl font-black ${
-                        hasFirstRideDiscount
-                          ? "text-[#005823] line-through"
-                          : "text-[#005823]"
-                      }`}
-                    >
-                      {formatCurrency(totalAmount)}
+                    <span className="font-bold text-gray-900">
+                      Discounted Amount
+                    </span>
+                    <span className="text-xl font-black text-[#005823]">
+                      {formatCurrency(DiscountedAmount)}
                     </span>
                   </div>
+                )}
+              </div>
 
-                  {hasFirstRideDiscount && (
-                    <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
-                      <span className="font-bold text-gray-900">Discounted Amount</span>
-                      <span className="text-xl font-black text-[#005823]">
-                        {formatCurrency(DiscountedAmount)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-gray-100">
-                  <h4 className="font-bold text-sm text-gray-900 tracking-wide uppercase">Select Payment Method</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === 'wallet' ? 'border-[#005823] bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300'}`}>
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="wallet"
-                        checked={selectedPayment === "wallet"}
-                        onChange={(e) => setSelectedPayment(e.target.value)}
-                        disabled={isPaid}
-                        className="w-4 h-4 accent-[#005823]"
-                      />
-                      <div className="flex-1">
-                        <div className="font-bold text-gray-900">Wallet</div>
-                        <div className="text-xs text-gray-500">Bal: {formatCurrency(walletBalance)}</div>
-                      </div>
-                    </label>
-                    <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === 'online' ? 'border-[#005823] bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300'}`}>
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="online"
-                        checked={selectedPayment === "online"}
-                        onChange={(e) => setSelectedPayment(e.target.value)}
-                        disabled={isPaid}
-                        className="w-4 h-4 accent-[#005823]"
-                      />
-                      <div className="flex-1 font-bold text-gray-900">Pay Online</div>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Pickup Notes (Optional)</label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Need something specific? Tell the provider..."
-                    disabled={isPaid}
-                    className="w-full p-3 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#00582333] transition-all resize-none h-20"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <button
-                    onClick={handleConfirmAndPay}
-                    disabled={isProcessing || isPaid}
-                    className="w-full py-4 bg-[#005823] text-white rounded-xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-900/10 disabled:opacity-50"
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                <h4 className="font-bold text-sm text-gray-900 tracking-wide uppercase">
+                  Select Payment Method
+                </h4>
+                <div className="grid grid-cols-1 gap-3">
+                  <label
+                    className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === "wallet" ? "border-[#005823] bg-green-50 shadow-sm" : "border-gray-100 hover:border-gray-300"}`}
                   >
-                    {isPaid
-                      ? "Payment Successful ✓"
-                      : isProcessing
-                        ? "Processing..."
-                        : `Confirm & Pay ${formatCurrency(payableAmount)}`}
-                  </button>
-                  {!isPaid && (
-                    <button
-                      onClick={() => setCancelModalOpen(true)}
-                      className="w-full py-2 text-red-600 font-bold hover:bg-red-50 rounded-lg transition-all text-sm"
-                    >
-                      Cancel Request
-                    </button>
-                  )}
-                  <p className="text-center text-[10px] text-gray-400 font-medium">Rider will proceed once payment is confirmed</p>
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="wallet"
+                      checked={selectedPayment === "wallet"}
+                      onChange={(e) => setSelectedPayment(e.target.value)}
+                      disabled={isPaid}
+                      className="w-4 h-4 accent-[#005823]"
+                    />
+                    <div className="flex-1">
+                      <div className="font-bold text-gray-900">Wallet</div>
+                      <div className="text-xs text-gray-500">
+                        Bal: {formatCurrency(walletBalance)}
+                      </div>
+                    </div>
+                  </label>
+                  <label
+                    className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${selectedPayment === "online" ? "border-[#005823] bg-green-50 shadow-sm" : "border-gray-100 hover:border-gray-300"}`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="online"
+                      checked={selectedPayment === "online"}
+                      onChange={(e) => setSelectedPayment(e.target.value)}
+                      disabled={isPaid}
+                      className="w-4 h-4 accent-[#005823]"
+                    />
+                    <div className="flex-1 font-bold text-gray-900">
+                      Pay Online
+                    </div>
+                  </label>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Pickup Notes (Optional)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Need something specific? Tell the provider..."
+                  disabled={isPaid}
+                  className="w-full p-3 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#00582333] transition-all resize-none h-20"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={handleConfirmAndPay}
+                  disabled={isProcessing || isPaid}
+                  className="w-full py-4 bg-[#005823] text-white rounded-xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-900/10 disabled:opacity-50"
+                >
+                  {isPaid
+                    ? "Payment Successful ✓"
+                    : isProcessing
+                      ? "Processing..."
+                      : `Confirm & Pay ${formatCurrency(payableAmount)}`}
+                </button>
+                {!isPaid && (
+                  <CancelBookingButton
+                    bookingId={bookingDetails?._id}
+                    role="user"
+                    status={bookingDetails?.status}
+                    paymentStatus={bookingDetails?.payment?.status}
+                    title="Cancel Request"
+                    className="w-full py-2 text-red-600 font-bold hover:bg-red-50 rounded-lg transition-all text-sm"
+                    onSuccess={() => {
+                      setCancelModalOpen(false);
+                      navigate("/bookings");
+                    }}
+                  />
+                )}
+                <p className="text-center text-[10px] text-gray-400 font-medium">
+                  Rider will proceed once payment is confirmed
+                </p>
+              </div>
             </div>
+          </div>
         </div>
         {showSuccessModal && <SuccessModal />}
         {showExpiredModal && (
