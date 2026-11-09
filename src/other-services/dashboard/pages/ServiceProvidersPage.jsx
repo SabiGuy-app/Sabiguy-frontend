@@ -19,7 +19,7 @@ import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import Breadcrumbs from "../../../components/dashboard/BreadCrumbs";
 import ProviderCard from "../../../components/dashboard/ProviderCard";
 import LocationAutocomplete from "../../../components/LocationAutocomplete";
-import { searchServiceProviders } from "../../../api/bookings";
+import { searchGeneralProviders, searchServiceProviders } from "../../../api/bookings";
 import { getUserById } from "../../../api/user";
 import {
   extractNearbyProviders,
@@ -39,25 +39,28 @@ const PROVIDER_SEARCH_CACHE_KEY = "service-search-providers-v1";
 const getCurrentLocation = () =>
   new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      reject(
-        new Error("Location access is needed to find providers near you."),
-      );
+      reject(new Error("This browser does not support current location. Search by address instead."));
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) =>
+      ({ coords, timestamp }) =>
         resolve({
           latitude: coords.latitude,
           longitude: coords.longitude,
+          timestamp: timestamp || Date.now(),
         }),
-      () =>
-        reject(
-          new Error(
-            "Allow location access in your browser to see providers near you.",
-          ),
-        ),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+      (error) => {
+        const message = error?.code === 1
+          ? "Location permission was denied. Check this site's browser permission, or search by address instead."
+          : error?.code === 2
+            ? "Your browser has location permission but could not determine your position. Search by address instead."
+            : error?.code === 3
+              ? "Finding your current location took too long. Try again or search by address."
+              : "Could not get your current location. Search by address instead.";
+        reject(new Error(message));
+      },
+      { enableHighAccuracy: false, timeout: 30000, maximumAge: 10 * 60 * 1000 },
     );
   });
 
@@ -104,8 +107,7 @@ const mergeProviderResults = (providers) => {
   return Array.from(providersById.values());
 };
 
-// The backend matches the free-text search against service, business and
-// provider names, so the same request serves category pages and global search.
+// Use the general endpoint unless the user explicitly applies a location filter.
 const searchProvidersForService = async (
   location,
   query,
@@ -116,8 +118,9 @@ const searchProvidersForService = async (
   const search = query.trim();
   if (!search) return [];
 
-  const response = searchResponse ||
-    await searchServiceProviders({ location, search });
+  const response = searchResponse || (location
+    ? await searchServiceProviders({ location, search })
+    : await searchGeneralProviders({ search }));
 
   const providers = extractNearbyProviders(response);
 
@@ -141,6 +144,7 @@ const searchProvidersForService = async (
         ...provider,
         ...details,
         id,
+        online: provider.online ?? details.online,
         availability: provider.availability ?? details.availability,
         locationFresh: provider.locationFresh ?? details.locationFresh,
         distanceFromPickup: provider.distanceFromPickup,
@@ -265,7 +269,7 @@ export default function ServiceProvidersPage({ searchMode = false }) {
     );
   }, [routeLocation.search, searchParam]);
 
-  const loadProviders = useCallback(async (signal, requestedSearch) => {
+  const loadProviders = useCallback((requestedSearch) => {
     const requestedLocation = requestedSearch?.location;
     const hasRequestedLocation =
       Number.isFinite(Number(requestedLocation?.latitude)) &&
@@ -280,44 +284,25 @@ export default function ServiceProvidersPage({ searchMode = false }) {
       setLocationDraft(requestedSearch.address || "");
       setLoading(false);
     } else {
-      setLoading(true);
+      setSearchLocation(null);
+      setLocationAddress("");
+      setLocationDraft("");
+      setLoading(false);
     }
     setError("");
     setProviders([]);
 
-    try {
-      const location = await getCurrentLocation();
-      if (!signal.aborted) {
-        setCurrentLocation(location);
-        if (!hasRequestedLocation) {
-          setSearchLocation(location);
-          setLocationAddress("Current location");
-        }
-      }
-    } catch (requestError) {
-      if (signal.aborted) return;
-      console.warn("Could not load current location shortcut", requestError);
-      if (!hasRequestedLocation) {
-        setError(
-          requestError?.response?.data?.message ||
-            requestError?.message ||
-            "We could not load providers. Please try again.",
-        );
-      }
-    } finally {
-      if (!signal.aborted && !hasRequestedLocation) setLoading(false);
-    }
+    // Do not request location permission just to search. Location is used only
+    // after the user picks an address or explicitly chooses current location.
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-    loadProviders(controller.signal, initialBeautySearch.current);
-    return () => controller.abort();
-  }, [loadProviders, reloadKey, routeLocation.key]);
+    loadProviders(initialBeautySearch.current);
+  }, [loadProviders, routeLocation.key]);
 
   useEffect(() => {
     const query = searchTerm.trim();
-    if (categoriesLoading || !searchLocation || (!category && !searchMode)) return undefined;
+    if (categoriesLoading || (!category && !searchMode)) return undefined;
     if (query.length < 2) {
       setServiceSearchResults(null);
       setServiceSearchLoading(false);
@@ -379,7 +364,7 @@ export default function ServiceProvidersPage({ searchMode = false }) {
       active = false;
       clearTimeout(timeoutId);
     };
-  }, [category, categoriesLoading, exploreCategories, searchLocation, searchMode, searchTerm]);
+  }, [category, categoriesLoading, exploreCategories, reloadKey, searchLocation, searchMode, searchTerm]);
 
   const filteredProviders = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -443,13 +428,30 @@ export default function ServiceProvidersPage({ searchMode = false }) {
     setLocationPickerOpen(false);
   };
 
-  const selectCurrentLocation = () => {
-    if (!currentLocation) return;
+  const selectCurrentLocation = async () => {
+    let location = currentLocation;
+    if (!location) {
+      try {
+        location = await getCurrentLocation();
+        setCurrentLocation(location);
+      } catch (requestError) {
+        setLocationPickerError(requestError.message || "Could not get your current location.");
+        return;
+      }
+    }
     setError("");
     setServiceSearchError("");
     setLocationPickerError("");
-    setSearchLocation(currentLocation);
-    setLocationAddress("Current location");
+    const coordinates = {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    };
+    setSearchLocation(coordinates);
+    setLocationAddress(
+      Date.now() - Number(location.timestamp || Date.now()) > 2 * 60 * 1000
+        ? "Recent location"
+        : "Current location",
+    );
     setLocationDraft("");
     setLocationPickerOpen(false);
   };
@@ -509,10 +511,10 @@ export default function ServiceProvidersPage({ searchMode = false }) {
         <p className="mt-2 text-sm text-gray-500 sm:text-base">
           {searchMode
             ? searchTerm.trim()
-              ? `Providers and businesses matching “${searchTerm.trim()}” near you.`
+              ? `Providers and businesses matching “${searchTerm.trim()}”${searchLocation ? " near your selected location" : ""}.`
               : "Search by provider name, business name or service."
             : category.description ||
-              `Find trusted ${category.title.toLowerCase()} providers near you.`}
+              `Find trusted ${category.title.toLowerCase()} providers.`}
         </p>
 
         {category && <div className="mt-5 flex flex-wrap gap-2" aria-label={`${category.title} services`}>
@@ -584,11 +586,25 @@ export default function ServiceProvidersPage({ searchMode = false }) {
                 <button
                   type="button"
                   onClick={selectCurrentLocation}
-                  disabled={!currentLocation}
                   className="mt-3 w-full rounded-md border border-gray-200 px-3 py-2 text-left text-sm font-medium text-[#005823] hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
                 >
                   Use current location
                 </button>
+                {searchLocation && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchLocation(null);
+                      setLocationAddress("");
+                      setLocationDraft("");
+                      setLocationPickerOpen(false);
+                      setServiceSearchResults(null);
+                    }}
+                    className="mt-2 w-full rounded-md px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50"
+                  >
+                    Search everywhere
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -630,7 +646,9 @@ export default function ServiceProvidersPage({ searchMode = false }) {
         ) : (
           <p className="rounded-md border border-gray-200 bg-white px-4 py-5 text-sm text-gray-500">
             {searchTerm.trim()
-              ? "No nearby providers match your search."
+              ? searchLocation
+                ? "No nearby providers match your search."
+                : "No providers match your search."
               : searchMode
                 ? "Type a provider, business or service name in the search bar."
                 : "Choose a service above to see providers near you."}

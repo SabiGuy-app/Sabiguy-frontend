@@ -362,7 +362,23 @@ export default function ServiceBookingFlow({
       !Number.isFinite(Number(location?.latitude)) ||
       !Number.isFinite(Number(location?.longitude))
     ) {
-      setLocationError("Search location is unavailable. Please search again.");
+      const customerAddress = localStorage.getItem("currentLocationAddress") || "";
+      const providerAddress = [
+        provider.currentLocation?.address,
+        provider.businessAddress,
+        provider.BusinessAddress,
+        provider.city !== "Business address not provided" ? provider.city : "",
+      ]
+        .map((value) =>
+          typeof value === "string" ? value : value?.address || "",
+        )
+        .find(Boolean) || "";
+      setAddress(
+        booking.pricingOption === "customer_address"
+          ? customerAddress
+          : providerAddress,
+      );
+      setLocationError("");
       setLocationLoading(false);
       return undefined;
     }
@@ -391,8 +407,13 @@ export default function ServiceBookingFlow({
       active = false;
     };
   }, [
+    booking.pricingOption,
+    provider.businessAddress,
+    provider.BusinessAddress,
     provider.buyerSearchLocation?.latitude,
     provider.buyerSearchLocation?.longitude,
+    provider.city,
+    provider.currentLocation?.address,
   ]);
 
   useEffect(() => {
@@ -760,19 +781,23 @@ export default function ServiceBookingFlow({
             htmlFor="beauty-booking-location"
             className="mb-1 block text-sm font-medium text-gray-700"
           >
-            Booking address
+            {booking.pricingOption === "customer_address"
+              ? "Your service address"
+              : "Service address"}
           </label>
           <input
             id="beauty-booking-location"
             type="text"
             value={address}
-            readOnly
+            onChange={(event) => setAddress(event.target.value)}
             placeholder={
               locationLoading
                 ? "Resolving search location..."
-                : "Address unavailable"
+                : booking.pricingOption === "customer_address"
+                  ? "Enter your address"
+                  : "Provider address unavailable; enter an address"
             }
-            className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none"
+            className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#34805A]"
           />
           {locationError && (
             <p role="alert" className="mt-2 text-sm text-red-600">
@@ -941,17 +966,6 @@ export default function ServiceBookingFlow({
               value={date}
               min={localDateTime(new Date(now))}
               onChange={(event) => setDate(event.target.value)}
-            />
-          </div>
-        )}
-        {booking.id === "home" && (
-          <div className="mt-5">
-            <InputField
-              name="beauty-booking-address"
-              label="Your address"
-              placeholder="Enter the full service address"
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
             />
           </div>
         )}

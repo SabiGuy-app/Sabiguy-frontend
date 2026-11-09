@@ -169,6 +169,7 @@ export default function ServiceProviderProfilePage() {
   const [reviewState, setReviewState] = useState(null);
   const provider =
     providerState?.requestedId === providerId ? providerState.data : null;
+  const isOffline = provider?.online === false;
 
   useEffect(() => {
     setProfileCategory(null);
@@ -218,6 +219,7 @@ export default function ServiceProviderProfilePage() {
         const providerForCategory = {
           ...cachedProvider,
           ...fullEntry,
+          online: cachedProvider?.online ?? fullEntry.online,
           service: mergeBeautyServices(
             Array.isArray(fullEntry.service) && fullEntry.service.length
               ? fullEntry.service
@@ -351,7 +353,7 @@ export default function ServiceProviderProfilePage() {
     );
   };
   const startSelectedBooking = () => {
-    if (!selectedServices.length) return;
+    if (!selectedServices.length || provider?.online === false) return;
     const option = pricingOptions.find((item) => item.value === pricingOption);
     setBooking({
       service: selectedServices.map((service) => service.name).join(", "),
@@ -546,17 +548,19 @@ export default function ServiceProviderProfilePage() {
                   onSelect={setPreferredStaff}
                 />
               )}
+              {isOffline && (
+                <p role="status" className="mt-4 rounded-md bg-gray-100 px-4 py-3 text-sm text-gray-600">
+                  Provider is not online right now. You can view their profile, but booking is unavailable.
+                </p>
+              )}
               {services.length > 0 && (
                 <button
                   type="button"
-                  disabled={!selectedServices.length}
+                  disabled={!selectedServices.length || isOffline}
                   onClick={startSelectedBooking}
                   className="mt-4 flex w-full items-center justify-between rounded-md bg-[#34805A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2d6f4f] disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
-                  <span>
-                    Book {selectedServices.length || "selected"} service
-                    {selectedServices.length === 1 ? "" : "s"}
-                  </span>
+                  <span>{isOffline ? "Provider is not online" : `Book ${selectedServices.length || "selected"} service${selectedServices.length === 1 ? "" : "s"}`}</span>
                   <span>
                     {selectedTotal > 0
                       ? `₦${selectedTotal.toLocaleString("en-NG")}`
