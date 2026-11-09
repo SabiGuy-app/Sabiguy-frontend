@@ -164,50 +164,50 @@ export default function JobDetailsModal({
 
   return (
     <div>
-      <div className="fixed inset-0 bg-gray-50  bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white sm:p-5 rounded-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50/50 p-3 sm:p-4">
+        <div className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-xl sm:p-5">
           {/* Header */}
-          <div className="top-0 bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="top-0 flex items-center justify-between border-b border-gray-200 bg-white px-3 py-3 sm:px-6 sm:py-4">
+            <div className="flex min-w-0 items-center gap-3">
               <button
                 onClick={onClose}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                className="rounded-full p-1 transition-colors hover:bg-gray-100"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
               <h2 className="text-xl font-semibold">Service Details</h2>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="space-y-6 p-4 sm:p-6">
             {/* Service Title */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">
+              <h3 className="mb-4 break-words text-base font-semibold sm:text-lg">
                 {formatTitle(serviceTitle)}
               </h3>
 
               {/* Provider Info */}
-              <div className="lg:flex items-start justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
                   <img
                     src={
                       job?.originalData?.userId?.profilePicture || "/avatar.png"
                     }
                     alt="Customer"
-                    className="w-14 h-14 rounded-full object-cover"
+                    className="h-14 w-14 rounded-full object-cover"
                   />
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-[16px] sm:text-base">
+                      <span className="break-words text-sm font-semibold sm:text-[16px]">
                         {job?.originalData?.userId?.fullName || "Customer"}
                       </span>
-                      <Verified className="w-4 h-4 text-[#2D6A3E]" />
+                      <Verified className="h-4 w-4 shrink-0 text-[#2D6A3E]" />
                     </div>
                     <div>
                       {ratingValue != null && (
-                        <div className="flex items-center gap-1 text-sm">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <div className="flex items-center gap-1 text-xs sm:text-sm">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           <span className="font-medium">
                             {typeof job.ratings === "object"
                               ? job.ratings.score
@@ -217,9 +217,9 @@ export default function JobDetailsModal({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1 text-sm">
-                      <MapPin className="w-4 h-4" />
-                      <span className="font-medium">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span className="break-words font-medium">
                         {getLocationAddress(
                           job?.location || job?.originalData?.location,
                           "Location unavailable",
@@ -230,9 +230,8 @@ export default function JobDetailsModal({
                 </div>
 
                 {/* Status Badge */}
-                {/* Status Badge */}
                 <span
-                  className={`inline-flex w-fit px-3 py-1 text-xs font-medium rounded-full border h-fit sm:ml-auto ${getStatusStyles(
+                  className={`inline-flex h-fit w-fit self-start rounded-full border px-3 py-1 text-xs font-medium sm:ml-auto ${getStatusStyles(
                     bookingStatus,
                   )}`}
                 >
@@ -240,7 +239,7 @@ export default function JobDetailsModal({
                 </span>
               </div>
 
-              <div className="flex flex-wrap mt-3 gap-3 w-full">
+              <div className="mt-3 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
                 {ShowCallBtn && (
                   <button
                     onClick={() =>
@@ -260,21 +259,25 @@ export default function JobDetailsModal({
                         },
                       })
                     }
-                    className="flex-1 min-w-25 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:flex-1 sm:min-w-0"
                   >
-                    <PhoneCall className="w-4 h-4" />
-                    Call
+                    <span className="flex items-center justify-center gap-2">
+                      <PhoneCall className="h-4 w-4" />
+                      Call
+                    </span>
                   </button>
                 )}
 
                 {ShowMessageBtn &&
                   canMessage(job?.status || job?.originalData?.status) && (
                     <button
-                      className="flex-1 min-w-25 py-2 mt-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:flex-1 sm:min-w-0"
                       onClick={() => onMessageCustomer?.(job)}
                     >
-                      <MessageCircle className="w-4 h-4" />
-                      Message
+                      <span className="flex items-center justify-center gap-2">
+                        <MessageCircle className="h-4 w-4" />
+                        Message
+                      </span>
                     </button>
                   )}
 
@@ -285,7 +288,7 @@ export default function JobDetailsModal({
                     job?.fullBookingId ||
                     job?.bookingId
                   }
-                  className="flex-1 min-w-25 py-2 mt-3  rounded-lg font-medium  flex items-center justify-center gap-2  bg-white text-red-600 border border-red-300  hover:bg-red-50 transition-colors"
+                  className="w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 sm:flex-1 sm:min-w-0"
                   role="provider"
                   status={job?.originalData?.status || job?.status}
                   paymentStatus={
@@ -301,7 +304,7 @@ export default function JobDetailsModal({
 
             {/* Booking Information */}
             <div className="border-t border-gray-200">
-              <h4 className="text-base font-semibold mb-3 mt-2">Booking Information</h4>
+              <h4 className="mb-3 mt-2 text-sm font-semibold sm:text-base">Booking Information</h4>
               <div className="space-y-3">
                 {/* Booking ID */}
                 {job?.orderId && (
@@ -312,11 +315,11 @@ export default function JobDetailsModal({
                       </span>
                     </div>
                     <div className="flex flex-col">
-                      <p className="text-sm font-medium text-gray-700">
+                      <p className="text-xs font-medium text-gray-700 sm:text-sm">
                         Booking ID
                       </p>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm text-gray-600 font-bold uppercase transition-all duration-300">
+                        <p className="text-xs font-bold uppercase text-gray-600 transition-all duration-300 sm:text-sm">
                           {job.orderId}
                         </p>
                         <button
@@ -338,10 +341,10 @@ export default function JobDetailsModal({
                 <div className="flex items-start gap-3">
                   <Wrench className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-xs font-medium text-gray-700 sm:text-sm">
                       Service Type
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-600 sm:text-sm">
                       {formatTitle(serviceTitle)}
                     </p>
                   </div>
@@ -349,10 +352,10 @@ export default function JobDetailsModal({
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-xs font-medium text-gray-700 sm:text-sm">
                       Created At:
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-600 sm:text-sm">
                       {formatDateTime(
                         job?.createdAt || job?.originalData?.createdAt,
                       )}
@@ -365,10 +368,10 @@ export default function JobDetailsModal({
                     <div className="flex items-start gap-3">
                       <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                       <div>
-                        <p className="text-sm font-medium text-gray-700">
+                        <p className="text-xs font-medium text-gray-700 sm:text-sm">
                           Scheduled Date
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs text-gray-600 sm:text-sm">
                           {formatDateTime(
                             job?.scheduleDate ||
                               job?.originalData?.scheduleDate,
@@ -379,10 +382,10 @@ export default function JobDetailsModal({
                     <div className="flex items-start gap-3">
                       <Calendar className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                       <div>
-                        <p className="text-sm font-medium text-gray-700">
+                        <p className="text-xs font-medium text-gray-700 sm:text-sm">
                           Scheduled Time
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs text-gray-600 sm:text-sm">
                           {job?.scheduleTime ||
                             job?.originalData?.scheduleTime ||
                             "N/A"}
@@ -398,10 +401,10 @@ export default function JobDetailsModal({
                     <div className="w-2 h-2 bg-[#005823] rounded-full" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-xs font-medium text-gray-700 sm:text-sm">
                       Pickup Location
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-600 sm:text-sm">
                       {pickupAddress}
                     </p>
                   </div>
@@ -410,10 +413,10 @@ export default function JobDetailsModal({
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-[#2D6A3E] mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-xs font-medium text-gray-700 sm:text-sm">
                       Dropoff Location
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-600 sm:text-sm">
                       {dropoffAddress}
                     </p>
                   </div>
@@ -435,10 +438,10 @@ export default function JobDetailsModal({
                     />
                   </svg>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-xs font-medium text-gray-700 sm:text-sm">
                       Service Cost
                     </p>
-                    <p className="text-sm m mb-3 text-gray-600">
+                    <p className="mb-3 text-xs text-gray-600 sm:text-sm">
                       ₦{(job.agreedPrice || 0).toLocaleString()}
                     </p>
                   </div>
@@ -449,16 +452,16 @@ export default function JobDetailsModal({
 
             {/* Additional Notes */}
             <div>
-              <h4 className="font-semibold mb-3">Additional notes</h4>
-              <div className="bg-blue-50 border border-gray-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600 italic">
+              <h4 className="mb-3 text-sm font-semibold sm:text-base">Additional notes</h4>
+              <div className="rounded-lg border border-gray-200 bg-blue-50 p-4">
+                <p className="text-xs italic text-gray-600 sm:text-sm">
                   {job?.originalData?.pickupNote ||
                     "No additional notes provided by the customer."}
                 </p>
               </div>
             </div>
 
-            <p className="flex mt-6 items-center text-sm justify-center">
+            <p className="mt-6 flex items-center justify-center text-center text-xs sm:text-sm">
               Update the job status to keep the customer informed
             </p>
 
@@ -466,7 +469,7 @@ export default function JobDetailsModal({
               <button
                 type="button"
                 onClick={handleAction}
-                className="mt-4 w-full rounded-lg bg-[#347D53] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#286642]"
+                className="mt-4 w-full rounded-lg bg-[#347D53] px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-[#286642] sm:text-sm"
               >
                 {actionLabel}
               </button>

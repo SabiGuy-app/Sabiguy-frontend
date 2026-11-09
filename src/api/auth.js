@@ -5,6 +5,7 @@ import { useUIStore } from "../stores/ui.store";
 import { useProviderStore } from "../stores/provider.store";
 import { removeFCMToken } from "./fcm";
 import { trackEvent } from "../services/analytics";
+import { clearStoragePreservingTours } from "../utils/tourStorage";
 
 // Password reset uses the shared auth endpoints for every account type.
 export const requestPasswordReset = async (email) => {
@@ -195,19 +196,8 @@ export async function handleLogout() {
   }
 
   try {
-    // ✅ Save tour keys before clearing
-    const tourKeys = Object.keys(localStorage).filter(
-      (key) =>
-        key.startsWith("tourSeen_") || key.startsWith("bookingTourSeen_"),
-    );
-    const savedTours = tourKeys.map((key) => [key, localStorage.getItem(key)]);
-
-    // Clear everything
-    localStorage.clear();
+    clearStoragePreservingTours(localStorage);
     sessionStorage.clear();
-
-    // ✅ Restore tour keys
-    savedTours.forEach(([key, value]) => localStorage.setItem(key, value));
 
     // Reset all Zustand stores
     useAuthStore.getState().logout();

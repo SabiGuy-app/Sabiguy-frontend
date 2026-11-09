@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import LandingFooter from "../components/LandingFooter";
+import DownloadAppSection from "../components/DownloadAppSection";
 import LandingChatbotWidget from "../components/LandingChatbotWidget";
 import {
   fadeInUp,
@@ -22,6 +23,7 @@ import {
 } from "../utils/animations";
 import { useNavigate } from "react-router-dom";
 import OptimizedImage from "../components/common/OptimizedImage";
+import AccountTypeModal from "../components/AccountTypeModal";
 
 
 // Animated Counter Component
@@ -80,6 +82,7 @@ const LandingPage = () => {
   const hasStartedStatsAnimation = useRef(false);
   const [openIndex, setOpenIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+    const [isOpenModal, setIsOpenModal] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [statsAnimationKey, setStatsAnimationKey] = useState(0);
@@ -358,14 +361,14 @@ const LandingPage = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  to="/service-provider/signup"
-                  className="bg-white text-[#2A3349] border-2 border-gray-100 px-6 md:px-10 py-3 md:py-4 rounded-lg md:rounded-xl font-bold hover:bg-gray-50 transition-all inline-block w-full text-center text-sm md:text-base"
+                  onClick={() => setIsOpenModal(true)}                  className="bg-white text-[#2A3349] border-2 border-gray-100 px-6 md:px-10 py-3 md:py-4 rounded-lg md:rounded-xl font-bold hover:bg-gray-50 transition-all inline-block w-full text-center text-sm md:text-base"
                 >
                   Start Earning Today
                 </Link>
               </motion.div>
             </motion.div>
           </motion.div>
+          <AccountTypeModal isOpenModal={isOpenModal} setIsOpenModal={setIsOpenModal} />
 
           <motion.div
             initial={{ opacity: 0, scale: 0.8, x: 50 }}
@@ -734,6 +737,8 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      <DownloadAppSection />
 
       {/* FAQ Section - Responsive */}
       <section id="faq" className="w-full max-w-4xl mx-auto px-4 md:px-6 my-12 md:my-20 scroll-mt-24">
