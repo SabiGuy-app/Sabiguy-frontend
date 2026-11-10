@@ -2,7 +2,7 @@ import EarningsSummary from "../components/earningComponents/EarningsSummary";
 import WalletCard from "../components/earningComponents/WalletCard";
 import IncomeChart from "../components/earningComponents/IncomeChart";
 import { paymentWarning } from "../data/mockEarnings";
-import DriverBalances from "../components/earningComponents/DriverBalances";
+// import DriverBalances from "../components/earningComponents/DriverBalances";
 import Reconciliation from "../components/earningComponents/Reconciliation";
 import EarningTabs from "../components/earningComponents/EarningTabs";
 import WalletLedger from "../components/earningComponents/WalletLedger";
@@ -37,10 +37,10 @@ const Earnings = ({ title }) => {
           </span>
         </div>
 
-        <DriverBalances />
+        {/* <DriverBalances /> */}
 
         <div className="w-full flex max-lg:flex-col justify-center items-center gap-5 my-5">
-          <Reconciliation />
+          {/* <Reconciliation /> */}
           <EarningTabs />
         </div>
 

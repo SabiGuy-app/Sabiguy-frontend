@@ -14,7 +14,7 @@ export default function ReviewSent ({ isOpen, onClose}) {
         Review Sent
       </h2>
        <p className="text-gray-500 text-sm mb-6 max-w-sm">
-        Customer need to review and approve the project before it can be completed
+        Customer need to review and approve the service before it can be completed and payment will be released to you. You will be notified once the review is done.
       </p>
 
             </div>

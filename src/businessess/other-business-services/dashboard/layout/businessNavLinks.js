@@ -4,7 +4,7 @@ import {
 } from "../icons";
 
 export const businessDashboardPath = "/other-business-services/dashboard";
-
+// Business dashboard navigation groups and items. Used in the sidebar and in the dashboard routes.
 export const businessNavGroups = [
   {
     section: "Overview",

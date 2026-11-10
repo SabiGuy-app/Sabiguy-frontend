@@ -35,6 +35,11 @@ const normalizeStatus = (status) =>
 const UserBeautyViewDetailsModal = ({
   provider,
   providerArea,
+  assignedProviderLoading = false,
+  assignedProviderError = "",
+  isBusinessBooking = false,
+  hasAssignedStaff = false,
+  businessName = "",
   booking,
   serviceDate,
   durationLabel,
@@ -117,7 +122,9 @@ const showCountdown = SHOW_COUNTDOWN.includes(status);
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold text-[#231F20]">
-                  {provider?.fullName}
+                  {isBusinessBooking && hasAssignedStaff
+                    ? `A staff member of ${businessName} — ${provider?.fullName}`
+                    : provider?.fullName}
                 </h3>
                 <BadgeCheck size={18} className="text-[#2F7B4F]" />
               </div>
@@ -132,6 +139,12 @@ const showCountdown = SHOW_COUNTDOWN.includes(status);
                 <MapPin size={16} />
                 {providerArea}
               </p>
+              {assignedProviderLoading && (
+                <p className="mt-1 text-xs text-gray-500">Loading assigned provider details...</p>
+              )}
+              {assignedProviderError && (
+                <p className="mt-1 text-xs text-amber-700">{assignedProviderError}</p>
+              )}
             </div>
           </div>
 

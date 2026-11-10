@@ -2,13 +2,13 @@ import api from "./axios";
 import { trackEvent } from "../services/analytics";
 
 export const getDashboardStats = async () => {
-  const { data } = await api.get("/provider/dashboard/stats");
+  const { data } = await api.get("/provider/business-dashboard/stats");
   return data;
 };
 
 export const getProviderBookings = async (status = null) => {
   const params = status ? { status } : {};
-  const { data } = await api.get("/provider/bookings?limit=40", { params });
+  const { data } = await api.get("/provider/business-bookings?limit=40", { params });
   return data;
 };
 

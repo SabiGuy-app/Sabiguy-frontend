@@ -61,14 +61,11 @@ const ActivityPage = lazy(() => import("./pages/Dashboard/sections/Activity"));
 const ProfilePage = lazy(() => import("./pages/Dashboard/sections/Settings"));
 const ContactPage = lazy(() => import("./pages/Dashboard/sections/Help"));
 const Categories = lazy(() => import("./pages/Dashboard/sections/Categories"));
-const BeautyServices = lazy(
-  () => import("./other-services/dashboard/pages/BeautyServices"),
+const ServiceProvidersPage = lazy(
+  () => import("./other-services/dashboard/pages/ServiceProvidersPage"),
 );
-const BeautyProviderProfile = lazy(
-  () => import("./other-services/dashboard/pages/BeautyProviderProfile"),
-);
-const DynamicServicePage = lazy(
-  () => import("./other-services/dashboard/services/pages/ServicePage"),
+const ServiceProviderProfilePage = lazy(
+  () => import("./other-services/dashboard/pages/ServiceProviderProfilePage"),
 );
 const AmbulanceServices = lazy(
   () => import("./other-services/dashboard/services/pages/AmbulanceServices"),
@@ -454,12 +451,20 @@ function App() {
                 <Route path="/dashboard/settings" element={<ProfilePage />} />
                 <Route path="/dashboard/categories" element={<Categories />} />
                 <Route
+                  path="/dashboard/search"
+                  element={<ServiceProvidersPage searchMode />}
+                />
+                <Route
                   path="/dashboard/categories/beauty-personal-care"
-                  element={<BeautyServices />}
+                  element={<ServiceProvidersPage />}
                 />
                 <Route
                   path="/dashboard/beauty/:providerId"
-                  element={<BeautyProviderProfile />}
+                  element={<ServiceProviderProfilePage />}
+                />
+                <Route
+                  path="/dashboard/categories/:categorySlug/providers/:providerId"
+                  element={<ServiceProviderProfilePage />}
                 />
                 <Route path="/bookings/vehicletype" element={<VehicleType />} />
                 <Route
@@ -508,7 +513,7 @@ function App() {
                 />
                 <Route
                   path="/dashboard/categories/:serviceSlug"
-                  element={<DynamicServicePage />}
+                  element={<ServiceProvidersPage />}
                 />
                 <Route
                   path="/dashboard/categories/emergency"
