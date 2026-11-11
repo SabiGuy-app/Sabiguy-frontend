@@ -1,25 +1,11 @@
 import { useState } from "react";
 import { Plus, Trash2, UserRound } from "lucide-react";
-import tundeAvatar from "../../../../../assets/tunde.png";
-import emekaAvatar from "../../../../../assets/emeka.png";
+// import tundeAvatar from "../../../../../assets/tunde.png";
+// import emekaAvatar from "../../../../../assets/emeka.png";
 import SettingsTabCard, { SettingsEditDialog } from "./SettingsTabCard";
 
 const initialTeam = [
-  {
-    id: "owner",
-    name: "Adewale Okonkwo",
-    email: "adewale@adewalefleet.ng",
-    role: "Owner",
-    avatar: tundeAvatar,
-  },
-  {
-    id: "stylist",
-    name: "Bisi Adeyemi",
-    email: "bisi@adewalefleet.ng",
-    role: "Manager",
-    avatar: emekaAvatar,
-  },
-];
+  ];
 
 export default function TeamSettingsTab() {
   const [members, setMembers] = useState(initialTeam);
