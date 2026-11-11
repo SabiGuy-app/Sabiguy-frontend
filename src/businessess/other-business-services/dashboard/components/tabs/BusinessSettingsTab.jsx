@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import SettingsTabCard, {
   EditableSettingsSection,
   SettingsEditDialog,
@@ -6,8 +6,9 @@ import SettingsTabCard, {
 } from "./SettingsTabCard";
 import {
   getBanks,
-  updateServiceDetails,
+  updateBusinessProfile,
   verifyBankAccount,
+  updateBusinessBankInfo,
 } from "../../../api/businessess";
 
 const payoutDays = [
@@ -27,17 +28,21 @@ export default function BusinessSettingsTab({
   onBusinessUpdate,
 }) {
   const [payout, setPayout] = useState({
-    accountName: business?.accountName ?? "",
-    accountNumber: business?.accountNumber ?? "",
-    bankName: business?.bankName ?? "",
-    bankCode: business?.bankCode ?? "",
+    accountName: business?.payoutAccount.accountName ?? "",
+    accountNumber: business?.payoutAccount.accountNumber ?? "",
+    bankName: business?.payoutAccount.bankName ?? "",
+    bankCode: business?.payoutAccount.bankCode ?? "",
   });
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [bankDraft, setBankDraft] = useState(payout);
   const [banks, setBanks] = useState([]);
   const [loadingBanks, setLoadingBanks] = useState(false);
+  const [bankSearchTerm, setBankSearchTerm] = useState("");
+  const [showBankDropdown, setShowBankDropdown] = useState(false);
   const [verifyingBank, setVerifyingBank] = useState(false);
   const [bankError, setBankError] = useState("");
+  const bankDropdownRef = useRef(null);
+  const [isSavingBank, setIsSavingBank] = useState(false);
   const [payoutSchedule, setPayoutSchedule] = useState(() => ({
     automatic: business?.payoutSchedule?.automatic ?? false,
     day: business?.payoutSchedule?.day ?? "Friday",
@@ -48,16 +53,16 @@ export default function BusinessSettingsTab({
 
   useEffect(() => {
     setPayout({
-      accountName: business?.accountName ?? "",
-      accountNumber: business?.accountNumber ?? "",
-      bankName: business?.bankName ?? "",
-      bankCode: business?.bankCode ?? "",
+      accountName: business?.payoutAccount.accountName ?? "",
+      accountNumber: business?.payoutAccount.accountNumber ?? "",
+      bankName: business?.payoutAccount.bankName ?? "",
+      bankCode: business?.payoutAccount.bankCode ?? "",
     });
   }, [
-    business?.accountName,
-    business?.accountNumber,
-    business?.bankName,
-    business?.bankCode,
+    business?.payoutAccount.accountName,
+    business?.payoutAccount.accountNumber,
+    business?.payoutAccount.bankName,
+    business?.payoutAccount.bankCode,
   ]);
 
   useEffect(() => {
@@ -65,9 +70,7 @@ export default function BusinessSettingsTab({
     setPayoutSchedule({
       automatic: business.payoutSchedule.automatic ?? false,
       day: business.payoutSchedule.day ?? "Friday",
-      minimumThreshold: String(
-        business.payoutSchedule.minimumThreshold ?? 0,
-      ),
+      minimumThreshold: String(business.payoutSchedule.minimumThreshold ?? 0),
     });
   }, [
     business?._id,
@@ -76,6 +79,16 @@ export default function BusinessSettingsTab({
     business?.payoutSchedule?.day,
     business?.payoutSchedule?.minimumThreshold,
   ]);
+
+  const filteredBanks = useMemo(() => {
+    const trimmedQuery = bankSearchTerm.trim().toLowerCase();
+
+    if (!trimmedQuery) return banks;
+
+    return banks.filter((bank) =>
+      bank.name.toLowerCase().includes(trimmedQuery),
+    );
+  }, [bankSearchTerm, banks]);
 
   useEffect(() => {
     if (!payoutOpen) return;
@@ -108,6 +121,22 @@ export default function BusinessSettingsTab({
       cancelled = true;
     };
   }, [payoutOpen]);
+
+  useEffect(() => {
+    if (!showBankDropdown) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (
+        bankDropdownRef.current &&
+        !bankDropdownRef.current.contains(event.target)
+      ) {
+        setShowBankDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showBankDropdown]);
 
   const verifyPayoutAccount = async () => {
     setBankError("");
@@ -143,14 +172,62 @@ export default function BusinessSettingsTab({
     }
   };
 
+  const handleSavePayout = async () => {
+    if (isSavingBank || verifyingBank) return;
+
+    setBankError("");
+    if (
+      !bankDraft.bankName ||
+      !bankDraft.bankCode ||
+      !bankDraft.accountNumber ||
+      !bankDraft.accountName
+    ) {
+      setBankError("Please verify and complete all bank details.");
+      return;
+    }
+
+    setIsSavingBank(true);
+
+    try {
+      const payload = {
+        accountName: bankDraft.accountName,
+        accountNumber: bankDraft.accountNumber,
+        bankName: bankDraft.bankName,
+        bankCode: bankDraft.bankCode,
+      };
+
+      const result = await updateBusinessBankInfo(payload);
+
+      setPayout(bankDraft);
+      setPayoutOpen(false);
+
+      console.log("Business bank information updated:", result);
+    } catch (saveError) {
+      console.error("Failed to update business bank information:", saveError);
+
+      setBankError(
+        saveError?.response?.data?.message ||
+          "Failed to update bank information. Please try again.",
+      );
+    } finally {
+      setIsSavingBank(false);
+    }
+  };
+
   const saveBusinessProfile = async (values) => {
     setProfileSaveError("");
+
+    const ninUrl = business?.ninUrl || business?.ninSlip || business?.NINUrl;
+    if (!ninUrl) {
+      setProfileSaveError(
+        "This business has no saved NIN document. Upload it again before updating the profile.",
+      );
+      return false;
+    }
+
+    const latitude = Number(business?.latitude);
+    const longitude = Number(business?.longitude);
     const payload = {
-      service: business?.service ?? [],
-      availableDays: business?.availableDays ?? [],
-      businessHours: business?.businessHours ?? { start: "", end: "" },
-      servicePlace: business?.servicePlace ?? [],
-      studioImages: business?.studioImages ?? [],
       ...(business?.businessCategory
         ? { businessCategory: business.businessCategory }
         : {}),
@@ -158,17 +235,22 @@ export default function BusinessSettingsTab({
         ? { businessName: values.businessName }
         : {}),
       ...(values.address !== "__" ? { businessAddress: values.address } : {}),
+      ...(values.city !== "__" ? { cityOfOperation: values.city } : {}),
+      ...(Number.isFinite(latitude) ? { latitude } : {}),
+      ...(Number.isFinite(longitude) ? { longitude } : {}),
+      ninUrl,
     };
 
     try {
-      const result = await updateServiceDetails(payload);
+      const result = await updateBusinessProfile(payload);
       onBusinessUpdate?.({
         ...result,
-        ...(payload.businessName
-          ? { BusinessName: payload.businessName }
-          : {}),
+        ...(payload.businessName ? { BusinessName: payload.businessName } : {}),
         ...(payload.businessAddress
           ? { BusinessAddress: payload.businessAddress }
+          : {}),
+        ...(payload.cityOfOperation
+          ? { cityOfOperation: payload.cityOfOperation }
           : {}),
       });
       return true;
@@ -247,11 +329,6 @@ export default function BusinessSettingsTab({
           {profileSaveError}
         </p>
       )}
-      <p className="mx-3 text-[9px] text-[#777777]">
-        This endpoint saves the business name and address. Owner and city,
-        operating defaults, and payout settings are not included in its update
-        contract.
-      </p>
       <EditableSettingsSection
         title="Operating defaults"
         initialValues={{
@@ -293,6 +370,7 @@ export default function BusinessSettingsTab({
         title="Company payout account"
         onEdit={() => {
           setBankDraft(payout);
+          setBankSearchTerm(payout.bankName || "");
           setPayoutOpen(true);
         }}
       >
@@ -331,12 +409,7 @@ export default function BusinessSettingsTab({
             className="w-full max-w-md rounded-lg bg-white p-5 shadow-2xl sm:p-6"
             onSubmit={(event) => {
               event.preventDefault();
-              if (!bankDraft.accountName) {
-                setBankError("Verify the account before saving.");
-                return;
-              }
-              setPayout(bankDraft);
-              setPayoutOpen(false);
+              handleSavePayout();
             }}
           >
             <h2 className="text-base font-semibold text-[#242424]">
@@ -345,31 +418,67 @@ export default function BusinessSettingsTab({
             <div className="mt-5 space-y-3">
               <label className="block text-xs font-medium text-[#555555]">
                 Bank
-                <select
-                  value={bankDraft.bankCode}
-                  disabled={loadingBanks || verifyingBank}
-                  onChange={(event) => {
-                    const selectedBank = banks.find(
-                      (bank) => bank.code === event.target.value,
-                    );
-                    setBankDraft((current) => ({
-                      ...current,
-                      bankName: selectedBank?.name ?? "",
-                      bankCode: selectedBank?.code ?? "",
-                      accountName: "",
-                    }));
-                  }}
-                  className="mt-1.5 h-10 w-full rounded-md border border-[#D8D8D8] bg-white px-3 text-sm outline-none focus:border-[#347B54] disabled:opacity-60"
-                >
-                  <option value="">
-                    {loadingBanks ? "Loading banks..." : "Select your bank"}
-                  </option>
-                  {banks.map((bank) => (
-                    <option key={bank.code} value={bank.code}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
+                <div ref={bankDropdownRef} className="relative mt-1.5">
+                  <input
+                    type="text"
+                    value={bankSearchTerm}
+                    disabled={loadingBanks || verifyingBank}
+                    placeholder={
+                      loadingBanks ? "Loading banks..." : "Search for your bank"
+                    }
+                    onFocus={() => setShowBankDropdown(true)}
+                    onChange={(event) => {
+                      const nextValue = event.target.value;
+                      setBankSearchTerm(nextValue);
+                      setShowBankDropdown(true);
+
+                      const selectedBank = banks.find(
+                        (bank) =>
+                          bank.name.toLowerCase() ===
+                          nextValue.trim().toLowerCase(),
+                      );
+
+                      if (selectedBank) {
+                        setBankDraft((current) => ({
+                          ...current,
+                          bankName: selectedBank.name,
+                          bankCode: selectedBank.code,
+                          accountName: "",
+                        }));
+                      }
+                    }}
+                    className="h-10 w-full rounded-md border border-[#D8D8D8] bg-white px-3 text-sm outline-none focus:border-[#347B54] disabled:opacity-60"
+                  />
+
+                  {showBankDropdown && filteredBanks.length > 0 && (
+                    <div className="absolute z-10 mt-1 max-h-52 w-full overflow-y-auto rounded-md border border-[#E2E2E2] bg-white shadow-lg">
+                      {filteredBanks.map((bank) => (
+                        <button
+                          key={bank.code}
+                          type="button"
+                          onClick={() => {
+                            setBankSearchTerm(bank.name);
+                            setBankDraft((current) => ({
+                              ...current,
+                              bankName: bank.name,
+                              bankCode: bank.code,
+                              accountName: "",
+                            }));
+                            setShowBankDropdown(false);
+                          }}
+                          className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-[#333333] hover:bg-[#F5F7F5]"
+                        >
+                          <span>{bank.name}</span>
+                          {bankDraft.bankCode === bank.code && (
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-[#347B54]">
+                              Selected
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </label>
               <label className="block text-xs font-medium text-[#555555]">
                 Account number
@@ -428,9 +537,10 @@ export default function BusinessSettingsTab({
               ) : (
                 <button
                   type="submit"
+                  disabled={isSavingBank}
                   className="h-9 rounded-md bg-[#347B54] px-4 text-xs font-medium text-white hover:bg-[#286642]"
                 >
-                  Save
+                  {isSavingBank ? "Saving..." : "Save"}
                 </button>
               )}
             </div>

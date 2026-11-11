@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useServiceCategories } from "../../../stores/serviceCategories.store";
 
+export { getCategoryForProvider } from "./categoryMatcher.js";
+
 // Dashboard-only presentation for the shared service categories.
 const CATEGORY_DISPLAY = {
   transport: {
@@ -48,45 +50,6 @@ export function useExploreCategories() {
 
 export const getExploreCategoryBySlug = (exploreCategories, slug) =>
   exploreCategories.find((category) => category.to && category.slug === slug);
-
-const normalizeCategoryValue = (value) =>
-  String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, " ");
-
-// Search results span categories, so read each provider's from its job service.
-export const getCategoryForProvider = (exploreCategories, provider, fallback = null) => {
-  const providerServices = [
-    ...(Array.isArray(provider?.job) ? provider.job.map((job) => job?.service) : []),
-    ...(Array.isArray(provider?.service) ? provider.service.map((service) =>
-      service?.serviceName || service?.name
-    ) : []),
-    ...(Array.isArray(provider?.services) ? provider.services.map((service) =>
-      service?.serviceName || service?.name
-    ) : []),
-  ]
-    .map(normalizeCategoryValue)
-    .filter(Boolean);
-  return exploreCategories.find((category) => {
-    if (!category.to) return false;
-    const categoryValues = [
-      category.id,
-      category.slug,
-      category.backendId,
-      category.label,
-      ...(Array.isArray(category.services)
-        ? category.services.map((service) => service?.name)
-        : []),
-    ]
-      .filter(Boolean)
-      .map(normalizeCategoryValue);
-    return providerServices.some((providerValue) =>
-      categoryValues.some((categoryValue) =>
-        providerValue === categoryValue ||
-        providerValue.includes(categoryValue) ||
-        categoryValue.includes(providerValue),
-      ),
-    );
-  }) || fallback;
-};
 
 export const getProviderProfilePath = (category, providerId) =>
   category?.slug

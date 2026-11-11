@@ -560,10 +560,10 @@ n i input thr                  element={<AvailableProviders />}
                     path="/other-business-services/dashboard"
                     element={<BusinessOverview />}
                   />
-                  <Route
+                  {/* <Route
                     path="/other-business-services/dashboard/live-map"
                     element={<BusinessLiveMap />}
-                  />
+                  /> */}
                   <Route
                     path="/other-business-services/dashboard/bookings"
                     element={<BusinessBookings />}

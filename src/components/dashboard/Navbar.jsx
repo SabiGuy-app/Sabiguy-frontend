@@ -59,6 +59,7 @@ export default function Navbar({
   const bookingRequestNotificationTypes = [
     "new_booking_request",
     "booking_selected",
+    "booking_assigned",
   ];
 
   const fetchUnreadCount = async () => {
@@ -291,6 +292,16 @@ export default function Navbar({
 
     setShowBookingRequestModal(false);
     setBookingRequestNotification(null);
+
+    if (notification.type === "booking_assigned") {
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          tab: "jobs",
+        },
+      });
+      return;
+    }
 
     try {
       const serviceType = notification.data?.serviceType;

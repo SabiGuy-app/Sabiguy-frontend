@@ -50,6 +50,7 @@ export default function BookingRequestModal({
   notification,
 }) {
   const payload = notification?.data || notification || {};
+  const isBookingAssigned = notification?.type === "booking_assigned";
   const title = payload?.title || "Booking request";
   const message =
     payload?.message || "You have a new booking request to review.";
@@ -115,7 +116,7 @@ export default function BookingRequestModal({
                 </div>
 
                 <span className="mb-2 inline-flex items-center rounded-full border border-[#005823]/15 bg-[#005823]/5 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#005823]">
-                  New booking
+                  {isBookingAssigned ? "Job assigned" : "New booking"}
                 </span>
 
                 <h2 className="text-2xl font-semibold leading-tight text-[#231F20] sm:text-3xl">
@@ -206,7 +207,7 @@ export default function BookingRequestModal({
                     onClick={onViewBooking}
                     className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-[#005823] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#005823]/25 transition hover:bg-[#00461d]"
                   >
-                    View Booking
+                    {isBookingAssigned ? "View Jobs" : "View Booking"}
                   </button>
                 </div>
               </div>
