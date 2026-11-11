@@ -15,7 +15,11 @@ import {
   declineBooking as declineProviderBooking,
   getProviderBookings,
 } from "../../../../api/provider";
-import { getAllBookings, acceptBookings } from "../../../../api/bookings";
+import {
+  getAllBookings,
+  getProviderBookings as getProviderBookingsFallback,
+  acceptBookings,
+} from "../../../../api/bookings";
 import { useAuthStore } from "../../../../stores/auth.store";
 import ProviderCancellationModal from "../../../../components/provider-dashboard/ProviderCancellationModal";
 import toast from "react-hot-toast";
@@ -61,10 +65,21 @@ const canStartBeautyJourney = (booking) =>
       .replace(/\s+/g, "_"),
   );
 
+const extractBookingList = (response) => {
+  const data = response?.data ?? response;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.bookings)) return data.bookings;
+  if (Array.isArray(data?.data?.bookings)) return data.data.bookings;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+};
+
 export default function HireAlerts() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState("alert");
+  const [activeTab, setActiveTab] = useState(
+    () => (location.state?.tab === "jobs" ? "jobs" : "alert"),
+  );
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -148,6 +163,12 @@ export default function HireAlerts() {
     fetchBookings();
   }, [user]);
 
+  useEffect(() => {
+    if (location.state?.tab === "jobs" || location.state?.tab === "alert") {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state?.tab]);
+
   const fetchBookings = async () => {
     const requestSequence = ++fetchSequence.current;
 
@@ -195,15 +216,23 @@ export default function HireAlerts() {
           // job title. Keep them in the same live alert query as logistics jobs.
           return job?.service && (job?.title || isBeautyProviderJob);
         })
-        .map((job) => {
+        .map(async (job) => {
           const modeOfDelivery = resolveModeOfDelivery(job);
-          return getAllBookings({
-            status: "awaiting_provider_acceptance",
-            serviceType: String(job.service).trim().toLowerCase(),
-            modeOfDelivery,
-            page: 1,
-            limit: 20,
-          });
+          try {
+            return await getAllBookings({
+              status: "awaiting_provider_acceptance",
+              serviceType: String(job.service).trim().toLowerCase(),
+              modeOfDelivery,
+              page: 1,
+              limit: 20,
+            });
+          } catch (requestError) {
+            console.warn(
+              `Could not load booking alerts for service ${job.service}`,
+              requestError,
+            );
+            return null;
+          }
         });
 
       const [providerResponse, ...alertResponses] = await Promise.all([
@@ -211,10 +240,38 @@ export default function HireAlerts() {
         ...alertRequests,
       ]);
 
-      const providerBookingsData = providerResponse.data || providerResponse;
-      const providerBookings = Array.isArray(providerBookingsData)
-        ? providerBookingsData
-        : providerBookingsData.bookings || [];
+      let providerBookings = extractBookingList(providerResponse);
+
+      // If we don't have pre-fetched alerts, fetch them from responses
+      if (!alertBookings || alertBookings.length === 0) {
+        alertBookings = alertResponses.flatMap(extractBookingList);
+      }
+
+      const alertRequestMissed = alertResponses.some(
+        (response) => extractBookingList(response).length === 0,
+      );
+      if (
+        providerBookings.length === 0 ||
+        alertBookings.length === 0 ||
+        alertRequestMissed
+      ) {
+        try {
+          const fallbackResponse = await getProviderBookingsFallback({
+            status: "awaiting_provider_acceptance",
+            page: 1,
+            limit: 10,
+          });
+          const fallbackBookings = extractBookingList(fallbackResponse);
+          if (providerBookings.length === 0) providerBookings = fallbackBookings;
+          alertBookings = [...alertBookings, ...fallbackBookings];
+        } catch (fallbackError) {
+          console.warn(
+            "Could not load provider bookings from the fallback endpoint",
+            fallbackError,
+          );
+        }
+      }
+
       const transformedProviderBookings =
         transformBookingsData(providerBookings);
 
@@ -223,16 +280,6 @@ export default function HireAlerts() {
       // the same list instead of showing them only in the Jobs tab.
       if (requestSequence !== fetchSequence.current) return;
       setJobs(transformedProviderBookings.jobs);
-
-      // If we don't have pre-fetched alerts, fetch them from responses
-      if (!alertBookings || alertBookings.length === 0) {
-        alertBookings = alertResponses.flatMap((response) => {
-          const data = response.data || response;
-          if (Array.isArray(data)) return data;
-          if (Array.isArray(data.bookings)) return data.bookings;
-          return [];
-        });
-      }
 
       const uniqueAlertBookings = Array.from(
         new Map(

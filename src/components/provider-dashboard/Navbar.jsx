@@ -43,6 +43,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   const bookingRequestNotificationTypes = [
     "new_booking_request",
     "booking_selected",
+    "booking_assigned",
   ];
   const memberships = user?.data?.staffMemberships || [];
   const activeMembership = memberships.find((membership) => membership?.status === "ACTIVE" && membership?.onDuty?.active)
@@ -396,6 +397,16 @@ export default function ProviderNavbar({ onMenuClick }) {
 
     setShowBookingRequestModal(false);
     setBookingRequestNotification(null);
+
+    if (notification.type === "booking_assigned") {
+      navigate("/dashboard/provider/hire-alert", {
+        state: {
+          bookingData: notification.data,
+          tab: "jobs",
+        },
+      });
+      return;
+    }
 
     try {
       const serviceType = notification.data?.serviceType;
