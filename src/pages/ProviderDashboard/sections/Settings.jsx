@@ -12,7 +12,7 @@ import ReferralsTab from "../../../components/provider-dashboard/ReferralsTab";
 import SettingsTab from "../../../components/dashboard/SettingsTab";
 import { useAuthStore } from "../../../stores/auth.store";
 import { updateProviderProfilePic } from "../../../api/provider";
-import { getUserByEmail } from "../../../api/auth";
+import { getAuthenticatedProfile, mergeProfilePreservingActiveRole } from "../../../api/auth";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
 import SwitchToBuyerButton from "../../../components/auth/SwitchToBuyerButton";
@@ -41,9 +41,9 @@ export default function ProviderProfilePage() {
       if (!user?.data?.email) return;
       hasFetchedProfile.current = true;
       try {
-        const response = await getUserByEmail(user.data.email);
+        const response = await getAuthenticatedProfile();
         if (response && response.data) {
-          updateUser({ data: { ...user.data, ...response.data } });
+          updateUser(mergeProfilePreservingActiveRole(user, response));
         }
       } catch (error) {
         console.error("Failed to fetch fresh profile from database", error);
