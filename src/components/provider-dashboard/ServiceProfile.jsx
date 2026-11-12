@@ -32,7 +32,7 @@ const SERVICE_LOCATIONS = [
   {
     key: "walk_in",
     value: "Walk in Salon",
-    label: "Walk-in salon",
+    label: "Studio, Office or Shop",
     Icon: Store,
   },
   {
