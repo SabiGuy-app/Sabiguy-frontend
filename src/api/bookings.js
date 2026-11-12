@@ -201,9 +201,14 @@ export const markAsComplete = async (bookingId, payload = {}) => {
   return data;
 };
 
-export const getProviderBookings = async () => {
+export const getProviderBookings = async ({
+  status = "awaiting_provider_acceptance",
+  page = 1,
+  limit = 10,
+} = {}) => {
   const token = localStorage.getItem("token");
-  const { data } = await api.get("/provider/bookings?page=1&limit=20", {
+  const { data } = await api.get("/provider/bookings", {
+    params: { status, page, limit },
     headers: {
       Authorization: `Bearer ${token}`,
     },

@@ -68,6 +68,7 @@ export default function NotificationDrawer({
   const getIcon = (type) => {
     const iconMap = {
       new_booking_request: <FiCalendar className="text-blue-500" size={20} />,
+      booking_assigned: <FiCalendar className="text-green-500" size={20} />,
       provider_accepted: <FiCalendar className="text-green-500" size={20} />,
       booking_selected: <FiCalendar className="text-blue-500" size={20} />,
       booking_taken: <FiCalendar className="text-purple-500" size={20} />,
