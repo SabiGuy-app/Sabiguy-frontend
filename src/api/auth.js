@@ -6,6 +6,7 @@ import { useProviderStore } from "../stores/provider.store";
 import { removeFCMToken } from "./fcm";
 import { trackEvent } from "../services/analytics";
 import { clearStoragePreservingTours } from "../utils/tourStorage";
+import { getUserById } from "./user";
 
 // Password reset uses the shared auth endpoints for every account type.
 export const requestPasswordReset = async (email) => {
@@ -37,6 +38,33 @@ export const switchToBuyer = async () => {
 export const getAuthProfiles = async () => {
   const { data } = await api.get("/auth/profiles");
   return data;
+};
+
+// Resolve the profile selected by the authenticated session, then fetch that
+// exact profile. Email is shared by linked profiles and is not a safe key.
+export const getAuthenticatedProfile = async () => {
+  const response = await getAuthProfiles();
+  const result = response?.data?.data || response?.data || response;
+  const activeProfile = result?.activeProfile;
+  if (!activeProfile?.profileId) {
+    throw new Error("The authenticated session did not identify an active profile.");
+  }
+
+  const profileResponse = await getUserById(activeProfile.profileId);
+  const profile = profileResponse?.data?.data || profileResponse?.data || profileResponse;
+  const role = activeProfile.role || profile?.role || profile?.data?.role;
+  if (!profile || typeof profile !== "object") {
+    throw new Error("Could not load the authenticated profile.");
+  }
+
+  return {
+    ...profile,
+    ...(role ? { role } : {}),
+    data: {
+      ...(profile.data || profile),
+      ...(role ? { role } : {}),
+    },
+  };
 };
 
 export const switchProfile = async (payload) => {
@@ -154,6 +182,26 @@ export const getUserByEmail = async (email) => {
   });
 
   return data;
+};
+
+// The email lookup can return a different linked profile than the one used to
+// authenticate. Merge its fresh fields without changing the active role.
+export const mergeProfilePreservingActiveRole = (currentUser, profileResponse, activeRole) => {
+  const freshRoot = profileResponse?.data || profileResponse || {};
+  const freshData = freshRoot?.data || freshRoot;
+  const currentData = currentUser?.data || {};
+  const role = activeRole || currentData.role || currentUser?.role;
+
+  return {
+    ...(currentUser || {}),
+    ...(freshRoot && typeof freshRoot === "object" ? freshRoot : {}),
+    ...(role ? { role } : {}),
+    data: {
+      ...currentData,
+      ...(freshData && typeof freshData === "object" ? freshData : {}),
+      ...(role ? { role } : {}),
+    },
+  };
 };
 
 // GOOGLE LOGIN
