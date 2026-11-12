@@ -84,7 +84,6 @@ export default function BusinessSettingsTab({
   onBusinessUpdate,
 }) {
   const [businesses, setBusinesses] = useState({
-    name: business?.BusinessName || "__",
     category: business?.businessCategory || "__",
   });
   const [businessEditorOpen, setBusinessEditorOpen] = useState(false);
@@ -132,7 +131,6 @@ export default function BusinessSettingsTab({
       (business?.service ?? []).map((service) => toUiService(service, current)),
     );
     setBusinesses({
-      name: business?.BusinessName || "__",
       category: business?.businessCategory || "__",
     });
     setOpenDays(business?.availableDays ?? []);
@@ -265,9 +263,6 @@ export default function BusinessSettingsTab({
           },
         ],
         businessCategory: nextBusinesses.category,
-        ...(nextBusinesses.name !== "__"
-          ? { businessName: nextBusinesses.name }
-          : {}),
         };
         const result = await updateServiceDetails(payload);
 
@@ -286,7 +281,7 @@ export default function BusinessSettingsTab({
         setLocations(normalizeServicePlace(nextLocations));
         onBusinessUpdate?.({
           ...result,
-          BusinessName: payload.businessName ?? business?.BusinessName,
+          BusinessName: business?.BusinessName,
           businessCategory:
             result?.businessCategory ?? payload.businessCategory,
         });
@@ -461,15 +456,12 @@ export default function BusinessSettingsTab({
         onEdit={() => setBusinessEditorOpen(true)}
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] text-[#777777]">Business name</p>
+          <div className="flex justify-between w-full ">
+            <p className="text-[10px] text-[#777777]">Business category</p>
             <p className="mt-0.5 text-[10px] font-semibold text-[#272727]">
-              {businesses.name}
+              {businesses.category}
             </p>
           </div>
-          <p className="text-[10px] font-semibold text-[#272727]">
-            {businesses.category}
-          </p>
         </div>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div className="max-w-md">
@@ -759,7 +751,6 @@ export default function BusinessSettingsTab({
         isOpen={businessEditorOpen}
         title="Edit business category"
         fields={[
-          { key: "name", label: "Business name" },
           {
             key: "category",
             label: "Business category",
