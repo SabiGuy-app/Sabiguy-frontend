@@ -18,8 +18,9 @@ import Loader from "../../components/Loader";
 import {
   login,
   googleLogin,
-  getUserByEmail,
+  getAuthenticatedProfile,
   getBusinessProfile,
+  mergeProfilePreservingActiveRole,
 } from "../../api/auth";
 import { requestNotificationPermission } from "../../services/fcmService";
 import { registerUserFCMToken } from "../../api/fcm";
@@ -240,8 +241,7 @@ export default function Login() {
     // navigation if this account type isn't in the /users lookup yet)
     let fullUser = null;
     try {
-      fullUser = await getUserByEmail(email);
-      useAuthStore.getState().setUser(fullUser);
+      fullUser = await getAuthenticatedProfile();
     } catch (err) {
       console.warn("Could not fetch full user profile:", err.message);
     }
@@ -251,6 +251,11 @@ export default function Login() {
       fullUser?.data?.role ||
       fullUser?.user?.role ||
       fullUser?.data?.user?.role;
+    if (fullUser) {
+      useAuthStore
+        .getState()
+        .setUser(mergeProfilePreservingActiveRole(null, fullUser, userRole));
+    }
 
     // Non-blocking FCM registration
     registerFCM(); // intentionally NOT awaited — fire and forget
@@ -482,7 +487,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((p) => !p)}
-                      className="absolute top-11 right-3"
+                      className="absolute top-[3.55rem] right-3 -translate-y-1/2"
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }

@@ -14,7 +14,7 @@ import { notificationService } from "../../api/notifications";
 import { getAllBookings } from "../../api/bookings";
 import { toggleAvailability as apiToggleAvailability } from "../../api/provider";
 import KycVerificationModal from "./KycVerificationModal";
-import { getUserByEmail } from "../../api/auth";
+import { getAuthenticatedProfile, mergeProfilePreservingActiveRole } from "../../api/auth";
 import { getUserById } from "../../api/user";
 import { requestStaffClockIn, requestStaffClockOut } from "../../api/business";
 
@@ -53,11 +53,9 @@ export default function ProviderNavbar({ onMenuClick }) {
   const requestPending = activeMembership?.clockRequest?.status?.toLowerCase() === "pending";
 
   const refreshStaffProfile = async () => {
-    const email = useAuthStore.getState().user?.data?.email;
-    if (!email) return;
-    const response = await getUserByEmail(email);
-    const freshUser = response?.data || response;
-    if (freshUser) updateUser({ data: { ...useAuthStore.getState().user?.data, ...freshUser } });
+    const response = await getAuthenticatedProfile();
+    const currentUser = useAuthStore.getState().user;
+    if (response) updateUser(mergeProfilePreservingActiveRole(currentUser, response));
   };
 
   useEffect(() => {
