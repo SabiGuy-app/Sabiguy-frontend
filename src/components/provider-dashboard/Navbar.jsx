@@ -18,6 +18,8 @@ import { getAuthenticatedProfile, mergeProfilePreservingActiveRole } from "../..
 import { getUserById } from "../../api/user";
 import { requestStaffClockIn, requestStaffClockOut } from "../../api/business";
 
+const BUSINESS_CLOCK_IN_PROMPT_KEY = "provider-business-clock-in-prompt";
+
 export default function ProviderNavbar({ onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -33,6 +35,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showClockInPrompt, setShowClockInPrompt] = useState(false);
   const [staffBusiness, setStaffBusiness] = useState(null);
   const [clockRequestBusy, setClockRequestBusy] = useState(false);
   const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
@@ -51,6 +54,19 @@ export default function ProviderNavbar({ onMenuClick }) {
   const onBusinessWorkspace = Boolean(activeMembership?.onDuty?.active);
   const businessId = activeMembership?.business?._id || activeMembership?.business;
   const requestPending = activeMembership?.clockRequest?.status?.toLowerCase() === "pending";
+
+  useEffect(() => {
+    if (
+      !hydrated ||
+      sessionStorage.getItem(BUSINESS_CLOCK_IN_PROMPT_KEY) !== "true"
+    ) {
+      return;
+    }
+
+    sessionStorage.removeItem(BUSINESS_CLOCK_IN_PROMPT_KEY);
+    setShowProfileMenu(true);
+    setShowClockInPrompt(true);
+  }, [hydrated]);
 
   const refreshStaffProfile = async () => {
     const response = await getAuthenticatedProfile();
@@ -82,6 +98,7 @@ export default function ProviderNavbar({ onMenuClick }) {
 
   const handleWorkspaceSwitch = async (workspace) => {
     setShowProfileMenu(false);
+    setShowClockInPrompt(false);
     if (!activeMembership || !businessId) return;
     if (clockRequestBusy) return;
     if (workspace === "business" && onBusinessWorkspace) return;
@@ -695,8 +712,23 @@ export default function ProviderNavbar({ onMenuClick }) {
                   <div className="min-w-0 flex-1"><p className="truncate font-semibold text-[#327c53]">{onBusinessWorkspace ? (staffBusiness?.fullName || staffBusiness?.businessName || "Business") : (user?.data?.fullName || "Provider")}</p><p className="text-sm text-gray-500">{onBusinessWorkspace ? "Business workspace" : "Personal profile"}</p></div>
                 </div>
                 <div className="flex justify-end gap-4 border-b px-4 pb-3 text-sm text-gray-600"><button type="button" onClick={() => { setShowProfileMenu(false); navigate("/dashboard/provider/settings"); }} className="hover:text-gray-900">Account settings</button><button type="button" onClick={() => { setShowProfileMenu(false); logout(); navigate("/login"); }} className="hover:text-gray-900">Sign out</button></div>
+                {showClockInPrompt && (
+                  <div
+                    role="status"
+                    className="mx-4 mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"
+                  >
+                    <p className="font-semibold">
+                      Invitation accepted. You’ve joined the business team.
+                    </p>
+                    <p className="mt-1">
+                      {activeMembership
+                        ? "Select Clock in below to switch to your business profile."
+                        : "Your business workspace will appear here once your profile finishes updating."}
+                    </p>
+                  </div>
+                )}
                 {activeMembership && businessId && <div className="p-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Switch workspace</p>
-                  <button type="button" disabled={clockRequestBusy || requestPending || onBusinessWorkspace} onClick={() => handleWorkspaceSwitch("business")} className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-gray-50 disabled:cursor-default disabled:opacity-70"><Building2 className="h-11 w-11 shrink-0 rounded-full border border-[#327c53] p-2 text-[#327c53]" /><span className="min-w-0 flex-1"><span className="block truncate font-medium">{staffBusiness?.fullName || staffBusiness?.businessName || "Business workspace"}</span><span className="block text-sm text-gray-500">{requestPending && activeMembership?.clockRequest?.action?.toLowerCase().includes("in") ? "Clock-in request awaiting approval" : "Business workspace"}</span></span>{onBusinessWorkspace && <span className="text-xs font-medium text-[#327c53]">Current</span>}{!onBusinessWorkspace && !requestPending && <span className="text-xs text-[#327c53]">Clock in</span>}</button>
+                  <button type="button" disabled={clockRequestBusy || requestPending || onBusinessWorkspace} onClick={() => handleWorkspaceSwitch("business")} className={`flex w-full items-center gap-3 rounded-lg p-2 text-left disabled:cursor-default disabled:opacity-70 ${showClockInPrompt ? "border border-emerald-300 bg-emerald-50" : "hover:bg-gray-50"}`}><Building2 className="h-11 w-11 shrink-0 rounded-full border border-[#327c53] p-2 text-[#327c53]" /><span className="min-w-0 flex-1"><span className="block truncate font-medium">{staffBusiness?.fullName || staffBusiness?.businessName || "Business workspace"}</span><span className="block text-sm text-gray-500">{requestPending && activeMembership?.clockRequest?.action?.toLowerCase().includes("in") ? "Clock-in request awaiting approval" : "Business workspace"}</span></span>{onBusinessWorkspace && <span className="text-xs font-medium text-[#327c53]">Current</span>}{!onBusinessWorkspace && !requestPending && <span className="text-xs font-semibold text-[#327c53]">{showClockInPrompt ? "Clock in now" : "Clock in"}</span>}</button>
                   <button type="button" disabled={clockRequestBusy || requestPending || !onBusinessWorkspace} onClick={() => handleWorkspaceSwitch("personal")} className="mt-2 flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-gray-50 disabled:cursor-default disabled:opacity-70"><UserRound className="h-11 w-11 shrink-0 rounded-full border border-gray-300 p-2 text-lime-600" /><span className="min-w-0 flex-1"><span className="block truncate font-medium">{user?.data?.fullName || "Personal profile"}</span><span className="block text-sm text-gray-500">{requestPending && activeMembership?.clockRequest?.action?.toLowerCase().includes("out") ? "Clock-out request awaiting approval" : "Personal profile"}</span></span>{!onBusinessWorkspace && <span className="text-xs font-medium text-[#327c53]">Current</span>}{onBusinessWorkspace && !requestPending && <span className="text-xs text-[#327c53]">Clock out</span>}</button>
                 </div>}
               </div>

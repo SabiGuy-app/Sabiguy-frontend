@@ -3,7 +3,7 @@
 
 const PAYMENT_PENDING = ["payment_pending", "provider_accepted", "provider_selected", "accept_selection"];
 const PAID = ["paid_escrow", "paid_escrow_scheduled"];
-const COMPLETED = ["completed", "user_accepted_completion", "funds_released"];
+const COMPLETED = ["user_accepted_completion"];
 const ON_SITE = ["in_progress", "arrived_at_pickup", "enroute_to_dropoff", "arrived_at_dropoff"];
 
 export function getUiBookingStatus(booking) {
@@ -16,9 +16,13 @@ export function getUiBookingStatus(booking) {
   if (status === "cancellation_requested") return "cancellation_requested";
   if (status === "disputed") return "disputed";
   if (PAYMENT_PENDING.includes(status)) return "payment_pending";
+  if (status === "completed") return "awaiting_confirmation";
+  if (status === "funds_released") return "funds_released";
   if (COMPLETED.includes(status) || businessStatus === "completed") return "completed";
   if (ON_SITE.includes(status) || businessStatus === "in_progress") return "in_service";
-  if (businessStatus === "assigned") return status === "paid_escrow_scheduled" ? "scheduled" : "assigned";
+  if (["assigned", "staff_assigned"].includes(businessStatus)) {
+    return status === "paid_escrow_scheduled" ? "scheduled" : "assigned";
+  }
   if (PAID.includes(status)) return "accepted";
   return "completed";
 }
@@ -105,7 +109,17 @@ export function normalizeBusinessBooking(booking, roster = []) {
 }
 
 // Staff can be assigned once the business has accepted and until the job closes.
-const NOT_ASSIGNABLE = ["pending", "expired", "declined", "cancelled", "completed", "payment_expired", "disputed"];
+const NOT_ASSIGNABLE = [
+  "pending",
+  "expired",
+  "declined",
+  "cancelled",
+  "completed",
+  "awaiting_confirmation",
+  "funds_released",
+  "payment_expired",
+  "disputed",
+];
 export const canAssignStaff = (booking) => Boolean(booking) && !NOT_ASSIGNABLE.includes(booking.status);
 
 const ineligibleReasons = {
