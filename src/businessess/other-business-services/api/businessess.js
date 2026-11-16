@@ -47,6 +47,34 @@ export const getBusinessStaff = async (businessId, params = {}) => {
   return data?.data || data;
 };
 
+export const clockOutBusinessStaff = async (businessId, staffId) => {
+  const { data } = await api.post(
+    `/business/${businessId}/staff/${staffId}/clock-out`,
+  );
+  return data?.data || data;
+};
+
+export const suspendBusinessStaff = async (businessId, staffId) => {
+  const { data } = await api.post(
+    `/business/${businessId}/staff/${staffId}/suspend`,
+  );
+  return data?.data || data;
+};
+
+export const liftBusinessStaffSuspension = async (businessId, staffId) => {
+  const { data } = await api.post(
+    `/business/${businessId}/staff/${staffId}/lift-suspension`,
+  );
+  return data?.data || data;
+};
+
+export const removeBusinessStaff = async (businessId, staffId) => {
+  const { data } = await api.delete(
+    `/business/${businessId}/staff/${staffId}`,
+  );
+  return data?.data || data;
+};
+
 export const getBusinessClockRequests = async (businessId) => {
   const { data } = await api.get(`/business/${businessId}/clock-requests`);
   return data?.data || data;

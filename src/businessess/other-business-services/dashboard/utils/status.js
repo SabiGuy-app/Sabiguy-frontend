@@ -13,6 +13,8 @@ export const bookingStatuses = {
   en_route: { label: "Staff en route", tone: "assigned" },
   in_service: { label: "In service", tone: "in-service" },
   completed: { label: "Completed", tone: "completed" },
+  awaiting_confirmation: { label: "Awaiting confirmation", tone: "pending" },
+  funds_released: { label: "Funds released", tone: "completed" },
   cancelled: { label: "Cancelled", tone: "offline" },
   declined: { label: "Declined", tone: "offline" },
   expired: { label: "Expired", tone: "offline" },
