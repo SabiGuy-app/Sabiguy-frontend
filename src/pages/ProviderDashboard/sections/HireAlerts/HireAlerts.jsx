@@ -546,12 +546,12 @@ export default function HireAlerts() {
     const filters = ["All", "Active", "Pending", "Completed"];
 
     return (
-      <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
+      <div className="flex max-w-full gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`px-5 sm:px-6 py-2.5 rounded-xl font-semibold transition-all text-sm whitespace-nowrap ${
+            className={`shrink-0 px-5 sm:px-6 py-2.5 rounded-xl font-semibold transition-all text-sm whitespace-nowrap ${
               activeFilter === filter.toLowerCase()
                 ? "bg-[#2D6A3E] text-white shadow-md shadow-green-900/10 active:scale-95"
                 : "bg-white text-gray-500 border border-gray-200 hover:border-[#2D6A3E] hover:text-[#2D6A3E] active:scale-95"
@@ -948,7 +948,7 @@ export default function HireAlerts() {
         onComplete={handleCancelComplete}
       />
 
-      <div className="flex border-b mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex min-w-0 border-b mb-4">
         <button
           onClick={() => setActiveTab("alert")}
           className={`flex-1 sm:flex-none px-4 sm:px-8 py-3.5 font-bold transition-all relative text-center text-sm sm:text-base ${

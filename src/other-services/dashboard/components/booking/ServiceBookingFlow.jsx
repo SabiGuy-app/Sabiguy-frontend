@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { normalizeBeautyBooking, useBeautyBookingStore } from "../../../../stores/beautyBooking.store";
 import { useEffect, useMemo, useState } from "react";
 import { initializePayment, payWithWallet } from "../../../../api/payment";
@@ -27,6 +28,7 @@ import Modal from "../../../../components/Modal";
 import Button from "../../../../components/button";
 import InputField from "../../../../components/InputField";
 import { formatMoney } from "../../utils/bookingFormat";
+import { getAvailableWalletBalance, getWalletPaymentError } from "../../utils/walletPayment";
 import CancelBookingButton from "../../../../components/CancelBookingButton";
 import { useCallContext } from "../../../../components/shared/CallContext";
 import { getServiceCategoryBackendId } from "../../../../stores/serviceCategories.store";
@@ -232,35 +234,35 @@ function ProviderSummary({ provider, isBusiness = false }) {
     : provider.currentLocation?.address || provider.city || provider.businessAddress;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-5">
-      <div className="flex items-center gap-3">
+    <div className="flex min-w-0 flex-wrap items-center justify-between gap-5">
+      <div className="flex min-w-0 max-w-full items-center gap-3">
         <img
           src={provider.profilePicture}
           alt={displayName}
-          className="h-16 w-16 rounded-full object-cover"
+          className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-16 sm:w-16"
         />
-        <div>
+        <div className="min-w-0 [overflow-wrap:anywhere]">
           <h3 className="flex items-center gap-2 font-semibold">
             {displayName}
-            <BadgeCheck size={15} className="text-[#005823]" />
+            <BadgeCheck size={15} className="shrink-0 text-[#005823]" />
           </h3>
           <p className="mt-1 flex items-center text-sm text-gray-500">
             <Star size={15} className="fill-amber-400 text-amber-400" />
             {provider.rating} ({provider.reviews} reviews)
           </p>
           <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
-            <MapPin size={14} />
+            <MapPin size={14} className="shrink-0" />
             {providerArea || (isBusiness ? "Business address not provided" : "Location not provided")}
           </p>
         </div>
       </div>
-      <div className="flex divide-x divide-gray-200 text-center text-xs">
+      <div className="grid max-w-full grid-cols-3 divide-x divide-gray-200 text-center text-xs">
         {[
           ["2 - 5 yrs", "Experience"],
           ["25", "Jobs Done"],
           ["< 10 Mins", "Response Time"],
         ].map(([value, label]) => (
-          <div key={label} className="px-3">
+          <div key={label} className="min-w-0 px-2 sm:px-3">
             <strong>{value}</strong>
             <p className="mt-1 text-gray-400">{label}</p>
           </div>
@@ -302,7 +304,7 @@ function BookingInformation({ booking, date, address }) {
       {rows.map((row) => (
         <div key={row.label} className="flex gap-3">
           <row.icon size={20} className="mt-0.5 shrink-0 text-[#34805A]" />
-          <div>
+          <div className="min-w-0 [overflow-wrap:anywhere]">
             <dt className="text-sm font-medium">{row.label}</dt>
             <dd className="mt-1 text-sm text-gray-500">{row.value}</dd>
           </div>
@@ -350,7 +352,6 @@ export default function ServiceBookingFlow({
   const [now, setNow] = useState(Date.now);
   const [message, setMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
-  const [paymentError, setPaymentError] = useState("");
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletLoading, setWalletLoading] = useState(false);
@@ -528,12 +529,7 @@ export default function ServiceBookingFlow({
       setWalletLoading(true);
       try {
         const response = await getWalletBalance({ bustCache: true });
-        const available =
-          response?.data?.walletBalance?.available ??
-          response?.data?.available ??
-          response?.available ??
-          0;
-        setWalletBalance(Number(available || 0));
+        setWalletBalance(getAvailableWalletBalance(response));
       } catch {
         setWalletBalance(null);
       } finally {
@@ -587,7 +583,7 @@ export default function ServiceBookingFlow({
     });
   };
   const total = Number(
-    paymentBooking.totalAmount || paymentBooking.price + 100 || 0,
+    paymentBooking.totalAmount ?? (Number(paymentBooking.price || 0) + 100),
   );
   const serviceCharge = Math.max(0, total - Number(booking.price || 0));
   const canContinue = Boolean(
@@ -687,17 +683,29 @@ export default function ServiceBookingFlow({
 
     const bookingId = paymentBooking.id || paymentBooking._id;
     if (!bookingId) {
-      setPaymentError("Booking ID not found. Please refresh your bookings.");
+      toast.error("Booking ID not found. Please refresh.");
       return;
     }
 
-    setPaymentError("");
     setPaymentLoading(true);
 
     try {
       const pickupNote = note.trim() || undefined;
 
       if (method === "wallet") {
+        let balanceResponse;
+        try {
+          balanceResponse = await getWalletBalance({ bustCache: true });
+        } catch {
+          throw new Error("Unable to verify your wallet balance. Please try again or choose Pay Online.");
+        }
+        const latestBalance = getAvailableWalletBalance(balanceResponse);
+        setWalletBalance(latestBalance);
+        const balanceError = getWalletPaymentError(latestBalance, total);
+        if (balanceError) {
+          toast.error(balanceError);
+          return;
+        }
         await payWithWallet(bookingId, pickupNote);
         await store.fetchBookings();
         setStage("success");
@@ -716,7 +724,7 @@ export default function ServiceBookingFlow({
       localStorage.setItem(`pendingBookingPaymentKind:${bookingId}`, "beauty");
       window.location.href = authorizationUrl;
     } catch (error) {
-      setPaymentError(
+      toast.error(
         error?.response?.data?.message ||
           error?.message ||
           "Payment processing failed. Please try again.",
@@ -1146,7 +1154,8 @@ export default function ServiceBookingFlow({
       isOpen
       onClose={onClose}
       showCloseButton={stage !== "success"}
-      panelClassName="relative max-h-[94vh] w-[96%] max-w-6xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl sm:p-8"
+      overlayClassName="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 backdrop-blur-sm sm:p-4"
+      panelClassName="relative max-h-[94dvh] min-w-0 w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-4 shadow-xl sm:p-8"
     >
       {stage === "success" ? (
         <div className="mx-auto max-w-lg py-10 text-center">
@@ -1170,16 +1179,16 @@ export default function ServiceBookingFlow({
         </div>
       ) : (
         <>
-          <div className="grid gap-8 lg:grid-cols-2">
-            <section>
-              <div className="rounded-2xl border border-gray-200 p-5">
+          <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8">
+            <section className="min-w-0">
+              <div className="min-w-0 rounded-2xl border border-gray-200 p-3 sm:p-5">
                 <ProviderSummary provider={provider} isBusiness={isBusinessBooking} />
-                <div className="w-full mt-6 flex justify-center items-center gap-3">
+                <div className="mt-6 grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
                   <button
                     type="button"
                     onClick={handleCallProvider}
                     disabled={!paymentBookingId || !providerId}
-                    className="w-full flex justify-center items-center gap-2 rounded-lg border border-gray-200 px-5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
+                    className="min-w-0 w-full flex justify-center items-center gap-2 rounded-lg border border-gray-200 px-2 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
                   >
                     <Phone size={16} />
                     Call
@@ -1188,7 +1197,7 @@ export default function ServiceBookingFlow({
                     type="button"
                     onClick={handleMessageProvider}
                     disabled={!paymentBookingId}
-                    className="w-full flex justify-center items-center gap-2 rounded-lg border border-gray-200 px-5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
+                    className="min-w-0 w-full flex justify-center items-center gap-2 rounded-lg border border-gray-200 px-2 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
                   >
                     <MessageCircle size={16} />
                     Message
@@ -1201,7 +1210,7 @@ export default function ServiceBookingFlow({
                       await store.fetchBookings();
                       onClose();
                     }}
-                    className="w-full flex justify-center items-center gap-2 rounded-lg border border-red-200 px-5 py-2 text-sm text-red-600 bg-red-50"
+                    className="min-w-0 w-full flex justify-center items-center gap-2 rounded-lg border border-red-200 px-2 py-2 text-sm text-red-600 bg-red-50"
                   />
                 </div>
               </div>
@@ -1214,7 +1223,7 @@ export default function ServiceBookingFlow({
                 address={address}
               />
             </section>
-            <section className="rounded-2xl border border-gray-200 p-5">
+            <section className="min-w-0 rounded-2xl border border-gray-200 p-3 [overflow-wrap:anywhere] sm:p-5">
               <div
                 role="status"
                 className="mb-6 rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-gray-600"
@@ -1241,7 +1250,7 @@ export default function ServiceBookingFlow({
                   <dd>{formatMoney(total)}</dd>
                 </div>
               </dl>
-              <fieldset className="mt-6 space-y-3 border-t border-gray-200 pt-5">
+              <fieldset className="mt-6 min-w-0 space-y-3 border-t border-gray-200 pt-5" disabled={paymentLoading}>
                 <legend className="sr-only">Payment Method</legend>
                 <h2 className="font-semibold">Payment Method</h2>
                 {[
@@ -1250,17 +1259,17 @@ export default function ServiceBookingFlow({
                 ].map((item) => (
                   <label
                     key={item.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 ${method === item.id ? "border-[#34805A] bg-gray-50" : "border-gray-200"}`}
+                    className={`flex min-w-0 cursor-pointer items-center gap-3 rounded-lg border p-3 sm:p-4 ${method === item.id ? "border-[#34805A] bg-gray-50" : "border-gray-200"}`}
                   >
                     <input
                       type="radio"
                       name="beauty-payment-method"
                       checked={method === item.id}
                       onChange={() => setMethod(item.id)}
-                      className="accent-[#005823]"
+                      className="shrink-0 accent-[#005823]"
                     />
-                    <item.icon size={22} className="text-gray-500" />
-                    <span className="text-sm">
+                    <item.icon size={22} className="shrink-0 text-gray-500" />
+                    <span className="min-w-0 text-sm">
                       {item.label}
                       {item.id === "wallet" && (
                         <small className="block text-gray-500">
@@ -1287,18 +1296,14 @@ export default function ServiceBookingFlow({
                 <textarea
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
-                  className="mt-2 min-h-20 w-full rounded-lg border border-gray-200 bg-gray-50 p-3"
+                  className="mt-2 min-h-20 min-w-0 w-full max-w-full resize-y rounded-lg border border-gray-200 bg-gray-50 p-3"
                   placeholder="Please arrive 5 minutes early. Call upon arrival."
                 />
               </label>
-              <div className="mt-5 grid">
-                {paymentError && (
-                  <p className="mb-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {paymentError}
-                  </p>
-                )}
+              <div className="mt-5 grid min-w-0">
                 <Button
-                  disabled={!remaining || paymentLoading}
+                  disabled={!remaining || paymentLoading || (method === "wallet" && walletLoading)}
+                  className="min-w-0 w-full px-3 text-sm sm:px-6 sm:text-lg"
                   onClick={handlePayment}
                 >
                   {paymentLoading
