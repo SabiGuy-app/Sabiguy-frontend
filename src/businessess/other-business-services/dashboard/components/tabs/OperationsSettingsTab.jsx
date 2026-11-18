@@ -7,6 +7,7 @@ import { updateServiceDetails } from "../../../api/businessess";
 import { uploadBusinessWorkVisual } from "../../../../../api/business";
 import {
   findServiceCategoryByLabel,
+  getServiceCategoryBackendId,
   useServiceCategories,
 } from "../../../../../stores/serviceCategories.store";
 
@@ -262,7 +263,13 @@ export default function BusinessSettingsTab({
               .map((item) => item.url),
           },
         ],
-        businessCategory: nextBusinesses.category,
+        businessCategory:
+          getServiceCategoryBackendId(
+            findServiceCategoryByLabel(categories, nextBusinesses.category),
+          ) || nextBusinesses.category,
+        ...(nextBusinesses.name !== "__"
+          ? { businessName: nextBusinesses.name }
+          : {}),
         };
         const result = await updateServiceDetails(payload);
 

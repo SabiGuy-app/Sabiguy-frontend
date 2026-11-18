@@ -14,9 +14,15 @@ import {
   formatCurrency,
   updateProviderLocation,
 } from "../../../api/provider";
+import {
+  getAuthenticatedProfile,
+  mergeProfilePreservingActiveRole,
+} from "../../../api/auth";
 import { useAuthStore } from "../../../stores/auth.store";
 import { getUserById } from "../../../api/user";
 import api from "../../../api/axios";
+
+const BUSINESS_CLOCK_IN_PROMPT_KEY = "provider-business-clock-in-prompt";
 
 export default function ProviderDashboard() {
   const user = useAuthStore((state) => state.user);
@@ -30,12 +36,51 @@ export default function ProviderDashboard() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteAction, setInviteAction] = useState("");
   const [inviteError, setInviteError] = useState("");
-  const [inviteNotice, setInviteNotice] = useState("");
+  const [profileStatusLoaded, setProfileStatusLoaded] = useState(false);
+  const [profileStatusError, setProfileStatusError] = useState("");
   const invitedBy = user?.data?.invitedBy ?? user?.invitedBy;
   const staffId = user?.data?.staffId ?? user?.staffId;
+  const status = user?.data?.status ?? user?.status;
   const hasBusinessInvite = Boolean(
-    invitedBy && invitedBy !== "null" && (staffId == null || staffId === "null"),
+    profileStatusLoaded &&
+      !profileStatusError &&
+      invitedBy &&
+      invitedBy !== "null" &&
+      staffId == null &&
+      status !== "DECLINED",
   );
+
+  useEffect(() => {
+    if (!hydrated) return undefined;
+    let active = true;
+
+    getAuthenticatedProfile()
+      .then((profileResponse) => {
+        if (!active) return;
+        const currentUser = useAuthStore.getState().user;
+        useAuthStore
+          .getState()
+          .updateUser(
+            mergeProfilePreservingActiveRole(currentUser, profileResponse),
+          );
+        setProfileStatusError("");
+      })
+      .catch((profileError) => {
+        if (!active) return;
+        console.error("Could not refresh provider profile:", profileError);
+        setProfileStatusError(
+          profileError?.response?.data?.message ||
+            "Could not verify your invitation status. Refresh the page to try again.",
+        );
+      })
+      .finally(() => {
+        if (active) setProfileStatusLoaded(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [hydrated]);
 
   useEffect(() => {
     if (!hasBusinessInvite) return;
@@ -76,14 +121,30 @@ export default function ProviderDashboard() {
       setInviteAction(status);
       setInviteError("");
       await api.post("/business/staff/invites/respond", { staffEmail, businessEmail, status });
+      if (status === "accept") {
+        sessionStorage.setItem(BUSINESS_CLOCK_IN_PROMPT_KEY, "true");
+        try {
+          const profileResponse = await getAuthenticatedProfile();
+          if (profileResponse) {
+            const currentUser = useAuthStore.getState().user;
+            useAuthStore
+              .getState()
+              .updateUser(
+                mergeProfilePreservingActiveRole(currentUser, profileResponse),
+              );
+          }
+        } catch (profileError) {
+          console.error(
+            "Invitation was accepted, but the provider profile could not be refreshed:",
+            profileError,
+          );
+        }
+      }
       useAuthStore.getState().updateUser((current) => {
         if (current?.data) return { ...current, data: { ...current.data, invitedBy: null } };
         return { ...current, invitedBy: null };
       });
-      setInviteNotice(status === "accept"
-        ? "Invitation accepted. You’ve joined the business team."
-        : "Invitation declined.");
-      setInviteOpen(false);
+      window.location.reload();
     } catch (error) {
       setInviteError(error?.response?.data?.message || "Could not update the invitation. Please try again.");
     } finally {
@@ -215,6 +276,14 @@ export default function ProviderDashboard() {
           </p>
         </div>
       </div>
+          {profileStatusError && (
+            <p
+              role="alert"
+              className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {profileStatusError}
+            </p>
+          )}
       {hasBusinessInvite && (
         <section className="mb-5 flex items-center justify-between gap-4 rounded-xl bg-[#20232b] p-5 text-white shadow-sm">
           <div className="flex min-w-0 items-center gap-4">
@@ -227,12 +296,6 @@ export default function ProviderDashboard() {
           </div>
           <button onClick={openInvite} className="flex shrink-0 items-center gap-2 rounded-lg bg-[#327c53] px-5 py-3 font-medium hover:bg-[#286844]">View Details <ArrowRight size={18} /></button>
         </section>
-      )}
-      {inviteNotice && (
-        <div role="status" className="mb-5 flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          <span>{inviteNotice}</span>
-          <button type="button" onClick={() => setInviteNotice("")} aria-label="Dismiss message" className="rounded p-1 hover:bg-emerald-100"><X size={18} /></button>
-        </div>
       )}
       {inviteOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setInviteOpen(false); }}>
