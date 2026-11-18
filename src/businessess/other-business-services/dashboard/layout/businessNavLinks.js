@@ -1,6 +1,6 @@
 import {
   BookOpen, ClipboardList, FileText, LayoutGrid, Map, MoneyBag,
-  Settings, Shapes, Star, UsersRound,
+  Package, Settings, Shapes, ShoppingBag, Star, UsersRound,
 } from "../icons";
 
 export const businessDashboardPath = "/other-business-services/dashboard";
@@ -11,6 +11,13 @@ export const businessNavGroups = [
     items: [
       { name: "Overview", path: "", icon: LayoutGrid },
       { name: "Live Map", path: "live-map", icon: Map },
+    ],
+  },
+  {
+    section: "Store management",
+    items: [
+      { name: "Products", path: "products", icon: ShoppingBag },
+      { name: "Orders", path: "orders", icon: Package },
     ],
   },
   {

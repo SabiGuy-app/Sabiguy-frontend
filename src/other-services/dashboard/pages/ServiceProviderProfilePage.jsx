@@ -1,5 +1,5 @@
 import { createElement, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -11,14 +11,22 @@ import {
   BriefcaseBusiness,
   Check,
   Image,
+  ShoppingBag,
   Users,
 } from "lucide-react";
 import DashboardLayout from "../../../components/layouts/DashboardLayout";
 import { getUserById } from "../../../api/user";
-import { mergeBeautyServices, normalizeSearchBeautyProvider } from "../utils/beautyProviderMapper";
+import { getProductDeliveryQuote } from "../../../api/products";
+import { reverseGeocodeCoordinates } from "../../../services/reverseGeocode";
+import {
+  mergeBeautyServices,
+  mergeProviderProducts,
+  normalizeSearchBeautyProvider,
+} from "../utils/beautyProviderMapper";
 
 import ServiceBookingOptions from "../components/booking/ServiceBookingOptions";
 import ServiceBookingFlow from "..//components/booking/ServiceBookingFlow";
+import ProductCheckoutModal from "../components/booking/ProductCheckoutModal";
 import {
   getCategoryForProvider,
   getExploreCategoryBySlug,
@@ -36,6 +44,8 @@ const PRICING_OPTIONS = [
 const getServiceId = (service) =>
   service._id || service.id || service.name || service.serviceName;
 
+const getProductId = (product) => product?._id || product?.id;
+
 const getServicePrice = (service, pricingOption) => {
   const rawPrice =
     service.pricingModel?.[pricingOption] ??
@@ -51,6 +61,22 @@ const getDurationMinutes = (duration) => {
   if (!match) return 45;
   const amount = Number(match[1]);
   return /hour|hr/i.test(match[2]) ? amount * 60 : amount;
+};
+
+const formatProductPrice = (product) => {
+  const price = Number(product.price);
+  if (!Number.isFinite(price)) return "Price unavailable";
+
+  const currency = product.currency || "NGN";
+  try {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(price);
+  } catch {
+    return `${currency} ${price.toLocaleString("en-NG")}`;
+  }
 };
 
 function WorkPhoto({ src, alt, className }) {
@@ -147,6 +173,7 @@ function PreferredStaffPicker({ staff, selectedStaffCode, onSelect }) {
 }
 
 export default function ServiceProviderProfilePage() {
+  const location = useLocation();
   const { providerId, categorySlug = "beauty-personal-care" } = useParams();
   const navigate = useNavigate();
   const { exploreCategories, loading: categoriesLoading } = useExploreCategories();
@@ -165,6 +192,10 @@ export default function ServiceProviderProfilePage() {
   const [booking, setBooking] = useState(null);
   const [pricingOption, setPricingOption] = useState("walk_in");
   const [selectedServiceIds, setSelectedServiceIds] = useState([]);
+  const [productQuantities, setProductQuantities] = useState({});
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutPreparing, setCheckoutPreparing] = useState(false);
+  const [checkoutSetup, setCheckoutSetup] = useState({});
   const [preferredStaff, setPreferredStaff] = useState(null);
   const [reviewState, setReviewState] = useState(null);
   const provider =
@@ -220,6 +251,10 @@ export default function ServiceProviderProfilePage() {
           ...cachedProvider,
           ...fullEntry,
           online: cachedProvider?.online ?? fullEntry.online,
+          products: mergeProviderProducts(
+            cachedProvider?.products,
+            fullEntry.products,
+          ),
           service: mergeBeautyServices(
             Array.isArray(fullEntry.service) && fullEntry.service.length
               ? fullEntry.service
@@ -322,6 +357,61 @@ export default function ServiceProviderProfilePage() {
     );
 
   const services = provider.services || [];
+  const products = (provider.products || []).filter((product) => product?.name);
+  const selectedProducts = products
+    .filter((product) => productQuantities[getProductId(product)] > 0)
+    .map((product) => ({
+      product,
+      quantity: productQuantities[getProductId(product)],
+    }));
+  const startProductCheckout = async () => {
+    if (!selectedProducts.length || checkoutPreparing) return;
+
+    setCheckoutPreparing(true);
+    setCheckoutSetup({});
+    try {
+      if (!navigator.geolocation) {
+        throw new Error(
+          "Current location is unavailable. Choose a delivery address in checkout.",
+        );
+      }
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 60000,
+        });
+      });
+      const destination = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        address: await reverseGeocodeCoordinates({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }),
+      };
+      const response = await getProductDeliveryQuote({
+        productId: getProductId(selectedProducts[0].product),
+        modeOfDelivery: "Bike",
+        destination,
+      });
+      const quote = response?.data?.data || response?.data || response;
+      if (!quote?.quoteId) {
+        throw new Error("The delivery quote response did not include a quote ID.");
+      }
+      setCheckoutSetup({ destination, quote });
+    } catch (error) {
+      const message = error?.code === 1
+        ? "Location permission was denied. Choose a delivery address in checkout."
+        : error?.response?.data?.message ||
+          error?.message ||
+          "Could not calculate delivery. Choose another address in checkout.";
+      setCheckoutSetup({ quoteError: message });
+    } finally {
+      setCheckoutPreparing(false);
+      setCheckoutOpen(true);
+    }
+  };
   const isBusiness = provider.role === "businessOwner";
   const staffOnDuty = Array.isArray(provider.staffOnDuty?.staff)
     ? provider.staffOnDuty.staff.filter(
@@ -477,6 +567,112 @@ export default function ServiceProviderProfilePage() {
                 {provider.about || "No description provided yet."}
               </p>
             </section>
+            {products.length > 0 && (
+              <section className="mt-10" aria-labelledby="provider-products">
+                <h2
+                  id="provider-products"
+                  className="mb-4 text-xl font-bold"
+                >
+                  Products
+                </h2>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {products.map((product) => (
+                    <article
+                      key={getProductId(product) || product.name}
+                      className="overflow-hidden rounded-xl border border-gray-200 bg-white"
+                    >
+                      {product.productImage ? (
+                        <img
+                          src={product.productImage}
+                          alt={product.name}
+                          className="h-44 w-full bg-gray-100 object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div
+                          aria-hidden="true"
+                          className="flex h-44 items-center justify-center bg-gray-100 text-gray-400"
+                        >
+                          <ShoppingBag size={36} />
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <h3 className="font-semibold text-gray-900">
+                          {product.name}
+                        </h3>
+                        {product.description && (
+                          <p className="mt-1 text-sm text-gray-500">
+                            {product.description}
+                          </p>
+                        )}
+                        <p className="mt-3 font-semibold text-[#005823]">
+                          {formatProductPrice(product)}
+                        </p>
+                        <label className="mt-4 flex items-center gap-2 text-sm font-medium text-gray-700">
+                          <input
+                            type="checkbox"
+                            disabled={!getProductId(product)}
+                            checked={Boolean(
+                              productQuantities[getProductId(product)],
+                            )}
+                            onChange={(event) => {
+                              const productId = getProductId(product);
+                              if (!productId) return;
+                              setProductQuantities((current) => {
+                                const next = { ...current };
+                                if (event.target.checked) {
+                                  next[productId] = next[productId] || 1;
+                                } else {
+                                  delete next[productId];
+                                }
+                                return next;
+                              });
+                            }}
+                            className="h-4 w-4 accent-[#005823]"
+                          />
+                          Add to order
+                        </label>
+                        {productQuantities[getProductId(product)] > 0 && (
+                          <label className="mt-3 block text-sm text-gray-600">
+                            Quantity
+                            <input
+                              type="number"
+                              min="1"
+                              step="1"
+                              value={productQuantities[getProductId(product)]}
+                              onChange={(event) => {
+                                const quantity = Number.parseInt(
+                                  event.target.value,
+                                  10,
+                                );
+                                setProductQuantities((current) => ({
+                                  ...current,
+                                  [getProductId(product)]:
+                                    Number.isFinite(quantity) && quantity > 0
+                                      ? quantity
+                                      : 1,
+                                }));
+                              }}
+                              className="ml-3 w-20 rounded-md border border-gray-300 px-2 py-1"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  disabled={!selectedProducts.length || checkoutPreparing}
+                  onClick={startProductCheckout}
+                  className="mt-4 w-full rounded-lg bg-[#34805A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2d6f4f] disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  {checkoutPreparing
+                    ? "Getting delivery quote..."
+                    : `Checkout ${selectedProducts.length} product${selectedProducts.length === 1 ? "" : "s"}`}
+                </button>
+              </section>
+            )}
             <section className="mt-10" aria-labelledby="service-prices">
               <h2 id="service-prices" className="mb-4 text-xl font-bold">
                 Services &amp; Pricing
@@ -751,6 +947,17 @@ export default function ServiceProviderProfilePage() {
           booking={booking}
           category={category}
           onClose={() => setBooking(null)}
+        />
+      )}
+      {checkoutOpen && selectedProducts.length > 0 && (
+        <ProductCheckoutModal
+          products={selectedProducts}
+          sellerName={provider.fullName}
+          returnPath={location.pathname}
+          initialDestination={checkoutSetup.destination}
+          initialQuote={checkoutSetup.quote}
+          initialQuoteError={checkoutSetup.quoteError}
+          onClose={() => setCheckoutOpen(false)}
         />
       )}
     </DashboardLayout>

@@ -68,6 +68,48 @@ export const extractNearbyProviders = (response) => {
   return [];
 };
 
+export const extractProductsForProvider = (response, providerId) => {
+  const containers = [response, response?.data, response?.data?.data];
+  const products = containers.find((container) => Array.isArray(container?.products))
+    ?.products || [];
+  const targetId = String(providerId || "");
+  if (!targetId) return [];
+
+  return products.filter((product) => {
+    const ownerId =
+      product?.owner?._id ||
+      product?.owner?.id ||
+      product?.ownerId ||
+      product?.owner;
+    return ownerId != null && String(ownerId) === targetId;
+  });
+};
+
+export const mergeProviderProducts = (...productGroups) => {
+  const productsById = new Map();
+
+  productGroups.forEach((products) => {
+    if (!Array.isArray(products)) return;
+    products.forEach((product) => {
+      if (!product || typeof product !== "object") return;
+      const key =
+        product._id ||
+        product.id ||
+        String(product.name || "").trim().toLowerCase();
+      if (!key) return;
+      const mergedProduct = { ...productsById.get(key) };
+      Object.entries(product).forEach(([field, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          mergedProduct[field] = value;
+        }
+      });
+      productsById.set(key, mergedProduct);
+    });
+  });
+
+  return Array.from(productsById.values());
+};
+
 export const mergeBeautyServices = (detailServices, searchServices) => {
   const fallback = Array.isArray(searchServices) ? searchServices : [];
   if (!Array.isArray(detailServices) || detailServices.length === 0) return fallback;
@@ -186,6 +228,7 @@ export const normalizeSearchBeautyProvider = (
     isAvailable: !isUnavailable,
     isUnavailable,
     online: provider.online,
+    products: Array.isArray(provider.products) ? provider.products : [],
   };
 };
 

@@ -4,6 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import NotificationDrawer from "../../../../components/dashboard/Notification";
 import NotificationToast from "../../../../components/NotificationToast";
 import BookingRequestModal from "../../../../components/BookingRequestModal";
+import ProductOrderReceivedModal from "../../../../components/ProductOrderReceivedModal";
 import ActivityDetailsModal from "../../../../components/dashboard/ActivityDetailsModal";
 import KycVerificationModal from "../../../../components/provider-dashboard/KycVerificationModal";
 import useNotificationCenter from "../../../../hooks/useNotificationCenter";
@@ -47,6 +48,7 @@ export default function BusinessSession() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
   const [bookingRequest, setBookingRequest] = useState(null);
+  const [productOrderNotification, setProductOrderNotification] = useState(null);
   const [completedNotification, setCompletedNotification] = useState(null);
 
   useEffect(() => {
@@ -157,6 +159,10 @@ export default function BusinessSession() {
       setBookingRequest(notification);
       return;
     }
+    if (notification?.type === "product_order_received") {
+      setProductOrderNotification(notification);
+      return;
+    }
     if (notification?.type === "job_completed_confirmed") {
       setCompletedNotification(notification);
       return;
@@ -214,6 +220,15 @@ export default function BusinessSession() {
         onClose={() => setBookingRequest(null)}
         onViewBooking={() => viewBookingRequest(bookingRequest)}
         notification={bookingRequest}
+      />
+      <ProductOrderReceivedModal
+        isOpen={Boolean(productOrderNotification)}
+        onClose={() => setProductOrderNotification(null)}
+        onProcessOrder={() => {
+          setProductOrderNotification(null);
+          navigate(`${businessDashboardPath}/orders`);
+        }}
+        notification={productOrderNotification}
       />
       <ActivityDetailsModal
         isOpen={Boolean(completedNotification)}

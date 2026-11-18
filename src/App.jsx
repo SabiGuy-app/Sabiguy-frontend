@@ -53,6 +53,9 @@ const DashboardHome = lazy(() => import("./pages/Dashboard/sections/Homepage"));
 const Bookings = lazy(
   () => import("./pages/Dashboard/sections/Bookings/Bookings"),
 );
+const ProductOrderHistoryPage = lazy(
+  () => import("./pages/Dashboard/sections/ProductOrderHistoryPage"),
+);
 const SavedProfile = lazy(
   () => import("./pages/Dashboard/sections/SavedProfile"),
 );
@@ -191,6 +194,12 @@ const FleetSettings = lazy(
 const BusinessStaffPage = lazy(
   () =>
     import("./businessess/other-business-services/dashboard/pages/BusinessStaffPage"),
+);
+const ProductManagementPage = lazy(
+  () => import("./pages/ProviderDashboard/sections/ProductManagementPage"),
+);
+const ProductOrdersPage = lazy(
+  () => import("./pages/ProviderDashboard/sections/ProductOrdersPage"),
 );
 const BusinessSettingsPage = lazy(
   () =>
@@ -405,6 +414,10 @@ function App() {
                 path="/wallet/funding/callback"
                 element={<WalletCallback />}
               />
+              <Route
+                path="/product-orders/callback"
+                element={<WalletCallback />}
+              />
               <Route path="/payment/callback" element={<WalletCallback />} />
 
               <Route path="*" element={<NotFound />} />
@@ -444,6 +457,7 @@ function App() {
                 <Route path="/kyc/pending" element={<BuyerKycPending />} />
                 <Route path="/dashboard" element={<DashboardHome />} />
                 <Route path="/bookings" element={<Bookings />} />
+                <Route path="/dashboard/orders" element={<ProductOrderHistoryPage />} />
                 <Route path="/dashboard/saved" element={<SavedProfile />} />
                 <Route path="/dashboard/test" element={<NotificationTest />} />
                 <Route path="/dashboard/chat" element={<ChatPage />} />
@@ -482,6 +496,14 @@ function App() {
                 <Route
                   path="/dashboard/provider/chat"
                   element={<ProviderChat />}
+                />
+                <Route
+                  path="/dashboard/provider/products"
+                  element={<ProductManagementPage />}
+                />
+                <Route
+                  path="/dashboard/provider/orders"
+                  element={<ProductOrdersPage />}
                 />
                 <Route path="/dashboard/activity" element={<ActivityPage />} />
 
@@ -571,6 +593,14 @@ n i input thr                  element={<AvailableProviders />}
                   <Route
                     path="/other-business-services/dashboard/staff"
                     element={<BusinessStaffPage />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/products"
+                    element={<ProductManagementPage business />}
+                  />
+                  <Route
+                    path="/other-business-services/dashboard/orders"
+                    element={<ProductOrdersPage business />}
                   />
                   <Route
                     path="/other-business-services/dashboard/settings"

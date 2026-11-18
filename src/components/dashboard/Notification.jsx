@@ -20,6 +20,7 @@ export default function NotificationDrawer({
   onBookingCompleted,
   // Overrides the provider hire-alert navigation for booking requests.
   onBookingRequestClick,
+  onProductDeliveryClick,
   showSampleNotifications = true,
 }) {
   const navigate = useNavigate();
@@ -69,6 +70,12 @@ export default function NotificationDrawer({
     const iconMap = {
       new_booking_request: <FiCalendar className="text-blue-500" size={20} />,
       booking_assigned: <FiCalendar className="text-green-500" size={20} />,
+      product_order_received: (
+        <FiBell className="text-green-500" size={20} />
+      ),
+      product_order_delivered: (
+        <FiBell className="text-green-500" size={20} />
+      ),
       provider_accepted: <FiCalendar className="text-green-500" size={20} />,
       booking_selected: <FiCalendar className="text-blue-500" size={20} />,
       booking_taken: <FiCalendar className="text-purple-500" size={20} />,
@@ -111,6 +118,15 @@ export default function NotificationDrawer({
 
     if (completionNotificationTypes.includes(notification.type)) {
       onBookingCompleted?.(notification);
+      setMarkingAsRead(null);
+      return;
+    }
+
+    if (
+      notification.type === "product_order_delivered" &&
+      onProductDeliveryClick
+    ) {
+      onProductDeliveryClick(notification);
       setMarkingAsRead(null);
       return;
     }
@@ -190,6 +206,15 @@ export default function NotificationDrawer({
   const handleViewDetails = async (e, notification) => {
     e.stopPropagation();
     if (notification.type === "beauty_sample") { sample.markRead(); onClose(); navigate(getBeautyNotificationUrl(notification)); return; }
+
+    if (
+      notification.type === "product_order_delivered" &&
+      onProductDeliveryClick
+    ) {
+      onClose();
+      onProductDeliveryClick(notification);
+      return;
+    }
 
     // If it's a booking request, route to hire alert page instead of opening modal
     if (
