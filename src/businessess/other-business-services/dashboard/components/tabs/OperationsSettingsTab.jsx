@@ -452,12 +452,12 @@ export default function BusinessSettingsTab({
   return (
     <div className="py-1">
       <SettingsTabCard
-        title="Business category"
+        title=""
         onEdit={() => setBusinessEditorOpen(true)}
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex justify-between w-full ">
-            <p className="text-[10px] text-[#777777]">Business category</p>
+            <p className="text-[10px] font-semibold">Business category</p>
             <p className="mt-0.5 text-[10px] font-semibold text-[#272727]">
               {businesses.category}
             </p>
