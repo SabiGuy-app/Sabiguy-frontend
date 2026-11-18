@@ -42,7 +42,7 @@ const AccountTypeModal = ({ isOpenModal, setIsOpenModal }) => {
 
   return (
     <div
-      className="w-full h-screen fixed inset-0 bg-black/20 flex justify-center items-center z-20 px-4"
+      className="w-full h-screen fixed inset-0 bg-black/20 flex justify-center items-center z-[60] px-4"
       onClick={() => setIsOpenModal(false)}
     >
       <div

@@ -18,6 +18,22 @@ button {
   cursor: pointer;
 }
 
+.landing-section-heading {
+  font-family: "Inter", sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .landing-section-heading {
+    font-size: 42px;
+  }
+}
+
 button:disabled {
   cursor: not-allowed;
 }
