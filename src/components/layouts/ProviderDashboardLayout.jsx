@@ -70,8 +70,8 @@ export default function ProviderDashboardLayout({ children }) {
             open={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
           />
-          <div className="flex-1 md:ml-64 flex flex-col w-full">
-            <main className="flex-1 min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] p-3 sm:p-6 w-full">
+          <div className="min-w-0 flex-1 md:ml-64 flex flex-col">
+            <main className="min-w-0 flex-1 min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] p-3 sm:p-6 w-full">
               <div className="max-w-7xl mx-auto w-full">{children}</div>
             </main>
           </div>

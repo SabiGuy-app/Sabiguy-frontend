@@ -101,8 +101,8 @@ export default function AlertsCard({
         : "Open Journey";
 
   return (
-    <article className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2">
+    <article className="min-w-0 rounded-lg border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-x-3 sm:gap-y-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="break-words text-base font-semibold leading-5 text-[#231F20]">
@@ -116,13 +116,13 @@ export default function AlertsCard({
           </div>
 
           <div className="mt-2 space-y-1.5 text-xs text-[#6B6B6B] sm:text-sm">
-            <div className="flex min-w-0 items-start gap-1.5">
-              <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-sm bg-[#EAF3FF] px-1.5 py-1 text-[11px] text-[#1674E8]">
+            <div className="flex min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap">
+              <span className="inline-flex max-w-full shrink-0 items-center gap-1 rounded-sm bg-[#EAF3FF] px-1.5 py-1 text-[11px] text-[#1674E8]">
                 <Home className="h-4 w-4 shrink-0" />
-                <span className="min-w-0 break-words">{servicePlace}</span>
+                <span>{servicePlace}</span>
               </span>
               {isCustomerAddress && (
-                <span className="min-w-0 break-words">{serviceAddress}</span>
+                <span className="min-w-0 break-words [overflow-wrap:anywhere] sm:basis-full">{serviceAddress}</span>
               )}
             </div>
             {scheduledDate && (
@@ -144,8 +144,8 @@ export default function AlertsCard({
           </div>
         </div>
 
-        <div className="flex min-w-[76px] flex-col items-end justify-between gap-4">
-          <span className="rounded-full bg-[#005823] px-2 py-0.5 text-xs font-medium leading-4 text-white">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:max-w-[180px] sm:flex-col sm:items-end sm:gap-4">
+          <span className="max-w-full break-words rounded-full bg-[#005823] px-2 py-0.5 text-xs font-medium leading-4 text-white [overflow-wrap:anywhere]">
             {isJob ? alert?.status || "Active" : "New"}
           </span>
           <span className="whitespace-nowrap text-base font-bold text-[#005823] sm:text-lg">
@@ -158,7 +158,7 @@ export default function AlertsCard({
         <button
           type="button"
           onClick={() => onViewDetails?.(alert)}
-          className="inline-flex min-h-10 min-w-[182px] items-center justify-center rounded-[4px] bg-[#347D53] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[#286642] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2D6A3E]"
+          className="inline-flex min-h-10 w-full items-center justify-center rounded-[4px] bg-[#347D53] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[#286642] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2D6A3E] sm:w-auto sm:min-w-[182px]"
         >
           View Details
         </button>
@@ -171,7 +171,7 @@ export default function AlertsCard({
                 : onAcceptBooking?.(alert)
             }
             disabled={accepting}
-            className="inline-flex min-h-10 min-w-[182px] items-center justify-center rounded-[4px] border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-[#555555] transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60"
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-[4px] border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-[#555555] transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60 sm:w-auto sm:min-w-[182px]"
           >
             {accepting ? "Accepting..." : actionLabel}
           </button>
