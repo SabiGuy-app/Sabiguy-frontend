@@ -598,7 +598,8 @@ export default function ProviderNavbar({ onMenuClick }) {
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 sm:h-20 items-center justify-between bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 shadow-sm">
         {/* Mobile Menu Button (toggles sidebar) */}
         <button
-          className="md:hidden p-2 text-gray-600 hover:text-gray-800"
+          className="shrink-0 md:hidden p-1 min-[380px]:p-2 text-gray-600 hover:text-gray-800"
+          aria-label="Open navigation menu"
           onClick={onMenuClick}
         >
           <Menu size={26} className="text-gray-600" />
@@ -612,7 +613,7 @@ export default function ProviderNavbar({ onMenuClick }) {
           <img
             src="/logo.jpg"
             alt="SabiGuy Logo"
-            className="h-6 sm:h-8 w-auto"
+            className="h-auto w-[88px] min-[380px]:w-[108px] sm:h-8 sm:w-auto"
           />
         </button>
 
@@ -639,8 +640,8 @@ export default function ProviderNavbar({ onMenuClick }) {
         */}
 
         {/* Right Icons */}
-        <div className="flex items-center justify-end space-x-1.5 sm:space-x-4 flex-1">
-          <div className="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-4 flex-1">
+          <div className="flex shrink-0 items-center justify-center gap-1 px-1.5 py-1.5 bg-gray-50 rounded-lg border border-gray-200 min-[380px]:gap-1.5 min-[380px]:px-2">
             <div className="flex items-center justify-center gap-1 sm:gap-2">
               {locationEnabled && (
                 <MapPin
@@ -664,7 +665,7 @@ export default function ProviderNavbar({ onMenuClick }) {
             <button
               onClick={toggleAvailability}
               disabled={updatingAvailability}
-              className={`relative w-5 h-2 rounded-full transition-all duration-300 ${
+              className={`relative shrink-0 w-5 h-2 rounded-full transition-all duration-300 ${
                 isAvailable ? "bg-green-500" : "bg-gray-300"
               } ${updatingAvailability ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label="Toggle availability and location"
@@ -699,7 +700,8 @@ export default function ProviderNavbar({ onMenuClick }) {
           {/* Bell */}
           <button
             onClick={handleNotificationClick}
-            className="relative text-gray-600 hover:text-gray-900 transition-colors p-1"
+            className="relative shrink-0 text-gray-600 hover:text-gray-900 transition-colors p-1"
+            aria-label="Open notifications"
           >
             <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
             {unreadCount > 0 && (
@@ -710,7 +712,7 @@ export default function ProviderNavbar({ onMenuClick }) {
           </button>
 
           {/* Profile */}
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               type="button"
               aria-expanded={showProfileMenu}
@@ -723,7 +725,7 @@ export default function ProviderNavbar({ onMenuClick }) {
               ) : (
                 <img src={user?.data?.profilePicture || "/avatar.png"} alt="Personal profile" className="h-7 w-7 rounded-full border sm:h-8 sm:w-8" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatar.png"; }} />
               )}
-              <ChevronDown size={15} />
+              <ChevronDown size={15} className="hidden min-[380px]:block" />
             </button>
             {showProfileMenu && (
               <div className="absolute right-0 top-12 z-[70] w-[min(92vw,350px)] overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-xl">
