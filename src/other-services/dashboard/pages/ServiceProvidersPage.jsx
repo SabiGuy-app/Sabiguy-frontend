@@ -22,8 +22,10 @@ import LocationAutocomplete from "../../../components/LocationAutocomplete";
 import { searchGeneralProviders, searchServiceProviders } from "../../../api/bookings";
 import { getUserById } from "../../../api/user";
 import {
+  extractProductsForProvider,
   extractNearbyProviders,
   mergeBeautyServices,
+  mergeProviderProducts,
   normalizeSearchBeautyProvider,
 } from "../utils/beautyProviderMapper";
 import { mergeProviderAvailability } from "../utils/providerAvailability";
@@ -122,7 +124,13 @@ const searchProvidersForService = async (
     ? await searchServiceProviders({ location, search })
     : await searchGeneralProviders({ search }));
 
-  const providers = extractNearbyProviders(response);
+  const providers = extractNearbyProviders(response).map((provider) => ({
+    ...provider,
+    products: mergeProviderProducts(
+      provider.products,
+      extractProductsForProvider(response, provider.id || provider._id),
+    ),
+  }));
 
   return Promise.all(
     providers.map(async (provider) => {
@@ -157,6 +165,7 @@ const searchProvidersForService = async (
             ? provider.service
             : provider.services,
         ),
+        products: mergeProviderProducts(provider.products, details.products),
       };
       const providerCategory = getCategoryForProvider(exploreCategories, merged, category);
       const normalized = normalizeSearchBeautyProvider(

@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import NotificationDrawer from "../dashboard/Notification";
 import NotificationToast from "../NotificationToast";
 import BookingRequestModal from "../BookingRequestModal";
+import ProductOrderReceivedModal from "../ProductOrderReceivedModal";
 import ActivityDetailsModal from "../dashboard/ActivityDetailsModal";
 import { useAuthStore } from "../../stores/auth.store";
 import locationService from "../../services/locationService";
@@ -40,6 +41,7 @@ export default function ProviderNavbar({ onMenuClick }) {
   const [clockRequestBusy, setClockRequestBusy] = useState(false);
   const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
   const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
+  const [productOrderNotification, setProductOrderNotification] = useState(null);
   const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
   const navigate = useNavigate();
   const isAvailable = user?.data?.availability?.isAvailable ?? false;
@@ -291,6 +293,13 @@ export default function ProviderNavbar({ onMenuClick }) {
         setShowBookingRequestModal(true);
         return;
       }
+      if (notification?.type === "product_order_received") {
+        notificationSoundService.play().catch((err) => {
+          console.warn("Sound playback failed:", err);
+        });
+        setProductOrderNotification(notification);
+        return;
+      }
       if (notification?.type === "job_completed_confirmed") {
         notificationSoundService.play().catch((err) => {
           console.warn("âš ï¸ Sound playback failed:", err);
@@ -459,6 +468,11 @@ export default function ProviderNavbar({ onMenuClick }) {
     }
   };
 
+  const handleProcessProductOrder = () => {
+    setProductOrderNotification(null);
+    navigate("/dashboard/provider/orders");
+  };
+
   const isKycVerificationError = (message) =>
     typeof message === "string" &&
     message.toLowerCase().includes("kyc verification required");
@@ -554,6 +568,12 @@ export default function ProviderNavbar({ onMenuClick }) {
 
   return (
     <>
+      <ProductOrderReceivedModal
+        isOpen={Boolean(productOrderNotification)}
+        onClose={() => setProductOrderNotification(null)}
+        onProcessOrder={handleProcessProductOrder}
+        notification={productOrderNotification}
+      />
       <KycVerificationModal
         isOpen={showKycModal}
         onClose={() => setShowKycModal(false)}

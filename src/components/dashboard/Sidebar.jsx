@@ -12,12 +12,12 @@ import {
   Book,
   ClipboardList,
   Cog,
+  ShoppingBag,
 } from "lucide-react";
-import { handleLogout } from "../../api/auth";
-
 const links = [
   { name: "Home", path: "/dashboard", icon: <Home /> },
   { name: "My Bookings", path: "/bookings", icon: <Book /> },
+  { name: "My Orders", path: "/dashboard/orders", icon: <ShoppingBag /> },
   // { name: "Saved Profile", path: "/dashboard/saved", icon: <Heart/> },
   { name: "Chat", path: "/dashboard/chat", icon: <MessageCircle /> },
   { name: "Activity", path: "/dashboard/activity", icon: <ClipboardList /> },

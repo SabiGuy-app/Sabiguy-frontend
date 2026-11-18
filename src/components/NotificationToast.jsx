@@ -1,4 +1,10 @@
-import { X, MessageCircle, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  X,
+  MessageCircle,
+  CheckCircle2,
+  AlertCircle,
+  PackageCheck,
+} from "lucide-react";
 import { FiMessageSquare, FiCalendar, FiBell } from "react-icons/fi";
 
 export default function NotificationToast({ notification, onClose, onClick }) {
@@ -29,6 +35,12 @@ export default function NotificationToast({ notification, onClose, onClick }) {
       message_received: <MessageCircle className="text-green-600" size={20} />,
       new_message: <MessageCircle className="text-green-600" size={20} />,
       booking_status_updated: <FiCalendar className="text-blue-500" size={20} />,
+      product_order_received: (
+        <PackageCheck className="text-green-500" size={20} />
+      ),
+      product_order_delivered: (
+        <PackageCheck className="text-blue-500" size={20} />
+      ),
       counter_offer: <FiBell className="text-blue-500" size={20} />,
       job_completed_confirmed: (
         <CheckCircle2 className="text-green-500" size={20} />
