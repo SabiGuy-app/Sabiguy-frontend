@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mergeBeautyServices, normalizeSearchBeautyProvider } from "./beautyProviderMapper.js";
+import {
+  extractProductsForProvider,
+  mergeBeautyServices,
+  mergeProviderProducts,
+  normalizeSearchBeautyProvider,
+} from "./beautyProviderMapper.js";
 
 test("detail services retain search prices when the detail response omits them", () => {
   const services = mergeBeautyServices(
@@ -27,6 +32,35 @@ test("detail prices win while missing pricing options come from search", () => {
   });
 });
 
+test("provider products merge detail fields without losing search-result images", () => {
+  const products = mergeProviderProducts(
+    [{ _id: "product-1", name: "Hair cream", productImage: "image.jpg", price: 30000 }],
+    [{ _id: "product-1", name: "Hair cream", productImage: null, description: "Hair care" }],
+  );
+
+  assert.deepEqual(products, [{
+    _id: "product-1",
+    name: "Hair cream",
+    productImage: "image.jpg",
+    price: 30000,
+    description: "Hair care",
+  }]);
+});
+
+test("top-level search products are associated with their owning provider", () => {
+  const response = {
+    products: [
+      { _id: "product-1", owner: { _id: "provider-1" }, name: "Hair cream" },
+      { _id: "product-2", owner: { _id: "provider-2" }, name: "Shampoo" },
+    ],
+  };
+
+  assert.deepEqual(
+    extractProductsForProvider(response, "provider-1"),
+    [{ _id: "product-1", owner: { _id: "provider-1" }, name: "Hair cream" }],
+  );
+});
+
 test("beauty provider cards use the business address and real completed jobs", () => {
   const provider = normalizeSearchBeautyProvider({
     _id: "provider-1",
@@ -41,6 +75,7 @@ test("beauty provider cards use the business address and real completed jobs", (
   assert.equal(provider.completedJobs, 7);
   assert.equal(provider.yearsOfExperience, 5);
   assert.deepEqual(provider.services.map((service) => service.name), ["Barbing"]);
+  assert.deepEqual(provider.products, []);
 });
 
 test("work gallery contains only real work-visual pictures", () => {

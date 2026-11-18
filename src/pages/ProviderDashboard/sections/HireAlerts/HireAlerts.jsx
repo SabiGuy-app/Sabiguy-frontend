@@ -99,6 +99,18 @@ export default function HireAlerts() {
   const [decliningAlertId, setDecliningAlertId] = useState(null);
   const hasConsumedPrefetchedAlerts = useRef(false);
   const fetchSequence = useRef(0);
+  const memberships = user?.data?.staffMemberships || user?.staffMemberships || [];
+  const isClockedIntoBusiness = memberships.some((membership) => {
+    const action = String(membership?.clockRequest?.action || "")
+      .toLowerCase()
+      .replace(/[-_\s]/g, "");
+    return (
+      membership?.status === "ACTIVE" &&
+      membership?.onDuty?.active === true &&
+      membership?.clockRequest?.status?.toLowerCase() === "approved" &&
+      action.includes("clockin")
+    );
+  });
 
   useEffect(() => {
     if (!paymentWaiting) return undefined;
@@ -181,6 +193,7 @@ export default function HireAlerts() {
       let alertBookings = [];
 
       if (
+        !isClockedIntoBusiness &&
         !hasConsumedPrefetchedAlerts.current &&
         locationState?.fetchedAlerts
       ) {
@@ -191,7 +204,13 @@ export default function HireAlerts() {
         hasConsumedPrefetchedAlerts.current = true;
       }
 
-      const providerJobsPromise = getProviderBookings();
+      const providerJobsPromise = isClockedIntoBusiness
+        ? getProviderBookings()
+        : getProviderBookingsFallback({
+            status: null,
+            page: 1,
+            limit: 40,
+          });
       const rawUserJobs = user?.job || user?.data?.job || [];
       const userJobs = Array.isArray(rawUserJobs) ? rawUserJobs : [rawUserJobs];
       const resolveModeOfDelivery = (job) => {
@@ -203,7 +222,7 @@ export default function HireAlerts() {
         return "";
       };
 
-      const alertRequests = userJobs
+      const alertRequests = (isClockedIntoBusiness ? [] : userJobs)
         .filter((job) => {
           const normalizedService = String(job?.service || "")
             .trim()
@@ -251,9 +270,10 @@ export default function HireAlerts() {
         (response) => extractBookingList(response).length === 0,
       );
       if (
-        providerBookings.length === 0 ||
-        alertBookings.length === 0 ||
-        alertRequestMissed
+        !isClockedIntoBusiness &&
+        (providerBookings.length === 0 ||
+          alertBookings.length === 0 ||
+          alertRequestMissed)
       ) {
         try {
           const fallbackResponse = await getProviderBookingsFallback({

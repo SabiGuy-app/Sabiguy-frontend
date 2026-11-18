@@ -27,6 +27,18 @@ const BUSINESS_CLOCK_IN_PROMPT_KEY = "provider-business-clock-in-prompt";
 export default function ProviderDashboard() {
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
+  const memberships = user?.data?.staffMemberships || user?.staffMemberships || [];
+  const isClockedIntoBusiness = memberships.some((membership) => {
+    const action = String(membership?.clockRequest?.action || "")
+      .toLowerCase()
+      .replace(/[-_\s]/g, "");
+    return (
+      membership?.status === "ACTIVE" &&
+      membership?.onDuty?.active === true &&
+      membership?.clockRequest?.status?.toLowerCase() === "approved" &&
+      action.includes("clockin")
+    );
+  });
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -155,10 +167,13 @@ export default function ProviderDashboard() {
   // ── Fetch dashboard stats ──────────────────────────────────────────────
   useEffect(() => {
     const fetchDashboardStats = async () => {
+      if (!hydrated) return;
       try {
         setIsLoading(true);
         setError(null);
-        const response = await getDashboardStats();
+        const response = await getDashboardStats({
+          businessWorkspace: isClockedIntoBusiness,
+        });
 
         // Confirmed API shape (flat object inside data):
         // {
@@ -215,7 +230,7 @@ export default function ProviderDashboard() {
     };
 
     fetchDashboardStats();
-  }, []);
+  }, [hydrated, isClockedIntoBusiness]);
 
   useEffect(() => {
     const displayLocation = async () => {
