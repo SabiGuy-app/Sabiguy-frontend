@@ -127,6 +127,19 @@ export const declineBusinessBooking = async (bookingId) => {
   return data?.data || data;
 };
 
+export const startBusinessBooking = async (bookingId) => {
+  const { data } = await api.patch(`/businesses/bookings/${bookingId}/start`, {});
+  return data?.data || data;
+};
+
+export const completeBusinessBooking = async (bookingId, payload = {}) => {
+  const { data } = await api.patch(
+    `/businesses/bookings/${bookingId}/complete`,
+    payload,
+  );
+  return data?.data || data;
+};
+
 // Dashboard stats for the business overview.
 export const getBusinessDashboardStats = async (businessId) => {
   const { data } = await api.get(`/business/${businessId}/dashboard/stats`);

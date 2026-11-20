@@ -1,4 +1,6 @@
 import api from "./axios";
+import { useAuthStore } from "../stores/auth.store";
+import { assertBuyerIdentityComplete } from "../utils/buyerKycStatus";
 
 export const uploadProductImage = async (email, file) => {
   if (!email) throw new Error("Your account email is unavailable for the product image upload.");
@@ -33,6 +35,7 @@ export const getProductDeliveryQuote = async (payload) => {
 };
 
 export const checkoutProductOrder = async (payload) => {
+  assertBuyerIdentityComplete(useAuthStore.getState().user);
   const { data } = await api.post("/products/orders/checkout", payload);
   return data;
 };

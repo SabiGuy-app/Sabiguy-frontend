@@ -27,8 +27,11 @@ import {
 import Modal from "../../../../components/Modal";
 import Button from "../../../../components/button";
 import InputField from "../../../../components/InputField";
+import BuyerIdentityPrompt from "../../../../components/identity/BuyerIdentityPrompt";
 import { formatMoney } from "../../utils/bookingFormat";
 import { getAvailableWalletBalance, getWalletPaymentError } from "../../utils/walletPayment";
+import { useAuthStore } from "../../../../stores/auth.store";
+import { getBuyerBookingGate } from "../../../../utils/buyerKycStatus";
 import CancelBookingButton from "../../../../components/CancelBookingButton";
 import { useCallContext } from "../../../../components/shared/CallContext";
 import { getServiceCategoryBackendId } from "../../../../stores/serviceCategories.store";
@@ -352,6 +355,7 @@ export default function ServiceBookingFlow({
   const [now, setNow] = useState(Date.now);
   const [message, setMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [buyerIdentityPromptOpen, setBuyerIdentityPromptOpen] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletLoading, setWalletLoading] = useState(false);
@@ -607,6 +611,13 @@ export default function ServiceBookingFlow({
   };
   const createBooking = async () => {
     if (!canContinue || store.loading) return;
+
+    if (
+      !getBuyerBookingGate(useAuthStore.getState().user).canCreateBooking
+    ) {
+      setBuyerIdentityPromptOpen(true);
+      return;
+    }
 
     setSubmitError("");
     try {
@@ -941,6 +952,15 @@ export default function ServiceBookingFlow({
             {submitError}
           </p>
         )}
+        {buyerIdentityPromptOpen && (
+          <BuyerIdentityPrompt
+            onCancel={() => setBuyerIdentityPromptOpen(false)}
+            onComplete={() => {
+              setBuyerIdentityPromptOpen(false);
+              createBooking();
+            }}
+          />
+        )}
       </Modal>
     );
   }
@@ -999,6 +1019,15 @@ export default function ServiceBookingFlow({
             {store.loading ? "Creating Booking..." : "Continue"}
           </Button>
         </div>
+        {buyerIdentityPromptOpen && (
+          <BuyerIdentityPrompt
+            onCancel={() => setBuyerIdentityPromptOpen(false)}
+            onComplete={() => {
+              setBuyerIdentityPromptOpen(false);
+              createBooking();
+            }}
+          />
+        )}
       </Modal>
     );
 

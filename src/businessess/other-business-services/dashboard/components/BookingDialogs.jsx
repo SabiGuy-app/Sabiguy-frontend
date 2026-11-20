@@ -9,7 +9,7 @@ import "../layout/businessBookings.css";
 
 // flow: the object returned by useBusinessBookings.
 export default function BookingDialogs({ flow }) {
-  const { booking, seconds, available, dialog, confirmation, busyAction, candidates, onClose, onAssign, onClearConfirmation, onConfirm, onAccept, onDecline, onAssignStaff } = flow;
+  const { booking, seconds, available, dialog, confirmation, busyAction, candidates, onClose, onAssign, onClearConfirmation, onConfirm, onAccept, onDecline, onAssignStaff, onStart, onComplete } = flow;
   if (!booking) return null;
 
   return (
@@ -26,6 +26,8 @@ export default function BookingDialogs({ flow }) {
         onConfirm={onConfirm}
         onAssignStaff={onAssignStaff}
         onChooseStaff={() => onAssign(booking.id)}
+        onStart={onStart}
+        onComplete={onComplete}
       />
       <BookingPaymentModal isOpen={dialog === "payment" && booking.status === "payment_pending"} booking={booking} seconds={seconds} onClose={onClose} />
       <BookingAssignmentModal

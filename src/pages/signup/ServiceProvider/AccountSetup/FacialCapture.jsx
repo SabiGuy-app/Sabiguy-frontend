@@ -6,8 +6,14 @@ import Button from "../components/Button";
 import { FaCamera, FaExclamationCircle } from "react-icons/fa";
 import { IoIosArrowBack } from "react-icons/io";
 import { LuRefreshCw } from "react-icons/lu";
+import { useAuthStore } from "../../../../stores/auth.store";
 
-export default function FaceCapture({ onNext, onBack, data = {} }) {
+export default function FaceCapture({
+  onNext,
+  onBack,
+  onSaveCapture,
+  data = {},
+}) {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const cameraInstanceRef = useRef(null);
@@ -17,7 +23,7 @@ export default function FaceCapture({ onNext, onBack, data = {} }) {
 
   const [image, setImage] = useState(null); // fresh base64 preview, this session only
   // Whatever the parent already knows about, from a previous successful save
-  const [savedUrl, setSavedUrl] = useState(data.profilePictureUrl || null);
+  const [savedUrl, setSavedUrl] = useState(data.facialCaptureUrl || null);
   // Controls whether we show the "already captured" screen or the live webcam flow
   const [retaking, setRetaking] = useState(false);
 
@@ -35,11 +41,25 @@ export default function FaceCapture({ onNext, onBack, data = {} }) {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [cameraError, setCameraError] = useState(null);
 
-  const email = localStorage.getItem("email");
-  const google_email = localStorage.getItem("google-email");
+  const authEmail = useAuthStore(
+    (state) =>
+      state.user?.data?.email ||
+      state.user?.data?.user?.email ||
+      state.user?.user?.email ||
+      state.user?.email,
+  );
+  const email = [
+    authEmail,
+    localStorage.getItem("email"),
+    localStorage.getItem("google-email"),
+  ]
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .find((value) => value && !/^(null|undefined)$/i.test(value));
 
-  const uploadEndpoint = `${import.meta.env.VITE_BASE_URL}/file/${email || google_email}/profile_pictures`;
-  const saveEndpoint = `${import.meta.env.VITE_BASE_URL}/provider/profile-pic`;
+  const uploadEndpoint = email
+    ? `${import.meta.env.VITE_BASE_URL}/file/${encodeURIComponent(email)}/facial_captures`
+    : null;
+  const saveEndpoint = `${import.meta.env.VITE_BASE_URL}/provider/facial-capture`;
 
   // Only run the face-mesh/webcam pipeline when we actually need the live camera
   // (no saved photo yet, or user explicitly chose to retake).
@@ -287,6 +307,11 @@ export default function FaceCapture({ onNext, onBack, data = {} }) {
 
   const handleSave = async () => {
     if (!image) return;
+    if (!uploadEndpoint) {
+      setErrorMessage("Your account email is unavailable. Please sign in again.");
+      return;
+    }
+
     setUploading(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -309,16 +334,21 @@ export default function FaceCapture({ onNext, onBack, data = {} }) {
         return;
       }
 
-      const saveRes = await fetch(saveEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ imageUrl: uploadData.file.url }),
-      });
+      let saveData;
+      if (onSaveCapture) {
+        saveData = await onSaveCapture(uploadData.file.url);
+      } else {
+        const saveRes = await fetch(saveEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ imageUrl: uploadData.file.url }),
+        });
 
-      const saveData = await saveRes.json();
+        saveData = await saveRes.json();
+      }
 
       if (saveData.success) {
         setSuccessMessage("Facial capture successful!");
@@ -327,12 +357,12 @@ export default function FaceCapture({ onNext, onBack, data = {} }) {
         setTimeout(() => {
           // Send the persisted result up so this survives back/forward nav
           onNext?.({
-            profilePictureUrl: uploadData.file.url,
+            facialCaptureUrl: uploadData.file.url,
             faceCaptured: true,
           });
         }, 1500);
       } else {
-        setErrorMessage(saveData.message || "Failed to save profile picture");
+        setErrorMessage(saveData.message || "Failed to save facial capture");
       }
     } catch (err) {
       console.error("Upload error:", err);
@@ -408,7 +438,7 @@ export default function FaceCapture({ onNext, onBack, data = {} }) {
             </button>
             <button
               onClick={() =>
-                onNext?.({ profilePictureUrl: savedUrl, faceCaptured: true })
+                onNext?.({ facialCaptureUrl: savedUrl, faceCaptured: true })
               }
               className="px-4 py-2 text-white bg-[#005823] hover:bg-[#004419] rounded-lg transition-colors"
             >

@@ -53,7 +53,7 @@ const statuses = {
   completed: "Completed",
   expired: "Expired",
   cancelled: "Cancelled",
-  needs_staff: "Needs Staff",
+  // needs_staff: "Needs Staff",
   assigned: "Assigned",
   staff_assigned: "Staff Assigned",
   in_progress: "In Progress",
