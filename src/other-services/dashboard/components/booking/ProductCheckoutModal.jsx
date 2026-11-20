@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, MapPin, X } from "lucide-react";
 import LocationAutocomplete from "../../../../components/LocationAutocomplete";
+import BuyerIdentityPrompt from "../../../../components/identity/BuyerIdentityPrompt";
 import { useAuthStore } from "../../../../stores/auth.store";
 import { reverseGeocodeCoordinates } from "../../../../services/reverseGeocode";
+import { getBuyerBookingGate } from "../../../../utils/buyerKycStatus";
 import {
   checkoutProductOrder,
   getProductDeliveryQuote,
@@ -56,6 +58,7 @@ export default function ProductCheckoutModal({
   const [pickupNote, setPickupNote] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
+  const [buyerIdentityPromptOpen, setBuyerIdentityPromptOpen] = useState(false);
   const [now, setNow] = useState(Date.now);
 
   const selectedProducts = products.filter(
@@ -159,7 +162,7 @@ export default function ProductCheckoutModal({
   };
 
   const handleCheckout = async (event) => {
-    event.preventDefault();
+    event?.preventDefault();
     if (checkoutLoading) return;
     if (
       fulfillmentType === "delivery" &&
@@ -170,6 +173,13 @@ export default function ProductCheckoutModal({
           ? "Your delivery quote has expired. Get a new quote before continuing."
           : "Get a delivery quote and enter the recipient's name and phone number.",
       );
+      return;
+    }
+
+    if (
+      !getBuyerBookingGate(useAuthStore.getState().user).canCreateBooking
+    ) {
+      setBuyerIdentityPromptOpen(true);
       return;
     }
 
@@ -527,6 +537,15 @@ export default function ProductCheckoutModal({
           </div>
         </form>
       </section>
+      {buyerIdentityPromptOpen && (
+        <BuyerIdentityPrompt
+          onCancel={() => setBuyerIdentityPromptOpen(false)}
+          onComplete={() => {
+            setBuyerIdentityPromptOpen(false);
+            handleCheckout();
+          }}
+        />
+      )}
     </div>
   );
 }

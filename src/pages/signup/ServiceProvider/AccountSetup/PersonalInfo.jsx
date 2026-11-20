@@ -1,83 +1,98 @@
 import AccountSetupLayout from "./layout";
 import InputField from "../components/InputField";
-import { useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion as Motion } from "framer-motion";
 import { Formik, ErrorMessage } from "formik";
 import { PersonalInfoSchema } from "../schema";
 import axios from "axios";
 import { trackEvent } from "../../../../services/analytics";
 import { IoIosArrowBack } from "react-icons/io";
-import { LuUpload, LuFileCheck, LuX } from "react-icons/lu";
+import { CheckCircle2 } from "lucide-react";
 
 export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [uploadingNin, setUploadingNin] = useState(false);
-  const fileInputRef = useRef(null);
+  const [verifyingNin, setVerifyingNin] = useState(false);
+  const [ninVerified, setNinVerified] = useState(data.ninVerified === true);
+  const [ninVerificationError, setNinVerificationError] = useState("");
+  const ninVerificationRef = useRef(null);
 
   const token = localStorage.getItem("token");
-  const email = localStorage.getItem("email");
 
-  const uploadNinSlip = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
+  useEffect(
+    () => () => {
+      const controller = ninVerificationRef.current;
+      ninVerificationRef.current = null;
+      controller?.abort();
+    },
+    [],
+  );
 
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/file/${email}/identity_docs`,
-      formData,  
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  const handleNinChange = (event, currentNin, setFieldValue) => {
+    const nin = event.target.value.replace(/\D/g, "").slice(0, 11);
+    if (nin === currentNin) return;
+
+    ninVerificationRef.current?.abort();
+    ninVerificationRef.current = null;
+    setVerifyingNin(false);
+    setNinVerified(false);
+    setNinVerificationError("");
+    setFieldValue("nin", nin);
+
+    if (nin.length !== 11) return;
+
+    const controller = new AbortController();
+    ninVerificationRef.current = controller;
+    setVerifyingNin(true);
+
+    axios
+      .post(
+        `${import.meta.env.VITE_BASE_URL}/kyc/nin`,
+        { nin },
+        {
+          signal: controller.signal,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         },
-      },
-    );
+      )
+      .then(({ data: responseData }) => {
+        if (controller.signal.aborted) return;
 
-    return response.data.file.url;
-  };
+        if (
+          responseData?.success === true &&
+          responseData?.data?.ninVerified === true
+        ) {
+          setNinVerified(true);
+          setNinVerificationError("");
+          return;
+        }
 
-  const handleNinUpload = async (file, setFieldValue) => {
-    if (!file) return;
-
-    const allowed = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
-    if (!allowed.includes(file.type)) {
-      setErrorMessage("Only JPG, PNG, or PDF files are accepted.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage("File must be under 5MB.");
-      return;
-    }
-
-    setUploadingNin(true);
-    setErrorMessage("");
-    try {
-      const url = await uploadNinSlip(file);
-      // console.log("Uploaded URL:", url);
-      // console.log("URL type:", typeof url);
-      // console.log("URL length:", url?.length);
-
-      await setFieldValue("ninSlip", url);
-      await setFieldValue("ninSlipFile", file);
-    } catch (err) {
-      console.error("NIN upload error:", err);
-      setErrorMessage(
-        err.response?.data?.message ||
-          "Failed to upload NIN slip. Please try again.",
-      );
-    } finally {
-      setUploadingNin(false);
-    }
+        setNinVerificationError(
+          responseData?.message || "Unable to verify your NIN.",
+        );
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        console.error(
+          "NIN verification failed:",
+          error.response?.status || error.message,
+        );
+        setNinVerificationError(
+          error.response?.data?.message ||
+            "Unable to verify your NIN. Please try again.",
+        );
+      })
+      .finally(() => {
+        if (ninVerificationRef.current === controller) {
+          ninVerificationRef.current = null;
+          setVerifyingNin(false);
+        }
+      });
   };
 
   const handleSubmit = async (values) => {
-    if (uploadingNin) {
-      setErrorMessage("Please wait for the NIN slip upload to finish.");
-      return;
-    }
-    if (!values.ninSlip) {
-      setErrorMessage("Please upload your NIN slip before continuing.");
+    if (verifyingNin || !ninVerified || values.nin.length !== 11) {
+      setNinVerificationError("Please enter and verify your 11-digit NIN.");
       return;
     }
 
@@ -94,7 +109,7 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
           gender: values.gender,
           city: values.city,
           address: values.address,
-          ninSlip: values.ninSlip,
+          nin: values.nin,
         },
         token
           ? {
@@ -111,12 +126,15 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
           step: "personal_info",
         });
         setSuccessMessage("Personal information saved successfully!");
-        onNext(values);
+        onNext({ ...values, ninVerified: true });
       } else {
         setErrorMessage("Failed to save your details. Please try again.");
       }
     } catch (error) {
-      console.error("PersonalInfo submit error:", error);
+      console.error(
+        "PersonalInfo submit failed:",
+        error?.response?.status || error?.message,
+      );
       trackEvent("kyc_step_failed", {
         role: "provider",
         step: "personal_info",
@@ -139,7 +157,7 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
 
   return (
     <AccountSetupLayout currentStep={0}>
-      <motion.div
+      <Motion.div
         key="step-one"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -166,8 +184,7 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
               gender: data.gender || "",
               city: data.city || "",
               address: data.address || "",
-              ninSlip: data.ninSlip || "",
-              ninSlipFile: data.ninSlipFile || null,
+              nin: data.nin || "",
             }}
             validationSchema={PersonalInfoSchema}
             onSubmit={handleSubmit}
@@ -179,15 +196,7 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
               handleSubmit,
               setFieldValue,
               isValid,
-              dirty,
             }) => {
-              console.log("Form State:", {
-                values,
-                isValid,
-                ninSlipValue: values.ninSlip,
-                ninSlipFile: values.ninSlipFile,
-              });
-
               return (
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                   <div>
@@ -248,62 +257,41 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
 
                   <div>
                     <label className="block text-[16px] font-medium text-[#231F20] mb-1.5">
-                      NIN Slip
+                      NIN
                     </label>
-
                     <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/jpg,application/pdf"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleNinUpload(file, setFieldValue);
-                      }}
+                      name="nin"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      maxLength={11}
+                      placeholder="Enter your 11-digit NIN"
+                      value={values.nin}
+                      onChange={(event) =>
+                        handleNinChange(event, values.nin, setFieldValue)
+                      }
+                      onBlur={handleBlur}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D9E75] focus:border-transparent"
                     />
-
-                    {!values.ninSlipFile ? (
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingNin}
-                        className="w-full flex items-center justify-center gap-2 border-[1.5px] border-dashed border-gray-300 rounded-xl p-5 text-gray-500 hover:border-[#1D9E75] hover:text-[#1D9E75] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50"
-                      >
-                        <LuUpload size={18} />
-                        <span className="text-sm">
-                          {uploadingNin
-                            ? "Uploading..."
-                            : "Click to upload NIN slip"}
-                        </span>
-                        <span className="text-xs text-gray-400 ml-1">
-                          (JPG, PNG or PDF · max 5MB)
-                        </span>
-                      </button>
-                    ) : (
-                      <div className="flex items-center justify-between border border-[#1D9E75] bg-[#f0faf6] rounded-xl px-4 py-3">
-                        <div className="flex items-center gap-2 text-[#1D9E75]">
-                          <LuFileCheck size={18} />
-                          <span className="text-sm font-medium truncate max-w-[220px]">
-                            {values.ninSlipFile.name}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFieldValue("ninSlip", "");
-                            setFieldValue("ninSlipFile", null);
-                            if (fileInputRef.current)
-                              fileInputRef.current.value = "";
-                          }}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <LuX size={16} />
-                        </button>
-                      </div>
+                    {verifyingNin && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        Verifying NIN...
+                      </p>
+                    )}
+                    {ninVerified && values.nin.length === 11 && (
+                      <p className="flex items-center gap-1 text-sm text-green-600 mt-1">
+                        <CheckCircle2 size={16} aria-hidden="true" />
+                        NIN verified
+                      </p>
+                    )}
+                    {ninVerificationError && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {ninVerificationError}
+                      </p>
                     )}
 
                     <ErrorMessage
-                      name="ninSlip"
+                      name="nin"
                       component="span"
                       className="text-[#db3a3a] text-sm mt-1 block"
                     />
@@ -318,10 +306,16 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
                   <div className="flex justify-end mt-4">
                     <button
                       type="submit"
-                      disabled={loading || uploadingNin || !isValid}
+                      disabled={
+                        loading || verifyingNin || !ninVerified || !isValid
+                      }
                       className="p-3 rounded-md text-white bg-[#005823BF] hover:bg-[#005823] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {uploadingNin ? "Uploading NIN slip..." : loading ? "Saving..." : "Save & Continue"}
+                      {verifyingNin
+                        ? "Verifying NIN..."
+                        : loading
+                          ? "Saving..."
+                          : "Save & Continue"}
                     </button>
                   </div>
                   {errorMessage && (
@@ -337,7 +331,7 @@ export default function PersonalInfoForm({ onBack, onNext, data = {} }) {
             }}
           </Formik>
         </div>
-      </motion.div>
+      </Motion.div>
     </AccountSetupLayout>
   );
 }

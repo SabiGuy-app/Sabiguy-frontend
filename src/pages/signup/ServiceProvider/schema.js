@@ -30,5 +30,7 @@ export const PersonalInfoSchema = Yup.object().shape({
   gender: Yup.string().required("Please select your gender"),
   city: Yup.string().required("Please enter your city"),
   address: Yup.string().required("Please enter your address"),
-  ninSlip: Yup.string().required("Please upload your nin slip"),
+  nin: Yup.string()
+    .matches(/^\d{11}$/, "NIN must be exactly 11 digits")
+    .required("Please enter your NIN"),
 });

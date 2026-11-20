@@ -1,20 +1,21 @@
 import api from "./axios";
 import { useAuthStore } from "../stores/auth.store";
-import { getBuyerBookingGate } from "../utils/buyerKycStatus";
+import {
+  assertBuyerIdentityComplete,
+  getBuyerBookingGate,
+} from "../utils/buyerKycStatus";
 import { trackEvent } from "../services/analytics";
 
 export const bookingPost = async (payload) => {
   const token = localStorage.getItem("token");
-  const bookingGate = getBuyerBookingGate(useAuthStore.getState().user);
+  const user = useAuthStore.getState().user;
+  const bookingGate = getBuyerBookingGate(user);
 
   if (!bookingGate.canCreateBooking) {
     trackEvent("booking_kyc_gate_shown", {
       kyc_status: bookingGate.status,
     });
-    const error = new Error(bookingGate.message);
-    error.code = "BUYER_KYC_REQUIRED";
-    error.kycGate = bookingGate;
-    throw error;
+    assertBuyerIdentityComplete(user);
   }
 
   try {
@@ -45,6 +46,8 @@ export const bookingPost = async (payload) => {
 };
 
 export const createServiceBooking = async (payload) => {
+  assertBuyerIdentityComplete(useAuthStore.getState().user);
+
   try {
     const { data } = await api.post("/bookings/service", payload);
 

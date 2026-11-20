@@ -1,5 +1,13 @@
 export const getUserRecord = (user) => user?.data || user?.user || user;
 
+export const isBuyerIdentityComplete = (user) => {
+  const record = getUserRecord(user);
+  return (
+    record?.ninVerified === true &&
+    Boolean(record?.facialCapture || record?.facialCaptureUrl)
+  );
+};
+
 export const getBuyerKycStatus = (user) => {
   const record = getUserRecord(user);
 
@@ -27,12 +35,24 @@ export const getBuyerKycActionPath = (status) => {
 };
 
 export const getBuyerBookingGate = (user) => {
-  const status = getBuyerKycStatus(user);
+  const canCreateBooking = isBuyerIdentityComplete(user);
 
   return {
     actionPath: null,
-    canCreateBooking: true,
-    message: "",
-    status,
+    canCreateBooking,
+    message: canCreateBooking
+      ? ""
+      : "Verify your NIN and complete facial capture to continue.",
+    status: canCreateBooking ? "approved" : "identity_required",
   };
+};
+
+export const assertBuyerIdentityComplete = (user) => {
+  const gate = getBuyerBookingGate(user);
+  if (gate.canCreateBooking) return gate;
+
+  const error = new Error(gate.message);
+  error.code = "BUYER_KYC_REQUIRED";
+  error.kycGate = gate;
+  throw error;
 };

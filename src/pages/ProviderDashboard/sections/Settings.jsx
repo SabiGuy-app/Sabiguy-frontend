@@ -125,7 +125,11 @@ export default function ProviderProfilePage() {
       toast.success("Profile picture updated successfully!");
     } catch (error) {
       console.error("Avatar upload failed:", error);
-      toast.error(error.message || "Failed to update profile picture");
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update profile picture",
+      );
     } finally {
       setIsUploading(false);
       e.target.value = ""; // reset input

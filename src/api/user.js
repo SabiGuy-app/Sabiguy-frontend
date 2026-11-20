@@ -26,6 +26,16 @@ export const submitUserNin = async (nin) => {
   }
 };
 
+export const verifyUserNin = async (nin, config = {}) => {
+  const { data } = await api.post("/kyc/nin", { nin }, config);
+  return data;
+};
+
+export const updateUserProfile = async (profileData) => {
+  const { data } = await api.put("/users/profile", profileData);
+  return data;
+};
+
 export const updateUserLocation = async ({ latitude, longitude }) => {
   const { data } = await api.put("/users/location", {
     latitude,

@@ -23,7 +23,9 @@ import { allowSystem } from "../../../../api/bookings";
 import { getPromoEligibility } from "../../../../api/payment";
 import useBookingStore from "../../../../stores/booking.store";
 import BookingsTour from "../../../../components/tour/BookingsTour";
+import BuyerIdentityPrompt from "../../../../components/identity/BuyerIdentityPrompt";
 import { getServiceCategoryBackendId } from "../../../../stores/serviceCategories.store";
+import { getBuyerBookingGate } from "../../../../utils/buyerKycStatus";
 import {
   getCategoryDestination,
   useExploreCategories,
@@ -133,6 +135,7 @@ export default function Bookings() {
   const [promoEligibility, setPromoEligibility] = useState(null);
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
+  const [buyerIdentityPromptOpen, setBuyerIdentityPromptOpen] = useState(false);
   const setBooking = useBookingStore((state) => state.setBooking);
   const navigate = useNavigate();
   const [customBeautyService, setCustomBeautyService] = useState("");
@@ -274,6 +277,14 @@ export default function Bookings() {
     }),
     onSubmit: async (values) => {
       if (uploadingPackagePhoto) return;
+      if (
+        values.jobTitle === "transport" &&
+        !getBuyerBookingGate(useAuthStore.getState().user).canCreateBooking
+      ) {
+        setBuyerIdentityPromptOpen(true);
+        return;
+      }
+
       console.log("Submitting booking with values:", values);
       setSuccessMessage("");
       setErrorMessage("");
@@ -1133,6 +1144,15 @@ export default function Bookings() {
           </div>
         )}
       </div>
+      {buyerIdentityPromptOpen && (
+        <BuyerIdentityPrompt
+          onCancel={() => setBuyerIdentityPromptOpen(false)}
+          onComplete={() => {
+            setBuyerIdentityPromptOpen(false);
+            formik.submitForm();
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }
