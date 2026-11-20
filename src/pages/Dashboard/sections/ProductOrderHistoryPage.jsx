@@ -63,6 +63,7 @@ export default function ProductOrderHistoryPage() {
 
   const handleConfirmDelivery = async (order) => {
     if (!order.id || confirmingOrderId || disputingOrderId) return;
+    const isPickup = String(order.status).toLowerCase() === "ready_for_pickup";
     setConfirmingOrderId(order.id);
     try {
       const response = await confirmProductOrderDelivery(order.id);
@@ -87,7 +88,7 @@ export default function ProductOrderHistoryPage() {
             : [updatedOrder];
         }),
       );
-      toast.success("Delivery confirmed");
+      toast.success(isPickup ? "Pickup confirmed" : "Delivery confirmed");
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
@@ -184,29 +185,50 @@ export default function ProductOrderHistoryPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {orders.map((order) => (
-                  <tr key={order.id ?? order.orderNumber} className="text-gray-700">
-                    <th scope="row" className="px-3 py-4 font-medium text-gray-900">
-                      {order.orderNumber ?? order.id ?? "—"}
-                    </th>
-                    <td className="max-w-sm px-3 py-4">
-                      {getProductOrderItems(order).length
-                        ? getProductOrderItems(order).map((item) => {
-                          const name = item.product?.name ?? item.name ?? item.productName ?? "Product";
-                          return `${name}${item.quantity ? ` × ${item.quantity}` : ""}`;
-                        }).join(", ")
-                        : "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4">{getOrderDate(order)}</td>
-                    <td className="whitespace-nowrap px-3 py-4">
-                      {formatProductOrderPrice(order.totalAmount ?? order.total ?? order.amount)}
-                    </td>
-                    <td className="px-3 py-4">
-                      <span className="inline-flex whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-                        {formatProductOrderStatus(order.status)}
-                      </span>
-                      {String(order.status).toLowerCase() === "delivered" &&
-                        order.id && (
+                {orders.map((order) => {
+                  const status = String(order.status).toLowerCase();
+                  const isDelivered = status === "delivered";
+                  const isReadyForPickup = status === "ready_for_pickup";
+                  const canConfirm = isDelivered || isReadyForPickup;
+
+                  return (
+                    <tr
+                      key={order.id ?? order.orderNumber}
+                      className="text-gray-700"
+                    >
+                      <th
+                        scope="row"
+                        className="px-3 py-4 font-medium text-gray-900"
+                      >
+                        {order.orderNumber ?? order.id ?? "—"}
+                      </th>
+                      <td className="max-w-sm px-3 py-4">
+                        {getProductOrderItems(order).length
+                          ? getProductOrderItems(order)
+                              .map((item) => {
+                                const name =
+                                  item.product?.name ??
+                                  item.name ??
+                                  item.productName ??
+                                  "Product";
+                                return `${name}${item.quantity ? ` × ${item.quantity}` : ""}`;
+                              })
+                              .join(", ")
+                          : "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4">
+                        {getOrderDate(order)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4">
+                        {formatProductOrderPrice(
+                          order.totalAmount ?? order.total ?? order.amount,
+                        )}
+                      </td>
+                      <td className="px-3 py-4">
+                        <span className="inline-flex whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                          {formatProductOrderStatus(order.status)}
+                        </span>
+                        {canConfirm && order.id && (
                           <div className="mt-2 flex flex-wrap gap-2">
                             <button
                               type="button"
@@ -219,27 +241,32 @@ export default function ProductOrderHistoryPage() {
                             >
                               {confirmingOrderId === order.id
                                 ? "Confirming..."
-                                : "Confirm Delivery"}
+                                : isReadyForPickup
+                                  ? "Confirm Pick Up"
+                                  : "Confirm Delivery"}
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDisputeError("");
-                                setDisputeOrder(order);
-                              }}
-                              disabled={
-                                confirmingOrderId !== null ||
-                                disputingOrderId !== null
-                              }
-                              className="whitespace-nowrap rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              Dispute Delivery
-                            </button>
+                            {isDelivered && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDisputeError("");
+                                  setDisputeOrder(order);
+                                }}
+                                disabled={
+                                  confirmingOrderId !== null ||
+                                  disputingOrderId !== null
+                                }
+                                className="whitespace-nowrap rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                Dispute Delivery
+                              </button>
+                            )}
                           </div>
                         )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
