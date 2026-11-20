@@ -53,7 +53,7 @@ const statuses = {
   completed: "Completed",
   expired: "Expired",
   cancelled: "Cancelled",
-  needs_staff: "Needs Staff",
+  // needs_staff: "Needs Staff",
   assigned: "Assigned",
   staff_assigned: "Staff Assigned",
   in_progress: "In Progress",
@@ -171,7 +171,8 @@ export function ServiceBookingCard({ booking, onRefresh }) {
     (["payment", "review", "track", "details"].includes(requestedView)
       ? requestedView
       : null);
-  const assignedStaff = booking.assignedStaff ?? booking.raw?.assignedStaff ?? [];
+  const assignedStaff =
+    booking.assignedStaff ?? booking.raw?.assignedStaff ?? [];
   const assignedStaffEntry = Array.isArray(assignedStaff)
     ? assignedStaff[0]
     : null;
@@ -207,10 +208,7 @@ export function ServiceBookingCard({ booking, onRefresh }) {
           response ||
           {};
         const profile =
-          entry.providerProfile ||
-          entry.profile ||
-          entry.userId?.data ||
-          {};
+          entry.providerProfile || entry.profile || entry.userId?.data || {};
         const details = { ...profile, ...entry };
         setAssignedProviderDetails({
           ...provider,
@@ -223,7 +221,7 @@ export function ServiceBookingCard({ booking, onRefresh }) {
           rating:
             typeof details.rating === "number"
               ? details.rating
-              : details.rating?.average ?? provider.rating,
+              : (details.rating?.average ?? provider.rating),
           reviews: details.rating?.count ?? details.reviews ?? provider.reviews,
         });
       })
@@ -272,7 +270,7 @@ export function ServiceBookingCard({ booking, onRefresh }) {
       active = false;
     };
   }, [view, booking.id]);
-  
+
   const reviewText = booking.review?.review || "";
   const shouldShowReadMore = reviewText.length > 120;
   const displayedReviewText =
@@ -280,7 +278,8 @@ export function ServiceBookingCard({ booking, onRefresh }) {
       ? reviewText
       : `${reviewText.slice(0, 120).trim()}...`;
   const dropoffAddress = booking.address || "";
-  const providerAddress = displayProvider.currentLocation?.address?.trim() || "";
+  const providerAddress =
+    displayProvider.currentLocation?.address?.trim() || "";
   const businessAddress =
     typeof business?.businessAddress === "string"
       ? business.businessAddress
@@ -304,9 +303,8 @@ export function ServiceBookingCard({ booking, onRefresh }) {
     displayProvider.city ||
     "";
   const displayStatus = booking.businessStatus ?? booking.status;
-  const displayStatusLabel = booking.businessStatus
-    ? statuses[booking.businessStatus] ||
-      booking.businessStatus.replaceAll("_", " ")
+  const displayStatusLabel = booking.status
+    ? statuses[booking.status] || booking.status.replaceAll("_", " ")
     : statuses[booking.status] || booking.apiStatus || booking.status;
   const canCancel = ["pending", "accepted", "", "expired"].includes(
     booking.status,
@@ -378,7 +376,7 @@ export function ServiceBookingCard({ booking, onRefresh }) {
       : null,
   };
 
-const reviewScore = Math.max(
+  const reviewScore = Math.max(
     0,
     Math.min(5, Math.round(Number(booking.review?.score || 0))),
   );
@@ -404,7 +402,7 @@ const reviewScore = Math.max(
                 {booking.service}
               </h3>
               <span
-                className={`rounded-full border px-2 py-0.5 text-xs font-medium ${displayStatus === "completed" ? "border-[#34805A] bg-[#34805A1A] text-[#34805A]" : ["active", "in_progress"].includes(displayStatus) ? "border-blue-200 bg-blue-50 text-blue-600" : ["expired", "cancelled"].includes(displayStatus) ? "border-gray-200 bg-gray-50 text-gray-500" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+                className={`rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${displayStatus === "completed" ? "border-[#34805A] bg-[#34805A1A] text-[#34805A]" : ["active", "in_progress"].includes(displayStatus) ? "border-blue-200 bg-blue-50 text-blue-600" : ["expired", "cancelled"].includes(displayStatus) ? "border-gray-200 bg-gray-50 text-gray-500" : "border-amber-200 bg-amber-50 text-amber-700"}`}
               >
                 {displayStatusLabel}
               </span>

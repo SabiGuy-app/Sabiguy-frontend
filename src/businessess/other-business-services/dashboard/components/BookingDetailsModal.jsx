@@ -9,13 +9,16 @@ import BookingInformation from "./BookingInformation";
 import BookingStaffCard from "./BookingStaffCard";
 import StatusBadge from "./StatusBadge";
 
-export default function BookingDetailsModal({ isOpen, booking, seconds, available, busyAction, candidates, onClose, onAccept, onConfirm, onAssignStaff, onChooseStaff, onMessage }) {
+export default function BookingDetailsModal({ isOpen, booking, seconds, available, busyAction, candidates, onClose, onAccept, onConfirm, onAssignStaff, onChooseStaff, onMessage, onStart, onComplete }) {
   if (!booking) return null;
   const pending = booking.status === "pending";
   const upcoming = booking.status === "scheduled";
   const profile = booking.customerProfile ?? {};
   const busy = Boolean(busyAction);
   const expired = pending && (!Number.isFinite(seconds) || seconds <= 0);
+  const canStart = booking.paymentStatus === "paid" &&
+    ["accepted", "assigned", "scheduled"].includes(booking.status);
+  const canComplete = booking.status === "in_service";
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} closeIcon={<X size={21} />} title="Service Details" panelClassName="business-booking-dialog" titleClassName="business-booking-dialog-heading" contentClassName="business-booking-dialog-body">
@@ -46,6 +49,30 @@ export default function BookingDetailsModal({ isOpen, booking, seconds, availabl
         ) : <StatusBadge statuses={bookingStatuses} status={booking.status} />}
       </div>
       <BookingInformation booking={booking} />
+      {(canStart || canComplete) && (
+        <div className="business-booking-response-actions">
+          {canStart && (
+            <Button
+              size="sm"
+              className="business-button business-button-primary"
+              disabled={busy}
+              onClick={onStart}
+            >
+              {busyAction === "start" ? "Starting booking..." : "Start booking"}
+            </Button>
+          )}
+          {canComplete && (
+            <Button
+              size="sm"
+              className="business-button business-button-primary"
+              disabled={busy}
+              onClick={onComplete}
+            >
+              {busyAction === "complete" ? "Completing booking..." : "Complete booking"}
+            </Button>
+          )}
+        </div>
+      )}
       <section className="business-booking-staff-section" aria-label="Staff">
         <h3>Staff</h3>
         <BookingStaffCard

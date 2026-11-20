@@ -3,10 +3,12 @@ import toast from "react-hot-toast";
 import {
   acceptBusinessBooking,
   assignBookingStaff,
+  completeBusinessBooking,
   declineBusinessBooking,
   getBookingStaffCandidates,
   getBusinessBookings,
   getBusinessStaff,
+  startBusinessBooking,
 } from "../../api/businessess";
 import { useBusinessSession } from "../session/businessSessionContext";
 import { canAssignStaff, normalizeBusinessBooking } from "../utils/businessBookings";
@@ -182,6 +184,24 @@ export default function useBusinessBookings({ onStatusChange } = {}) {
     loadCandidates(next.id);
   };
 
+  const start = async () => {
+    const next = await runAction(
+      "start",
+      () => startBusinessBooking(booking.id),
+      "Booking started",
+    );
+    if (next) setDialog("details");
+  };
+
+  const complete = async () => {
+    const next = await runAction(
+      "complete",
+      () => completeBusinessBooking(booking.id),
+      "Booking marked as completed",
+    );
+    if (next) setDialog("details");
+  };
+
   return {
     bookings,
     loading,
@@ -207,5 +227,7 @@ export default function useBusinessBookings({ onStatusChange } = {}) {
     onAccept: accept,
     onDecline: decline,
     onAssignStaff: assignStaff,
+    onStart: start,
+    onComplete: complete,
   };
 }

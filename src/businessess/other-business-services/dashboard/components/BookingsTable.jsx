@@ -37,7 +37,7 @@ export default function BookingsTable({ bookings, selected, search, onView }) {
               <td><span className="business-booking-address" title={booking.address}>{booking.address}</span></td>
               <td>{requests ? booking.requestedStaff || "—" : booking.assignedStaff?.name || "—"}</td>
               <td className="business-booking-amount">{formatNaira(booking.amount)}</td>
-              {!requests && <td>{booking.status === "accepted" ? <span className="business-status business-booking-needs-staff">Needs staff</span> : <StatusBadge statuses={bookingStatuses} status={booking.status} />}</td>}
+              {!requests && <td>{booking.status === "accepted" ? <span className="business-status business-booking-needs-staff">Assign staff or start service</span> : <StatusBadge statuses={bookingStatuses} status={booking.status} />}</td>}
               <td>
                 <div className="business-booking-row-actions">
                   <Button size="sm" className="business-button business-button-primary" onClick={() => onView(booking.id)}>{booking.status === "payment_pending" ? "View payment" : "View Details"}</Button>

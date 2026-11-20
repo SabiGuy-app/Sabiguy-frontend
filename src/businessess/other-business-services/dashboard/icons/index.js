@@ -19,6 +19,8 @@ export {
   Menu,
   Route,
   Phone,
+  Package,
+  ShoppingBag,
   Scissors,
   CircleDollarSign as MoneyBag,
   Search,

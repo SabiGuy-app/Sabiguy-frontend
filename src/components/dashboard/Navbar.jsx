@@ -7,6 +7,8 @@ import NotificationToast from "../NotificationToast";
 import NotificationCompletionModal from "../NotificationCompletionModal";
 import BeautyCompletionReviewModal from "./BeautyCompletionReviewModal";
 import BookingRequestModal from "../BookingRequestModal";
+import ConfirmProductDeliveryModal from "../ConfirmProductDeliveryModal";
+import DisputeProductDeliveryModal from "../DisputeProductDeliveryModal";
 import ActivityDetailsModal from "./ActivityDetailsModal";
 import ReviewModal from "./ReviewModal";
 import DisputeCompletionModal from "./DisputeCompletionModal";
@@ -15,6 +17,11 @@ import NotificationDrawer from "./Notification";
 import { useAuthStore } from "../../stores/auth.store";
 import { notificationService } from "../../api/notifications";
 import { acceptCompletion, disputeCompletion, getAllBookings, getBookingsDetails } from "../../api/bookings";
+import {
+  confirmProductOrderDelivery,
+  disputeProductOrderDelivery,
+} from "../../api/products";
+import { getProductOrderId } from "../../utils/productOrders";
 import { getSharedSocket, releaseSocket } from "../../services/socketManager";
 import userLocationService from "../../services/userLocationService";
 
@@ -40,6 +47,14 @@ export default function Navbar({
   const [completionBookingError, setCompletionBookingError] = useState("");
   const [showBookingRequestModal, setShowBookingRequestModal] = useState(false);
   const [bookingRequestNotification, setBookingRequestNotification] = useState(null);
+  const [productDeliveryNotification, setProductDeliveryNotification] = useState(null);
+  const [confirmingProductDelivery, setConfirmingProductDelivery] = useState(false);
+  const [productDeliveryError, setProductDeliveryError] = useState("");
+  const [productDeliveryDispute, setProductDeliveryDispute] = useState(null);
+  const [submittingProductDeliveryDispute, setSubmittingProductDeliveryDispute] =
+    useState(false);
+  const [productDeliveryDisputeError, setProductDeliveryDisputeError] =
+    useState("");
   const [jobCompletedNotification, setJobCompletedNotification] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -159,6 +174,12 @@ export default function Navbar({
     if (bookingRequestNotificationTypes.includes(notification?.type)) {
       setBookingRequestNotification(notification);
       setShowBookingRequestModal(true);
+      return;
+    }
+
+    if (notification?.type === "product_order_delivered") {
+      setProductDeliveryNotification(notification);
+      setProductDeliveryError("");
       return;
     }
 
@@ -285,6 +306,97 @@ export default function Navbar({
   const handleBookingCompletedNotification = (notification) => {
     setCompletionNotification(notification);
     setShowCompletionModal(true);
+  };
+
+  const handleProductDeliveryNotification = (notification) => {
+    setProductDeliveryNotification(notification);
+    setProductDeliveryError("");
+  };
+
+  const handleConfirmProductDelivery = async () => {
+    if (!productDeliveryNotification || confirmingProductDelivery) return;
+
+    const orderId = getProductOrderId(productDeliveryNotification);
+
+    if (!orderId) {
+      setProductDeliveryError(
+        "We couldn't find the order ID. Please open your order history to confirm delivery.",
+      );
+      return;
+    }
+
+    setConfirmingProductDelivery(true);
+    setProductDeliveryError("");
+    try {
+      await confirmProductOrderDelivery(orderId);
+      if (productDeliveryNotification._id) {
+        await markAsRead(productDeliveryNotification._id);
+      }
+      setProductDeliveryNotification(null);
+      toast.success("Delivery confirmed");
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to confirm delivery. Please try again.";
+      setProductDeliveryError(message);
+      toast.error(message);
+    } finally {
+      setConfirmingProductDelivery(false);
+    }
+  };
+
+  const handleDisputeProductDelivery = async (reason) => {
+    if (!productDeliveryDispute || submittingProductDeliveryDispute) return;
+    const orderId = getProductOrderId(
+      productDeliveryDispute.notification,
+    );
+
+    if (!orderId) {
+      setProductDeliveryDisputeError(
+        "We couldn't find the order ID. Please open your order history to submit a dispute.",
+      );
+      return;
+    }
+
+    setSubmittingProductDeliveryDispute(true);
+    setProductDeliveryDisputeError("");
+    try {
+      await disputeProductOrderDelivery(orderId, reason);
+      if (productDeliveryDispute.notification._id) {
+        await markAsRead(productDeliveryDispute.notification._id);
+      }
+      setProductDeliveryDispute(null);
+      setProductDeliveryNotification(null);
+      toast.success("Delivery dispute submitted");
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to submit the delivery dispute. Please try again.";
+      setProductDeliveryDisputeError(message);
+      toast.error(message);
+    } finally {
+      setSubmittingProductDeliveryDispute(false);
+    }
+  };
+
+  const openProductDeliveryDispute = () => {
+    if (!productDeliveryNotification) return;
+    const data =
+      productDeliveryNotification.data?.order ||
+      productDeliveryNotification.data?.productOrder ||
+      productDeliveryNotification.data?.product_order ||
+      productDeliveryNotification.data ||
+      {};
+    setProductDeliveryDispute({
+      notification: productDeliveryNotification,
+      order: {
+        ...(typeof data === "object" ? data : {}),
+        id: getProductOrderId(productDeliveryNotification),
+      },
+    });
+    setProductDeliveryDisputeError("");
   };
 
   const handleBookingRequestNotification = async (notification) => {
@@ -697,6 +809,32 @@ export default function Navbar({
           onMarkAllAsRead={markAllAsRead}
           onDelete={deleteNotification}
           onBookingCompleted={handleBookingCompletedNotification}
+          onProductDeliveryClick={handleProductDeliveryNotification}
+        />
+        <ConfirmProductDeliveryModal
+          isOpen={Boolean(productDeliveryNotification)}
+          notification={productDeliveryNotification}
+          confirming={confirmingProductDelivery}
+          error={productDeliveryError}
+          onClose={() => {
+            if (confirmingProductDelivery) return;
+            setProductDeliveryNotification(null);
+            setProductDeliveryError("");
+          }}
+          onConfirm={handleConfirmProductDelivery}
+          onDispute={openProductDeliveryDispute}
+        />
+        <DisputeProductDeliveryModal
+          isOpen={Boolean(productDeliveryDispute)}
+          order={productDeliveryDispute?.order}
+          submitting={submittingProductDeliveryDispute}
+          error={productDeliveryDisputeError}
+          onClose={() => {
+            if (submittingProductDeliveryDispute) return;
+            setProductDeliveryDispute(null);
+            setProductDeliveryDisputeError("");
+          }}
+          onSubmit={handleDisputeProductDelivery}
         />
         <NotificationCompletionModal
           isOpen={showCompletionModal && !completionDetailsPending && !completionBookingLoading && !isBeautyCompletion}

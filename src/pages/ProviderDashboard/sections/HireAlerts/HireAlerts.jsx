@@ -99,6 +99,18 @@ export default function HireAlerts() {
   const [decliningAlertId, setDecliningAlertId] = useState(null);
   const hasConsumedPrefetchedAlerts = useRef(false);
   const fetchSequence = useRef(0);
+  const memberships = user?.data?.staffMemberships || user?.staffMemberships || [];
+  const isClockedIntoBusiness = memberships.some((membership) => {
+    const action = String(membership?.clockRequest?.action || "")
+      .toLowerCase()
+      .replace(/[-_\s]/g, "");
+    return (
+      membership?.status === "ACTIVE" &&
+      membership?.onDuty?.active === true &&
+      membership?.clockRequest?.status?.toLowerCase() === "approved" &&
+      action.includes("clockin")
+    );
+  });
 
   useEffect(() => {
     if (!paymentWaiting) return undefined;
@@ -181,6 +193,7 @@ export default function HireAlerts() {
       let alertBookings = [];
 
       if (
+        !isClockedIntoBusiness &&
         !hasConsumedPrefetchedAlerts.current &&
         locationState?.fetchedAlerts
       ) {
@@ -191,7 +204,13 @@ export default function HireAlerts() {
         hasConsumedPrefetchedAlerts.current = true;
       }
 
-      const providerJobsPromise = getProviderBookings();
+      const providerJobsPromise = isClockedIntoBusiness
+        ? getProviderBookings()
+        : getProviderBookingsFallback({
+            status: null,
+            page: 1,
+            limit: 40,
+          });
       const rawUserJobs = user?.job || user?.data?.job || [];
       const userJobs = Array.isArray(rawUserJobs) ? rawUserJobs : [rawUserJobs];
       const resolveModeOfDelivery = (job) => {
@@ -203,7 +222,7 @@ export default function HireAlerts() {
         return "";
       };
 
-      const alertRequests = userJobs
+      const alertRequests = (isClockedIntoBusiness ? [] : userJobs)
         .filter((job) => {
           const normalizedService = String(job?.service || "")
             .trim()
@@ -251,9 +270,10 @@ export default function HireAlerts() {
         (response) => extractBookingList(response).length === 0,
       );
       if (
-        providerBookings.length === 0 ||
-        alertBookings.length === 0 ||
-        alertRequestMissed
+        !isClockedIntoBusiness &&
+        (providerBookings.length === 0 ||
+          alertBookings.length === 0 ||
+          alertRequestMissed)
       ) {
         try {
           const fallbackResponse = await getProviderBookingsFallback({
@@ -546,12 +566,12 @@ export default function HireAlerts() {
     const filters = ["All", "Active", "Pending", "Completed"];
 
     return (
-      <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
+      <div className="flex max-w-full gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1 no-scrollbar whitespace-nowrap">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => onFilterChange(filter.toLowerCase())}
-            className={`px-5 sm:px-6 py-2.5 rounded-xl font-semibold transition-all text-sm whitespace-nowrap ${
+            className={`shrink-0 px-5 sm:px-6 py-2.5 rounded-xl font-semibold transition-all text-sm whitespace-nowrap ${
               activeFilter === filter.toLowerCase()
                 ? "bg-[#2D6A3E] text-white shadow-md shadow-green-900/10 active:scale-95"
                 : "bg-white text-gray-500 border border-gray-200 hover:border-[#2D6A3E] hover:text-[#2D6A3E] active:scale-95"
@@ -948,7 +968,7 @@ export default function HireAlerts() {
         onComplete={handleCancelComplete}
       />
 
-      <div className="flex border-b mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex min-w-0 border-b mb-4">
         <button
           onClick={() => setActiveTab("alert")}
           className={`flex-1 sm:flex-none px-4 sm:px-8 py-3.5 font-bold transition-all relative text-center text-sm sm:text-base ${

@@ -1,8 +1,11 @@
 import api from "./axios";
 import { trackEvent } from "../services/analytics";
 
-export const getDashboardStats = async () => {
-  const { data } = await api.get("/provider/business-dashboard/stats");
+export const getDashboardStats = async ({ businessWorkspace = false } = {}) => {
+  const endpoint = businessWorkspace
+    ? "/provider/business-dashboard/stats"
+    : "/provider/dashboard/stats";
+  const { data } = await api.get(endpoint);
   return data;
 };
 

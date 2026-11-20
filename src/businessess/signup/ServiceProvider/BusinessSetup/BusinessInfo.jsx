@@ -1,72 +1,109 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { X } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import Button from "../../../../components/button";
-import UploadBox from "../../../../components/uploadBox";
 import InputField from "../../../../components/InputField";
 import BusinessSetupLayout from "../BusinessSetupLayout";
 
 const BUSINESS_DETAILS_ENDPOINT = "/businesses/business-details";
-const FILE_UPLOAD_CATEGORY = "identity_docs";
-
-const MAX_FILE_SIZE_MB = 5;
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
 export default function BusinessInfo({ onNext, onBack }) {
   const [form, setForm] = useState({
     businessName: "",
     address: "",
     city: "",
+    nin: "",
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-  const [ninFile, setNinFile] = useState(null);
-  const [uploadingNin, setUploadingNin] = useState(false);
+  const [verifyingNin, setVerifyingNin] = useState(false);
+  const [ninVerified, setNinVerified] = useState(false);
   const [ninError, setNinError] = useState("");
+  const ninVerificationRef = useRef(null);
+
+  useEffect(
+    () => () => {
+      const controller = ninVerificationRef.current;
+      ninVerificationRef.current = null;
+      controller?.abort();
+    },
+    [],
+  );
 
   const handleChange = (field) => (e) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
     if (errors[field]) setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
-  const uploadFile = async (file) => {
-    const token = localStorage.getItem("token");
-    const email = localStorage.getItem("email");
+  const handleNinChange = (event) => {
+    const nin = event.target.value.replace(/\D/g, "").slice(0, 11);
+    if (nin === form.nin) return;
 
-    if (!token || !email) {
-      throw new Error("Your session has expired. Please sign in again.");
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/file/${encodeURIComponent(email)}/${FILE_UPLOAD_CATEGORY}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    return response.data?.file?.url ?? response.data?.data?.file?.url;
-  };
-
-  const handleRemoveNin = () => {
-    setNinFile(null);
+    ninVerificationRef.current?.abort();
+    ninVerificationRef.current = null;
+    setVerifyingNin(false);
+    setNinVerified(false);
     setNinError("");
+    setErrors((previous) => ({ ...previous, nin: undefined }));
+    setForm((previous) => ({ ...previous, nin }));
+
+    if (nin.length !== 11) return;
+
+    const controller = new AbortController();
+    ninVerificationRef.current = controller;
+    setVerifyingNin(true);
+    const token = localStorage.getItem("token");
+
+    axios
+      .post(
+        `${import.meta.env.VITE_BASE_URL}/kyc/nin`,
+        { nin },
+        {
+          signal: controller.signal,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+      )
+      .then(({ data: responseData }) => {
+        if (controller.signal.aborted) return;
+
+        if (
+          responseData?.success === true &&
+          responseData?.data?.ninVerified === true
+        ) {
+          setNinVerified(true);
+          setNinError("");
+          return;
+        }
+
+        setNinError(responseData?.message || "Unable to verify your NIN.");
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        console.error(
+          "Business NIN verification failed:",
+          error.response?.status || error.message,
+        );
+        setNinError(
+          error.response?.data?.message ||
+            "Unable to verify your NIN. Please try again.",
+        );
+      })
+      .finally(() => {
+        if (ninVerificationRef.current === controller) {
+          ninVerificationRef.current = null;
+          setVerifyingNin(false);
+        }
+      });
   };
 
   const canContinue = Boolean(
     form.businessName.trim() &&
       form.address.trim() &&
       form.city.trim() &&
-      ninFile?.url,
+      form.nin.length === 11 &&
+      ninVerified,
   );
 
   const validate = () => {
@@ -75,7 +112,9 @@ export default function BusinessInfo({ onNext, onBack }) {
       next.businessName = "Business name is required";
     if (!form.address.trim()) next.address = "Business address is required";
     if (!form.city.trim()) next.city = "City of operation is required";
-    if (!ninFile) next.nin = "Please upload your NIN slip";
+    if (form.nin.length !== 11)
+      next.nin = "Please enter your 11-digit NIN";
+    else if (!ninVerified) next.nin = "Please verify your NIN";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -84,8 +123,8 @@ export default function BusinessInfo({ onNext, onBack }) {
     setErrorMessage("");
     setSuccessMessage("");
 
-    if (uploadingNin) {
-      setNinError("Please wait for the NIN slip to finish uploading.");
+    if (verifyingNin || !ninVerified) {
+      setNinError("Please enter and verify your 11-digit NIN.");
       return;
     }
 
@@ -115,7 +154,7 @@ export default function BusinessInfo({ onNext, onBack }) {
         businessName: form.businessName.trim(),
         businessAddress: form.address.trim(),
         cityOfOperation: form.city.trim(),
-        ninUrl: ninFile.url,
+        nin: form.nin,
       };
 
       const response = await axios.post(
@@ -134,7 +173,8 @@ export default function BusinessInfo({ onNext, onBack }) {
           businessName: form.businessName,
           address: form.address,
           city: form.city,
-          ninUrl: ninFile.url,
+          nin: form.nin,
+          ninVerified: true,
           businessDetails: response.data,
         });
       } else {
@@ -222,36 +262,26 @@ export default function BusinessInfo({ onNext, onBack }) {
                 </div>
 
                 <div>
-                  <label className="block text-base font-medium text-[#231F20] mb-2">
-                    NIN Slip
-                  </label>
-
-                  {!ninFile ? (
-                    <UploadBox multiple={false} accept={ACCEPTED_TYPES.join(",")} maxSizeMB={MAX_FILE_SIZE_MB}
-                      prompt="Upload NIN slip" formatHint="JPEG, PNG, PDF format, Max 5 MB"
-                      disabled={submitting} onUploadStart={() => { setUploadingNin(true); setNinError(""); }}
-                      onUploadEnd={() => setUploadingNin(false)} onError={setNinError}
-                      uploadFile={async (file) => {
-                        const url = await uploadFile(file);
-                        if (!url) throw new Error("Upload failed. Please try again.");
-                        setNinFile({ name: file.name, url });
-                        setErrors((previous) => ({ ...previous, nin: undefined }));
-                        return url;
-                      }} />
-                  ) : (
-                    <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
-                      <span className="max-w-[220px] truncate text-[13px] text-gray-700">
-                        {ninFile.name}
-                      </span>
-                      <button
-                        type="button"
-                        aria-label="Remove NIN slip"
-                        onClick={handleRemoveNin}
-                        className="hover:text-red-500"
-                      >
-                        <X size={15} />
-                      </button>
-                    </div>
+                  <InputField
+                    name="nin"
+                    label="NIN"
+                    placeholder="Enter your 11-digit NIN"
+                    value={form.nin}
+                    onChange={handleNinChange}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={11}
+                  />
+                  {verifyingNin && (
+                    <p className="mt-1.5 text-sm text-gray-500">
+                      Verifying NIN...
+                    </p>
+                  )}
+                  {ninVerified && form.nin.length === 11 && (
+                    <p className="mt-1.5 flex items-center gap-1 text-sm text-green-600">
+                      <CheckCircle2 size={16} aria-hidden="true" />
+                      NIN verified
+                    </p>
                   )}
 
                   {ninError && (
@@ -267,9 +297,9 @@ export default function BusinessInfo({ onNext, onBack }) {
                 </div>
 
                 <div className="flex justify-end gap-4 pt-2">
-                  <Button type="button" variant="ghost" onClick={onBack} disabled={submitting || uploadingNin}>Back</Button>
-                  <Button type="submit" disabled={!canContinue || submitting || uploadingNin}>
-                    {submitting ? "Saving..." : "Save & Continue"}
+                  <Button type="button" variant="ghost" onClick={onBack} disabled={submitting || verifyingNin}>Back</Button>
+                  <Button type="submit" disabled={!canContinue || submitting || verifyingNin}>
+                    {verifyingNin ? "Verifying NIN..." : submitting ? "Saving..." : "Save & Continue"}
                   </Button>
                 </div>
           </form>

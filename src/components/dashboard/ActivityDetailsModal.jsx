@@ -26,6 +26,8 @@ import { useEffect, useState } from "react";
 const TYPE_LABELS = {
   new_booking_request: "New Booking Request",
   booking_assigned: "Booking Assigned",
+  product_order_received: "Product Order Received",
+  product_order_delivered: "Product Order Delivered",
   provider_accepted: "Provider Accepted Booking",
   booking_selected: "Booking Selected",
   booking_taken: "Booking Taken",
@@ -67,6 +69,11 @@ const getStatusStyle = (type) => {
 // Category label
 const getCategory = (type) => {
   if (
+    ["product_order_received", "product_order_delivered"].includes(type)
+  ) {
+    return "Product Order";
+  }
+  if (
     [
       "new_booking_request",
       "booking_assigned",
@@ -91,6 +98,8 @@ const getIconConfig = (type) => {
   const configs = {
     new_booking_request: { icon: FiCheckCircle, bgColor: "bg-blue-500" },
     booking_assigned: { icon: FiCheckCircle, bgColor: "bg-green-500" },
+    product_order_received: { icon: FiBell, bgColor: "bg-green-500" },
+    product_order_delivered: { icon: FiBell, bgColor: "bg-blue-500" },
     provider_accepted: { icon: FiUserCheck, bgColor: "bg-green-500" },
     booking_selected: { icon: FiCheckCircle, bgColor: "bg-blue-500" },
     booking_taken: { icon: FiTruck, bgColor: "bg-yellow-500" },

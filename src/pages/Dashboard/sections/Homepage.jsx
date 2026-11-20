@@ -265,7 +265,7 @@ export default function DashboardHome() {
           >
             <Search size={17} className="shrink-0 text-[#005823]" aria-hidden="true" />
             <span className="min-w-0 flex-1 truncate">
-              Search providers &amp; businesses for “{searchTerm.trim()}”
+              Search providers, businesses or products for “{searchTerm.trim()}”
             </span>
             <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
           </button>

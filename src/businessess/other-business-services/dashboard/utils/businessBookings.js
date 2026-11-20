@@ -16,6 +16,7 @@ export function getUiBookingStatus(booking) {
   if (status === "cancellation_requested") return "cancellation_requested";
   if (status === "disputed") return "disputed";
   if (PAYMENT_PENDING.includes(status)) return "payment_pending";
+  if (businessStatus === "completed") return "completed";
   if (status === "completed") return "awaiting_confirmation";
   if (status === "funds_released") return "funds_released";
   if (COMPLETED.includes(status) || businessStatus === "completed") return "completed";

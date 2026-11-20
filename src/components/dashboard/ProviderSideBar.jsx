@@ -12,7 +12,6 @@ import {
   FaQuestionCircle,
   FaBell,
 } from "react-icons/fa";
-import { handleLogout } from "../../api/auth";
 
 const links = [
   { name: "Dashboard", path: "/dashboard/provider", icon: <FaChartBar /> },
@@ -21,9 +20,19 @@ const links = [
     path: "/dashboard/provider/hire-alert",
     icon: <FaBell />,
   },
+  {
+    name: "Products",
+    path: "/dashboard/provider/products",
+    icon: <FaBook />,
+  },
+  {
+    name: "Orders",
+    path: "/dashboard/provider/orders",
+    icon: <FaClipboardList />,
+  },
   { name: "Chat", path: "/dashboard/provider/chat", icon: <MessageCircle /> },
   {
-    name: "Activity",
+    name: "Activities",
     path: "/dashboard/provider/activity",
     icon: <FaClipboardList />,
   },

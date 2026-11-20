@@ -24,7 +24,6 @@ import { getServiceCategories } from "../../api/categories";
 import toast from "react-hot-toast";
 import UploadBox from "../uploadBox";
 import { useAuthStore } from "../../stores/auth.store";
-import ProductsPricingSection from "./products/ProductsPricingSection";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -592,7 +591,6 @@ export default function ProviderServiceProfileTab({
                 </p>
               )}
             </div>
-            <ProductsPricingSection />
           </div>
         </section>
 
