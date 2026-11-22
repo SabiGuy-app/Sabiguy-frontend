@@ -116,7 +116,7 @@ export default function ProductsPricingSection() {
       {isLoading ? <p className="text-sm text-gray-500">Loading products...</p> : products.length ? (
         visibleProducts.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+            <table className="w-full min-w-180 border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
                   <th scope="col" className="px-3 py-3 font-medium">Product</th>
