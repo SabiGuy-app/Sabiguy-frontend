@@ -46,8 +46,10 @@ export default function Congrats() {
                 />
 
                 <p className="mt-5 mb-5 text-base leading-relaxed text-slate-700 sm:text-xl lg:text-2xl">
-                    We’re reviewing your documents and will notify you once you’re verified.
-                </p>
+Your account is currently under review as we verify the information and documents submitted.
+In the meantime, you can log in to your account to complete your profile by adding more services, setting your service prices, and uploading products where applicable.
+
+We’ll notify you once your account has been successfully verified and is approved to go live on SabiGuy.                </p>
 
                 <div className="mt-8">
                     <Button size="md" onClick={() => navigate("/login")}>
