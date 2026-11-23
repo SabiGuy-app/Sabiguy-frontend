@@ -107,7 +107,8 @@ export default function CategoryServiceForm({
   const setRegistrationField = (name, value) => setRegistration((previous) => ({ ...previous, [name]: value }));
   const isFormComplete = selectedServices.some((id) => services.some((service) => service.id === id && service.name.trim())) &&
     selectedDays.length > 0 && selectedLocations.length > 0 &&
-    TIME_OPTIONS.includes(openingTime) && TIME_OPTIONS.includes(closingTime);
+    TIME_OPTIONS.includes(openingTime) && TIME_OPTIONS.includes(closingTime) &&
+    studioPictures.length > 0;
 
   useEffect(() => {
     try {
@@ -241,6 +242,10 @@ export default function CategoryServiceForm({
     }
     if (!selectedLocations.length) {
       setErrorMessage("Please select at least one service location.");
+      return;
+    }
+    if (!studioPictures.length) {
+      setErrorMessage("Please upload at least one photo of your work space.");
       return;
     }
     if (!isFormComplete) {
@@ -420,7 +425,7 @@ export default function CategoryServiceForm({
 
         <section className="mt-4 flex flex-col gap-3">
           <h3 className="font-semibold text-[#231F20]">
-            Photos of your work space
+            Photos of your work space <span className="text-red-600" aria-hidden="true">*</span>
           </h3>
           <p className="mt-1 text-sm text-[#231F20BF]">
              Upload clear photos of your shop, store, or office.
