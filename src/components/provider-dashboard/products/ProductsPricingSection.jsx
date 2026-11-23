@@ -116,11 +116,12 @@ export default function ProductsPricingSection() {
       {isLoading ? <p className="text-sm text-gray-500">Loading products...</p> : products.length ? (
         visibleProducts.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+            <table className="w-full min-w-180 border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
                   <th scope="col" className="px-3 py-3 font-medium">Product</th>
                   <th scope="col" className="px-3 py-3 font-medium">Price</th>
+                  <th scope="col" className="px-3 py-3 font-medium">Quantity</th>
                   <th scope="col" className="px-3 py-3 font-medium">Approval status</th>
                   <th scope="col" className="px-3 py-3 font-medium">Actions</th>
                 </tr>
@@ -143,6 +144,7 @@ export default function ProductsPricingSection() {
                         </div>
                       </th>
                       <td className="whitespace-nowrap px-3 py-3 font-medium text-[#005823]">{formatPrice(product.price)}</td>
+                      <td className="whitespace-nowrap px-3 py-3">{product.quantity ?? "—"}</td>
                       <td className="px-3 py-3">
                         <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}>
                           <StatusIcon size={13} />{status.label}
