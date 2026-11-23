@@ -28,10 +28,11 @@ export default function BusinessSettingsTab({
   onBusinessUpdate,
 }) {
   const [payout, setPayout] = useState({
-    accountName: business?.payoutAccount.accountName ?? "",
-    accountNumber: business?.payoutAccount.accountNumber ?? "",
-    bankName: business?.payoutAccount.bankName ?? "",
-    bankCode: business?.payoutAccount.bankCode ?? "",
+    accountName: business?.payoutAccount?.accountName ?? "",
+    accountNumber: business?.payoutAccount?.accountNumber ?? "",
+    bankName: business?.payoutAccount?.bankName ?? "",
+    bankCode: business?.payoutAccount?.bankCode ?? "",
+    verified: business?.payoutAccount?.verified ?? false,
   });
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [bankDraft, setBankDraft] = useState(payout);
@@ -53,16 +54,18 @@ export default function BusinessSettingsTab({
 
   useEffect(() => {
     setPayout({
-      accountName: business?.payoutAccount.accountName ?? "",
-      accountNumber: business?.payoutAccount.accountNumber ?? "",
-      bankName: business?.payoutAccount.bankName ?? "",
-      bankCode: business?.payoutAccount.bankCode ?? "",
+      accountName: business?.payoutAccount?.accountName ?? "",
+      accountNumber: business?.payoutAccount?.accountNumber ?? "",
+      bankName: business?.payoutAccount?.bankName ?? "",
+      bankCode: business?.payoutAccount?.bankCode ?? "",
+      verified: business?.payoutAccount?.verified ?? false,
     });
   }, [
-    business?.payoutAccount.accountName,
-    business?.payoutAccount.accountNumber,
-    business?.payoutAccount.bankName,
-    business?.payoutAccount.bankCode,
+    business?.payoutAccount?.accountName,
+    business?.payoutAccount?.accountNumber,
+    business?.payoutAccount?.bankName,
+    business?.payoutAccount?.bankCode,
+    business?.payoutAccount?.verified,
   ]);
 
   useEffect(() => {
@@ -159,9 +162,17 @@ export default function BusinessSettingsTab({
       if (!accountName) {
         throw new Error("Account verification did not return an account name.");
       }
-      setBankDraft((current) => ({ ...current, accountName }));
+      setBankDraft((current) => ({
+        ...current,
+        accountName,
+        verified: true,
+      }));
     } catch (verificationError) {
-      setBankDraft((current) => ({ ...current, accountName: "" }));
+      setBankDraft((current) => ({
+        ...current,
+        accountName: "",
+        verified: false,
+      }));
       setBankError(
         verificationError?.response?.data?.message ||
           verificationError?.message ||
@@ -194,6 +205,7 @@ export default function BusinessSettingsTab({
         accountNumber: bankDraft.accountNumber,
         bankName: bankDraft.bankName,
         bankCode: bankDraft.bankCode,
+        verified: true,
       };
 
       const result = await updateBusinessBankInfo(payload);
@@ -391,7 +403,7 @@ export default function BusinessSettingsTab({
           label="Verification"
           valueNode={
             <span className="rounded-full border border-[#B8DEC2] bg-[#F0FAF2] px-2 py-0.5 text-[9px] font-medium text-[#347B54]">
-              {payout.accountName ? "Verified" : "Not verified"}
+              {payout.verified ? "Verified" : "Not verified"}
             </span>
           }
         />
@@ -444,6 +456,7 @@ export default function BusinessSettingsTab({
                           bankName: selectedBank.name,
                           bankCode: selectedBank.code,
                           accountName: "",
+                          verified: false,
                         }));
                       }
                     }}
@@ -463,6 +476,7 @@ export default function BusinessSettingsTab({
                               bankName: bank.name,
                               bankCode: bank.code,
                               accountName: "",
+                              verified: false,
                             }));
                             setShowBankDropdown(false);
                           }}
@@ -496,6 +510,7 @@ export default function BusinessSettingsTab({
                       ...current,
                       accountNumber,
                       accountName: "",
+                      verified: false,
                     }));
                   }}
                   className="mt-1.5 h-10 w-full rounded-md border border-[#D8D8D8] px-3 text-sm outline-none focus:border-[#347B54] disabled:opacity-60"
