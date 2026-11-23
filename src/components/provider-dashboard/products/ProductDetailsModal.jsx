@@ -11,6 +11,7 @@ export default function ProductDetailsModal({ onClose, onSave, editingProduct, i
   const [product, setProduct] = useState(() => ({
     name: editingProduct?.name ?? "",
     price: editingProduct ? String(editingProduct.price) : "",
+    quantity: editingProduct ? String(editingProduct.quantity ?? "") : "1",
     description: editingProduct?.description ?? "",
     productImage: editingProduct?.productImage ?? "",
   }));
@@ -39,6 +40,7 @@ export default function ProductDetailsModal({ onClose, onSave, editingProduct, i
       await onSave({
         name: product.name.trim(),
         price: Number(product.price),
+        quantity: Number(product.quantity),
         description: product.description.trim(),
         productImage: product.productImage,
         currency: "NGN",
@@ -85,6 +87,14 @@ export default function ProductDetailsModal({ onClose, onSave, editingProduct, i
           </label>
           <input id="productPrice" name="price" type="number" value={product.price} onChange={updateProduct}
             placeholder="0.00" min="0" step="0.01" inputMode="decimal" required
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#388659] focus:ring-2 focus:ring-[#388659]/15" />
+        </div>
+        <div>
+          <label htmlFor="productQuantity" className="mb-2 block text-sm font-medium text-[#231F20]">
+            Quantity
+          </label>
+          <input id="productQuantity" name="quantity" type="number" value={product.quantity} onChange={updateProduct}
+            placeholder="1" min="1" step="1" inputMode="numeric" required
             className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#388659] focus:ring-2 focus:ring-[#388659]/15" />
         </div>
         <div>
