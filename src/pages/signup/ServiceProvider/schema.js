@@ -17,13 +17,8 @@ export const SignUpSchema = Yup.object().shape({
     .matches(/^\d+$/, "Phone number must contain digits only")
     .length(11, "Phone number must be 11 digits")
     .required("Please enter your phone number"),
-  fullName: Yup.string()
-    .required("Please enter your first name and last name")
-    .test(
-      "first-last-name",
-      "Please enter your first name and last name",
-      (value) => (value ? value.trim().split(/\s+/).length >= 2 : false),
-    ),
+  firstName: Yup.string().trim().required("Please enter your first name"),
+  lastName: Yup.string().trim().required("Please enter your last name"),
 });
 
 export const PersonalInfoSchema = Yup.object().shape({
