@@ -341,23 +341,9 @@ export default function StepOne({ onNext }) {
                   </div>
 
                   <div className="relative">
-                    <div className="mb-1 flex items-center justify-between">
-                      <label
-                        htmlFor="password"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Password
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotPassword(true)}
-                        className="text-sm font-medium text-[#005823] hover:underline"
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
                     <InputField
                       name="password"
+                      label="Password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={values.password}
@@ -368,6 +354,25 @@ export default function StepOne({ onNext }) {
                         setPasswordFocused(false);
                       }}
                     />
+                    <button
+                      type="button"
+                      onClick={handleShowPassword}
+                      className="absolute top-[3.55rem] right-3 -translate-y-1/2"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showPassword ? <BsEye /> : <BsEyeSlash />}
+                    </button>
+                    <div className="mt-2 flex justify-end mb-5">
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="font-semibold text-[14px] hover:text-[#005823BF] hover:underline cursor-pointer"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
                     <ErrorMessage
                       name="password"
                       component="span"
@@ -397,17 +402,6 @@ export default function StepOne({ onNext }) {
                           </p>
                         </div>
                       </div>
-                    )}
-                    {showPassword ? (
-                      <BsEye
-                        onClick={handleShowPassword}
-                        className="absolute top-11 right-3 cursor-pointer"
-                      />
-                    ) : (
-                      <BsEyeSlash
-                        onClick={handleShowPassword}
-                        className="absolute top-11 right-3 cursor-pointer"
-                      />
                     )}
                   </div>
 
