@@ -13,7 +13,6 @@ import { SignUpSchema } from "./schema";
 import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
 import PasswordRequirements from "../../../components/PasswordRequirements";
-import ForgotPassword from "../../../pages/Forgot-Password/ForgotPassword";
 import { SIGNUP_PLATFORM } from "../../../constants/platform";
 
 const MotionDiv = motion.div;
@@ -27,7 +26,6 @@ export default function StepOne({ onNext }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [termAccepted, setTermAccepted] = useState(false);
   const [termError, setTermError] = useState("");
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const evaluatePasswordStrength = (password) => {
     const strongPasswordPattern =
@@ -256,7 +254,6 @@ export default function StepOne({ onNext }) {
               city: "",
               phoneNumber: "",
               password: "",
-              forgotPassword: false,
               term: false,
             }}
             onSubmit={handleSubmit}
@@ -364,15 +361,6 @@ export default function StepOne({ onNext }) {
                     >
                       {showPassword ? <BsEye /> : <BsEyeSlash />}
                     </button>
-                    <div className="mt-2 flex justify-end mb-5">
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotPassword(true)}
-                        className="font-semibold text-[14px] hover:text-[#005823BF] hover:underline cursor-pointer"
-                      >
-                        Forgot Password?
-                      </button>
-                    </div>
                     <ErrorMessage
                       name="password"
                       component="span"
@@ -509,10 +497,6 @@ export default function StepOne({ onNext }) {
           </Formik>
         </MotionDiv>
       </AuthLayout>
-      <ForgotPassword
-        isOpen={showForgotPassword}
-        onClose={() => setShowForgotPassword(false)}
-      />
     </div>
   );
 }
