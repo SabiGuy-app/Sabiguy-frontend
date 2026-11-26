@@ -26,7 +26,11 @@ export default function PasswordTab() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.oldPassword || !formData.newPassword || !formData.confirmPassword) {
+    if (
+      !formData.oldPassword ||
+      !formData.newPassword ||
+      !formData.confirmPassword
+    ) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -48,12 +52,14 @@ export default function PasswordTab() {
 
     setIsSubmitting(true);
     try {
-      await api.put("/business/auth/change-password", {
+      await api.put("/auth/change-password", {
         oldPassword: formData.oldPassword,
         newPassword: formData.newPassword,
       });
 
-      toast.success("Password changed! You will be logged out in a moment...", { duration: 3000 });
+      toast.success("Password changed! You will be logged out in a moment...", {
+        duration: 3000,
+      });
       setFormData({ oldPassword: "", newPassword: "", confirmPassword: "" });
 
       // Auto-logout after 2 seconds as requested by backend
@@ -101,11 +107,15 @@ export default function PasswordTab() {
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-900 mb-2">Password</h2>
-      <p className="text-sm text-gray-600 mb-6">Update and recover your password here</p>
+      <p className="text-sm text-gray-600 mb-6">
+        Update and recover your password here
+      </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Old Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Old Password
+          </label>
           <div className="relative">
             <input
               type={showOldPassword ? "text" : "password"}
@@ -123,7 +133,9 @@ export default function PasswordTab() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            New Password
+          </label>
           <div className="relative">
             <input
               type={showNewPassword ? "text" : "password"}
@@ -141,7 +153,9 @@ export default function PasswordTab() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Confirm Password
+          </label>
           <div className="relative">
             <input
               type={showConfirmPassword ? "text" : "password"}
