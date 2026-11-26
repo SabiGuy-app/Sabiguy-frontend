@@ -52,7 +52,7 @@ export default function StepOne({ onNext }) {
 
     try {
       const payload = {
-        fullName: values.fullName,
+        fullName: `${values.firstName.trim()} ${values.lastName.trim()}`,
         phoneNumber: values.phoneNumber,
         city: values.city,
         email: values.email,
@@ -250,7 +250,7 @@ export default function StepOne({ onNext }) {
           </p>
           <Formik
             initialValues={{
-              fullName: "",
+              firstName: "",
               lastName: "",
               email: "",
               city: "",
@@ -264,7 +264,8 @@ export default function StepOne({ onNext }) {
           >
             {({ values, handleChange, handleBlur, handleSubmit }) => {
               const isFormComplete =
-                values.fullName.trim() &&
+                values.firstName.trim() &&
+                values.lastName.trim() &&
                 values.email.trim() &&
                 values.city.trim() &&
                 values.phoneNumber.trim() &&
@@ -279,15 +280,30 @@ export default function StepOne({ onNext }) {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                   <div>
                     <InputField
-                      name="fullName"
-                      label="Full Name"
-                      placeholder="Enter your first and last name"
-                      value={values.fullName}
+                      name="firstName"
+                      label="First Name"
+                      placeholder="Enter your first name"
+                      value={values.firstName}
                       onChange={handleChange}
                       onBlur={handleBlur}
                     />
                     <ErrorMessage
-                      name="fullName"
+                      name="firstName"
+                      component="span"
+                      className="text-[#db3a3a]"
+                    />
+                  </div>
+                  <div>
+                    <InputField
+                      name="lastName"
+                      label="Last Name (Surname)"
+                      placeholder="Enter your last name"
+                      value={values.lastName}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                    <ErrorMessage
+                      name="lastName"
                       component="span"
                       className="text-[#db3a3a]"
                     />
