@@ -13,7 +13,6 @@ import { SignUpSchema } from "./schema";
 import { useGoogleLogin } from "@react-oauth/google";
 import { trackEvent } from "../../../services/analytics";
 import PasswordRequirements from "../../../components/PasswordRequirements";
-import ForgotPassword from "../../../pages/Forgot-Password/ForgotPassword";
 import { SIGNUP_PLATFORM } from "../../../constants/platform";
 
 const MotionDiv = motion.div;
@@ -27,7 +26,6 @@ export default function StepOne({ onNext }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [termAccepted, setTermAccepted] = useState(false);
   const [termError, setTermError] = useState("");
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const evaluatePasswordStrength = (password) => {
     const strongPasswordPattern =
@@ -256,7 +254,6 @@ export default function StepOne({ onNext }) {
               city: "",
               phoneNumber: "",
               password: "",
-              forgotPassword: false,
               term: false,
             }}
             onSubmit={handleSubmit}
@@ -357,23 +354,9 @@ export default function StepOne({ onNext }) {
                   </div>
 
                   <div className="relative">
-                    <div className="mb-1 flex items-center justify-between">
-                      <label
-                        htmlFor="password"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Password
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotPassword(true)}
-                        className="text-sm font-medium text-[#005823] hover:underline"
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
                     <InputField
                       name="password"
+                      label="Password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={values.password}
@@ -384,6 +367,16 @@ export default function StepOne({ onNext }) {
                         setPasswordFocused(false);
                       }}
                     />
+                    <button
+                      type="button"
+                      onClick={handleShowPassword}
+                      className="absolute top-[3.55rem] right-3 -translate-y-1/2"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showPassword ? <BsEye /> : <BsEyeSlash />}
+                    </button>
                     <ErrorMessage
                       name="password"
                       component="span"
@@ -413,17 +406,6 @@ export default function StepOne({ onNext }) {
                           </p>
                         </div>
                       </div>
-                    )}
-                    {showPassword ? (
-                      <BsEye
-                        onClick={handleShowPassword}
-                        className="absolute top-11 right-3 cursor-pointer"
-                      />
-                    ) : (
-                      <BsEyeSlash
-                        onClick={handleShowPassword}
-                        className="absolute top-11 right-3 cursor-pointer"
-                      />
                     )}
                   </div>
 
@@ -531,10 +513,6 @@ export default function StepOne({ onNext }) {
           </Formik>
         </MotionDiv>
       </AuthLayout>
-      <ForgotPassword
-        isOpen={showForgotPassword}
-        onClose={() => setShowForgotPassword(false)}
-      />
     </div>
   );
 }

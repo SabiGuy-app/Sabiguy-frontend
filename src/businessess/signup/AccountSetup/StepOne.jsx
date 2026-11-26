@@ -266,7 +266,7 @@ export default function StepOne({ onNext, email }) {
                 </div>
 
                 <div className="relative">
-                  <div className="mb-1 flex items-center justify-between">
+                  <div className="mb-1">
                     <label
                       htmlFor="password"
                       className="text-sm font-medium text-gray-700"
